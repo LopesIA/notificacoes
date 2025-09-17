@@ -513,7 +513,32 @@
         display: flex;
         gap: 10px;
     }
-
+    /* NOVO: Estilo para o Pop-up de Atualização */
+    #update-popup {
+        display: none; /* Começa escondido */
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--cor-destaque-ouro);
+        color: #000;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        z-index: 1000;
+        text-align: center;
+        font-weight: 600;
+     }
+     #update-popup button {
+        background-color: #0c0c0c;
+        color: var(--cor-destaque-ouro);
+        border: 1px solid #000;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+        font-weight: 600;
+     }
   </style>
 </head>
 <body>
@@ -833,6 +858,11 @@
     </div>
 </div>
 
+<div id="update-popup">
+  <span>Uma nova versão está disponível!</span><br>
+  <button id="update-button">Atualizar Agora</button>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
@@ -994,7 +1024,7 @@ function abrirModal(id) {
                 vipContentAtivo.classList.remove('hidden');
             } else {
                 vipContent.classList.remove('hidden');
-                vipContentAtivo.add('hidden');
+                vipContentAtivo.classList.add('hidden');
             }
         }
         if (id === 'modalFidelidade') {
@@ -1330,12 +1360,6 @@ async function abrirPortaSecreta() {
     alert("Código inválido!");
   }
 }
-// O restante de suas funções (carregarCliente, abrirBarbeiros, etc.) continua aqui, sem alterações...
-// ... (COLE TODO O RESTANTE DO SEU CÓDIGO JS AQUI, ATÉ O FINAL)
-// ...
-// ... (aqui entrariam todas as suas funções, como carregarCliente, abrirBarbeiros, confirmarAgendamento, etc.)
-// ...
-// ... (COLEI ABAIXO PARA GARANTIR A COMPLETUDE)
 function carregarCliente() {
   document.getElementById("conteudoCliente").innerHTML = "<p>👈 Escolha uma opção acima</p>";
   document.getElementById("redeemContainer").classList.remove("hidden");
@@ -3029,51 +3053,59 @@ async function verDetalhesUsuario(usuarioUid) {
 </script>
 
 <script>
-    // Variável para guardar o evento de instalação
+    // ESTE É O BLOCO DE SCRIPT ANTIGO QUE SERÁ SUBSTITUÍDO.
+    // O NOVO BLOCO ESTÁ ABAIXO DELE.
+    // ... (o código antigo que você forneceu estava aqui)
+</script>
+
+<script>
+    // NOVO BLOCO DE SCRIPT PARA PWA E NOTIFICAÇÕES
+    // Substitui completamente o script anterior para essas funcionalidades.
+    
     let deferredPrompt;
 
-    // 1. Lógica para o botão "Adicionar à Tela de Início" (PWA)
+    // 1. Pop-up de instalação automático (PWA)
     window.addEventListener('beforeinstallprompt', (e) => {
-      // Previne o Chrome 67 e anteriores de mostrar o prompt automaticamente
+      console.log('beforeinstallprompt foi acionado');
+      // Previne o prompt padrão do navegador
       e.preventDefault();
-      // Guarda o evento para que possa ser acionado mais tarde
+      // Armazena o evento para ser usado depois
       deferredPrompt = e;
-      
-      // Cria e exibe o botão de instalação
-      const container = document.getElementById("botaoExtra");
-      // Limpa qualquer botão antigo para não duplicar
-      const oldBtn = document.getElementById("btnInstallPwa");
-      if(oldBtn) oldBtn.remove();
-
-      const btnInstall = document.createElement("button");
-      btnInstall.id = "btnInstallPwa";
-      btnInstall.textContent = "📲 Instalar App";
-      btnInstall.style.width = "auto";
-      btnInstall.style.padding = "10px 15px";
-      btnInstall.onclick = async () => {
-        if(deferredPrompt) {
-          // Mostra o prompt de instalação
-          deferredPrompt.prompt();
-          // Espera o usuário responder ao prompt
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log(`User response to the install prompt: ${outcome}`);
-          // O prompt só pode ser usado uma vez, então limpamos a variável
-          deferredPrompt = null;
-          // Esconde o botão após o uso
-          btnInstall.classList.add("hidden");
-        }
-      };
-      container.appendChild(btnInstall);
+      // Mostra o prompt de instalação para o usuário
+      deferredPrompt.prompt();
     });
 
-    // 2. Lógica de registro do Service Worker
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-                console.log('✅ Service Worker registrado com sucesso:', registration.scope);
-            }, function(err) {
-                console.log('❌ Falha ao registrar o Service Worker:', err);
+    // 2. Lógica de atualização do Service Worker
+    let newWorker;
+
+    function showUpdatePopup() {
+        const popup = document.getElementById('update-popup');
+        if (popup) popup.style.display = 'block';
+        
+        const updateButton = document.getElementById('update-button');
+        if (updateButton) {
+            updateButton.addEventListener('click', () => {
+                // Envia mensagem ao Service Worker para ele se ativar
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                // Recarrega a página para usar o novo Service Worker
+                window.location.reload();
             });
+        }
+    }
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js').then(reg => {
+                reg.addEventListener('updatefound', () => {
+                    newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        // Verifica se o novo Service Worker está instalado e esperando
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdatePopup();
+                        }
+                    });
+                });
+            }).catch(err => console.log('Falha ao registrar o Service Worker:', err));
         });
     }
 
@@ -3085,24 +3117,18 @@ async function verDetalhesUsuario(usuarioUid) {
       }
 
       try {
-        // Pede permissão para notificações
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
           console.log('✅ Permissão para notificações concedida.');
-
-          // Obtém o token do dispositivo
           const fcmToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
           
           if (fcmToken) {
             console.log('FCM Token:', fcmToken);
-            // Salva o token no perfil do usuário no Firestore
             const userRef = db.collection("usuarios").doc(uid);
             await userRef.update({
               fcmTokens: firebase.firestore.FieldValue.arrayUnion(fcmToken)
             });
-            console.log("Token salvo no Firestore com sucesso.");
-          } else {
-             console.log("Não foi possível obter o token.");
+            console.log("Token salvo no Firestore.");
           }
         } else {
           console.warn('🚫 Permissão para notificações negada.');
@@ -3112,15 +3138,12 @@ async function verDetalhesUsuario(usuarioUid) {
       }
     }
 
-    // Manipulador para mensagens recebidas com o app aberto (em primeiro plano)
     if (messaging) {
         messaging.onMessage((payload) => {
             console.log('Mensagem recebida com o app aberto:', payload);
-            // Exibe um alerta simples com o título e o corpo da notificação
             alert(`🔔 ${payload.notification.title}\n\n${payload.notification.body}`);
         });
     }
-
 </script>
 
 </body>
