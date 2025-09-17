@@ -2,7 +2,7 @@
 importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js');
 
-// Suas credenciais do Firebase (devem ser as mesmas do seu app)
+// Suas credenciais do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDBt7NcU5rP-hsrBZ07ne_HbiMCHRyVcnY",
   authDomain: "navalha-de-ouro-v11.firebaseapp.com",
@@ -12,23 +12,28 @@ const firebaseConfig = {
   appId: "1:434474263075:web:163893d68a1b5dbe74c796"
 };
 
-// Inicializa o Firebase no Service Worker
 firebase.initializeApp(firebaseConfig);
-
-// Obtém a instância do serviço de Messaging
 const messaging = firebase.messaging();
 
-// Adiciona um manipulador para escutar mensagens recebidas em segundo plano
+// NOVO: Listener para pular a espera e ativar o novo Service Worker imediatamente
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Manipulador para mensagens recebidas em segundo plano
 messaging.onBackgroundMessage(function(payload) {
   console.log('[service-worker.js] Mensagem recebida em segundo plano.', payload);
 
-  // Extrai o título e as opções da notificação do payload
   const notificationTitle = payload.notification.title;
+  // Opções aprimoradas para a notificação
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/icone.png'
+    icon: '/icone.png',
+    badge: '/icone.png', // Ícone para a barra de status no Android
+    vibrate: [200, 100, 200] // Padrão de vibração
   };
 
-  // Exibe a notificação
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
