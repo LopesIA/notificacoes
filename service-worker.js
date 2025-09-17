@@ -22,11 +22,11 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function(payload) {
   console.log('[service-worker.js] Mensagem recebida em segundo plano.', payload);
 
-  // Extrai o título e as opções da notificação a partir do payload
+  // Extrai o título e as opções da notificação do payload
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/firebase-logo.png' // Certifique-se de que este caminho está correto
+    icon: '/icone.png'
   };
 
   // Exibe a notificação
