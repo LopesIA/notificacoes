@@ -26,11 +26,9 @@ messaging.onBackgroundMessage(function(payload) {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    // Opcional: defina um ícone para a notificação.
-    // Certifique-se de que o ícone exista no caminho especificado na sua pasta pública.
-    // icon: '/images/logo.png' 
+    icon: '/firebase-logo.png' // Certifique-se de que este caminho está correto
   };
 
-  // Exibe a notificação para o usuário
+  // Exibe a notificação
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });

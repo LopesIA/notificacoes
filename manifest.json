@@ -1,0 +1,22 @@
+{
+  "name": "Navalha de Ouro",
+  "short_name": "Navalha",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0c0c0c",
+  "theme_color": "#d4af37",
+  "description": "Seu aplicativo de barbearia",
+  "icons": [
+    {
+      "src": "/image_e45f91.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/image_e45faf.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "gcm_sender_id": "434474263075"
+}
