@@ -899,14 +899,22 @@ let lastGlobalMessageTimestamp = null;
  * @param {string} body - O corpo da mensagem da notificação.
  */
 async function sendNotification(token, title, body) {
-  const backendUrl = "https://navalhabackend-2.onrender.com/sendNotification";
+  // A URL do seu Web Service no Render
+  const backendUrl = "https://navalhabackend.onrender.com";
+
+  // A rota que você definiu no seu server.js
+  const notificationEndpoint = "/enviar-notificacao";
+
+  // A URL completa da API
+  const fullUrl = backendUrl + notificationEndpoint;
+
   if (!token) {
-      console.error("Tentativa de enviar notificação sem um token.");
-      return;
+    console.error("Tentativa de enviar notificação sem um token.");
+    return;
   }
+  
   try {
-    // O cabeçalho 'Content-Type' é crucial para o backend entender o formato dos dados.
-    const response = await fetch(backendUrl, {
+    const response = await fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -920,7 +928,7 @@ async function sendNotification(token, title, body) {
 
     const data = await response.json();
     if (response.ok) {
-      console.log('Notificação enviada com sucesso:', data.messageId);
+      console.log('Notificação enviada com sucesso:', data);
     } else {
       console.error('Falha ao enviar a notificação:', data.error);
     }
@@ -929,12 +937,6 @@ async function sendNotification(token, title, body) {
   }
 }
 
-/**
- * Função auxiliar para buscar os tokens de um usuário e enviar a notificação.
- * @param {string} uid - O ID do usuário a ser notificado.
- * @param {string} title - O título da notificação.
- * @param {string} body - O corpo da mensagem da notificação.
- */
 async function notifyUser(uid, title, body) {
     if (!uid) return;
     try {
@@ -2695,7 +2697,7 @@ function abrirAvaliacoesBarbeiro() {
 // Função para enviar uma notificação para um token específico
 // O nome da função está em inglês para se alinhar com o código que você me enviou.
 async function sendNotification_DEPRECATED(token, title, body) {
-  const backendUrl = "https://navalhabackend-2.onrender.com"; // SUBSTITUA PELA URL DO SEU BACKEND
+  const backendUrl = "https://navalhabackend.onrender.com"; // SUBSTITUA PELA URL DO SEU BACKEND
   try {
     const response = await fetch(backendUrl, {
       method: 'POST',
