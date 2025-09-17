@@ -169,9 +169,6 @@
       justify-content: space-between;
       z-index: 15;
     }
-    .bottom-buttons-container button {
-      width: auto;
-    }
     .redeem-container {
       position: fixed;
       bottom: 25px; /* Posição ajustada */
@@ -516,7 +513,32 @@
         display: flex;
         gap: 10px;
     }
-
+    /* NOVO: Estilo para o Pop-up de Atualização */
+    #update-popup {
+        display: none; /* Começa escondido */
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--cor-destaque-ouro);
+        color: #000;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        z-index: 1000;
+        text-align: center;
+        font-weight: 600;
+     }
+     #update-popup button {
+        background-color: #0c0c0c;
+        color: var(--cor-destaque-ouro);
+        border: 1px solid #000;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+        font-weight: 600;
+     }
   </style>
 </head>
 <body>
@@ -835,10 +857,18 @@
         </div>
     </div>
 </div>
+
+<div id="update-popup">
+  <span>Uma nova versão está disponível!</span><br>
+  <button id="update-button">Atualizar Agora</button>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> <script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
+
+<script>
 // Firebase e variáveis globais
 const firebaseConfig = {
   apiKey: "AIzaSyDBt7NcU5rP-hsrBZ07ne_HbiMCHRyVcnY",
@@ -850,15 +880,8 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
-// Este código força o Firebase a "lembrar" do usuário mesmo se o app for fechado.
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-  .then(() => {
-    console.log("Persistência de autenticação definida para 'local'. O usuário ficará logado.");
-  })
-  .catch((error) => {
-    console.error("Erro ao definir a persistência de autenticação:", error);
-  });
-const messaging = firebase.messaging(); // NOVO: Inicializa o serviço de Messaging
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const messaging = firebase.messaging.isSupported() ? firebase.messaging() : null;
 const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.05, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
 const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
@@ -887,25 +910,12 @@ let agendamentoState = {
 
 let adminBalanceListener = null;
 let adminUserBalances = {};
-// NOVO: Listener global de chat e controle de timestamp
 let globalChatListener = null;
 let lastGlobalMessageTimestamp = null;
 
-// INÍCIO: NOVAS FUNÇÕES DE NOTIFICAÇÃO
-/**
- * Função principal para enviar uma notificação via backend.
- * @param {string} token - O token FCM do dispositivo de destino.
- * @param {string} title - O título da notificação.
- * @param {string} body - O corpo da mensagem da notificação.
- */
 async function sendNotification(token, title, body) {
-  // A URL do seu Web Service no Render
   const backendUrl = "https://navalhabackend.onrender.com";
-
-  // A rota que você definiu no seu server.js
   const notificationEndpoint = "/enviar-notificacao";
-
-  // A URL completa da API
   const fullUrl = backendUrl + notificationEndpoint;
 
   if (!token) {
@@ -943,9 +953,7 @@ async function notifyUser(uid, title, body) {
         const userDoc = await db.collection("usuarios").doc(uid).get();
         if (userDoc.exists) {
             const userData = userDoc.data();
-            // Verifica se o usuário tem tokens antes de tentar enviar.
             if (userData.fcmTokens && userData.fcmTokens.length > 0) {
-                // Envia a notificação para cada token que o usuário possui.
                 userData.fcmTokens.forEach(token => {
                     sendNotification(token, title, body);
                 });
@@ -956,11 +964,6 @@ async function notifyUser(uid, title, body) {
     }
 }
 
-/**
- * Função auxiliar para notificar todos os administradores.
- * @param {string} title - O título da notificação.
- * @param {string} body - O corpo da mensagem da notificação.
- */
 async function notifyAdmins(title, body) {
     try {
         const adminQuery = await db.collection("usuarios").where("tipo", "==", "admin").get();
@@ -978,9 +981,6 @@ async function notifyAdmins(title, body) {
         console.error("Erro ao notificar admins:", e);
     }
 }
-// FIM: NOVAS FUNÇÕES DE NOTIFICAÇÃO
-
-
 // Funções de UI
 function mostrar(id) {
   ["authView", "clienteView", "barbeiroView", "adminView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
@@ -1226,10 +1226,9 @@ function criarConta() {
         codigosResgatados: [],
         indicadoPorEmail: indicadorEmail || null,
         bonusIndicacaoPendente: !!indicadorEmail,
-        fcmTokens: [] // NOVO: Campo para armazenar tokens de notificação
+        fcmTokens: []
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
-      // NOTIFICAÇÃO
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
     })
     .catch(e => alert("Erro ao criar conta: " + e.message));
@@ -1247,7 +1246,7 @@ auth.onAuthStateChanged(async user => {
     renderCurrentView();
     document.getElementById("btnSair").classList.add("hidden");
     document.getElementById("redeemContainer").classList.add("hidden");
-    if(globalChatListener) globalChatListener(); // Desativa o listener de chat ao sair
+    if(globalChatListener) globalChatListener();
     return;
   }
   const ref = db.collection("usuarios").doc(user.uid);
@@ -1281,8 +1280,8 @@ auth.onAuthStateChanged(async user => {
   userView.currentType = perfil.tipo;
   renderCurrentView();
 
-  // NOVO: Chama a função para configurar as notificações
-  setupFCM(user.uid);
+  // ATIVA AS NOTIFICAÇÕES E PWA PARA O USUÁRIO LOGADO
+  setupPwaAndNotifications(user.uid);
 
   setTimeout(() => {
     document.getElementById("btnSair").classList.remove("hidden");
@@ -1303,8 +1302,7 @@ auth.onAuthStateChanged(async user => {
         });
     });
 
-    // NOVO: Listener de chat global para notificação piscante
-    if (globalChatListener) globalChatListener(); // Garante que não haja listeners duplicados
+    if (globalChatListener) globalChatListener(); 
     globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
         .orderBy("ts", "desc").limit(1)
         .onSnapshot(snapshot => {
@@ -1312,7 +1310,6 @@ auth.onAuthStateChanged(async user => {
             const msg = snapshot.docs[0].data();
             const janelaChat = document.getElementById('janelaChat');
             
-            // Verifica se a mensagem é nova, não é do próprio usuário e se o chat está fechado
             if (msg.ts?.seconds > (lastGlobalMessageTimestamp?.seconds || 0) &&
                 msg.remetenteUid !== user.uid && 
                 !janelaChat.classList.contains('show')) {
@@ -1355,7 +1352,6 @@ async function abrirPortaSecreta() {
             codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo)
         });
         alert("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
-        // NOTIFICAÇÃO
         notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!");
     } else {
         alert("Código inválido ou expirado.");
@@ -1364,7 +1360,6 @@ async function abrirPortaSecreta() {
     alert("Código inválido!");
   }
 }
-
 function carregarCliente() {
   document.getElementById("conteudoCliente").innerHTML = "<p>👈 Escolha uma opção acima</p>";
   document.getElementById("redeemContainer").classList.remove("hidden");
@@ -1479,7 +1474,6 @@ function selecionarServico(element, servico) {
     agendamentoState.servico = servico;
     verificarEstadoBotaoAgendar();
 }
-
 function selecionarHorario(element, horario) {
     document.querySelectorAll('#barbeiroPerfilHorariosList .selectable-item').forEach(item => item.classList.remove('selected'));
     element.classList.add('selected');
@@ -1491,7 +1485,6 @@ function verificarEstadoBotaoAgendar() {
     const btn = document.getElementById('btnConfirmarAgendamento');
     btn.disabled = !(agendamentoState.servico && agendamentoState.horario);
 }
-
 async function abrirBarbeiroPerfil(barbeiroUid) {
     try {
         resetAgendamentoState();
@@ -1613,7 +1606,6 @@ function confirmarAgendamento() {
         criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`);
         criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do barbeiro.");
         
-        // NOTIFICAÇÃO
         notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`);
 
         alert("Pedido enviado com sucesso!");
@@ -1622,7 +1614,6 @@ function confirmarAgendamento() {
         alert("Erro ao enviar pedido: " + e.message);
     });
 }
-
 function abrirModalVagaAprovada(agendamentoId) {
     const modal = document.getElementById('modalVagaImediataAprovada');
     const btnCancelar = document.getElementById('btnCancelarVagaAprovada');
@@ -1665,7 +1656,6 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
         });
 
         criarAviso(barbeiroUid, `❌ O cliente ${perfil.nome} cancelou a vaga imediata. O valor foi estornado.`);
-        // NOTIFICAÇÃO
         notifyUser(barbeiroUid, "❌ Agendamento Cancelado", `${perfil.nome} cancelou a vaga imediata. O valor foi estornado.`);
         
         alert("Agendamento cancelado e valor reembolsado com sucesso.");
@@ -1676,8 +1666,6 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
         console.error("Erro no reembolso:", e);
     }
 }
-
-
 function abrirHistoricoCliente() {
   const painel = document.getElementById("conteudoCliente");
   painel.innerHTML = `
@@ -1778,7 +1766,6 @@ function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
   }).then(() => {
     alert(`Avaliação enviada com sucesso! Você ganhou ${PONTOS_POR_CORTE} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
-    // NOTIFICAÇÕES
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`);
     notifyUser(auth.currentUser.uid, "🏆 Pontos Recebidos!", `Você ganhou ${PONTOS_POR_CORTE} pontos de fidelidade por avaliar o serviço.`);
   }).catch(e => {
@@ -1806,7 +1793,6 @@ function resgatarPontos() {
     });
   }).then(() => {
     alert(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
-    // NOTIFICAÇÃO
     notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)} na sua carteira.`);
   }).catch(e => {
     alert("Erro ao resgatar pontos: " + e.message);
@@ -1842,15 +1828,12 @@ function assinarVip() {
 
     }).then(() => {
         alert("Parabéns! Você agora é um membro VIP!");
-        // NOTIFICAÇÃO
         notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite 10% de desconto e benefícios exclusivos!");
     }).catch(e => {
         alert("Erro ao assinar VIP: " + e.message);
     });
 }
-
 async function abrirChatGlobal() {
-  // NOVO: Remove a classe piscante ao abrir o chat
   document.getElementById('btnChat').classList.remove('blinking-chat');
   
   abrirModal('janelaChat');
@@ -1907,11 +1890,10 @@ async function abrirChatGlobal() {
       }
     });
     
-    // NOVO: Adiciona listener para a tecla Enter no input do chat
     const chatInput = document.getElementById('chatInput');
     chatInput.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Impede a quebra de linha
+            event.preventDefault();
             enviarMensagem();
         }
     });
@@ -1950,75 +1932,30 @@ function sendBotMessage() {
 }
 
 function enviarMensagem() {
-
-  // 1. Verifica se já está enviando uma mensagem. Se sim, sai da função.
-
   if (isSending) {
-
     return;
-
   }
-
-
-
   const texto = document.getElementById("chatInput").value.trim();
-
   if (!texto) return;
-
-
-
-  // 2. Bloqueia o envio. O valor de isSending agora é 'true'.
 
   isSending = true;
 
-
-
-  // 3. Sua lógica de envio da mensagem para o Firestore
-
   db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
-
     remetenteUid: auth.currentUser.uid,
-
     remetenteNome: perfil.nome,
-
     tipo: perfil.tipo,
-
     texto,
-
     ts: firebase.firestore.FieldValue.serverTimestamp()
-
   }).then(() => {
-
-    // 4. A mensagem foi enviada com sucesso, agora libera o campo de texto.
-
     document.getElementById("chatInput").value = "";
-
-    
-
-    // 5. Usa setTimeout para agendar a liberação do envio após 1 segundo (1000ms).
-
-    // A função de dentro do setTimeout será executada após 1000 milissegundos.
-
     setTimeout(() => {
-
       isSending = false;
-
     }, 1000);
-
-
-
   }).catch(error => {
-
-    // Em caso de erro, você também deve liberar o envio para não travar o chat
-
     console.error("Erro ao enviar mensagem: ", error);
-
     isSending = false;
-
   });
-
 }
-
 function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
   const avisoData = {
     usuarioUid: uid,
@@ -2049,14 +1986,11 @@ function enviarDenuncia() {
     const mensagem = encodeURIComponent(`🚨 Nova denúncia no app. ID: ${denunciaRef.id}\n\nDe: ${perfil.nome}\n\nDescrição: ${texto}`);
     btnWhatsapp.href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
     document.getElementById("textoDenuncia").value = "";
-    // NOTIFICAÇÃO
     notifyAdmins("🚨 Nova Denúncia!", `Uma nova denúncia foi enviada por ${perfil.nome}.`);
   }).catch(e => {
     alert("Erro ao enviar denúncia: " + e.message);
   });
 }
-
-// Funções do Barbeiro
 function carregarBarbeiro() {
   document.getElementById("conteudoBarbeiro").innerHTML = "<p>👈 Escolha uma opção acima</p>";
 }
@@ -2252,8 +2186,6 @@ function abrirAgendamentosBarbeiro() {
         });
     });
 }
-
-
 function toggleVagaImediata() {
     db.collection("usuarios").doc(auth.currentUser.uid).update({
         vagaImediata: !perfil.vagaImediata
@@ -2348,14 +2280,12 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
 
     }).then(() => {
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
-        // NOTIFICAÇÃO
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para a barbearia!`);
         alert("Agendamento aprovado e valores transferidos!");
     }).catch(e => {
         alert("Erro ao aprovar agendamento: " + e);
     });
 }
-
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
   if (!confirm("Deseja aprovar este agendamento?")) return;
 
@@ -2400,7 +2330,6 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
 
   }).then(() => {
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo barbeiro ${perfil.nome}!`);
-      // NOTIFICAÇÃO
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
       alert("Agendamento aprovado e valores transferidos!");
       if (horario && horario !== 'null') {
@@ -2424,7 +2353,6 @@ function recusarAgendamento(agendamentoId, clienteUid) {
 
   }).then(() => {
       criarAviso(clienteUid, `❌ O barbeiro ${perfil.nome} recusou seu agendamento. O valor não foi cobrado da sua carteira.`);
-      // NOTIFICAÇÃO
       notifyUser(clienteUid, "❌ Agendamento Recusado", `O barbeiro ${perfil.nome} não pôde aceitar seu pedido.`);
       alert("Agendamento recusado.");
   }).catch(e => {
@@ -2474,7 +2402,6 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid) {
 
   }).then(() => {
       criarAviso(clienteUid, `❌ O barbeiro ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
-      // NOTIFICAÇÃO
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado para sua carteira.`);
       alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu em 10 pontos.");
   }).catch(e => {
@@ -2499,7 +2426,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 
     alert("Serviço concluído com sucesso!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar.`);
-    // NOTIFICAÇÃO
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`);
 
     const clienteDoc = await clienteRef.get();
@@ -2511,7 +2437,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
             bonusIndicacaoPendente: false
         });
         criarAviso(clienteUid, `🎉 Bônus! Você ganhou ${BONUS_INDICACAO} pontos de fidelidade pela sua primeira conclusão de agendamento por indicação!`);
-        // NOTIFICAÇÃO DE BÔNUS
         notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade!`);
 
         const query = await db.collection("usuarios").where("email", "==", clienteData.indicadoPorEmail).limit(1).get();
@@ -2521,7 +2446,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
                 pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO)
             });
             criarAviso(indicadorDoc.id, `🎉 Bônus! Você ganhou ${BONUS_INDICACAO} pontos de fidelidade porque ${clienteData.nome} concluiu o primeiro agendamento!`);
-            // NOTIFICAÇÃO DE BÔNUS PARA QUEM INDICOU
             notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o primeiro serviço!`);
         }
     }
@@ -2529,7 +2453,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     alert("Erro ao concluir serviço: " + e);
   }
 }
-
 function abrirClientesBarbeiro() {
   document.getElementById("conteudoBarbeiro").innerHTML = `
     <h3>🧑‍🤝‍🧑 Meus Clientes</h3>
@@ -2651,7 +2574,6 @@ function removerPromocao(index) {
     alert("Promoção removida com sucesso!");
   }).catch(e => alert("Erro ao remover promoção: " + e.message));
 }
-
 function abrirAvaliacoesBarbeiro() {
   abrirModal('modalAvaliacoes');
   const lista = document.getElementById("listaAvaliacoesModal");
@@ -2693,37 +2615,6 @@ function abrirAvaliacoesBarbeiro() {
       });
     });
 }
-
-// Função para enviar uma notificação para um token específico
-// O nome da função está em inglês para se alinhar com o código que você me enviou.
-async function sendNotification_DEPRECATED(token, title, body) {
-  const backendUrl = "https://navalhabackend.onrender.com"; // SUBSTITUA PELA URL DO SEU BACKEND
-  try {
-    const response = await fetch(backendUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        token: token,
-        title: title,
-        body: body,
-      }),
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-      console.log('Notificação enviada com sucesso:', data.messageId);
-      // Você pode adicionar um alerta ou modal de sucesso aqui
-    } else {
-      console.error('Falha ao enviar a notificação:', data.error);
-      // Exibir um alerta de erro
-    }
-  } catch (error) {
-    console.error('Erro de rede ou na chamada da API:', error);
-  }
-}
-
 async function solicitarDeposito() {
   const valor = parseFloat(prompt("Valor do depósito:"));
   if (isNaN(valor) || valor <= 0) {
@@ -2746,7 +2637,6 @@ async function solicitarDeposito() {
     btnWhatsapp.href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
     
     criarAviso(ADMIN_EMAIL, `📥 Nova solicitação de depósito de ${perfil.nome} no valor de R$ ${valor.toFixed(2)}.`);
-    // NOTIFICAÇÃO
     notifyAdmins("💰 Solicitação de Depósito", `${perfil.nome} solicitou um depósito de R$ ${valor.toFixed(2)}.`);
   } catch(e) {
       alert("Ocorreu um erro ao enviar sua solicitação. Por favor, tente novamente. Detalhes: " + e.message);
@@ -2791,14 +2681,12 @@ async function solicitarSaque() {
     btnWhatsapp.href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
 
     criarAviso(ADMIN_EMAIL, `📤 Nova solicitação de saque de ${perfil.nome} no valor de R$ ${valor.toFixed(2)}.`);
-    // NOTIFICAÇÃO
     notifyAdmins("🏧 Solicitação de Saque", `${perfil.nome} solicitou um saque de R$ ${valor.toFixed(2)}.`);
   } catch(e) {
       alert("Ocorreu um erro ao enviar sua solicitação de saque. Por favor, tente novamente. Detalhes: " + e.message);
       console.error("Erro ao criar solicitação de saque:", e);
   }
 }
-
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
   const conteudo = document.getElementById("blogConteudo").value.trim();
@@ -2875,8 +2763,6 @@ function carregarAdmin() {
         });
     });
 }
-
-
 function abrirModalEstatisticas() {
     abrirModal('modalEstatisticas');
     const painel = document.getElementById("estatisticasPainel");
@@ -2918,8 +2804,6 @@ function abrirModalEstatisticas() {
         });
     });
 }
-
-
 function abrirModalSolicitacoes() {
   abrirModal('modalSolicitacoes');
   const lista = document.getElementById("listaSolicitacoes");
@@ -2988,14 +2872,12 @@ function aprovarDeposito(solicitacaoId, usuarioUid, valor) {
       t.update(solicitacaoRef, { status: "aprovado" });
 
       if (pontosGanhos > 0) {
-        // NOTIFICAÇÃO DE PONTOS
         notifyUser(usuarioUid, "🏆 Você Ganhou Pontos!", `+${pontosGanhos} pontos de fidelidade adicionados pelo seu depósito.`);
       }
     });
   }).then(() => {
     alert("Depósito aprovado com sucesso!");
     criarAviso(usuarioUid, `✅ Seu depósito de R$ ${valor.toFixed(2)} foi creditado na sua carteira.`);
-    // NOTIFICAÇÃO
     notifyUser(usuarioUid, "✅ Pagamento Recebido!", `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado e adicionado à sua carteira.`);
   }).catch(e => alert("Erro ao aprovar: " + e.message));
 }
@@ -3015,7 +2897,6 @@ function aprovarSaque(solicitacaoId, usuarioUid, valor) {
   }).then(() => {
     alert("Saque aprovado com sucesso!");
     criarAviso(usuarioUid, `✅ Seu saque de R$ ${valor.toFixed(2)} foi aprovado e o valor será enviado para sua conta.`);
-    // NOTIFICAÇÃO
     notifyUser(usuarioUid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`);
   }).catch(e => alert("Erro ao aprovar: " + e.message));
 }
@@ -3025,11 +2906,9 @@ function recusarSolicitacao(solicitacaoId, usuarioUid, tipo) {
     .then(() => {
       alert("Solicitação recusada.");
       criarAviso(usuarioUid, `❌ Sua solicitação de ${tipo} foi recusada.`);
-      // NOTIFICAÇÃO
       notifyUser(usuarioUid, `❌ Solicitação Recusada`, `Sua solicitação de ${tipo} foi recusada pelo administrador.`);
     }).catch(e => alert("Erro: " + e.message));
 }
-
 function abrirModalUsuarios() {
   abrirModal('modalUsuarios');
   const lista = document.getElementById("usuariosPainel");
@@ -3077,7 +2956,6 @@ function abrirDenuncias() {
       });
     });
 }
-
 async function verDetalhesDenuncia(denunciaId) {
   const denunciaDoc = await db.collection("denuncias").doc(denunciaId).get();
   const d = denunciaDoc.data();
@@ -3130,7 +3008,6 @@ async function verDetalhesUsuario(usuarioUid) {
             await db.collection("usuarios").doc(usuarioUid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
             const acaoTexto = valor > 0 ? `adicionado à` : `removido da`;
             criarAviso(usuarioUid, `O valor de R$ ${Math.abs(valor).toFixed(2)} foi ${acaoTexto} sua carteira por um administrador.`);
-            // NOTIFICAÇÃO
             notifyUser(usuarioUid, "💸 Nova Transação!", `Um administrador alterou seu saldo em R$ ${valor.toFixed(2)}.`);
             alert("Saldo alterado!");
         } else {
@@ -3173,65 +3050,101 @@ async function verDetalhesUsuario(usuarioUid) {
         break;
   }
 }
+</script>
 
-// NOVO: Bloco de código para configurar as notificações
-function setupFCM(uid) {
-    // Verifica se o navegador suporta notificações
-    if (!firebase.messaging.isSupported()) {
-        console.log("Este navegador não suporta notificações em tempo real.");
-        return;
+<script>
+    // ESTE É O BLOCO DE SCRIPT ANTIGO QUE SERÁ SUBSTITUÍDO.
+    // O NOVO BLOCO ESTÁ ABAIXO DELE.
+    // ... (o código antigo que você forneceu estava aqui)
+</script>
+
+<script>
+    // NOVO BLOCO DE SCRIPT PARA PWA E NOTIFICAÇÕES
+    // Substitui completamente o script anterior para essas funcionalidades.
+    
+    let deferredPrompt;
+
+    // 1. Pop-up de instalação automático (PWA)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('beforeinstallprompt foi acionado');
+      // Previne o prompt padrão do navegador
+      e.preventDefault();
+      // Armazena o evento para ser usado depois
+      deferredPrompt = e;
+      // Mostra o prompt de instalação para o usuário
+      deferredPrompt.prompt();
+    });
+
+    // 2. Lógica de atualização do Service Worker
+    let newWorker;
+
+    function showUpdatePopup() {
+        const popup = document.getElementById('update-popup');
+        if (popup) popup.style.display = 'block';
+        
+        const updateButton = document.getElementById('update-button');
+        if (updateButton) {
+            updateButton.addEventListener('click', () => {
+                // Envia mensagem ao Service Worker para ele se ativar
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                // Recarrega a página para usar o novo Service Worker
+                window.location.reload();
+            });
+        }
     }
 
-    // Solicita permissão ao usuário
-    messaging.requestPermission().then(() => {
-        console.log("Permissão para notificações concedida.");
-        // Obtém o token do dispositivo. É aqui que você deve inserir sua chave VAPID.
-        return messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
-    }).then(token => {
-        if (token) {
-            console.log("Token do dispositivo (FCM Token):", token);
-            
-            // Salva o token no perfil do usuário no Firestore para que você possa enviar notificações para ele
-            const db = firebase.firestore();
-            const userRef = db.collection("usuarios").doc(uid);
-            
-            userRef.set({
-                tokens: firebase.firestore.FieldValue.arrayUnion(token)
-            }, { merge: true })
-            .then(() => {
-                console.log("Token salvo no perfil do usuário com sucesso.");
-            })
-            .catch(err => {
-                console.error("Erro ao salvar o token no Firestore:", err);
-            });
-        } else {
-            console.warn("Não foi possível obter o token. O usuário pode ter negado a permissão.");
-        }
-    }).catch(err => {
-        console.error("Ocorreu um erro ao solicitar permissão ou obter o token:", err);
-    });
-}
-
-// NOVO: Manipulador para mensagens recebidas enquanto o usuário está com o app aberto (em primeiro plano)
-if (firebase.messaging.isSupported()) {
-    messaging.onMessage((payload) => {
-        console.log('Mensagem recebida com o app aberto:', payload);
-        // Exibe um alerta simples com o título e o corpo da notificação
-        alert(`🔔 ${payload.notification.title}\n\n${payload.notification.body}`);
-    });
-}
-</script>
-    <script>
-        // Registra o seu Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-                    console.log('Service Worker registrado com sucesso:', registration.scope);
-                }, function(err) {
-                    console.log('Falha ao registrar o Service Worker:', err);
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js').then(reg => {
+                reg.addEventListener('updatefound', () => {
+                    newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        // Verifica se o novo Service Worker está instalado e esperando
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdatePopup();
+                        }
+                    });
                 });
+            }).catch(err => console.log('Falha ao registrar o Service Worker:', err));
+        });
+    }
+
+    // 3. Lógica para Notificações (FCM)
+    async function setupPwaAndNotifications(uid) {
+      if (!messaging) {
+        console.log("Este navegador não suporta notificações.");
+        return;
+      }
+
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          console.log('✅ Permissão para notificações concedida.');
+          const fcmToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
+          
+          if (fcmToken) {
+            console.log('FCM Token:', fcmToken);
+            const userRef = db.collection("usuarios").doc(uid);
+            await userRef.update({
+              fcmTokens: firebase.firestore.FieldValue.arrayUnion(fcmToken)
             });
+            console.log("Token salvo no Firestore.");
+          }
+        } else {
+          console.warn('🚫 Permissão para notificações negada.');
         }
-    </script>
+      } catch (err) {
+        console.error('Ocorreu um erro ao configurar as notificações:', err);
+      }
+    }
+
+    if (messaging) {
+        messaging.onMessage((payload) => {
+            console.log('Mensagem recebida com o app aberto:', payload);
+            alert(`🔔 ${payload.notification.title}\n\n${payload.notification.body}`);
+        });
+    }
+</script>
+
 </body>
 </html>
