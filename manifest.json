@@ -6,16 +6,18 @@
   "background_color": "#0c0c0c",
   "theme_color": "#d4af37",
   "description": "Seu aplicativo de barbearia",
-  "icons": [icone.png]
+  "icons": [
     {
-      "src": "/image_e45f91.png",
+      "src": "/icone.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/image_e45faf.png",
+      "src": "/icone.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "gcm_sender_id": "434474263075"
