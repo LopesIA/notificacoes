@@ -6,7 +6,7 @@
   "background_color": "#0c0c0c",
   "theme_color": "#d4af37",
   "description": "Seu aplicativo de barbearia",
-  "icons": [
+  "icons": [icone.png]
     {
       "src": "/image_e45f91.png",
       "sizes": "192x192",
