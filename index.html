@@ -1046,6 +1046,7 @@ function pedirPermissaoEFechar() {
 // ALTERAÇÃO INICIADA: Lógica de setup e atualização de token aprimorada
 async function garantirTokenAtualizadoNoPerfil(uid) {
     try {
+        // A CHAVE VAPID CORRETA FOI INSERIDA AQUI
         const currentToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
         if (currentToken) {
             const userRef = db.collection('usuarios').doc(uid);
@@ -1070,40 +1071,48 @@ async function garantirTokenAtualizadoNoPerfil(uid) {
 
 
 function setupFCM(uid) {
-    if (fcmSetupDone || !firebase.messaging.isSupported()) {
+    if (fcmSetupDone || !('serviceWorker' in navigator) || !firebase.messaging.isSupported()) {
         return;
     }
-    
-    Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-            console.log('Permissão para notificação concedida.');
-            fcmSetupDone = true; 
-            
-            garantirTokenAtualizadoNoPerfil(uid);
 
-            // Listener para quando o token é atualizado
-            messaging.onTokenRefresh(async () => {
-                console.log('Token foi atualizado pelo FCM.');
-                try {
-                    const refreshedToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
-                    if (refreshedToken) {
-                        console.log('Novo token gerado:', refreshedToken);
-                        const user = auth.currentUser;
-                        if(user) {
-                           await db.collection('usuarios').doc(user.uid).update({
-                                fcmTokens: firebase.firestore.FieldValue.arrayUnion(refreshedToken)
-                           });
-                           console.log('Token atualizado salvo no perfil.');
+    // A MÁGICA ACONTECE AQUI: Esperamos o Service Worker estar pronto.
+    navigator.serviceWorker.ready.then(registration => {
+        console.log('Service Worker está ativo e pronto.');
+
+        Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+                console.log('Permissão para notificação concedida.');
+                fcmSetupDone = true; 
+                
+                garantirTokenAtualizadoNoPerfil(uid);
+
+                // Listener para quando o token é atualizado (sintaxe correta para compat)
+                messaging.onTokenRefresh(async () => {
+                    console.log('Token foi atualizado pelo FCM.');
+                    try {
+                        // A CHAVE VAPID CORRETA FOI INSERIDA AQUI TAMBÉM
+                        const refreshedToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
+                        if (refreshedToken) {
+                            console.log('Novo token gerado:', refreshedToken);
+                            const user = auth.currentUser;
+                            if(user) {
+                               await db.collection('usuarios').doc(user.uid).update({
+                                    fcmTokens: firebase.firestore.FieldValue.arrayUnion(refreshedToken)
+                               });
+                               console.log('Token atualizado salvo no perfil.');
+                            }
                         }
+                    } catch (err) {
+                        console.error('Não foi possível obter o token atualizado.', err);
                     }
-                } catch (err) {
-                    console.error('Não foi possível obter o token atualizado.', err);
-                }
-            });
+                });
 
-        } else {
-            console.log('Permissão para notificação foi negada.');
-        }
+            } else {
+                console.log('Permissão para notificação foi negada.');
+            }
+        });
+    }).catch(err => {
+        console.error('Service Worker não está pronto, não é possível configurar o FCM.', err);
     });
 }
 // ALTERAÇÃO FINALIZADA
@@ -1361,9 +1370,7 @@ auth.onAuthStateChanged(async user => {
 
   solicitarPermissaoNotificacao();
   verificarVersaoApp();
-  // ALTERAÇÃO INICIADA: Garantir que o token está atualizado após o login
   setupFCM(user.uid);
-  // ALTERAÇÃO FINALIZADA
 
   setTimeout(() => {
     document.getElementById("btnSair").classList.remove("hidden");
