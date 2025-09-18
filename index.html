@@ -3220,79 +3220,18 @@ if (firebase.messaging.isSupported()) {
         alert(`🔔 ${payload.notification.title}\n\n${payload.notification.body}`);
     });
 }
-
-<script type="module">
-    // 1. Inicialização do Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
-
-    // Suas credenciais do Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyDBt7NcU5rP-hsrBZ07ne_HbiMCHRyVcnY",
-      authDomain: "navalha-de-ouro-v11.firebaseapp.com",
-      projectId: "navalha-de-ouro-v11",
-      storageBucket: "navalha-de-ouro-v11.firebasestorage.app",
-      messagingSenderId: "434474263075",
-      appId: "1:434474263075:web:163893d68a1b5dbe74c796"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const messaging = getMessaging(app);
-
-    // 2. Lógica para PWA e Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(registration) {
-          console.log('✅ Service Worker registrado com sucesso com escopo: ', registration.scope);
-        }).catch(function(err) {
-          console.log('Falha ao registrar o Service Worker:', err);
-        });
-      });
-    }
-
-    // 3. Lógica para Notificações (FCM)
-    async function setupPwaAndNotifications(uid) {
-      if (!messaging) {
-        console.log("Este navegador não suporta notificações.");
-        return;
-      }
-
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          console.log('✅ Permissão para notificações concedida.');
-          const fcmToken = await getToken(messaging, { vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
-          
-          if (fcmToken) {
-            console.log('FCM Token:', fcmToken);
-            const userRef = doc(db, "usuarios", uid);
-            await updateDoc(userRef, {
-              fcmTokens: arrayUnion(fcmToken)
-            });
-            console.log("Token salvo no Firestore.");
-          }
-        } else {
-          console.warn('🚫 Permissão para notificações negada.');
-        }
-      } catch (err) {
-        console.error('Ocorreu um erro ao configurar as notificações:', err);
-      }
-    }
-
-    // Manipulador para mensagens recebidas enquanto o usuário está com o app aberto (em primeiro plano)
-    if (messaging) {
-        onMessage(messaging, (payload) => {
-            console.log('Mensagem recebida com o app aberto:', payload);
-            // Exibe um alerta simples com o título e o corpo da notificação
-            alert(`🔔 ${payload.notification.title}\n\n${payload.notification.body}`);
-        });
-    }
-
-    // Adicione aqui a lógica de autenticação e outras funcionalidades do seu app.
 </script>
+    <script>
+        // Registra o seu Service Worker
+        if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(registration) {
+      console.log('✅ Service Worker registrado com sucesso com escopo: ', registration.scope);
+    }).catch(function(err) {
+      console.log('Falha ao registrar o Service Worker:', err);
+    });
+  });
+}
+    </script>
 </body>
 </html>
