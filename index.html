@@ -365,6 +365,12 @@
         color: var(--cor-fundo);
         border-color: var(--cor-destaque-ouro);
     }
+    .horario-btn.bloqueado {
+        background: #772014;
+        color: #fff;
+        border-color: #772014;
+        text-decoration: line-through;
+    }
     .horarios-actions {
         display: flex;
         justify-content: space-between;
@@ -555,6 +561,37 @@
     #chatPreview.show {
         opacity: 1;
     }
+     /* NOVOS ESTILOS PARA GAMIFICAÇÃO */
+    .conquista-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background-color: var(--cor-botoes);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .conquista-item.unlocked {
+        border-left: 5px solid var(--cor-destaque-ouro);
+    }
+    .conquista-item.locked {
+        opacity: 0.5;
+        border-left: 5px solid var(--cor-borda);
+    }
+    .conquista-icon {
+        font-size: 2em;
+    }
+    .ranking-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid var(--cor-borda);
+    }
+    .ranking-item:first-child {
+        font-weight: bold;
+        color: var(--cor-destaque-ouro);
+    }
   </style>
 </head>
 <body>
@@ -612,6 +649,8 @@
       <button onclick="abrirChatGlobal()" style="width:45%">💬 Chat</button>
       <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
+      <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
+      <button onclick="abrirModalRanking()" style="width:45%">📊 Ranking</button>
     </div>
   </div>
 
@@ -630,6 +669,7 @@
       <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
       <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
       <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
+      <button onclick="abrirModalDashboardBarbeiro()" style="width:92%">🚀 Meu Desempenho</button>
     </div>
   </div>
 
@@ -642,6 +682,7 @@
       <button onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
+      <button onclick="abrirModal('modalNotificacaoMarketing')" style="width:92%">📣 Enviar Notificação Geral</button>
     </div>
   </div>
 
@@ -826,6 +867,23 @@
   </div>
 </div>
 
+<div id="modalConquistas" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🏅 Minhas Conquistas</h3>
+    <div id="listaConquistas" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalRanking" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📊 Ranking Semanal de Fidelidade</h3>
+    <p style="font-size: 12px; opacity: 0.7;">Top 10 clientes com mais pontos.</p>
+    <div id="listaRanking" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 <div id="modalCriarPromocao" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🎁 Criar Promoção</h3>
@@ -882,7 +940,7 @@
     <button id="btnAgendaManual" onclick="toggleAgendaManual()"></button>
     <div id="agendaManualPainel" class="hidden card">
         <h4>Horários Disponíveis Hoje</h4>
-        <p>Selecione os horários que deseja trabalhar.</p>
+        <p>Selecione os horários para trabalhar ou clique duas vezes para bloquear.</p>
         <div id="horariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div>
         <div class="horarios-actions">
             <button onclick="salvarAgendaManual()">✅ Salvar Agenda</button>
@@ -940,6 +998,16 @@
   </div>
 </div>
 
+<div id="modalDashboardBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🚀 Meu Desempenho</h3>
+    <div id="dashboardConteudo">
+      <p>Carregando dados...</p>
+    </div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 
 <div id="modalBlogAdmin" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -982,6 +1050,18 @@
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
+
+<div id="modalNotificacaoMarketing" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📣 Notificação para Todos</h3>
+    <p>Esta mensagem será enviada como uma notificação push para todos os usuários do app.</p>
+    <input id="marketingTitulo" placeholder="Título da Notificação">
+    <textarea id="marketingCorpo" placeholder="Corpo da mensagem"></textarea>
+    <button onclick="enviarNotificacaoMarketing()">🚀 Enviar para todos</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 
 <div id="modalPermissaoNotificacao" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -1455,7 +1535,9 @@ function criarConta() {
         codigosResgatados: [],
         indicadoPorEmail: indicadorEmail || null,
         bonusIndicacaoPendente: !!indicadorEmail,
-        fcmTokens: []
+        fcmTokens: [],
+        cortesRealizados: 0, // Novo campo para conquistas
+        conquistas: [] // Novo campo para conquistas
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
@@ -1694,7 +1776,7 @@ function carregarBarbeirosPorCidade() {
       if (b.vagaImediata) {
           statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata Disponível!</div>`;
       } else if (b.usaAgendaManual) {
-          const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h]).sort();
+          const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
           if (horarios.length > 0) {
               statusHtml = `
                   <div class="card-status status-manual">
@@ -1808,7 +1890,7 @@ async function abrirBarbeiroPerfil(barbeiroUid) {
             hasOptions = true;
         }
         if (b.usaAgendaManual) {
-            const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h]).sort();
+            const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
             if (horarios.length > 0) {
                 horarios.forEach(h => {
                     horariosList.innerHTML += `
@@ -1872,7 +1954,8 @@ function confirmarAgendamento() {
         valor: preco,
         status: horario === 'imediato' ? 'imediato' : 'pendente',
         ts: firebase.firestore.FieldValue.serverTimestamp(),
-        avaliado: false 
+        avaliado: false,
+        lembreteEnviado: false // Novo campo para controle de lembrete
     };
     if (horario !== 'imediato') {
         agendamentoData.horario = horario;
@@ -2076,6 +2159,9 @@ function assinarVip() {
         });
 
         t.set(financeiroRef, { arrecadadoVip: firebase.firestore.FieldValue.increment(PRECO_VIP) }, { merge: true });
+        
+        // Verifica a conquista de se tornar VIP
+        verificarConquistas(auth.currentUser.uid, 'tornou_vip');
 
     }).then(() => {
         alert("Parabéns! Você agora é um membro VIP!");
@@ -2368,10 +2454,13 @@ function carregarAgenda() {
             tempSelectedHorarios = { ...perfil.agenda };
             for (let i = 7; i <= 18; i++) {
                 const horario = `${i}:00`;
-                const isSelecionado = tempSelectedHorarios[horario];
+                const statusHorario = tempSelectedHorarios[horario];
                 const btn = document.createElement('button');
                 btn.textContent = horario;
-                btn.className = `horario-btn ${isSelecionado ? 'selecionado' : ''}`;
+                btn.className = `horario-btn`;
+                if(statusHorario === true) btn.classList.add('selecionado');
+                if(statusHorario === 'bloqueado') btn.classList.add('bloqueado');
+
                 btn.onclick = () => toggleHorario(horario);
                 horariosContainer.appendChild(btn);
             }
@@ -2453,14 +2542,21 @@ function toggleAgendaManual() {
 
 function toggleHorario(horario) {
     const btn = Array.from(document.querySelectorAll('#horariosContainer .horario-btn')).find(b => b.textContent === horario);
-    if (tempSelectedHorarios[horario]) {
-        delete tempSelectedHorarios[horario];
+    const statusAtual = tempSelectedHorarios[horario];
+
+    if (statusAtual === true) { // Se está selecionado, bloqueia
+        tempSelectedHorarios[horario] = 'bloqueado';
         btn.classList.remove("selecionado");
-    } else {
+        btn.classList.add("bloqueado");
+    } else if (statusAtual === 'bloqueado') { // Se está bloqueado, desmarca
+        delete tempSelectedHorarios[horario];
+        btn.classList.remove("bloqueado");
+    } else { // Se não existe, seleciona
         tempSelectedHorarios[horario] = true;
         btn.classList.add("selecionado");
     }
 }
+
 
 function salvarAgendaManual() {
     db.collection("usuarios").doc(auth.currentUser.uid).update({
@@ -2478,15 +2574,19 @@ function cancelarAgendaManual() {
     tempSelectedHorarios = { ...perfil.agenda };
     for (let i = 7; i <= 18; i++) {
         const horario = `${i}:00`;
-        const isSelecionado = tempSelectedHorarios[horario];
+        const statusHorario = tempSelectedHorarios[horario];
         const btn = document.createElement('button');
         btn.textContent = horario;
-        btn.className = `horario-btn ${isSelecionado ? 'selecionado' : ''}`;
+        btn.className = 'horario-btn';
+        if(statusHorario === true) btn.classList.add('selecionado');
+        if(statusHorario === 'bloqueado') btn.classList.add('bloqueado');
+
         btn.onclick = () => toggleHorario(horario);
         horariosContainer.appendChild(btn);
     }
     alert("Alterações canceladas.");
 }
+
 
 function toggleDisponibilidade() {
   const novoStatus = perfil.disponivel === "sim" ? "nao" : "sim";
@@ -2676,7 +2776,10 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         }
         t.update(barbeiroRef, { cortesSemana: firebase.firestore.FieldValue.increment(1) });
         t.update(agendamentoRef, { status: "concluido" });
+        t.update(clienteRef, { cortesRealizados: firebase.firestore.FieldValue.increment(1) });
     });
+
+    await verificarConquistas(clienteUid, 'corte_concluido');
 
     alert("Serviço concluído com sucesso!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar.`);
@@ -3317,6 +3420,168 @@ async function verDetalhesUsuario(usuarioUid) {
     default:
         break;
   }
+}
+
+// =================================================================
+// ============== INÍCIO DAS NOVAS FUNÇÕES DO FRONTEND =============
+// =================================================================
+
+// --- FUNÇÃO DE MARKETING DO ADMIN (OPÇÃO 6) ---
+async function enviarNotificacaoMarketing() {
+    const title = document.getElementById('marketingTitulo').value.trim();
+    const body = document.getElementById('marketingCorpo').value.trim();
+
+    if (!title || !body) {
+        return alert('Por favor, preencha o título e o corpo da notificação.');
+    }
+
+    if (!confirm(`Confirma o envio da notificação:\n\nTítulo: ${title}\nMensagem: ${body}\n\nEsta ação enviará a notificação para TODOS os usuários.`)) {
+        return;
+    }
+
+    try {
+        const backendUrl = "https://navalhabackend.onrender.com";
+        const response = await fetch(`${backendUrl}/enviar-notificacao-massa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, body, adminUid: auth.currentUser.uid }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert(`Notificações enviadas com sucesso!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
+            fecharModal({ target: document.getElementById('modalNotificacaoMarketing') });
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        alert('Falha ao enviar notificações em massa: ' + error.message);
+    }
+}
+
+// --- FUNÇÕES DE GAMIFICAÇÃO (OPÇÃO 5) ---
+const conquistasDefinidas = {
+    'primeiro_corte': { nome: 'Iniciante na Navalha', icone: '👶', descricao: 'Realizou seu primeiro corte no app.' },
+    'quinto_corte': { nome: 'Cliente Regular', icone: '👍', descricao: 'Realizou 5 cortes.' },
+    'decimo_corte': { nome: 'Cliente Fiel', icone: '⭐', descricao: 'Realizou 10 cortes. Você é 10!' },
+    'tornou_vip': { nome: 'Membro de Elite', icone: '👑', descricao: 'Entrou para o clube VIP.' }
+};
+
+async function verificarConquistas(uid, evento) {
+    const userRef = db.collection('usuarios').doc(uid);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return;
+
+    const userData = userDoc.data();
+    const conquistasAtuais = userData.conquistas || [];
+    let novaConquistaId = null;
+
+    if (evento === 'corte_concluido') {
+        const cortes = userData.cortesRealizados || 0;
+        if (cortes >= 1 && !conquistasAtuais.includes('primeiro_corte')) novaConquistaId = 'primeiro_corte';
+        else if (cortes >= 5 && !conquistasAtuais.includes('quinto_corte')) novaConquistaId = 'quinto_corte';
+        else if (cortes >= 10 && !conquistasAtuais.includes('decimo_corte')) novaConquistaId = 'decimo_corte';
+    } else if (evento === 'tornou_vip') {
+        if (!conquistasAtuais.includes('tornou_vip')) novaConquistaId = 'tornou_vip';
+    }
+
+    if (novaConquistaId) {
+        await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(novaConquistaId) });
+        const conquista = conquistasDefinidas[novaConquistaId];
+        const mensagem = `🏅 Nova Conquista! Você desbloqueou: "${conquista.nome}"!`;
+        alert(mensagem);
+        notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"!`);
+    }
+}
+
+function abrirModalConquistas() {
+    abrirModal('modalConquistas');
+    const container = document.getElementById('listaConquistas');
+    container.innerHTML = "";
+    const conquistasDoUsuario = perfil.conquistas || [];
+
+    for (const id in conquistasDefinidas) {
+        const conquista = conquistasDefinidas[id];
+        const desbloqueada = conquistasDoUsuario.includes(id);
+        
+        container.innerHTML += `
+            <div class="conquista-item ${desbloqueada ? 'unlocked' : 'locked'}">
+                <div class="conquista-icon">${conquista.icone}</div>
+                <div>
+                    <b>${conquista.nome}</b>
+                    <p style="font-size:12px; margin:0;">${conquista.descricao}</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+async function abrirModalRanking() {
+    abrirModal('modalRanking');
+    const container = document.getElementById('listaRanking');
+    container.innerHTML = '<p>Carregando ranking...</p>';
+    
+    try {
+        const rankingDoc = await db.collection('config').doc('rankingSemanal').get();
+        if (!rankingDoc.exists) {
+            container.innerHTML = '<p>O ranking ainda não foi gerado. Volte mais tarde.</p>';
+            return;
+        }
+        
+        const rankingData = rankingDoc.data().ranking;
+        container.innerHTML = "";
+        rankingData.forEach((item, index) => {
+            container.innerHTML += `
+                <div class="ranking-item">
+                    <span>${index + 1}. ${item.nome}</span>
+                    <span>${item.pontos} Pts</span>
+                </div>
+            `;
+        });
+    } catch(e) {
+        container.innerHTML = '<p>Erro ao carregar o ranking.</p>';
+        console.error(e);
+    }
+}
+
+// --- FUNÇÕES AVANÇADAS DO BARBEIRO (OPÇÃO 4) ---
+async function abrirModalDashboardBarbeiro() {
+    abrirModal('modalDashboardBarbeiro');
+    const container = document.getElementById('dashboardConteudo');
+    container.innerHTML = '<p>Calculando seu desempenho...</p>';
+
+    try {
+        const agendamentosRef = db.collection('agendamentos');
+        const snap = await agendamentosRef
+            .where('barbeiroUid', '==', auth.currentUser.uid)
+            .where('status', '==', 'concluido')
+            .get();
+
+        let faturamentoTotal = 0;
+        const clientes = new Set();
+        const contagemServicos = {};
+
+        snap.forEach(doc => {
+            const ag = doc.data();
+            faturamentoTotal += ag.valor;
+            clientes.add(ag.clienteUid);
+            contagemServicos[ag.servico] = (contagemServicos[ag.servico] || 0) + 1;
+        });
+
+        const servicosOrdenados = Object.entries(contagemServicos).sort((a, b) => b[1] - a[1]);
+        const servicoMaisPopular = servicosOrdenados.length > 0 ? servicosOrdenados[0][0] : "Nenhum";
+
+        container.innerHTML = `
+            <h4>Resumo Geral</h4>
+            <p>💰 Faturamento Total (concluídos): <b>R$ ${faturamentoTotal.toFixed(2)}</b></p>
+            <p>🧑‍🤝‍🧑 Clientes Únicos Atendidos: <b>${clientes.size}</b></p>
+            <p>⭐ Serviço Mais Popular: <b>${servicoMaisPopular}</b></p>
+        `;
+
+    } catch (e) {
+        container.innerHTML = '<p>Erro ao carregar os dados.</p>';
+        console.error(e);
+    }
 }
 
 // Manipulador para mensagens recebidas enquanto o usuário está com o app aberto (em primeiro plano)
