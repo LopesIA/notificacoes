@@ -162,6 +162,10 @@
       transition: transform 0.3s ease-in-out;
       border: 1px solid var(--cor-borda);
     }
+    /* Estilo para o modal de ranking maior */
+    #modalRankingUnificado .modal-content {
+        max-width: 600px; /* Maior para caber as duas colunas */
+    }
     .modal.show .modal-content {
       transform: scale(1);
     }
@@ -529,8 +533,8 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        max-height: 150px; /* CORREÇÃO: Adiciona altura máxima e scroll */
-        overflow-y: auto;   /* CORREÇÃO: Adiciona scroll vertical quando necessário */
+        max-height: 150px;
+        overflow-y: auto;
     }
     #barbeiroPerfilHorariosList .selectable-item {
         flex-grow: 1;
@@ -543,10 +547,9 @@
         display: flex;
         gap: 10px;
     }
-    /* NOVO: Estilo para o preview do chat */
     #chatPreview {
         position: absolute;
-        top: -40px; /* Acima do título do painel */
+        top: -40px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(24, 24, 24, 0.8);
@@ -561,12 +564,11 @@
         max-width: 90%;
         opacity: 0;
         transition: opacity 0.5s ease-in-out;
-        pointer-events: none; /* Não interfere com cliques */
+        pointer-events: none;
     }
     #chatPreview.show {
         opacity: 1;
     }
-     /* NOVOS ESTILOS PARA GAMIFICAÇÃO */
     .conquista-item {
         display: flex;
         align-items: center;
@@ -586,12 +588,27 @@
     .conquista-icon {
         font-size: 2em;
     }
+    .ranking-container {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+    }
+    .ranking-column {
+        flex: 1;
+        min-width: 0;
+    }
+    .ranking-column h4 {
+        text-align: center;
+        margin-bottom: 10px;
+        color: var(--cor-destaque-ouro);
+    }
     .ranking-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px;
+        padding: 8px 5px;
         border-bottom: 1px solid var(--cor-borda);
+        font-size: 14px;
     }
     .ranking-item:first-child {
         font-weight: bold;
@@ -599,6 +616,19 @@
     }
     .chat-medal {
         margin-right: 4px;
+    }
+    .app-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        padding: 5px 0;
+        font-size: 10px;
+        color: var(--cor-texto-principal);
+        opacity: 0.5;
+        z-index: 5;
+        pointer-events: none;
     }
   </style>
 </head>
@@ -658,7 +688,7 @@
       <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
       <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
-      <button onclick="abrirModalRanking()" style="width:45%">📊 Ranking</button>
+      <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
     </div>
   </div>
 
@@ -677,7 +707,7 @@
       <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
       <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
       <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
-      <button onclick="abrirModalRankingBarbeiros()" style="width:45%">📊 Ranking</button>
+      <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
     </div>
   </div>
@@ -707,6 +737,8 @@
 </div>
 
 <button id="btnSair" class="hidden" onclick="auth.signOut()">Sair</button>
+
+<!-- MODAIS -->
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -884,14 +916,25 @@
   </div>
 </div>
 
-<div id="modalRanking" class="modal" onclick="fecharModal(event)">
+<!-- NOVO: Modal de Ranking Unificado -->
+<div id="modalRankingUnificado" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📊 Ranking de Clientes</h3>
-    <p style="font-size: 12px; opacity: 0.7;">Top 100 clientes com mais agendamentos concluídos.</p>
-    <div id="listaRanking" class="scrollable-list"></div>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
+    <h3>🏆 Ranking Geral 🏆</h3>
+    <p style="font-size: 12px; opacity: 0.7; text-align:center;">Top 100 com mais serviços concluídos.</p>
+    <div class="ranking-container">
+        <div class="ranking-column">
+            <h4>💈 Barbeiros</h4>
+            <div id="listaRankingBarbeirosUnificado" class="scrollable-list"></div>
+        </div>
+        <div class="ranking-column">
+            <h4>🙋 Clientes</h4>
+            <div id="listaRankingClientesUnificado" class="scrollable-list"></div>
+        </div>
+    </div>
+    <button onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
   </div>
 </div>
+
 
 <div id="modalCriarPromocao" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -977,36 +1020,6 @@
   </div>
 </div>
 
-<div id="modalFinancasBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📈 Minhas Finanças</h3>
-    <div id="financasPainel" class="card">
-      <p>Saldo: <b>R$ <span id="saldoAtual">0.00</span></b></p>
-      <p>Cortes esta semana: <b id="cortesSemana">0</b></p>
-      <p>Taxa por agendamento: ${TAXA * 100}%</p>
-      <button onclick="abrirModal('modalCarteira')">💰 Ir para a Carteira</button>
-    </div>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalPromocoesBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🎁 Minhas Promoções</h3>
-    <div id="listaPromocoes" class="scrollable-list"></div>
-    <button onclick="abrirModal('modalCriarPromocao')">+ Criar nova promoção</button>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalHistoricoBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📜 Meu Histórico</h3>
-    <div id="painelHistoricoBarbeiro" class="scrollable-list"></div>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
 <div id="modalDashboardBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🚀 Meu Desempenho</h3>
@@ -1021,15 +1034,6 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🏅 Minhas Conquistas de Barbeiro</h3>
     <div id="listaConquistasBarbeiro" class="scrollable-list"></div>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalRankingBarbeiros" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🏆 Ranking de Barbeiros</h3>
-    <p style="font-size: 12px; opacity: 0.7;">Top 100 barbeiros com mais cortes concluídos.</p>
-    <div id="listaRankingBarbeiros" class="scrollable-list"></div>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -1116,6 +1120,11 @@
         </div>
     </div>
 </div>
+
+<footer class="app-footer">
+  <div id="appVersion"></div>
+</footer>
+
 
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
@@ -1572,6 +1581,7 @@ auth.onAuthStateChanged(async user => {
 
   solicitarPermissaoNotificacao();
   setupFCM(user.uid);
+  exibirVersaoApp();
 
   setTimeout(() => { document.getElementById("btnSair").classList.remove("hidden"); }, 15000);
 
@@ -1691,13 +1701,11 @@ function carregarBarbeirosPorCidade() {
   lista.innerHTML = "<p>⏳ Carregando barbeiros...</p>";
   if (barbeirosListener) barbeirosListener(); 
   let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
-  if (perfil.estado && perfil.cidade) {
-      query = query.where("estado", "==", perfil.estado).where("cidade", "==", perfil.cidade);
-  }
+  // Removido filtro de cidade para mostrar todos
   barbeirosListener = query.onSnapshot(snap => {
     lista.innerHTML = "";
     if (snap.empty) {
-      lista.innerHTML = "<p>😔 Nenhum barbeiro disponível na sua cidade.</p>";
+      lista.innerHTML = "<p>😔 Nenhum barbeiro cadastrado no momento.</p>";
       return;
     }
     snap.forEach(doc => {
@@ -2225,7 +2233,6 @@ function toggleDisponibilidade() {
   db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => alert("Erro: " + e.message));
 }
 
-// CORRIGIDO: Erro de inicialização do barbeiroDoc
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
     const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
@@ -2865,29 +2872,38 @@ function abrirModalConquistasBarbeiro() {
     }
 }
 
-async function abrirModalRanking() {
-    abrirModal('modalRanking');
-    const container = document.getElementById('listaRanking');
-    container.innerHTML = '<p>Carregando...</p>';
-    const doc = await db.collection('config').doc('rankingClientes').get();
-    if (!doc.exists || !doc.data().ranking) return container.innerHTML = '<p>Ranking ainda não gerado.</p>';
-    container.innerHTML = "";
-    doc.data().ranking.forEach((item, i) => {
-        container.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${item.nome}</span><span>${item.contagem} Agendamentos</span></div>`;
-    });
+async function abrirModalRankingUnificado() {
+    abrirModal('modalRankingUnificado');
+    const containerClientes = document.getElementById('listaRankingClientesUnificado');
+    const containerBarbeiros = document.getElementById('listaRankingBarbeirosUnificado');
+    containerClientes.innerHTML = '<p>Carregando...</p>';
+    containerBarbeiros.innerHTML = '<p>Carregando...</p>';
+
+    try {
+        const docClientes = await db.collection('config').doc('rankingClientes').get();
+        if (docClientes.exists && docClientes.data().ranking) {
+            containerClientes.innerHTML = "";
+            docClientes.data().ranking.forEach((item, i) => {
+                containerClientes.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${item.nome}</span><span>${item.contagem}</span></div>`;
+            });
+        } else {
+            containerClientes.innerHTML = '<p>Nenhum ranking disponível.</p>';
+        }
+    } catch (e) { containerClientes.innerHTML = '<p>Erro ao carregar ranking.</p>'; }
+
+    try {
+        const docBarbeiros = await db.collection('config').doc('rankingBarbeiros').get();
+        if (docBarbeiros.exists && docBarbeiros.data().ranking) {
+            containerBarbeiros.innerHTML = "";
+            docBarbeiros.data().ranking.forEach((item, i) => {
+                containerBarbeiros.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${item.nome}</span><span>${item.contagem}</span></div>`;
+            });
+        } else {
+            containerBarbeiros.innerHTML = '<p>Nenhum ranking disponível.</p>';
+        }
+    } catch(e) { containerBarbeiros.innerHTML = '<p>Erro ao carregar ranking.</p>'; }
 }
 
-async function abrirModalRankingBarbeiros() {
-    abrirModal('modalRankingBarbeiros');
-    const container = document.getElementById('listaRankingBarbeiros');
-    container.innerHTML = '<p>Carregando...</p>';
-    const doc = await db.collection('config').doc('rankingBarbeiros').get();
-    if (!doc.exists || !doc.data().ranking) return container.innerHTML = '<p>Ranking ainda não gerado.</p>';
-    container.innerHTML = "";
-    doc.data().ranking.forEach((item, i) => {
-        container.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${item.nome}</span><span>${item.contagem} Cortes</span></div>`;
-    });
-}
 
 function obterIconeMaiorConquista(conquistas, tipo) {
     if (!conquistas || conquistas.length === 0) return '';
@@ -2959,6 +2975,24 @@ async function abrirModalDashboardBarbeiro() {
     } catch (e) { 
         container.innerHTML = '<p>Erro ao carregar dados.</p>'; 
         console.error("Erro no dashboard do barbeiro:", e);
+    }
+}
+
+
+// NOVO: Função para exibir a versão do App
+async function exibirVersaoApp() {
+    try {
+        // Usamos a data da última modificação do 'index.html' como um identificador de versão único
+        const response = await fetch('/index.html', { method: 'HEAD', cache: 'no-store' });
+        const lastModified = response.headers.get('Last-Modified');
+        if (lastModified) {
+            const d = new Date(lastModified);
+            const version = `V${d.getFullYear().toString().slice(-2)}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}.${d.getHours().toString().padStart(2, '0')}${d.getMinutes().toString().padStart(2, '0')}`;
+            document.getElementById('appVersion').textContent = version;
+        }
+    } catch(e) {
+        console.error("Erro ao obter versão do app:", e);
+        document.getElementById('appVersion').textContent = 'V.Local';
     }
 }
 
