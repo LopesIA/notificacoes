@@ -58,6 +58,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative; /* Adicionado para posicionamento do chat preview */
     }
     input, select, button, textarea {
       width: 100%;
@@ -392,6 +393,11 @@
       color: var(--cor-destaque-ouro);
       text-shadow: 0 0 5px var(--cor-destaque-ouro);
     }
+    /* NOVO: Estilo para nome de cliente no chat */
+    .cliente-chat {
+        color: var(--cor-texto-principal);
+        text-shadow: 0 0 8px var(--cor-destaque-prata);
+    }
     .show-password-container {
         position: relative;
         display: flex;
@@ -526,7 +532,29 @@
         display: flex;
         gap: 10px;
     }
-
+    /* NOVO: Estilo para o preview do chat */
+    #chatPreview {
+        position: absolute;
+        top: -40px; /* Acima do título do painel */
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(24, 24, 24, 0.8);
+        color: var(--cor-texto-principal);
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        z-index: 5;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 90%;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        pointer-events: none; /* Não interfere com cliques */
+    }
+    #chatPreview.show {
+        opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -540,8 +568,8 @@
 </div>
 
 <div class="content-container">
-
-  <div id="botaoExtra" class="hidden"></div>
+  
+  <div id="chatPreview"></div> <div id="botaoExtra" class="hidden"></div>
 
   <div id="authView" class="card">
     <h2>🔐 Entrar ou Criar Conta</h2>
@@ -585,7 +613,6 @@
       <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
     </div>
-    <div id="conteudoCliente"></div>
   </div>
 
   <div id="barbeiroView" class="hidden card">
@@ -602,8 +629,8 @@
       <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
       <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
       <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
+      <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
     </div>
-    <div id="conteudoBarbeiro"></div>
   </div>
 
   <div id="adminView" class="hidden card">
@@ -616,7 +643,6 @@
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
     </div>
-    <div id="conteudoAdmin"></div>
   </div>
 
 </div>
@@ -666,6 +692,46 @@
   </div>
 </div>
 
+<div id="janelaChat" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3 id="chatTitle">💬 Chat Global</h3>
+    <div id="chatMessages" class="chat-container"></div>
+    <input id="chatInput" placeholder="Digite sua mensagem">
+    <button onclick="enviarMensagem()">Enviar</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalDenuncia" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🚨 Denunciar</h3>
+    <p>Envie sua mensagem e o administrador responderá em breve!</p>
+    <textarea id="textoDenuncia" placeholder="Descreva o problema em detalhes"></textarea>
+    <button onclick="enviarDenuncia()">➡️ Enviar</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalDenunciaEnviada" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>✅ Denúncia Enviada!</h3>
+    <p>Agradecemos a sua denúncia. Ela será analisada pela nossa equipe.</p>
+    <p>💬 Se preferir, clique no botão abaixo para avisar o administrador diretamente no WhatsApp e agilizar o processo.</p>
+    <a id="btnWhatsappDenuncia" href="#" target="_blank">
+      <button>💬 Avisar no WhatsApp</button>
+    </a>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalBlog" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📰 Blog</h3>
+    <div id="listaBlog" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 <div id="modalVip" class="modal" onclick="fecharModal(event)">
   <div class="modal-content vip-glow" onclick="event.stopPropagation()">
     <div id="vipContent">
@@ -706,38 +772,6 @@
   </div>
 </div>
 
-<div id="janelaChat" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3 id="chatTitle">💬 Chat Global</h3>
-    <div id="chatMessages" class="chat-container"></div>
-    <input id="chatInput" placeholder="Digite sua mensagem">
-    <button onclick="enviarMensagem()">Enviar</button>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalDenuncia" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🚨 Denunciar</h3>
-    <p>Envie sua mensagem e o administrador responderá em breve!</p>
-    <textarea id="textoDenuncia" placeholder="Descreva o problema em detalhes"></textarea>
-    <button onclick="enviarDenuncia()">➡️ Enviar</button>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalDenunciaEnviada" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✅ Denúncia Enviada!</h3>
-    <p>Agradecemos a sua denúncia. Ela será analisada pela nossa equipe.</p>
-    <p>💬 Se preferir, clique no botão abaixo para avisar o administrador diretamente no WhatsApp e agilizar o processo.</p>
-    <a id="btnWhatsappDenuncia" href="#" target="_blank">
-      <button>💬 Avisar no WhatsApp</button>
-    </a>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
 <div id="modalBarbeiroPerfil" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div id="barbeiroPerfilHeader">
@@ -763,6 +797,34 @@
   </div>
 </div>
 
+<div id="modalVagaImediataAprovada" class="modal" style="z-index: 99;">
+    <div class="modal-content" style="background: #e74c3c; color: white;" onclick="event.stopPropagation()">
+        <h3 style="color:white;text-shadow: 2px 2px 4px #000;">⚠️ VAGA IMEDIATA APROVADA!</h3>
+        <p style="font-size: 1.2em; text-align: center;"><b>Você tem 10 minutos para chegar à barbearia.</b></p>
+        <p style="text-align: center;">Não se atrase para não perder a vaga e o seu dinheiro!</p>
+        <div style="display:flex; gap: 10px; margin-top: 20px;">
+            <button onclick="fecharModal({ target: this.closest('.modal') })" style="background:white; color:#e74c3c; flex: 1;">Entendi</button>
+            <button id="btnCancelarVagaAprovada" style="background: #333; color: white; flex: 1;">Cancelar Agendamento</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalBarbeariasCliente" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💈 Barbearias disponíveis</h3>
+    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="Buscar por barbeiro ou cidade...">
+    <div id='listaBarbeiros' class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalHistoricoCliente" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📜 Meu Histórico</h3>
+    <div id="painelHistorico" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
 
 <div id="modalCriarPromocao" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -775,13 +837,109 @@
   </div>
 </div>
 
-<div id="modalBlog" class="modal" onclick="fecharModal(event)">
+<div id="modalAlterarNomeBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📰 Blog</h3>
-    <div id="listaBlog" class="scrollable-list"></div>
+    <h3>✏️ Alterar Nome</h3>
+    <input id="novoNomeBarbeiro" type="text" placeholder="Novo nome do barbeiro/barbearia">
+    <button onclick="alterarNomeBarbeiro(event)">Salvar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
+
+<div id="modalAlterarEnderecoBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📍 Alterar Endereço</h3>
+    <input id="novoEnderecoRua" type="text" placeholder="Nova Rua">
+    <input id="novoEnderecoNumero" type="text" placeholder="Novo Número">
+    <button onclick="alterarEnderecoBarbeiro(event)">Salvar</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalAvaliacoes" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>⭐ Minhas Avaliações</h3>
+        <div id="listaAvaliacoesModal" class="scrollable-list"></div>
+        <button onclick="fecharModal(event)">❌ Fechar</button>
+    </div>
+</div>
+
+<div id="modalServicosBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>✂️ Meus Serviços</h3>
+    <div id="listaServicosBarbeiro" class="scrollable-list"></div>
+    <button onclick="adicionarServico()">+ Adicionar novo serviço</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalAgendaBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📅 Minha Agenda</h3>
+    <p>Use os botões abaixo para gerenciar sua disponibilidade e horários.</p>
+    <button id="btnDisponibilidade" onclick="toggleDisponibilidade()"></button>
+    <button id="btnVagaImediata" onclick="toggleVagaImediata()"></button>
+    <button id="btnAgendaManual" onclick="toggleAgendaManual()"></button>
+    <div id="agendaManualPainel" class="hidden card">
+        <h4>Horários Disponíveis Hoje</h4>
+        <p>Selecione os horários que deseja trabalhar.</p>
+        <div id="horariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div>
+        <div class="horarios-actions">
+            <button onclick="salvarAgendaManual()">✅ Salvar Agenda</button>
+            <button onclick="cancelarAgendaManual()">❌ Cancelar</button>
+        </div>
+    </div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalAgendamentosBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>⏰ Meus Agendamentos</h3>
+    <div id="agendamentosPainel" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalClientesBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🧑‍🤝‍🧑 Meus Clientes</h3>
+    <p>Lista de clientes que já agendaram com você.</p>
+    <div id="listaClientesBarbeiro" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalFinancasBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📈 Minhas Finanças</h3>
+    <div id="financasPainel" class="card">
+      <p>Saldo: <b>R$ <span id="saldoAtual">0.00</span></b></p>
+      <p>Cortes esta semana: <b id="cortesSemana">0</b></p>
+      <p>Taxa por agendamento: ${TAXA * 100}%</p>
+      <button onclick="abrirModal('modalCarteira')">💰 Ir para a Carteira</button>
+    </div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalPromocoesBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🎁 Minhas Promoções</h3>
+    <div id="listaPromocoes" class="scrollable-list"></div>
+    <button onclick="abrirModal('modalCriarPromocao')">+ Criar nova promoção</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalHistoricoBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📜 Meu Histórico</h3>
+    <div id="painelHistoricoBarbeiro" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 
 <div id="modalBlogAdmin" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -817,33 +975,12 @@
   </div>
 </div>
 
-<div id="modalAlterarNomeBarbeiro" class="modal" onclick="fecharModal(event)">
+<div id="modalDenunciasAdmin" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✏️ Alterar Nome</h3>
-    <input id="novoNomeBarbeiro" type="text" placeholder="Novo nome do barbeiro/barbearia">
-    <button onclick="alterarNomeBarbeiro(event)">Salvar</button>
+    <h3>🚨 Denúncias</h3>
+    <div id="listaDenuncias" class="scrollable-list"></div>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
-</div>
-
-<div id="modalAvaliacoes" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>⭐ Minhas Avaliações</h3>
-        <div id="listaAvaliacoesModal" class="scrollable-list"></div>
-        <button onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-</div>
-
-<div id="modalVagaImediataAprovada" class="modal" style="z-index: 99;">
-    <div class="modal-content" style="background: #e74c3c; color: white;" onclick="event.stopPropagation()">
-        <h3 style="color:white;text-shadow: 2px 2px 4px #000;">⚠️ VAGA IMEDIATA APROVADA!</h3>
-        <p style="font-size: 1.2em; text-align: center;"><b>Você tem 10 minutos para chegar à barbearia.</b></p>
-        <p style="text-align: center;">Não se atrase para não perder a vaga e o seu dinheiro!</p>
-        <div style="display:flex; gap: 10px; margin-top: 20px;">
-            <button onclick="fecharModal({ target: this.closest('.modal') })" style="background:white; color:#e74c3c; flex: 1;">Entendi</button>
-            <button id="btnCancelarVagaAprovada" style="background: #333; color: white; flex: 1;">Cancelar Agendamento</button>
-        </div>
-    </div>
 </div>
 
 <div id="modalPermissaoNotificacao" class="modal" onclick="fecharModal(event)">
@@ -934,6 +1071,7 @@ let lastGlobalMessageTimestamp = null;
 
 let deferredInstallPrompt = null;
 let versaoInterval = null;
+let chatPreviewTimeout = null; // NOVO: Timer para o preview do chat
 
 
 async function enviarNotificacaoParaBackend(uid, title, body) {
@@ -1027,7 +1165,7 @@ function abrirModal(id) {
                 vipContentAtivo.classList.remove('hidden');
             } else {
                 vipContent.classList.remove('hidden');
-                vipContentAtivo.classList.add('hidden');
+                vipContentAtivo.add('hidden');
             }
         }
         if (id === 'modalFidelidade') {
@@ -1179,11 +1317,9 @@ function renderCurrentView() {
             break;
         case 'barbeiro':
             mostrar("barbeiroView");
-            carregarBarbeiro();
             break;
         case 'cliente':
             mostrar("clienteView");
-            carregarCliente();
             break;
         default:
             mostrar("authView");
@@ -1410,9 +1546,21 @@ auth.onAuthStateChanged(async user => {
             const janelaChat = document.getElementById('janelaChat');
             
             if (msg.ts?.seconds > (lastGlobalMessageTimestamp?.seconds || 0) &&
-                msg.remetenteUid !== user.uid && 
-                !janelaChat.classList.contains('show')) {
-                document.getElementById('btnChat').classList.add('blinking-chat');
+                msg.remetenteUid !== user.uid) {
+                
+                if (!janelaChat.classList.contains('show')) {
+                    document.getElementById('btnChat').classList.add('blinking-chat');
+                    
+                    // Lógica do preview da mensagem
+                    const preview = document.getElementById('chatPreview');
+                    preview.innerHTML = `<b>${msg.remetenteNome}:</b> ${msg.texto}`;
+                    preview.classList.add('show');
+                    
+                    if (chatPreviewTimeout) clearTimeout(chatPreviewTimeout);
+                    chatPreviewTimeout = setTimeout(() => {
+                        preview.classList.remove('show');
+                    }, 3000);
+                }
             }
             lastGlobalMessageTimestamp = msg.ts;
         });
@@ -1499,20 +1647,9 @@ async function abrirPortaSecreta() {
   }
 }
 
-function carregarCliente() {
-  document.getElementById("conteudoCliente").innerHTML = "<p>👈 Escolha uma opção acima</p>";
-  document.getElementById("redeemContainer").classList.remove("hidden");
-  setTimeout(() => {
-    document.getElementById("redeemContainer").classList.add("hidden");
-  }, 14000); 
-}
-
+// Funções do Cliente
 function abrirBarbeiros() {
-  document.getElementById("conteudoCliente").innerHTML = `
-    <h3>💈 Barbearias disponíveis</h3>
-    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="Buscar por barbeiro ou cidade...">
-    <div id='listaBarbeiros' class="scrollable-list"></div>
-  `;
+  abrirModal('modalBarbeariasCliente');
   carregarBarbeirosPorCidade();
 }
 
@@ -1811,11 +1948,7 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
 
 
 function abrirHistoricoCliente() {
-  const painel = document.getElementById("conteudoCliente");
-  painel.innerHTML = `
-    <h3>📜 Meu Histórico</h3>
-    <div id="painelHistorico" class="scrollable-list"></div>
-  `;
+  abrirModal('modalHistoricoCliente');
   const painelHistorico = document.getElementById("painelHistorico");
   db.collection("agendamentos")
     .where("clienteUid", "==", auth.currentUser.uid)
@@ -1844,32 +1977,6 @@ function abrirHistoricoCliente() {
           Status: <b>${statusTexto}</b>
           <br>
           ${botoes}
-        </div>`;
-      });
-    });
-}
-
-function abrirHistoricoBarbeiro() {
-  const painel = document.getElementById("conteudoBarbeiro");
-  painel.innerHTML = `
-    <h3>📜 Meu Histórico</h3>
-    <div id="painelHistoricoBarbeiro" class="scrollable-list"></div>
-  `;
-  const painelHistorico = document.getElementById("painelHistoricoBarbeiro");
-  db.collection("agendamentos")
-    .where("barbeiroUid", "==", auth.currentUser.uid)
-    .where("status", "in", ["concluido", "cancelado"])
-    .orderBy("ts", "desc")
-    .limit(20)
-    .onSnapshot(snap => {
-      painelHistorico.innerHTML = "";
-      snap.forEach(doc => {
-        const a = doc.data();
-        let statusTexto = a.status === "concluido" ? "✂️ Concluído" : "❌ Cancelado";
-        painelHistorico.innerHTML += `<div class="card">
-          Cliente: ${a.clienteNome}<br>
-          Serviço: ${a.servico} - R$ ${a.valor.toFixed(2)}<br>
-          Status: <b>${statusTexto}</b>
         </div>`;
       });
     });
@@ -2023,7 +2130,8 @@ async function abrirChatGlobal() {
               } else if (remetenteData.vip) {
                   remetenteNome = `<span style="color: var(--cor-destaque-ouro); text-shadow: 0 0 5px var(--cor-destaque-ouro);">👑 ${remetenteData.nome}</span>`;
               } else {
-                  remetenteNome = `👤 ${remetenteData.nome}`;
+                  // Estilo de brilho para clientes normais
+                  remetenteNome = `<span class="cliente-chat">👤 ${remetenteData.nome}</span>`;
               }
           }
 
@@ -2142,16 +2250,8 @@ function enviarDenuncia() {
 }
 
 // Funções do Barbeiro
-function carregarBarbeiro() {
-  document.getElementById("conteudoBarbeiro").innerHTML = "<p>👈 Escolha uma opção acima</p>";
-}
-
 function abrirServicos() {
-  document.getElementById("conteudoBarbeiro").innerHTML = `
-    <h3>✂️ Meus Serviços</h3>
-    <div id="listaServicosBarbeiro" class="scrollable-list"></div>
-    <button onclick="adicionarServico()">+ Adicionar novo serviço</button>
-  `;
+  abrirModal('modalServicosBarbeiro');
   listarServicos();
 }
 
@@ -2220,24 +2320,27 @@ function alterarNomeBarbeiro(event) {
   });
 }
 
+function alterarEnderecoBarbeiro(event) {
+    const rua = document.getElementById("novoEnderecoRua").value.trim();
+    const numero = document.getElementById("novoEnderecoNumero").value.trim();
+    if (!rua || !numero) {
+        return alert("Por favor, preencha a rua e o número.");
+    }
+    db.collection("usuarios").doc(auth.currentUser.uid).update({
+        rua: rua,
+        numero: numero
+    }).then(() => {
+        alert("Endereço alterado com sucesso!");
+        document.getElementById("novoEnderecoRua").value = "";
+        document.getElementById("novoEnderecoNumero").value = "";
+        fecharModal(event);
+    }).catch(e => {
+        alert("Erro ao alterar endereço: " + e.message);
+    });
+}
+
 function abrirAgenda() {
-    const painel = document.getElementById("conteudoBarbeiro");
-    painel.innerHTML = `
-        <h3>📅 Minha Agenda</h3>
-        <p>Use os botões abaixo para gerenciar sua disponibilidade e horários.</p>
-        <button id="btnDisponibilidade" onclick="toggleDisponibilidade()"></button>
-        <button id="btnVagaImediata" onclick="toggleVagaImediata()"></button>
-        <button id="btnAgendaManual" onclick="toggleAgendaManual()"></button>
-        <div id="agendaManualPainel" class="hidden card">
-            <h4>Horários Disponíveis Hoje</h4>
-            <p>Selecione os horários que deseja trabalhar.</p>
-            <div id="horariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div>
-            <div class="horarios-actions">
-                <button onclick="salvarAgendaManual()">✅ Salvar Agenda</button>
-                <button onclick="cancelarAgendaManual()">❌ Cancelar</button>
-            </div>
-        </div>
-    `;
+    abrirModal('modalAgendaBarbeiro');
     carregarAgenda();
 }
 
@@ -2279,10 +2382,7 @@ function carregarAgenda() {
 }
 
 function abrirAgendamentosBarbeiro() {
-  document.getElementById("conteudoBarbeiro").innerHTML = `
-    <h3>⏰ Meus Agendamentos</h3>
-    <div id="agendamentosPainel" class="scrollable-list"></div>
-  `;
+  abrirModal('modalAgendamentosBarbeiro');
   const painel = document.getElementById("agendamentosPainel");
   painel.innerHTML = "<p>⏳ Carregando agendamentos...</p>";
 
@@ -2609,11 +2709,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 }
 
 function abrirClientesBarbeiro() {
-  document.getElementById("conteudoBarbeiro").innerHTML = `
-    <h3>🧑‍🤝‍🧑 Meus Clientes</h3>
-    <p>Lista de clientes que já agendaram com você.</p>
-    <div id="listaClientesBarbeiro" class="scrollable-list"></div>
-  `;
+  abrirModal('modalClientesBarbeiro');
   listarClientesBarbeiro();
 }
 
@@ -2655,15 +2751,7 @@ function listarClientesBarbeiro() {
 }
 
 function abrirFinancasBarbeiro() {
-  document.getElementById("conteudoBarbeiro").innerHTML = `
-    <h3>📈 Minhas Finanças</h3>
-    <div id="financasPainel" class="card">
-      <p>Saldo: <b>R$ <span id="saldoAtual">0.00</span></b></p>
-      <p>Cortes esta semana: <b id="cortesSemana">0</b></p>
-      <p>Taxa por agendamento: ${TAXA * 100}%</p>
-      <button onclick="abrirModal('modalCarteira')">💰 Ir para a Carteira</button>
-    </div>
-  `;
+  abrirModal('modalFinancasBarbeiro');
   db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
     const p = doc.data();
     document.getElementById("saldoAtual").textContent = (p.saldo || 0).toFixed(2);
@@ -2672,11 +2760,7 @@ function abrirFinancasBarbeiro() {
 }
 
 function abrirPromocoes() {
-  document.getElementById("conteudoBarbeiro").innerHTML = `
-    <h3>🎁 Minhas Promoções</h3>
-    <div id="listaPromocoes" class="scrollable-list"></div>
-    <button onclick="abrirModal('modalCriarPromocao')">+ Criar nova promoção</button>
-  `;
+  abrirModal('modalPromocoesBarbeiro');
   listarPromocoes();
 }
 
@@ -2700,6 +2784,29 @@ function listarPromocoes() {
     });
   });
 }
+
+function abrirHistoricoBarbeiro() {
+  abrirModal('modalHistoricoBarbeiro');
+  const painelHistorico = document.getElementById("painelHistoricoBarbeiro");
+  db.collection("agendamentos")
+    .where("barbeiroUid", "==", auth.currentUser.uid)
+    .where("status", "in", ["concluido", "cancelado"])
+    .orderBy("ts", "desc")
+    .limit(20)
+    .onSnapshot(snap => {
+      painelHistorico.innerHTML = "";
+      snap.forEach(doc => {
+        const a = doc.data();
+        let statusTexto = a.status === "concluido" ? "✂️ Concluído" : "❌ Cancelado";
+        painelHistorico.innerHTML += `<div class="card">
+          Cliente: ${a.clienteNome}<br>
+          Serviço: ${a.servico} - R$ ${a.valor.toFixed(2)}<br>
+          Status: <b>${statusTexto}</b>
+        </div>`;
+      });
+    });
+}
+
 
 function criarPromocao() {
   const nome = document.getElementById("promocaoNome").value;
@@ -2772,6 +2879,7 @@ function abrirAvaliacoesBarbeiro() {
     });
 }
 
+// Funções de Carteira (Geral)
 async function solicitarDeposito() {
   const valor = parseFloat(prompt("Valor do depósito:"));
   if (isNaN(valor) || valor <= 0) {
@@ -2845,6 +2953,7 @@ async function solicitarSaque() {
   }
 }
 
+// Funções do Admin
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
   const conteudo = document.getElementById("blogConteudo").value.trim();
@@ -2891,8 +3000,6 @@ function carregarListaBlog() {
 }
 
 function carregarAdmin() {
-    document.getElementById("conteudoAdmin").innerHTML = "<p>👈 Escolha uma opção acima</p>";
-
     if (adminBalanceListener) adminBalanceListener(); 
     
     db.collection("usuarios").get().then(snapshot => {
@@ -3095,10 +3202,7 @@ function abrirModalUsuarios() {
 }
 
 function abrirDenuncias() {
-  document.getElementById("conteudoAdmin").innerHTML = `
-    <h3>🚨 Denúncias</h3>
-    <div id="listaDenuncias" class="scrollable-list"></div>
-  `;
+  abrirModal('modalDenunciasAdmin');
   const lista = document.getElementById("listaDenuncias");
   lista.innerHTML = "<p>⏳ Carregando...</p>";
   db.collection("denuncias")
