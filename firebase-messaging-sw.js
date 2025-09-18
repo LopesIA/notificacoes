@@ -22,7 +22,42 @@ self.addEventListener('message', event => {
   }
 });
 
-// Manipulador para mensagens recebidas em segundo plano
+// ALTERAÇÃO INICIADA: Adicionado listener para o evento 'push'
+// Este é o principal responsável por exibir a notificação quando o app está fechado.
+self.addEventListener('push', event => {
+  console.log('[Service Worker] Push Recebido.');
+  const payload = event.data.json();
+  console.log('[Service Worker] Payload:', payload);
+
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/icone.png',
+    data: {
+      click_action: payload.fcmOptions ? payload.fcmOptions.link : 'https://navalha-de-ouro-v11.web.app/'
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(notificationTitle, notificationOptions)
+  );
+});
+
+// Listener para quando o usuário clica na notificação
+self.addEventListener('notificationclick', event => {
+  console.log('[Service Worker] Clique na notificação recebido.');
+  
+  event.notification.close();
+  
+  const clickAction = event.notification.data.click_action;
+  
+  event.waitUntil(
+    clients.openWindow(clickAction)
+  );
+});
+// ALTERAÇÃO FINALIZADA
+
+// Manipulador para mensagens de dados recebidas em segundo plano (quando o app não está em foco)
 messaging.onBackgroundMessage(function(payload) {
   console.log('[service-worker.js] Mensagem de segundo plano recebida.', payload);
 
