@@ -1046,7 +1046,7 @@ function pedirPermissaoEFechar() {
 // ALTERAÇÃO INICIADA: Lógica de setup e atualização de token aprimorada
 async function garantirTokenAtualizadoNoPerfil(uid) {
     try {
-        const currentToken = await messaging.getToken({ vapidKey: 'BMNfC7dJgR53-l-F7jFv18T7-s6L3aQY6P6g7dF7-Z9G4dZ9G4rG4P6P-g' });
+        const currentToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
         if (currentToken) {
             const userRef = db.collection('usuarios').doc(uid);
             const userDoc = await userRef.get();
