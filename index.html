@@ -1035,6 +1035,41 @@ function abrirModal(id) {
     }
 }
 
+function setupFCM() {
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            console.log('Permissão para notificação concedida.');
+            // O código abaixo para obter o token permanece o mesmo
+            messaging.getToken({ vapidKey: 'BMNfC7dJgR53-l-F7jFv18T7-s6L3aQY6P6g7dF7-Z9G4dZ9G4rG4P6P-g' }).then((token) => {
+                if (token) {
+                    console.log('Token de registro do FCM:', token);
+                    // Aqui você pode enviar o token para o seu servidor
+                    // Por exemplo, salvando no perfil do usuário no Firestore
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        const userRef = firebase.firestore().collection('usuarios').doc(user.uid);
+                        userRef.set({
+                            fcmTokens: firebase.firestore.FieldValue.arrayUnion(token)
+                        }, { merge: true })
+                        .then(() => {
+                            console.log("Token salvo no perfil do usuário com sucesso.");
+                        })
+                        .catch(err => {
+                            console.error("Erro ao salvar o token no Firestore:", err);
+                        });
+                    }
+                } else {
+                    console.warn("Não foi possível obter o token. O usuário pode ter negado a permissão.");
+                }
+            }).catch(err => {
+                console.error("Ocorreu um erro ao solicitar permissão ou obter o token:", err);
+            });
+        } else {
+            console.warn('Permissão para notificação negada.');
+        }
+    });
+}
+
 function alternarTema() {
   const body = document.body;
   const isLight = body.classList.toggle('tema-claro');
