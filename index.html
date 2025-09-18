@@ -1106,12 +1106,15 @@
     </div>
 </div>
 
+<!-- ATUALIZADO: Modal de atualização com o novo botão -->
 <div id="modalAtualizacao" class="modal" style="z-index: 100;" onclick="fecharModal(event)">
     <div class="modal-content" style="border: 2px solid var(--cor-destaque-ouro);" onclick="event.stopPropagation()">
         <h3>🚀 Nova Versão Disponível!</h3>
-        <p>Detectamos que você está usando uma versão antiga do aplicativo. Para garantir acesso a todas as funcionalidades e correções, por favor, atualize.</p>
-        <p><b>Como atualizar:</b> Desinstale o aplicativo atual da sua tela inicial e instale-o novamente através do navegador.</p>
-        <button onclick="fecharModal(event)">Lembrar Depois</button>
+        <p>Uma nova versão do aplicativo está pronta. Clique no botão abaixo para atualizar e ter acesso às últimas novidades e melhorias.</p>
+        <div style="display:flex; gap: 10px; margin-top: 20px;">
+           <button onclick="fecharModal(event)" style="background: #555;">Depois</button>
+           <button id="btnAtualizarApp" style="flex-grow: 1;">Atualize Agora</button>
+        </div>
     </div>
 </div>
 
@@ -1120,8 +1123,6 @@
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
 <script>
-const APP_VERSION = "1.0.1"; // Versão atualizada
-
 // Firebase e variáveis globais
 const firebaseConfig = {
   apiKey: "AIzaSyDBt7NcU5rP-hsrBZ07ne_HbiMCHRyVcnY",
@@ -1156,6 +1157,7 @@ let barbeirosListener = null;
 let tempSelectedHorarios = {};
 const CHAT_GLOBAL_ID = "chatGlobal";
 let botInterval = null;
+let newWorker; // Variável para guardar o novo Service Worker
 
 let userView = {
     originalType: null,
@@ -1175,7 +1177,6 @@ let globalChatListener = null;
 let lastGlobalMessageTimestamp = null;
 
 let deferredInstallPrompt = null;
-let versaoInterval = null;
 let chatPreviewTimeout = null; 
 
 
@@ -1258,9 +1259,7 @@ function fecharModal(event) {
     }
 }
 
-// ATUALIZADO: Função para abrir modais, garantindo que apenas um esteja aberto
 function abrirModal(id) {
-    // Fecha qualquer modal que esteja aberto
     if (currentModal && currentModal.id !== id) {
         currentModal.classList.remove('show');
     }
@@ -1301,7 +1300,6 @@ function pedirPermissaoEFechar() {
     fecharModal({ target: document.getElementById('modalPermissaoNotificacao') });
 }
 
-// Lógica de setup e atualização de token aprimorada
 async function garantirTokenAtualizadoNoPerfil(uid) {
     try {
         const currentToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
@@ -1419,7 +1417,6 @@ function renderCurrentView() {
 }
 
 
-// Estados e cidades do Brasil
 const cidadesPorEstado = {
   "ES": ["Aracruz", "Vitória", "Serra", "Linhares", "Colatina", "Cachoeiro de Itapemirim", "Guarapari", "Vila Velha", "São Mateus", "Barra de São Francisco"], "SP": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba"], "RJ": ["Rio de Janeiro", "Niterói", "Petrópolis", "Volta Redonda", "Campos dos Goytacazes"], "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Montes Claros"], "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Ilhéus", "Barreiras"], "PR": ["Curitiba", "Londrina", "Maringá", "Cascavel", "Ponta Grossa"], "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Santa Maria", "Novo Hamburgo"], "SC": ["Florianópolis", "Joinville", "Blumenau", "Chapecó", "Criciúma"], "PE": ["Recife", "Olinda", "Caruaru", "Petrolina", "Garanhuns"], "CE": ["Fortaleza", "Juazeiro do Norte", "Sobral", "Crato", "Iguatu"], "DF": ["Brasília"]
 };
@@ -1444,7 +1441,6 @@ function carregarCidades() {
 
 carregarEstados();
 
-// Funções de Autenticação
 function entrar() {
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value.trim();
@@ -1520,9 +1516,9 @@ function criarConta() {
         indicadoPorEmail: indicadorEmail || null,
         bonusIndicacaoPendente: !!indicadorEmail,
         fcmTokens: [],
-        cortesRealizados: 0, // Campo para conquistas de cliente
+        cortesRealizados: 0, 
         conquistas: [], 
-        clientesAtendidos: 0, // Campo para conquistas de barbeiro
+        clientesAtendidos: 0, 
         somaAvaliacoes: 0, numAvaliacoes: 0
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
@@ -1538,7 +1534,6 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 });
 
 auth.onAuthStateChanged(async user => {
-  if (versaoInterval) { clearInterval(versaoInterval); versaoInterval = null; }
   if (!user) {
     userView = { originalType: null, currentType: null };
     renderCurrentView();
@@ -1577,7 +1572,6 @@ auth.onAuthStateChanged(async user => {
   renderCurrentView();
 
   solicitarPermissaoNotificacao();
-  verificarVersaoApp();
   setupFCM(user.uid);
 
   setTimeout(() => { document.getElementById("btnSair").classList.remove("hidden"); }, 15000);
@@ -1634,23 +1628,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
         };
     }
 });
-
-async function verificarVersaoApp() {
-    try {
-        const configDoc = await db.collection("config").doc("sistema").get();
-        if (configDoc.exists) {
-            const versaoAtualFirestore = configDoc.data().versao_atual;
-            if (versaoAtualFirestore && versaoAtualFirestore !== APP_VERSION) {
-                abrirModal('modalAtualizacao');
-                if (versaoInterval) clearInterval(versaoInterval);
-                versaoInterval = setInterval(() => { abrirModal('modalAtualizacao'); }, 120000); 
-            }
-        }
-    } catch (error) {
-        console.error("Erro ao verificar versão do app:", error);
-    }
-}
-
 
 async function abrirPortaSecreta() {
   const codigo = prompt("💎 Insira o código de resgate:");
@@ -2161,7 +2138,7 @@ function carregarAgenda() {
 
     db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
         perfil = doc.data(); 
-        if(!btnDisp) return; // Se o modal não estiver aberto, não faz nada
+        if(!btnDisp) return;
         btnDisp.textContent = perfil.disponivel === 'sim' ? '🔴 Ficar Indisponível (Automático)' : '🟢 Ficar Disponível (Automático)';
         btnVagaImediata.textContent = perfil.vagaImediata ? '⚠️ Desativar Vaga Imediata' : '⚡ Ativar Vaga Imediata';
         btnAgendaManual.textContent = perfil.usaAgendaManual ? '❌ Desativar Agenda Manual' : '📅 Ativar Agenda Manual';
@@ -2256,7 +2233,7 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
         const clienteRef = db.collection("usuarios").doc(clienteUid);
         const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+        const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroDoc)]);
         if (agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada.";
         if (!clienteDoc.exists) throw "Cliente não encontrado.";
         if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
@@ -2282,7 +2259,7 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
       const clienteRef = db.collection("usuarios").doc(clienteUid);
       const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-      const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+      const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroDoc)]);
       if (agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada.";
       if (!clienteDoc.exists) throw "Cliente não encontrado.";
       if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
@@ -2380,7 +2357,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
   }
 }
 
-// ATUALIZADO: Função para listar clientes com link para WhatsApp
 function abrirClientesBarbeiro() {
   abrirModal('modalClientesBarbeiro');
   const lista = document.getElementById("listaClientesBarbeiro");
@@ -2486,7 +2462,6 @@ function abrirAvaliacoesBarbeiro() {
     });
 }
 
-// Funções de Carteira (Geral)
 async function solicitarDeposito() {
   const valor = parseFloat(prompt("Valor do depósito:"));
   if (isNaN(valor) || valor <= 0) return alert("Valor inválido.");
@@ -2527,7 +2502,6 @@ async function solicitarSaque() {
   }
 }
 
-// Funções do Admin
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
   const conteudo = document.getElementById("blogConteudo").value.trim();
@@ -2578,14 +2552,12 @@ function carregarAdmin() {
     });
 }
 
-// ATUALIZADO: Estatísticas do Admin mais robustas
 async function abrirModalEstatisticas() {
     abrirModal('modalEstatisticas');
     const painel = document.getElementById("estatisticasPainel");
     painel.innerHTML = "<p>⏳ Carregando estatísticas...</p>";
     
     try {
-        // Dados de Usuários
         const usuariosSnap = await db.collection("usuarios").get();
         let totalUsuarios = usuariosSnap.size;
         let clientes = 0, barbeiros = 0, vip = 0, totalSaldo = 0, somaReputacao = 0, barbeirosComReputacao = 0;
@@ -2604,7 +2576,6 @@ async function abrirModalEstatisticas() {
         });
         const mediaReputacao = barbeirosComReputacao > 0 ? (somaReputacao / barbeirosComReputacao).toFixed(0) : 'N/A';
 
-        // Dados de Agendamentos
         const agendamentosSnap = await db.collection("agendamentos").get();
         let totalAgendamentos = agendamentosSnap.size;
         let concluidos = 0, cancelados = 0;
@@ -2614,11 +2585,9 @@ async function abrirModalEstatisticas() {
             if (status === 'cancelado') cancelados++;
         });
 
-        // Dados de Solicitações
         const solicitacoesSnap = await db.collection("solicitacoes").where('status', '==', 'pendente').get();
         let solicitacoesPendentes = solicitacoesSnap.size;
 
-        // Dados Financeiros
         const financeiroDoc = await db.collection("config").doc("financeiro").get();
         const fin = financeiroDoc.data() || { arrecadadoTaxas: 0, arrecadadoVip: 0 };
         
@@ -2791,7 +2760,6 @@ async function verDetalhesUsuario(uid) {
   }
 }
 
-// --- MARKETING (ADMIN) ---
 async function enviarNotificacaoMarketing() {
     const title = document.getElementById('marketingTitulo').value.trim();
     const body = document.getElementById('marketingCorpo').value.trim();
@@ -2810,7 +2778,6 @@ async function enviarNotificacaoMarketing() {
     }
 }
 
-// --- GAMIFICAÇÃO (LÓGICA ATUALIZADA) ---
 const conquistasDefinidas = {
     'cortes_1': { nome: 'Primeiro Agendamento', icone: '👶', descricao: 'Concluiu seu primeiro agendamento.', level: 1 },
     'cortes_5': { nome: 'Cliente Iniciante', icone: '👍', descricao: 'Concluiu 5 agendamentos.', level: 2 },
@@ -2934,7 +2901,6 @@ function obterIconeMaiorConquista(conquistas, tipo) {
     return '';
 }
 
-// ATUALIZADO: Desempenho do Barbeiro mais robusto
 async function abrirModalDashboardBarbeiro() {
     abrirModal('modalDashboardBarbeiro');
     const container = document.getElementById('dashboardConteudo');
@@ -2996,8 +2962,6 @@ async function abrirModalDashboardBarbeiro() {
     }
 }
 
-
-// Manipulador de mensagens em primeiro plano
 if (firebase.messaging.isSupported()) {
     messaging.onMessage((payload) => {
         console.log('Mensagem recebida:', payload);
@@ -3005,17 +2969,42 @@ if (firebase.messaging.isSupported()) {
     });
 }
 </script>
-    <script>
-        // Registra o Service Worker
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(registration) {
-              console.log('✅ Service Worker registrado com sucesso: ', registration.scope);
-            }).catch(function(err) {
-              console.log('Falha ao registrar Service Worker:', err);
+<!-- ATUALIZADO: Lógica de registro do Service Worker com tratamento de atualização -->
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(reg) {
+          console.log('✅ Service Worker registrado com sucesso:', reg.scope);
+
+          // Lógica para quando um novo SW é encontrado
+          reg.addEventListener('updatefound', () => {
+            newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                 // Novo SW está instalado e esperando. Mostra o pop-up.
+                 const modal = document.getElementById('modalAtualizacao');
+                 const btn = document.getElementById('btnAtualizarApp');
+                 btn.onclick = () => {
+                   newWorker.postMessage({ type: 'SKIP_WAITING' });
+                 };
+                 abrirModal('modalAtualizacao');
+              }
             });
           });
-        }
-    </script>
+        }).catch(function(err) {
+          console.error('❌ Falha ao registrar Service Worker:', err);
+        });
+
+        // Lógica para recarregar a página quando o novo SW assume o controle
+        let refreshing;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return;
+          window.location.reload();
+          refreshing = true;
+        });
+      });
+    }
+</script>
 </body>
 </html>
+
