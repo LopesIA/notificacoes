@@ -887,7 +887,7 @@
 <div id="modalRanking" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>📊 Ranking de Clientes</h3>
-    <p style="font-size: 12px; opacity: 0.7;">Top 10 clientes com mais agendamentos concluídos.</p>
+    <p style="font-size: 12px; opacity: 0.7;">Top 100 clientes com mais agendamentos concluídos.</p>
     <div id="listaRanking" class="scrollable-list"></div>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
@@ -1028,7 +1028,7 @@
 <div id="modalRankingBarbeiros" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🏆 Ranking de Barbeiros</h3>
-    <p style="font-size: 12px; opacity: 0.7;">Top 10 barbeiros com mais cortes concluídos.</p>
+    <p style="font-size: 12px; opacity: 0.7;">Top 100 barbeiros com mais cortes concluídos.</p>
     <div id="listaRankingBarbeiros" class="scrollable-list"></div>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
@@ -1106,7 +1106,6 @@
     </div>
 </div>
 
-<!-- ATUALIZADO: Modal de atualização com o novo botão -->
 <div id="modalAtualizacao" class="modal" style="z-index: 100;" onclick="fecharModal(event)">
     <div class="modal-content" style="border: 2px solid var(--cor-destaque-ouro);" onclick="event.stopPropagation()">
         <h3>🚀 Nova Versão Disponível!</h3>
@@ -1157,7 +1156,7 @@ let barbeirosListener = null;
 let tempSelectedHorarios = {};
 const CHAT_GLOBAL_ID = "chatGlobal";
 let botInterval = null;
-let newWorker; // Variável para guardar o novo Service Worker
+let newWorker;
 
 let userView = {
     originalType: null,
@@ -2226,6 +2225,7 @@ function toggleDisponibilidade() {
   db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => alert("Erro: " + e.message));
 }
 
+// CORRIGIDO: Erro de inicialização do barbeiroDoc
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
     const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
@@ -2233,7 +2233,7 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
         const clienteRef = db.collection("usuarios").doc(clienteUid);
         const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroDoc)]);
+        const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
         if (agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada.";
         if (!clienteDoc.exists) throw "Cliente não encontrado.";
         if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
@@ -2259,7 +2259,7 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
       const clienteRef = db.collection("usuarios").doc(clienteUid);
       const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-      const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroDoc)]);
+      const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
       if (agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada.";
       if (!clienteDoc.exists) throw "Cliente não encontrado.";
       if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
@@ -2969,19 +2969,16 @@ if (firebase.messaging.isSupported()) {
     });
 }
 </script>
-<!-- ATUALIZADO: Lógica de registro do Service Worker com tratamento de atualização -->
 <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(reg) {
           console.log('✅ Service Worker registrado com sucesso:', reg.scope);
 
-          // Lógica para quando um novo SW é encontrado
           reg.addEventListener('updatefound', () => {
             newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                 // Novo SW está instalado e esperando. Mostra o pop-up.
                  const modal = document.getElementById('modalAtualizacao');
                  const btn = document.getElementById('btnAtualizarApp');
                  btn.onclick = () => {
@@ -2995,7 +2992,6 @@ if (firebase.messaging.isSupported()) {
           console.error('❌ Falha ao registrar Service Worker:', err);
         });
 
-        // Lógica para recarregar a página quando o novo SW assume o controle
         let refreshing;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (refreshing) return;
