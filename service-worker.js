@@ -24,16 +24,14 @@ self.addEventListener('message', event => {
 
 // Manipulador para mensagens recebidas em segundo plano
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[service-worker.js] Mensagem recebida em segundo plano.', payload);
+  console.log('[service-worker.js] Mensagem de segundo plano recebida.', payload);
 
   const notificationTitle = payload.notification.title;
-  // Opções aprimoradas para a notificação
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/icone.png',
-    badge: '/icone.png', // Ícone para a barra de status no Android
-    vibrate: [200, 100, 200] // Padrão de vibração
+    icon: '/icone.png', // Opcional: Adiciona um ícone à notificação
+    click_action: 'https://navalha-de-ouro-v11.web.app/' // Opcional: Abre a URL do seu site ao clicar na notificação
   };
 
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
