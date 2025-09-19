@@ -440,9 +440,10 @@
     .horario-disponivel:hover {
       background: var(--cor-destaque-ouro);
     }
-    .admin-chat {
-      color: var(--cor-destaque-ouro);
-      text-shadow: 0 0 5px var(--cor-destaque-ouro);
+    .admin-chat-pink {
+      color: hotpink;
+      font-weight: bold;
+      text-shadow: 0 0 4px #ffffff, 0 0 6px #ffffff;
     }
     .barbeiro-chat {
         color: var(--cor-texto-principal);
@@ -726,6 +727,7 @@
         display: flex;
         flex-direction: column;
         border: 1px solid var(--cor-borda);
+        cursor: pointer;
     }
     .produto-card img {
         width: 100%;
@@ -745,6 +747,42 @@
     .produto-preco-original { text-decoration: line-through; opacity: 0.7; font-size: 0.9em; }
     .produto-card button { font-size: 14px; padding: 8px; margin-top: 10px;}
     #lojaView .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .tamanho-options { display: flex; gap: 5px; justify-content: center; margin: 10px 0; }
+    .tamanho-options label {
+      padding: 5px 10px;
+      border: 1px solid var(--cor-borda);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .tamanho-options input { display: none; }
+    .tamanho-options input:checked + label {
+      background: var(--cor-destaque-ouro);
+      color: var(--cor-fundo);
+      border-color: var(--cor-destaque-ouro);
+    }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .checkbox-group label { display: flex; align-items: center; gap: 5px; }
+    .checkbox-group input { width: auto; margin: 0; }
+
+    .modal-venda {
+      z-index: 99;
+    }
+    .modal-venda .modal-content {
+      background: #c0392b;
+      color: white;
+      text-align: center;
+      border: 3px solid #e74c3c;
+      animation: flash-red 1.5s infinite;
+    }
+    .modal-venda h3 {
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    @keyframes flash-red {
+      0%, 100% { background-color: #c0392b; }
+      50% { background-color: #e74c3c; }
+    }
 
   </style>
 </head>
@@ -762,7 +800,7 @@
   
   <div id="chatPreview"></div> <div id="botaoExtra" class="hidden"></div>
 
-  <div id="authView" class="card">
+  <div id="authView" class="card hidden">
     <h2>🔐 Entrar ou Criar Conta</h2>
     <input id="email" type="email" placeholder="📧 Email">
     <input id="senha" type="password" placeholder="🔑 Senha">
@@ -793,6 +831,21 @@
     <button id="btnCriarConta" onclick="prepararCriarConta()">🆕 Criar conta</button>
     <button id="btnVoltar" class="hidden" onclick="voltarParaLogin()">⬅️ Voltar</button>
   </div>
+  
+  <div id="guestView" class="card">
+    <h2>🙋 Painel de Visitante</h2>
+    <p style="text-align: center; font-size: 14px; opacity: 0.8;">Bem-vindo! Explore o app. Para interagir, por favor, crie uma conta ou faça login.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+      <button>💈 Barbearias</button>
+      <button>📜 Histórico</button>
+      <button>💎 VIP</button>
+      <button>💰 Carteira</button>
+      <button>🏆 Fidelidade</button>
+      <button>📰 Blog</button>
+      <button>🏅 Conquistas</button>
+      <button>📊 Ranking</button>
+    </div>
+  </div>
 
   <div id="clienteView" class="hidden card">
     <h2>🙋 Painel do Cliente</h2>
@@ -801,11 +854,11 @@
       <button onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
       <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirModalLoja()" style="width:45%">🛍️ Vender na Loja</button>
       <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
       <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
       <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
+      <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:92%">🏪 Gerenciar Minha Loja</button>
     </div>
   </div>
 
@@ -818,7 +871,6 @@
       <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
       <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirModalLoja()" style="width:45%">🛍️ Vender na Loja</button>
       <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
       <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
       <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
@@ -828,6 +880,7 @@
       <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
       <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
+      <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
       <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-ouro), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
     </div>
   </div>
@@ -840,7 +893,7 @@
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
       <button onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirModalLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
+      <button onclick="abrirGerenciarLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
       <button onclick="abrirModal('modalNotificacaoMarketing')" style="width:92%">📣 Enviar Notificação Geral</button>
     </div>
@@ -850,8 +903,8 @@
     <div class="card-header">
         <h3>🛍️ Loja Navalha de Ouro</h3>
         <div style="display: flex; gap: 10px;">
-            <button onclick="abrirModalParaVender()" style="width:45%">🛍️ Vender na Loja</button>
-            <button onclick="mostrarPainelAtual()" style="width: auto; font-size: 14px; padding: 8px 12px;">Voltar</button>
+            <button onclick="abrirModalParaVender()" style="width: auto; font-size: 14px; padding: 8px 12px;">🛍️ Vender</button>
+            <button onclick="mostrarPainelAtual()" style="width: auto; font-size: 14px; padding: 8px 12px;">↩️ Voltar</button>
         </div>
     </div>
     <div id="lojaContainer" class="loja-grid">
@@ -873,7 +926,7 @@
   </button>
 </div>
 
-<button id="btnSair" class="hidden" onclick="auth.signOut()">Sair</button>
+<button id="btnSair" class="hidden" onclick="auth.signOut()">🚪 Sair</button>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -914,7 +967,7 @@
     <h3 id="chatTitle">💬 Chat Global</h3>
     <div id="chatMessages" class="chat-container"></div>
     <input id="chatInput" placeholder="Digite sua mensagem">
-    <button onclick="enviarMensagem()">Enviar</button>
+    <button onclick="enviarMensagem()">➡️ Enviar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -989,7 +1042,7 @@
     <div class="modal-footer">
         <button id="btnAcessarPortfolio" class="hidden" style="width: auto; background-color: var(--cor-botoes);">🖼️ Ver Portfólio</button>
         <button id="btnAbrirRota" class="hidden" style="width: auto; background-color: var(--cor-botoes);">🗺️ Rota</button>
-        <button id="btnConfirmarAgendamento" disabled>Agendar</button>
+        <button id="btnConfirmarAgendamento" disabled>🗓️ Agendar</button>
     </div>
   </div>
 </div>
@@ -1000,8 +1053,8 @@
         <p style="font-size: 1.2em; text-align: center;"><b>Você tem 10 minutos para chegar à barbearia.</b></p>
         <p style="text-align: center;">Não se atrase para não perder a vaga e o seu dinheiro!</p>
         <div style="display:flex; gap: 10px; margin-top: 20px;">
-            <button onclick="fecharModal({ target: this.closest('.modal') })" style="background:white; color:#e74c3c; flex: 1;">Entendi</button>
-            <button id="btnCancelarVagaAprovada" style="background: #333; color: white; flex: 1;">Cancelar Agendamento</button>
+            <button onclick="fecharModal({ target: this.closest('.modal') })" style="background:white; color:#e74c3c; flex: 1;">✅ Entendi</button>
+            <button id="btnCancelarVagaAprovada" style="background: #333; color: white; flex: 1;">❌ Cancelar Agendamento</button>
         </div>
     </div>
 </div>
@@ -1009,7 +1062,7 @@
 <div id="modalBarbeariasCliente" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💈 Barbearias disponíveis</h3>
-    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="Buscar por barbeiro ou cidade...">
+    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por barbeiro ou cidade...">
     <div id='listaBarbeiros' class="scrollable-list"></div>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
@@ -1056,7 +1109,7 @@
     <input id="promocaoNome" placeholder="Nome da Promoção">
     <input id="promocaoDescricao" placeholder="Descrição curta">
     <input type="number" id="promocaoDesconto" placeholder="Desconto em % (ex: 15)">
-    <button onclick="criarPromocao()">Salvar Promoção</button>
+    <button onclick="criarPromocao()">💾 Salvar Promoção</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -1065,7 +1118,7 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>✏️ Alterar Nome</h3>
     <input id="novoNomeBarbeiro" type="text" placeholder="Novo nome do barbeiro/barbearia">
-    <button onclick="alterarNomeBarbeiro(event)">Salvar</button>
+    <button onclick="alterarNomeBarbeiro(event)">💾 Salvar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -1076,7 +1129,7 @@
     <input id="novoEnderecoRua" type="text" placeholder="Nova Rua">
     <input id="novoEnderecoNumero" type="text" placeholder="Novo Número">
     <button onclick="obterLocalizacaoCadastro('barbeiro')">📍 Usar minha localização atual</button>
-    <button onclick="alterarEnderecoBarbeiro(event)">Salvar</button>
+    <button onclick="alterarEnderecoBarbeiro(event)">💾 Salvar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -1093,7 +1146,7 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>✂️ Meus Serviços</h3>
     <div id="listaServicosBarbeiro" class="scrollable-list"></div>
-    <button onclick="adicionarServico()">+ Adicionar novo serviço</button>
+    <button onclick="adicionarServico()">➕ Adicionar novo serviço</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -1145,6 +1198,14 @@
   </div>
 </div>
 
+<div id="modalHistoricoBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📜 Histórico de Serviços</h3>
+    <div id="painelHistoricoBarbeiro" class="scrollable-list"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 <div id="modalConquistasBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🏅 Minhas Conquistas de Barbeiro</h3>
@@ -1158,7 +1219,7 @@
     <h3>✍️ Novo Post</h3>
     <input id="blogTitulo" placeholder="Título">
     <textarea id="blogConteudo" placeholder="Conteúdo do post"></textarea>
-    <button onclick="publicarBlog()">Publicar</button>
+    <button onclick="publicarBlog()">✍️ Publicar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -1229,25 +1290,12 @@
         <h3>🛍️ Acesso à Loja de Vendedores</h3>
         <p>Você ainda não tem permissão pra cadastrar produtos na loja. Peça autorização pro administrador no WhatsApp.</p>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="fecharModal(event)" style="background-color: #555;">Cancelar</button>
+            <button onclick="fecharModal(event)" style="background-color: #555;">↩️ Cancelar</button>
             <button onclick="solicitarLiberacaoLoja()" style="flex-grow: 1;">
                 <img src="https://logopng.com.br/logos/whatsapp-33.png" alt="WhatsApp" style="width:20px; height:20px; vertical-align: middle; margin-right: 8px;">
-                WhatsApp
+                💬 Pedir no WhatsApp
             </button>
         </div>
-    </div>
-</div>
-
-<div id="modalAdicionarProduto" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>📦 Adicionar Novo Produto</h3>
-        <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
-        <input id="produtoNome" type="text" placeholder="Nome do Produto">
-        <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
-        <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional)">
-        <textarea id="produtoDescricao" placeholder="Descrição curta do produto" rows="3"></textarea>
-        <button onclick="salvarProduto()">Salvar Produto</button>
-        <button onclick="fecharModal(event)">❌ Fechar</button>
     </div>
 </div>
 
@@ -1256,7 +1304,7 @@
         <h3>🚀 Turbinar seu Perfil</h3>
         <p>Destaque seu perfil no topo da lista de barbearias por <strong>24 horas</strong> e alcance mais clientes!</p>
         <p style="font-size: 22px; color: var(--cor-destaque-ouro); font-weight: bold; text-align: center;">Apenas R$ 9,99</p>
-        <button onclick="confirmarTurbinar()">Confirmar e Turbinar</button>
+        <button onclick="confirmarTurbinar()">💥 Confirmar e Turbinar</button>
         <button onclick="fecharModal(event)">❌ Cancelar</button>
     </div>
 </div>
@@ -1266,8 +1314,8 @@
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>🔔 Fique por Dentro!</h3>
         <p>Ative as notificações para receber alertas importantes sobre seus agendamentos, promoções e novidades em tempo real.</p>
-        <button onclick="pedirPermissaoEFechar()">Ativar Notificações</button>
-        <button onclick="fecharModal(event)">Agora não</button>
+        <button onclick="pedirPermissaoEFechar()">👍 Ativar Notificações</button>
+        <button onclick="fecharModal(event)">❌ Agora não</button>
     </div>
 </div>
 
@@ -1275,8 +1323,8 @@
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>📱 Leve o App com Você!</h3>
         <p>Instale nosso aplicativo na sua tela inicial para um acesso mais rápido e uma melhor experiência.</p>
-        <button id="btnInstalarPWA">Instalar Agora</button>
-        <button onclick="fecharModal(event)">Depois</button>
+        <button id="btnInstalarPWA">📲 Instalar Agora</button>
+        <button onclick="fecharModal(event)">🤔 Depois</button>
     </div>
 </div>
 
@@ -1285,73 +1333,118 @@
         <h3>🚀 Nova Versão Disponível!</h3>
         <p>Uma nova versão do aplicativo está pronta. Clique no botão abaixo para atualizar e ter acesso às últimas novidades e melhorias.</p>
         <div style="display:flex; gap: 10px; margin-top: 20px;">
-           <button onclick="fecharModal(event)" style="background: #555;">Depois</button>
-           <button id="btnAtualizarApp" style="flex-grow: 1;">Atualize Agora</button>
+           <button onclick="fecharModal(event)" style="background: #555;">🤔 Depois</button>
+           <button id="btnAtualizarApp" style="flex-grow: 1;">🔄 Atualize Agora</button>
         </div>
     </div>
 </div>
 
 <div id="modalPromocoesBarbeiro" class="modal">
   <div class="modal-content">
-    <h2>Promoções Ativas</h2>
+    <h2>🎁 Promoções Ativas</h2>
     <div id="listaPromocoes">
       </div>
     <div class="modal-botoes">
-      <button onclick="abrirModalAddPromocao()">Adicionar Promoção</button>
-      <button onclick="fecharModal('modalPromocoesBarbeiro')">Fechar</button>
+      <button onclick="abrirModalAddPromocao()">➕ Adicionar Promoção</button>
+      <button onclick="fecharModal({target: this.closest('.modal')})">❌ Fechar</button>
     </div>
   </div>
 </div>
 
 <div id="modalAddPromocao" class="modal">
   <div class="modal-content">
-    <h2>Adicionar Nova Promoção</h2>
+    <h2>➕ Adicionar Nova Promoção</h2>
     <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
     <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
     <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
-    <div class="modal-botoes">
-      <button onclick="salvarNovaPromocao()">Salvar</button>
-      <button onclick="fecharModal('modalAddPromocao')">Cancelar</button>
-    </div>
+    <button onclick="salvarNovaPromocao()">💾 Salvar Promoção</button>
+    <button onclick="fecharModal({target: this.closest('.modal')})">❌ Cancelar</button>
   </div>
 </div>
-
-<div id="modalAddPromocao" class="modal">
-  <div class="modal-content">
-    <h2>Adicionar Nova Promoção</h2>
-    
-    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
-    <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
-    <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
-    
-    <button onclick="salvarNovaPromocao()">Salvar Promoção</button>
-    <button onclick="fecharModal('modalAddPromocao')">Cancelar</button>
-    
-  </div>
-</div>
-
-<div id="modalAddPromocao" class="modal">
-  <div class="modal-content">
-    <h2>Adicionar Nova Promoção</h2>
-    
-    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
-    <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
-    <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
-    
-    <button onclick="salvarNovaPromocao()">Salvar Promoção</button>
-    <button onclick="fecharModal('modalAddPromocao')">Cancelar</button>
-  </div>
-</div>
-
 	
 <div id="modalLoja" class="modal">
   <div class="modal-content">
     <h3>🛒 Produtos da Loja</h3>
-    
     <div id="listaProdutos" class="loja-grid"></div>
-    
-    <button onclick="fecharModal('modalLoja')">Fechar</button>
+    <button onclick="fecharModal('modalLoja')">❌ Fechar</button>
   </div>
+</div>
+
+
+<div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <img id="detalhesProdutoImg" src="" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 15px;">
+        <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque-ouro);"></h3>
+        <p><strong>Tamanho:</strong></p>
+        <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
+        <p><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
+        <p><strong>Descrição:</strong> <span id="detalhesProdutoDescricao"></span></p>
+        <p><strong>Entrega estimada:</strong> <span id="detalhesProdutoEntrega"></span></p>
+        <button id="btnComprarAgora">🛒 Comprar Agora</button>
+        <button onclick="fecharModal(event)">❌ Fechar</button>
+    </div>
+</div>
+
+<div id="modalConfirmarCompra" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>📦 Confirmação de Compra</h3>
+        <p>Por favor, confirme os detalhes para a entrega.</p>
+        <input id="compraEndereco" type="text" placeholder="🏠 Endereço Completo para Entrega">
+        <input id="compraTelefone" type="tel" placeholder="📞 Telefone para Contato">
+        <input id="compraMapsLink" type="url" placeholder="🗺️ Link do Google Maps (Opcional)">
+        <button id="btnConfirmarCompraFinal">✅ Confirmar Pedido</button>
+        <button onclick="fecharModal(event)">❌ Cancelar</button>
+    </div>
+</div>
+
+<div id="modalGerenciarLoja" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" style="max-width: 600px;">
+        <h3>🏪 Gerenciar Minha Loja</h3>
+        <div id="listaMeusProdutos" class="scrollable-list"></div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button onclick="abrirFormularioProduto()">➕ Adicionar Produto</button>
+          <button onclick="abrirClientesVendedor()">🧑‍🤝‍🧑 Meus Clientes</button>
+          <button onclick="fecharModal(event)">❌ Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 id="formProdutoTitulo">📦 Adicionar Novo Produto</h3>
+        <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
+        <input id="produtoNome" type="text" placeholder="Nome do Produto">
+        <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
+        <p>Tamanhos disponíveis:</p>
+        <div class="checkbox-group">
+            <label><input type="checkbox" name="tamanhos" value="P"> P</label>
+            <label><input type="checkbox" name="tamanhos" value="M"> M</label>
+            <label><input type="checkbox" name="tamanhos" value="G"> G</label>
+            <label><input type="checkbox" name="tamanhos" value="GG"> GG</label>
+        </div>
+        <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional)">
+        <input id="produtoEntrega" type="text" placeholder="Tempo de entrega (Ex: 3-5 dias)">
+        <textarea id="produtoDescricao" placeholder="Descrição curta do produto" rows="3"></textarea>
+        <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
+        <button onclick="fecharModal(event)">❌ Cancelar</button>
+    </div>
+</div>
+
+<div id="modalGerenciarLojaClientes" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content">
+        <h3>🧑‍🤝‍🧑 Meus Clientes da Loja</h3>
+        <div id="listaClientesLoja" class="scrollable-list"></div>
+        <button onclick="fecharModal(event)">❌ Fechar</button>
+    </div>
+</div>
+
+<div id="modalVendaRealizada" class="modal modal-venda" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>🎉 VENDA REALIZADA! 🎉</h3>
+        <p style="font-size: 1.1em;">Parabéns, você vendeu um produto!</p>
+        <p>Acesse <strong>Gerenciar Loja > Meus Clientes</strong> para ver os detalhes da entrega.</p>
+        <button onclick="fecharModal(event)" style="background: white; color: #c0392b;">✅ OK</button>
+    </div>
 </div>
 
 <footer class="app-footer">
@@ -1402,6 +1495,9 @@ let botInterval = null;
 let newWorker;
 let localizacaoCliente = null;
 let cadastroCoords = null;
+let vendaListener = null;
+let produtoEmEdicaoId = null; 
+let produtoParaCompra = null;
 
 let userView = {
     originalType: null,
@@ -1495,7 +1591,7 @@ function salvarNovaPromocao() {
   })
   .then(() => {
     alert("Promoção adicionada com sucesso!");
-    fecharModal('modalAddPromocao');
+    fecharModal({target: document.getElementById('modalAddPromocao')});
     document.getElementById('addPromocaoNome').value = '';
     document.getElementById('addPromocaoDescricao').value = '';
     document.getElementById('addPromocaoDesconto').value = '';
@@ -1508,20 +1604,15 @@ function salvarNovaPromocao() {
 
 function fecharModal(idOuEvento) {
     let modal;
-
-    // Se o que foi passado for um evento de clique, use-o para encontrar o modal.
     if (idOuEvento && typeof idOuEvento === 'object' && idOuEvento.target) {
         modal = idOuEvento.target.closest('.modal');
     }
-    // Caso contrário, assuma que é um ID (uma string) e encontre o modal por ele.
     else if (typeof idOuEvento === 'string') {
         modal = document.getElementById(idOuEvento);
     }
 
     if (modal) {
         modal.classList.remove("show");
-
-        // Esta é a lógica que você já tinha para o chat, agora integrada
         if (modal.id === 'janelaChat') {
             if (chatListener) {
                 chatListener();
@@ -1585,35 +1676,41 @@ async function notifyAdmins(title, body) {
 
 // Funções de UI
 function mostrar(id) {
-  ["authView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
+  ["authView", "guestView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
   document.getElementById(id)?.classList.remove("hidden");
-  const isAuth = id === 'authView';
-  document.getElementById("topbar").classList.toggle("hidden", isAuth);
-  document.getElementById("bottomButtons").classList.toggle("hidden", isAuth);
-  document.getElementById("redeemContainer").classList.toggle("hidden", isAuth);
-  document.getElementById("btnTema").classList.toggle("hidden", isAuth);
-  document.getElementById("btnCarteiraTop").classList.toggle("hidden", isAuth);
-  document.getElementById("botaoExtra").classList.toggle("hidden", isAuth);
-  document.getElementById("btnSair").classList.toggle("hidden", isAuth);
+  
+  const isGuestOrAuth = (id === 'authView' || id === 'guestView');
+  document.getElementById("topbar").classList.toggle("hidden", isGuestOrAuth);
+  document.getElementById("bottomButtons").classList.toggle("hidden", true); // Ocultar para todos inicialmente
+  document.getElementById("redeemContainer").classList.toggle("hidden", true);
+  
+  if (!isGuestOrAuth) { // Mostrar botões do rodapé apenas se logado
+      document.getElementById("bottomButtons").classList.remove("hidden");
+      document.getElementById("redeemContainer").classList.remove("hidden");
+  }
+
+  document.getElementById("btnTema").classList.toggle("hidden", isGuestOrAuth);
+  document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
+  document.getElementById("botaoExtra").classList.toggle("hidden", isGuestOrAuth);
+  document.getElementById("btnSair").classList.toggle("hidden", isGuestOrAuth);
+}
+
+
+function configurarBotoesGuest() {
+    const guestView = document.getElementById('guestView');
+    const buttons = guestView.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.onclick = () => {
+            alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
+            mostrar('authView');
+        };
+    });
 }
 
 function mostrarPainelAtual() {
     mostrar(`${userView.currentType}View`);
 }
 
-function abrirModal(id) {
-    if (currentModal && currentModal.id !== id) {
-        currentModal.classList.remove('show');
-    }
-    const modal = document.getElementById(id);
-    if (modal) {
-        if (id === 'modalFidelidade') {
-            document.getElementById('pontosFidelidade').textContent = perfil.pontosFidelidade || 0;
-        }
-        modal.classList.add("show");
-        currentModal = modal;
-    }
-}
 
 function abrirModalLoja() {
   abrirModal('modalLoja');
@@ -1654,10 +1751,14 @@ function solicitarPermissaoNotificacao() {
 }
 
 function pedirPermissaoEFechar() {
-    const user = auth.currentUser;
-    if (user) {
-        setupFCM(user.uid);
-    }
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            const user = auth.currentUser;
+            if (user) {
+                setupFCM(user.uid);
+            }
+        }
+    });
     fecharModal({ target: document.getElementById('modalPermissaoNotificacao') });
 }
 
@@ -1739,14 +1840,13 @@ function setupViewSwitcher() {
         container.appendChild(btn);
     };
     
-    // Botão da Loja principal
     const btnLoja = document.createElement("button");
-btnLoja.textContent = "🛍️ Loja";
-btnLoja.onclick = () => { 
-    mostrar('lojaView'); 
-    carregarProdutos(); // << ADICIONE ESTA LINHA
-};
-container.appendChild(btnLoja);
+    btnLoja.textContent = "🛍️ Loja";
+    btnLoja.onclick = () => { 
+        mostrar('lojaView'); 
+        carregarProdutos(); 
+    };
+    container.appendChild(btnLoja);
 
     if (userView.originalType === 'admin') {
         createButton("🧠 Admin", "admin");
@@ -1768,6 +1868,14 @@ function renderCurrentView() {
     if (adminBalanceListener) {
         adminBalanceListener();
         adminBalanceListener = null;
+    }
+    
+    document.getElementById('btnGerenciarLojaCliente').classList.add('hidden');
+    document.getElementById('btnGerenciarLojaBarbeiro').classList.add('hidden');
+
+    if(perfil && (perfil.lojaLiberada || perfil.tipo === 'admin')) {
+      if(userView.currentType === 'cliente') document.getElementById('btnGerenciarLojaCliente').classList.remove('hidden');
+      if(userView.currentType === 'barbeiro') document.getElementById('btnGerenciarLojaBarbeiro').classList.remove('hidden');
     }
 
     switch (userView.currentType) {
@@ -1915,12 +2023,17 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 });
 
 auth.onAuthStateChanged(async user => {
+  solicitarPermissaoNotificacao();
+  obterLocalizacaoAtual();
+
   if (!user) {
     userView = { originalType: null, currentType: null };
-    renderCurrentView();
+    mostrar("guestView");
+    configurarBotoesGuest();
     document.getElementById("btnSair").classList.add("hidden");
     document.getElementById("redeemContainer").classList.add("hidden");
     if(globalChatListener) globalChatListener(); 
+    if(vendaListener) vendaListener();
     return;
   }
   const ref = db.collection("usuarios").doc(user.uid);
@@ -1951,8 +2064,7 @@ auth.onAuthStateChanged(async user => {
   userView.originalType = perfil.tipo;
   userView.currentType = perfil.tipo;
   renderCurrentView();
-
-  solicitarPermissaoNotificacao();
+  
   setupFCM(user.uid);
   exibirVersaoApp();
 
@@ -2001,6 +2113,22 @@ auth.onAuthStateChanged(async user => {
             }
             lastGlobalMessageTimestamp = msg.ts;
         });
+    
+    // Listener de vendas para vendedores
+    if (vendaListener) vendaListener();
+    if(perfil.lojaLiberada || perfil.tipo === 'admin') {
+      vendaListener = db.collection("loja_pedidos")
+        .where("vendedorUid", "==", user.uid)
+        .where("vendedorNotificado", "==", false)
+        .onSnapshot(snapshot => {
+          snapshot.docChanges().forEach(change => {
+            if (change.type === "added") {
+              abrirModal('modalVendaRealizada');
+              change.doc.ref.update({ vendedorNotificado: true });
+            }
+          });
+        });
+    }
 });
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -2063,46 +2191,6 @@ function abrirBarbeiros() {
   carregarBarbeiros();
 }
 
-function salvarNovaPromocao() {
-  const nome = document.getElementById('addPromocaoNome').value;
-  const descricao = document.getElementById('addPromocaoDescricao').value;
-  const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
-  
-  if (!nome || !descricao || isNaN(desconto)) {
-    alert("Por favor, preencha todos os campos corretamente.");
-    return;
-  }
-  
-  // Cria o objeto da nova promoção
-  const novaPromocao = {
-    nome: nome,
-    descricao: descricao,
-    desconto: desconto,
-    // Você pode adicionar mais campos aqui, como data de criação, etc.
-  };
-
-  const userId = auth.currentUser.uid;
-  const userRef = db.collection("usuarios").doc(userId);
-
-  // Usa a função 'update' para adicionar a nova promoção à lista 'promocoes' do usuário
-  userRef.update({
-    promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
-  })
-  // Dentro da sua função salvarNovaPromocao
-.then(() => {
-  alert("Promoção adicionada com sucesso!");
-  // Corrija a chamada para fechar o modal, passando apenas o ID
-  fecharModal('modalAddPromocao');
-  document.getElementById('addPromocaoNome').value = '';
-  document.getElementById('addPromocaoDescricao').value = '';
-  document.getElementById('addPromocaoDesconto').value = '';
-})
-  .catch(error => {
-    console.error("Erro ao adicionar promoção:", error);
-    alert("Erro ao adicionar promoção. Tente novamente.");
-  });
-}
-
 function filtrarBarbeiros() {
   const termo = document.getElementById("filtroBarbeiro").value.toLowerCase();
   const barbeiros = document.querySelectorAll("#listaBarbeiros .card");
@@ -2119,36 +2207,12 @@ function filtrarBarbeiros() {
 
 async function carregarBarbeiros() {
     const lista = document.getElementById("listaBarbeiros");
-    lista.innerHTML = "<p>⏳ Obtendo sua localização e carregando barbeiros...</p>";
+    lista.innerHTML = "<p>⏳ Carregando barbeiros...</p>";
 
-    try {
-        localizacaoCliente = await new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-                reject(new Error("Geolocalização não é suportada pelo seu navegador."));
-            }
-            navigator.geolocation.getCurrentPosition(
-                (position) => resolve({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                }),
-                (error) => {
-                    console.warn("Não foi possível obter a localização: ", error.message);
-                    reject(new Error("Permissão de localização negada."));
-                }
-            );
-        });
-        if(!perfil.latitude || !perfil.longitude) {
-            await db.collection('usuarios').doc(auth.currentUser.uid).update({
-                latitude: localizacaoCliente.latitude,
-                longitude: localizacaoCliente.longitude
-            });
-        }
-
-    } catch (error) {
-        lista.innerHTML = `<p>⚠️ ${error.message} Mostrando todos os barbeiros.</p>`;
-        localizacaoCliente = null; // Continua sem localização
+    if (!localizacaoCliente) {
+       await obterLocalizacaoAtual();
     }
-
+    
     if (barbeirosListener) barbeirosListener();
     let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
     
@@ -2170,7 +2234,6 @@ async function carregarBarbeiros() {
             barbeiros.push(b);
         });
 
-        // LÓGICA DE ORDENAÇÃO
         barbeiros.sort((a, b) => {
             const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
             const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
@@ -2496,7 +2559,7 @@ function abrirModalVip() {
                     </ul>
                 </div>
                 <p style="font-size: 12px; color: var(--cor-destaque-prata); margin-top: 20px;">Sua contribuição é um investimento direto em novas funcionalidades e melhorias para toda a comunidade.</p>
-                <button onclick="assinarVip()" style="margin-top: 15px;">Assinar Agora</button>
+                <button onclick="assinarVip()" style="margin-top: 15px;">💎 Assinar Agora</button>
             </div>
         `;
     }
@@ -2527,7 +2590,6 @@ function assinarVip() {
     }).catch(e => alert("Erro ao assinar VIP: " + e.message));
 }
 
-// ALTERAÇÃO INICIADA: Chat otimizado para carregar apenas 6 mensagens
 async function abrirChatGlobal() {
     const badge = document.querySelector('.notification-badge');
     newMessagesCount = 0;
@@ -2543,7 +2605,6 @@ async function abrirChatGlobal() {
     document.getElementById("chatTitle").innerHTML = perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
     if (chatListener) chatListener();
 
-    // A alteração principal está aqui: limit(6) em vez de limit(100)
     chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
       .orderBy("ts", "desc").limit(6)
       .onSnapshot(async snapshot => {
@@ -2557,7 +2618,6 @@ async function abrirChatGlobal() {
             }
         });
         
-        // Ordena para garantir que a mais recente seja adicionada por último (e apareça no topo)
         messagesToRender.sort((a, b) => a.ts.seconds - b.ts.seconds);
 
         for(const msg of messagesToRender) {
@@ -2569,12 +2629,9 @@ async function abrirChatGlobal() {
     document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } });
     if (!botInterval) botInterval = setInterval(sendBotMessage, 600000);
 }
-// ALTERAÇÃO FINALIZADA
-
-// ALTERAÇÃO INICIADA: Adicionado suporte ao emoji de item exclusivo
 async function createMessageDiv(msg) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
-    let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = ""; // Nova variável para o ícone
+    let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = "";
 
     const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
     if (msg.tipo === "bot") {
@@ -2582,24 +2639,22 @@ async function createMessageDiv(msg) {
     } else if(remetenteDoc.exists) {
         const remetenteData = remetenteDoc.data();
 
-        // Lógica para adicionar o ícone da camisa
         if (remetenteData.possuiItemExclusivo) {
             itemExclusivoIcone = '👕✨';
         }
 
         if (remetenteData.tipo === "admin") {
-            classeCSS = `admin-chat`; iconeBase = `👑`;
+            classeCSS = `admin-chat-pink`; iconeBase = `🧠`;
         } else if (remetenteData.tipo === "barbeiro") {
             classeCSS = `barbeiro-chat`; iconeBase = `💈`;
             medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
         } else if (remetenteData.vip) {
-            classeCSS = `admin-chat`; iconeBase = `👑`;
+            classeCSS = `cliente-chat`; iconeBase = `👑`; // VIP continua como coroa
             medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
         } else {
             classeCSS = `cliente-chat`; iconeBase = `👤`;
             medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
         }
-        // Monta o nome do remetente com todos os ícones
         remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
     }
     const messageDiv = document.createElement('div');
@@ -2608,7 +2663,6 @@ async function createMessageDiv(msg) {
     messageDiv.id = `msg-${msg.id}`;
     return messageDiv;
 }
-// ALTERAÇÃO FINALIZADA
 
 
 const botMessages = [ "Dica: Avalie seu barbeiro após o serviço para ganhar 10 pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos via Pix de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos nos depósitos!", "Barbeiros: mantenham sua agenda e serviços atualizados para atrair mais clientes e facilitar os agendamentos.", "Fique de olho no nosso Blog! Administradores podem postar códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!" ];
@@ -2984,56 +3038,32 @@ function abrirClientesBarbeiro() {
     });
 }
 
-function abrirFinancasBarbeiro() {
-  abrirModal('modalFinancasBarbeiro');
-  db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
-    const p = doc.data();
-    document.getElementById("saldoAtual").textContent = (p.saldo || 0).toFixed(2);
-    document.getElementById("cortesSemana").textContent = p.cortesSemana || 0;
-  });
-}
-
-function abrirPromocoes() {
-  abrirModal('modalPromocoesBarbeiro');
-  const lista = document.getElementById("listaPromocoes");
-
-  // A CORREÇÃO É AQUI: Verifique se o elemento existe antes de usá-lo.
-  if (!lista) {
-    console.error("Erro: Elemento com ID 'listaPromocoes' não encontrado no HTML.");
-    return;
-  }
-
-  lista.innerHTML = "<p>⏳ Carregando...</p>";
-
-  db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
-    perfil = doc.data();
-    if (!perfil.promocoes || perfil.promocoes.length === 0) {
-      lista.innerHTML = "<p>Nenhuma promoção ativa.</p>";
-      return;
-    }
-
-    lista.innerHTML = ""; // Limpe o conteúdo antes de adicionar as promoções
-    
-    perfil.promocoes.forEach((p, index) => {
-      lista.innerHTML += `<div class="promocao-card"><b>${p.nome}</b><p>${p.descricao} (${p.desconto}%)</p><button onclick="removerPromocao(${index})" style="background:none;border:none;color:#fff;float:right;">❌</button></div>`;
-    });
-  });
-}
-
 function abrirHistoricoBarbeiro() {
   abrirModal('modalHistoricoBarbeiro');
   const painel = document.getElementById("painelHistoricoBarbeiro");
+  painel.innerHTML = "<p>⏳ Carregando...</p>";
   db.collection("agendamentos").where("barbeiroUid", "==", auth.currentUser.uid)
     .where("status", "in", ["concluido", "cancelado"]).orderBy("ts", "desc").limit(20)
     .onSnapshot(snap => {
+      if (snap.empty) {
+          painel.innerHTML = "<p>Nenhum serviço no histórico encontrado.</p>";
+          return;
+      }
       painel.innerHTML = "";
       snap.forEach(doc => {
         const a = doc.data();
-        painel.innerHTML += `<div class="card">Cliente: ${a.clienteNome}<br>Serviço: ${a.servico} - R$ ${a.valor.toFixed(2)}<br>Status: <b>${a.status === "concluido" ? "✂️ Concluído" : "❌ Cancelado"}</b></div>`;
+        const dataFormatada = a.ts ? new Date(a.ts.seconds * 1000).toLocaleDateString('pt-BR') : 'Data indisponível';
+        const statusIcon = a.status === "concluido" ? "✅" : "❌";
+        const statusTexto = a.status === "concluido" ? "Concluído" : "Cancelado";
+        painel.innerHTML += `<div class="card" style="margin-bottom: 10px;">
+          <p><strong>${statusIcon} Cliente:</strong> ${a.clienteNome}</p>
+          <p><strong>✂️ Serviço:</strong> ${a.servico} - R$ ${a.valor.toFixed(2)}</p>
+          <p><strong>🗓️ Data:</strong> ${dataFormatada}</p>
+          <p><strong>Status:</strong> ${statusTexto}</p>
+        </div>`;
       });
     });
 }
-
 
 function criarPromocao() {
   const nome = document.getElementById("promocaoNome").value;
@@ -3313,7 +3343,7 @@ function abrirModalUsuarios() {
     lista.innerHTML = snap.empty ? "<p>Nenhum usuário cadastrado.</p>" : "";
     snap.forEach(doc => {
       const u = doc.data();
-      lista.innerHTML += `<div class="card"><b>${u.nome}</b> (${u.tipo})<p>Email: ${u.email}</p><p>Telefone: ${u.telefone}</p><button onclick="verDetalhesUsuario('${doc.id}')">Gerenciar</button></div>`;
+      lista.innerHTML += `<div class="card"><b>${u.nome}</b> (${u.tipo})<p>Email: ${u.email}</p><p>Telefone: ${u.telefone}</p><button onclick="verDetalhesUsuario('${doc.id}')">⚙️ Gerenciar</button></div>`;
     });
   });
 }
@@ -3649,9 +3679,30 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
     return R * c; // Distância em km
 }
 
+function obterLocalizacaoAtual() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            return reject(new Error("Geolocalização não suportada."));
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                localizacaoCliente = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                };
+                resolve(localizacaoCliente);
+            },
+            (error) => {
+                console.warn("Não foi possível obter a localização: ", error.message);
+                reject(error);
+            }
+        );
+    });
+}
+
 function obterLocalizacaoCadastro() {
     const btn = document.getElementById('btnLocalizacaoCadastro');
-    if(btn) btn.textContent = 'Obtendo localização...';
+    if(btn) btn.textContent = '⏳ Obtendo localização...';
     if (!navigator.geolocation) {
         alert("Geolocalização não é suportada pelo seu navegador.");
         if(btn) btn.textContent = '📍 Usar minha localização atual';
@@ -3675,7 +3726,7 @@ function obterLocalizacaoCadastro() {
 
 function abrirRota(barbeiroLat, barbeiroLon) {
     if (localizacaoCliente) {
-        window.open(`https://www.google.com/maps/dir/${localizacaoCliente.latitude},${localizacaoCliente.longitude}/${barbeiroLat},${barbeiroLon}`, '_blank');
+        window.open(`https://www.google.com/maps/dir/?api=1&origin=${localizacaoCliente.latitude},${localizacaoCliente.longitude}&destination=${barbeiroLat},${barbeiroLon}`, '_blank');
     } else {
         window.open(`https://www.google.com/maps/search/?api=1&query=${barbeiroLat},${barbeiroLon}`, '_blank');
     }
@@ -3702,11 +3753,9 @@ function confirmarTurbinar() {
 }
 
 // Funções da Loja
-// Substitua a função abrirModalLoja() inteira por esta nova versão
 function abrirModalParaVender() {
-    // A lógica aqui é a mesma da sua função antiga, apenas com um nome mais claro
     if (perfil.lojaLiberada || perfil.tipo === 'admin') {
-        abrirModal('modalAdicionarProduto');
+        abrirFormularioProduto();
     } else {
         abrirModal('modalLiberarLoja');
     }
@@ -3736,51 +3785,17 @@ function aprovarLiberacaoLoja(solicitacaoId, uid) {
     }).catch(e => alert("Erro ao aprovar: " + e.message));
 }
 
-function abrirModalAdicionarProduto(){
-    abrirModal('modalAdicionarProduto');
-}
-
-async function salvarProduto() {
-    const nome = document.getElementById('produtoNome').value.trim();
-    const imagemUrl = document.getElementById('produtoImagemUrl').value.trim();
-    const preco = parseFloat(document.getElementById('produtoPreco').value);
-    const desconto = parseInt(document.getElementById('produtoDesconto').value) || 0;
-    const descricao = document.getElementById('produtoDescricao').value.trim();
-
-    if(!nome || !imagemUrl || isNaN(preco) || preco <= 0) {
-        return alert('Por favor, preencha nome, imagem e preço corretamente.');
-    }
-    await db.collection('loja_produtos').add({
-        nome, imagemUrl, preco, desconto, descricao,
-        vendedorUid: auth.currentUser.uid,
-        vendedorNome: perfil.nome,
-        vendedorTelefone: perfil.telefone,
-        isOficial: perfil.tipo === 'admin',
-        ts: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert('Produto adicionado com sucesso!');
-    document.getElementById('produtoNome').value = '';
-    document.getElementById('produtoImagemUrl').value = '';
-    document.getElementById('produtoPreco').value = '';
-    document.getElementById('produtoDesconto').value = '';
-    document.getElementById('produtoDescricao').value = '';
-    fecharModal({target: document.getElementById('modalAdicionarProduto')});
-}
-
-// ALTERAÇÃO INICIADA: Loja corrigida e com nova ordenação
 async function carregarProdutos() {
     const container = document.getElementById('lojaContainer');
     container.innerHTML = '<p>Carregando loja...</p>';
 
     try {
-        // 1. Busca todos os usuários para obter seus status (vip, boost, tipo)
         const usersSnap = await db.collection('usuarios').get();
         const usersData = {};
         usersSnap.forEach(doc => {
             usersData[doc.id] = doc.data();
         });
 
-        // 2. Busca todos os produtos
         const produtosSnap = await db.collection('loja_produtos').orderBy('ts', 'desc').get();
         
         let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
@@ -3789,15 +3804,15 @@ async function carregarProdutos() {
 
         produtosSnap.forEach(doc => {
             const produto = { ...doc.data(), id: doc.id };
+            const produtoJSON = JSON.stringify(produto).replace(/'/g, "\\'");
             if (produto.isOficial) {
-                officialHtml += renderProdutoCard(produto);
+                officialHtml += renderProdutoCard(produto, produtoJSON);
                 officialProductsFound = true;
             } else {
-                communityProducts.push(produto);
+                communityProducts.push({ data: produto, json: produtoJSON });
             }
         });
 
-        // Adiciona o texto de incentivo se houver produtos oficiais
         if (officialProductsFound) {
             officialHtml += `
               <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: var(--cor-botoes); border-radius: 10px; margin-top: 10px;">
@@ -3806,7 +3821,6 @@ async function carregarProdutos() {
             `;
         }
 
-        // 3. Ordena os produtos da comunidade
         const getUserScore = (uid) => {
             const user = usersData[uid];
             if (!user) return 0;
@@ -3819,22 +3833,20 @@ async function carregarProdutos() {
         };
 
         communityProducts.sort((a, b) => {
-            const scoreA = getUserScore(a.vendedorUid);
-            const scoreB = getUserScore(b.vendedorUid);
-            return scoreB - scoreA; // Ordena do maior para o menor score
+            const scoreA = getUserScore(a.data.vendedorUid);
+            const scoreB = getUserScore(b.data.vendedorUid);
+            return scoreB - scoreA;
         });
 
-        // 4. Constrói o HTML da comunidade
         let communityHtml = '<h4 style="grid-column: 1 / -1; margin-top: 20px;">🛒 Marketplace da Comunidade</h4>';
         if (communityProducts.length === 0) {
             communityHtml += '<p style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
         } else {
-            communityProducts.forEach(produto => {
-                communityHtml += renderProdutoCard(produto);
+            communityProducts.forEach(p => {
+                communityHtml += renderProdutoCard(p.data, p.json);
             });
         }
         
-        // 5. Renderiza tudo na tela
         container.innerHTML = officialHtml + communityHtml;
 
     } catch (error) {
@@ -3842,35 +3854,23 @@ async function carregarProdutos() {
         container.innerHTML = '<p>Ocorreu um erro ao carregar a loja.</p>';
     }
 }
-// ALTERAÇÃO FINALIZADA
 
 
-function renderProdutoCard(p) {
+function renderProdutoCard(p, pJson) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
     const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
-    const botaoComprar = p.isOficial 
-        ? `<button onclick="comprarProdutoOficial('${p.nome}')">Comprar Agora</button>`
-        : `<button onclick="contatarVendedor('${p.vendedorTelefone}', '${p.nome}')">Contatar Vendedor</button>`;
-    const botaoDeletar = perfil.tipo === 'admin' ? `<button style="background-color:#772014" onclick="deletarProduto('${p.id}')">Deletar</button>` : '';
-
+    
     return `
-        <div class="produto-card">
+        <div class="produto-card" onclick='abrirDetalhesProduto(${pJson})'>
             <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
             <div class="produto-info">
-                <div>
-                    <div class="produto-nome">${p.nome}</div>
-                    <div class="produto-preco">${precoHtml}</div>
-                </div>
-                <div>
-                    ${botaoComprar}
-                    ${botaoDeletar}
-                </div>
+                <div class="produto-nome">${p.nome}</div>
+                <div class="produto-preco">${precoHtml}</div>
             </div>
         </div>
     `;
 }
 
-// ALTERAÇÃO INICIADA: Lógica de compra de item oficial
 async function comprarProdutoOficial(nomeProduto) {
     if (confirm(`Confirmar a compra do produto oficial "${nomeProduto}"? Você ganhará 200 pontos de fidelidade e um ícone exclusivo no chat! 👕✨`)) {
         try {
@@ -3887,7 +3887,6 @@ async function comprarProdutoOficial(nomeProduto) {
         }
     }
 }
-// ALTERAÇÃO FINALIZADA
 
 
 function contatarVendedor(telefone, nomeProduto) {
@@ -3896,17 +3895,8 @@ function contatarVendedor(telefone, nomeProduto) {
     window.open(`https://wa.me/55${telefone}?text=${msg}`, '_blank');
 }
 
-function deletarProduto(id) {
-    if(confirm('Tem certeza que deseja deletar este produto?')) {
-        db.collection('loja_produtos').doc(id).delete();
-    }
-}
-
-
-// NOVO: Função para exibir a versão do App
 async function exibirVersaoApp() {
     try {
-        // Usamos a data da última modificação do 'index.html' como um identificador de versão único
         const response = await fetch('/index.html', { method: 'HEAD', cache: 'no-store' });
         const lastModified = response.headers.get('Last-Modified');
         if (lastModified) {
@@ -3924,6 +3914,222 @@ if (firebase.messaging.isSupported()) {
     messaging.onMessage((payload) => {
         console.log('Mensagem recebida:', payload);
         alert(`🔔 ${payload.notification.title}\n\n${payload.notification.body}`);
+    });
+}
+// NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
+function abrirDetalhesProduto(produto) {
+    produtoParaCompra = produto;
+    document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
+    document.getElementById('detalhesProdutoNome').textContent = produto.nome;
+    const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+    document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
+    document.getElementById('detalhesProdutoDescricao').textContent = produto.descricao;
+    document.getElementById('detalhesProdutoEntrega').textContent = produto.tempoEntrega;
+    
+    const tamanhosContainer = document.getElementById('detalhesProdutoTamanhos');
+    tamanhosContainer.innerHTML = '';
+    if (produto.tamanhos && produto.tamanhos.length > 0) {
+        produto.tamanhos.forEach(t => {
+            tamanhosContainer.innerHTML += `<input type="radio" name="tamanho_selecionado" value="${t}" id="tamanho_${t}"><label for="tamanho_${t}">${t}</label>`;
+        });
+    } else {
+        tamanhosContainer.innerHTML = 'Tamanho único';
+    }
+    
+    document.getElementById('btnComprarAgora').onclick = () => iniciarCompra(produto);
+    abrirModal('modalProdutoDetalhes');
+}
+
+function iniciarCompra(produto) {
+    const tamanhoSelecionado = document.querySelector('input[name="tamanho_selecionado"]:checked');
+    if ((produto.tamanhos && produto.tamanhos.length > 0) && !tamanhoSelecionado) {
+        return alert('Por favor, selecione um tamanho.');
+    }
+    
+    fecharModal({ target: document.getElementById('modalProdutoDetalhes') });
+    document.getElementById('compraEndereco').value = '';
+    document.getElementById('compraTelefone').value = perfil.telefone || '';
+    document.getElementById('compraMapsLink').value = '';
+    
+    document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra(produto, tamanhoSelecionado ? tamanhoSelecionado.value : 'único');
+    abrirModal('modalConfirmarCompra');
+}
+
+async function confirmarCompra(produto, tamanho) {
+    const endereco = document.getElementById('compraEndereco').value.trim();
+    const telefone = document.getElementById('compraTelefone').value.trim();
+    const mapsLink = document.getElementById('compraMapsLink').value.trim();
+    if (!endereco || !telefone) return alert('Endereço e telefone são obrigatórios.');
+
+    const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+    if (perfil.saldo < precoFinal) return alert('Saldo insuficiente.');
+    
+    if(!confirm('Confirmar o pedido? O valor será debitado do seu saldo.')) return;
+    
+    try {
+        await db.runTransaction(async t => {
+            const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
+            const vendedorRef = db.collection("usuarios").doc(produto.vendedorUid);
+            const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+            const adminRef = db.collection("usuarios").doc(adminSnap.docs[0].id);
+            const produtoRef = db.collection("loja_produtos").doc(produto.id);
+
+            const valorVendedor = precoFinal * (1 - TAXA);
+            const valorAdmin = precoFinal * TAXA;
+
+            t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-precoFinal) });
+            t.update(vendedorRef, { saldo: firebase.firestore.FieldValue.increment(valorVendedor) });
+            t.update(adminRef, { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+            t.update(produtoRef, { vendasRealizadas: firebase.firestore.FieldValue.increment(1) });
+            
+            t.set(db.collection("loja_pedidos").doc(), {
+                produtoId: produto.id,
+                produtoNome: produto.nome,
+                valor: precoFinal,
+                tamanho,
+                clienteUid: auth.currentUser.uid,
+                clienteNome: perfil.nome,
+                endereco,
+                telefone,
+                mapsLink,
+                vendedorUid: produto.vendedorUid,
+                vendedorNotificado: false,
+                status: "pendente",
+                ts: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+
+        alert("Pedido realizado com sucesso!");
+        notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`);
+        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`);
+        fecharModal({ target: document.getElementById('modalConfirmarCompra') });
+    } catch (e) {
+        alert('Erro ao processar a compra: ' + e.message);
+    }
+}
+
+async function abrirGerenciarLoja() {
+    abrirModal('modalGerenciarLoja');
+    const container = document.getElementById('listaMeusProdutos');
+    container.innerHTML = '<p>Carregando seus produtos...</p>';
+    
+    const snap = await db.collection('loja_produtos').where('vendedorUid', '==', auth.currentUser.uid).get();
+    if (snap.empty) {
+        container.innerHTML = '<p>Você ainda não tem produtos cadastrados.</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    snap.forEach(doc => {
+        const p = doc.data();
+        container.innerHTML += `
+            <div class="card">
+                <b>${p.nome}</b> - R$ ${p.preco.toFixed(2)}
+                <p>Vendas: ${p.vendasRealizadas || 0}</p>
+                <div style="display: flex; gap: 5px; margin-top: 5px;">
+                    <button onclick="abrirFormularioProduto('${doc.id}')" style="font-size:12px; padding: 5px 8px;">✏️ Editar</button>
+                    <button onclick="deletarProdutoVendedor('${doc.id}')" style="background: #c0392b; font-size:12px; padding: 5px 8px;">🗑️ Excluir</button>
+                </div>
+            </div>`;
+    });
+}
+
+async function abrirFormularioProduto(produtoId = null) {
+    produtoEmEdicaoId = produtoId;
+    const form = document.getElementById('modalAddEditProduto');
+    document.getElementById('formProdutoTitulo').textContent = produtoId ? '✏️ Editar Produto' : '📦 Adicionar Novo Produto';
+    
+    // Reset form
+    form.querySelector('#produtoNome').value = '';
+    form.querySelector('#produtoImagemUrl').value = '';
+    form.querySelector('#produtoPreco').value = '';
+    form.querySelector('#produtoDesconto').value = '';
+    form.querySelector('#produtoEntrega').value = '';
+    form.querySelector('#produtoDescricao').value = '';
+    form.querySelectorAll('input[name="tamanhos"]').forEach(c => c.checked = false);
+
+    if (produtoId) {
+        const doc = await db.collection('loja_produtos').doc(produtoId).get();
+        const p = doc.data();
+        form.querySelector('#produtoNome').value = p.nome;
+        form.querySelector('#produtoImagemUrl').value = p.imagemUrl;
+        form.querySelector('#produtoPreco').value = p.preco;
+        form.querySelector('#produtoDesconto').value = p.desconto || '';
+        form.querySelector('#produtoEntrega').value = p.tempoEntrega || '';
+        form.querySelector('#produtoDescricao').value = p.descricao || '';
+        if (p.tamanhos) {
+            p.tamanhos.forEach(t => {
+                const checkbox = form.querySelector(`input[value="${t}"]`);
+                if(checkbox) checkbox.checked = true;
+            });
+        }
+    }
+    abrirModal('modalAddEditProduto');
+}
+
+async function salvarProdutoVendedor() {
+    const nome = document.getElementById('produtoNome').value.trim();
+    const imagemUrl = document.getElementById('produtoImagemUrl').value.trim();
+    const preco = parseFloat(document.getElementById('produtoPreco').value);
+    const desconto = parseInt(document.getElementById('produtoDesconto').value) || 0;
+    const tempoEntrega = document.getElementById('produtoEntrega').value.trim();
+    const descricao = document.getElementById('produtoDescricao').value.trim();
+    const tamanhos = Array.from(document.querySelectorAll('input[name="tamanhos"]:checked')).map(c => c.value);
+
+    if(!nome || !imagemUrl || isNaN(preco) || preco <= 0 || !tempoEntrega) {
+        return alert('Preencha nome, imagem, preço e tempo de entrega.');
+    }
+
+    const data = {
+        nome, imagemUrl, preco, desconto, tempoEntrega, descricao, tamanhos,
+        vendedorUid: auth.currentUser.uid,
+        vendedorNome: perfil.nome,
+        vendedorTelefone: perfil.telefone,
+        isOficial: perfil.tipo === 'admin',
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    if (produtoEmEdicaoId) {
+        await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
+    } else {
+        data.vendasRealizadas = 0;
+        await db.collection('loja_produtos').add(data);
+    }
+    
+    alert('Produto salvo com sucesso!');
+    fecharModal({target: document.getElementById('modalAddEditProduto')});
+    abrirGerenciarLoja(); // Recarrega a lista
+}
+
+async function deletarProdutoVendedor(produtoId) {
+    if (confirm('Tem certeza que deseja excluir este produto?')) {
+        await db.collection('loja_produtos').doc(produtoId).delete();
+        alert('Produto excluído.');
+        abrirGerenciarLoja();
+    }
+}
+
+async function abrirClientesVendedor() {
+    abrirModal('modalGerenciarLojaClientes');
+    const container = document.getElementById('listaClientesLoja');
+    container.innerHTML = '<p>Carregando clientes...</p>';
+    
+    const snap = await db.collection('loja_pedidos').where('vendedorUid', '==', auth.currentUser.uid).orderBy('ts', 'desc').get();
+    if(snap.empty) {
+        container.innerHTML = '<p>Nenhum cliente encontado.</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    snap.forEach(doc => {
+        const pedido = doc.data();
+        container.innerHTML += `
+            <div class="card">
+                <b>${pedido.clienteNome}</b>
+                <p>Produto: ${pedido.produtoNome} (T: ${pedido.tamanho})</p>
+                <p>Endereço: ${pedido.endereco}</p>
+                <p>Telefone: ${pedido.telefone}</p>
+            </div>`;
     });
 }
 </script>
