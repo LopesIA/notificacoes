@@ -214,6 +214,7 @@
       width: auto;
       height: auto;
       text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+      position: relative; /* Para o contador de notificação */
     }
     #btnSair {
       font-size: 20px; /* Reduzido */
@@ -266,16 +267,17 @@
       justify-content: center;
     }
     .vantagens ul {
-      list-style-type: none;
-      padding: 0;
+      list-style-type: '✅';
+      padding-left: 20px;
     }
     .vantagens li {
-      background: var(--cor-botoes);
+      background: transparent;
       margin-bottom: 10px;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid var(--cor-borda);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      padding: 5px;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      padding-left: 10px;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -297,13 +299,27 @@
       50% { box-shadow: 0 0 16px #4CAF50, 0 0 24px #4CAF50; }
       100% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
     }
-    /* NOVO: Animação para o ícone de chat piscando */
-    @keyframes gentle-blink {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(1.1); }
+    /* NOVO: Animação para notificação de chat */
+    @keyframes gold-flash {
+      0%, 100% { background-color: transparent; transform: scale(1); }
+      50% { background-color: rgba(212, 175, 55, 0.8); transform: scale(1.2); }
     }
-    .blinking-chat {
-        animation: gentle-blink 1.5s ease-in-out infinite;
+    .new-message-glow {
+        animation: gold-flash 1.5s ease-in-out infinite;
+        border-radius: 50%;
+    }
+    /* NOVO: Contador de notificação */
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -8px;
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: bold;
+        border: 2px solid var(--cor-fundo);
     }
     .vip-glow {
       animation: vip-glow 2s ease-in-out infinite;
@@ -317,7 +333,8 @@
       color: #fff;
     }
     .chat-container {
-      max-height: 300px;
+      height: 100%;
+      flex-grow: 1; /* Faz o container crescer */
       overflow-y: auto;
       border: 1px solid var(--cor-borda);
       padding: 10px;
@@ -328,10 +345,14 @@
       flex-direction: column-reverse; 
     }
     .chat-message {
-      padding: 8px;
-      margin-bottom: 5px;
-      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 12px;
       animation: fadeIn 0.3s ease-in-out;
+      transition: opacity 1.5s ease-out; /* Transição para o fade out */
+    }
+    .chat-message.fading-out {
+        opacity: 0;
     }
     .chat-sent {
       text-align: right;
@@ -630,6 +651,46 @@
         z-index: 5;
         pointer-events: none;
     }
+    /* Estilos do Chat Fullscreen */
+    #janelaChat.fullscreen {
+        padding: 0;
+        border-radius: 0;
+    }
+    #janelaChat.fullscreen .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #janelaChat.fullscreen #chatInput {
+        margin-bottom: 0;
+    }
+    /* Estilos do Portfólio */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      padding: 10px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .portfolio-grid img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid var(--cor-borda);
+    }
+    #modalPortfolioCliente .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
   </style>
 </head>
 <body>
@@ -682,7 +743,7 @@
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
       <button onclick="abrirBarbeiros()" style="width:45%">💈 Barbearias</button>
       <button onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
-      <button id="btnVip" onclick="abrirModal('modalVip')" style="width:45%">💎 VIP</button>
+      <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirChatGlobal()" style="width:45%">💬 Chat</button>
       <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
@@ -703,6 +764,7 @@
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
       <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
+      <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
       <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
       <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
       <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
@@ -733,7 +795,10 @@
 
 <div class="bottom-buttons-container hidden" id="bottomButtons">
   <button id="btnDenuncia" onclick="abrirModal('modalDenuncia')">🚨</button>
-  <button id="btnChat" onclick="abrirChatGlobal()">💬</button>
+  <button id="btnChat" onclick="abrirChatGlobal()">
+    <span>💬</span>
+    <span class="notification-badge hidden">0</span>
+  </button>
 </div>
 
 <button id="btnSair" class="hidden" onclick="auth.signOut()">Sair</button>
@@ -815,34 +880,14 @@
 </div>
 
 <div id="modalVip" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content vip-glow" onclick="event.stopPropagation()">
-    <div id="vipContent">
-        <h3>💎 Vantagens VIP</h3>
-        <p>Adesão: R$ 100,00</p>
-        <p style="font-size: 14px; color: var(--cor-destaque-prata);">✨ Sua adesão é um apoio vital para a continuação e desenvolvimento deste projeto. O valor será totalmente investido em melhorias e na expansão do aplicativo.</p>
-        <div class="vantagens">
-            <h4>Vantagens para Cliente VIP:</h4>
-            <ul>
-                <li>👑 Desconto de 10% em todos os serviços.</li>
-                <li>✨ Atendimento prioritário.</li>
-            </ul>
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div id="vipContentContainer">
+            <!-- O conteúdo será injetado aqui pelo JavaScript -->
         </div>
-        <button onclick="assinarVip()">Assinar VIP</button>
+        <button onclick="fecharModal(event)">❌ Fechar</button>
     </div>
-    <div id="vipContentAtivo" class="hidden">
-        <h3>👑 Agora você é VIP!</h3>
-        <p style="font-size: 14px; color: var(--cor-destaque-prata);">Aproveite os benefícios exclusivos e os descontos de 10% em todos os serviços.</p>
-        <div class="vantagens">
-            <h4>Vantagens para Cliente VIP:</h4>
-            <ul>
-                <li>👑 Desconto de 10% em todos os serviços.</li>
-                <li>✨ Atendimento prioritário.</li>
-            </ul>
-        </div>
-    </div>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
 </div>
+
 
 <div id="modalFidelidade" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -873,6 +918,7 @@
     </div>
     
     <div class="modal-footer">
+        <button id="btnAcessarPortfolio" class="hidden" style="width: auto; background-color: var(--cor-botoes);">🖼️ Ver Portfólio</button>
         <button id="btnConfirmarAgendamento" disabled>Agendar</button>
         <button onclick="fecharModal(event)">❌ Fechar</button>
     </div>
@@ -1091,6 +1137,24 @@
   </div>
 </div>
 
+<div id="modalPortfolioBarbeiro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🖼️ Gerenciar Portfólio</h3>
+    <p style="font-size: 12px; opacity: 0.8;">Cole os links (URLs) das suas imagens. Use serviços como <a href="https://postimages.org/" target="_blank">Postimages</a> para hospedar suas fotos gratuitamente. Máximo de 10 imagens.</p>
+    <div id="portfolioInputsContainer" class="scrollable-list" style="max-height: 250px;"></div>
+    <button onclick="salvarPortfolio()">💾 Salvar Portfólio</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalPortfolioCliente" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3 id="portfolioClienteNome">🖼️ Portfólio</h3>
+    <div id="portfolioClienteGrid" class="portfolio-grid"></div>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 
 <div id="modalPermissaoNotificacao" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -1183,6 +1247,7 @@ let adminBalanceListener = null;
 let adminUserBalances = {};
 let globalChatListener = null;
 let lastGlobalMessageTimestamp = null;
+let newMessagesCount = 0;
 
 let deferredInstallPrompt = null;
 let chatPreviewTimeout = null; 
@@ -1271,20 +1336,8 @@ function abrirModal(id) {
     if (currentModal && currentModal.id !== id) {
         currentModal.classList.remove('show');
     }
-
     const modal = document.getElementById(id);
     if (modal) {
-        if (id === 'modalVip') {
-            const vipContent = document.getElementById('vipContent');
-            const vipContentAtivo = document.getElementById('vipContentAtivo');
-            if (perfil.vip) {
-                vipContent.classList.add('hidden');
-                vipContentAtivo.classList.remove('hidden');
-            } else {
-                vipContent.classList.remove('hidden');
-                vipContentAtivo.add('hidden');
-            }
-        }
         if (id === 'modalFidelidade') {
             document.getElementById('pontosFidelidade').textContent = perfil.pontosFidelidade || 0;
         }
@@ -1517,7 +1570,7 @@ function criarConta() {
       const data = {
         email, nome, tipo: tipoFinal, telefone, estado: estadoFinal, cidade: cidadeFinal,
         saldo: 0, reputacao: 100, cortesSemana: 0,
-        disponivel: "nao", listaServicos: [], promocoes: [],
+        disponivel: "nao", listaServicos: [], promocoes: [], portfolio: [],
         chatAtivo: true, vip: false,
         rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
         codigosResgatados: [],
@@ -1610,7 +1663,15 @@ auth.onAuthStateChanged(async user => {
             
             if (msg.ts?.seconds > (lastGlobalMessageTimestamp?.seconds || 0) && msg.remetenteUid !== user.uid) {
                 if (!janelaChat.classList.contains('show')) {
-                    document.getElementById('btnChat').classList.add('blinking-chat');
+                    const btnChat = document.getElementById('btnChat').querySelector('span:first-child');
+                    btnChat.classList.add('new-message-glow');
+                    setTimeout(() => btnChat.classList.remove('new-message-glow'), 2000);
+
+                    newMessagesCount++;
+                    const badge = document.querySelector('.notification-badge');
+                    badge.textContent = newMessagesCount;
+                    badge.classList.remove('hidden');
+
                     const preview = document.getElementById('chatPreview');
                     preview.innerHTML = `<b>${msg.remetenteNome}:</b> ${msg.texto}`;
                     preview.classList.add('show');
@@ -1797,6 +1858,14 @@ async function abrirBarbeiroPerfil(barbeiroUid) {
             horariosList.innerHTML = "<p>Nenhuma opção de agendamento disponível no momento.</p>";
         }
         
+        const btnPortfolio = document.getElementById('btnAcessarPortfolio');
+        if (b.portfolio && b.portfolio.length > 0) {
+            btnPortfolio.classList.remove('hidden');
+            btnPortfolio.onclick = () => abrirPortfolioCliente(barbeiroUid, b.nome);
+        } else {
+            btnPortfolio.classList.add('hidden');
+        }
+
         document.getElementById('btnConfirmarAgendamento').onclick = confirmarAgendamento;
         verificarEstadoBotaoAgendar();
         abrirModal('modalBarbeiroPerfil');
@@ -1948,6 +2017,49 @@ function resgatarPontos() {
   }).catch(e => alert("Erro ao resgatar pontos: " + e.message));
 }
 
+function abrirModalVip() {
+    const container = document.getElementById('vipContentContainer');
+    if (perfil.vip) {
+        container.innerHTML = `
+            <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
+                <h3 style="color: var(--cor-destaque-ouro);">👑 Você é um Membro VIP!</h3>
+                <p>Obrigado por fazer parte do nosso clube exclusivo. Sua assinatura é fundamental para o crescimento do nosso aplicativo.</p>
+                <div class="vantagens" style="text-align: left; margin-top: 20px;">
+                    <h4>Seus Benefícios Atuais:</h4>
+                    <ul>
+                        <li>Desconto de 10% em todos os serviços.</li>
+                        <li>Atendimento prioritário na agenda dos barbeiros.</li>
+                        <li>O dobro de pontos de fidelidade em depósitos.</li>
+                        <li>Símbolo de prestígio 👑 no chat global.</li>
+                    </ul>
+                </div>
+                <p style="font-size: 12px; opacity: 0.7; margin-top: 20px;">Sua assinatura não tem data de expiração. Aproveite!</p>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
+                <h3 style="color: var(--cor-destaque-ouro);">💎 Torne-se um Membro VIP!</h3>
+                <p>Eleve sua experiência e apoie o desenvolvimento contínuo do nosso aplicativo com uma adesão única.</p>
+                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)}</p>
+                <div class="vantagens" style="text-align: left; margin-top: 20px;">
+                    <h4>Vantagens Exclusivas para Clientes VIP:</h4>
+                    <ul>
+                        <li><strong>10% de Desconto</strong> em todos os serviços, sempre.</li>
+                        <li><strong>Atendimento Prioritário</strong> na agenda.</li>
+                        <li><strong>Dobro de Pontos</strong> de fidelidade ao fazer depósitos.</li>
+                         <li><strong>Status de Prestígio</strong> com um ícone 👑 no chat.</li>
+                    </ul>
+                </div>
+                <p style="font-size: 12px; color: var(--cor-destaque-prata); margin-top: 20px;">Sua contribuição é um investimento direto em novas funcionalidades e melhorias para toda a comunidade.</p>
+                <button onclick="assinarVip()" style="margin-top: 15px;">Assinar Agora</button>
+            </div>
+        `;
+    }
+    abrirModal('modalVip');
+}
+
+
 function assinarVip() {
     if (perfil.saldo < PRECO_VIP) {
         alert("Saldo insuficiente para assinar o VIP.");
@@ -1967,60 +2079,96 @@ function assinarVip() {
     }).then(() => {
         alert("Parabéns! Você agora é um membro VIP!");
         notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite 10% de desconto e benefícios exclusivos!");
+        fecharModal({target: document.getElementById('modalVip')});
     }).catch(e => alert("Erro ao assinar VIP: " + e.message));
 }
 
 async function abrirChatGlobal() {
-  document.getElementById('btnChat').classList.remove('blinking-chat');
-  abrirModal('janelaChat');
-  const chatContainer = document.getElementById("chatMessages");
-  chatContainer.innerHTML = "";
-  document.getElementById("chatTitle").innerHTML = perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
-  if (chatListener) chatListener();
-  const chatDoc = await db.collection("chats").doc(CHAT_GLOBAL_ID).get();
-  if (!chatDoc.exists) await db.collection("chats").doc(CHAT_GLOBAL_ID).set({ tipo: "global" });
+    const badge = document.querySelector('.notification-badge');
+    newMessagesCount = 0;
+    badge.textContent = '0';
+    badge.classList.add('hidden');
+    
+    const modal = document.getElementById('janelaChat');
+    modal.classList.add('fullscreen');
+    abrirModal('janelaChat');
 
-  chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-    .orderBy("ts").limitToLast(15) 
-    .onSnapshot(async snapshot => {
-      for (const change of snapshot.docChanges()) {
-        if (change.type === "added") {
-          const msg = change.doc.data();
-          let remetenteNome = msg.remetenteNome || "Desconhecido";
-          let classeCSS = "";
-          let iconeBase = "";
-          let medalhaIcone = "";
+    const chatContainer = document.getElementById("chatMessages");
+    chatContainer.innerHTML = "";
+    document.getElementById("chatTitle").innerHTML = perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
+    if (chatListener) chatListener();
 
-          const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
-          if (msg.tipo === "bot") {
-              remetenteNome = `<span style="color: red;">🤖 ${remetenteNome}</span>`;
-          } else if(remetenteDoc.exists) {
-              const remetenteData = remetenteDoc.data();
-              if (remetenteData.tipo === "admin") {
-                  classeCSS = `admin-chat`; iconeBase = `👑`;
-              } else if (remetenteData.tipo === "barbeiro") {
-                  classeCSS = `barbeiro-chat`; iconeBase = `💈`;
-                  medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
-              } else if (remetenteData.vip) {
-                  classeCSS = `admin-chat`; iconeBase = `👑`;
-                  medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
-              } else {
-                  classeCSS = `cliente-chat`; iconeBase = `👤`;
-                  medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
-              }
-              remetenteNome = `<span class="${classeCSS}">${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
-          }
-          const messageDiv = document.createElement('div');
-          messageDiv.className = `chat-message ${msg.remetenteUid === auth.currentUser.uid ? "chat-sent" : "chat-received"}`;
-          messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
-          chatContainer.prepend(messageDiv);
+    chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
+      .orderBy("ts", "desc").limit(100)
+      .onSnapshot(async snapshot => {
+        const initialLoad = chatContainer.innerHTML === "";
+        const messagesToRender = [];
+
+        for (const change of snapshot.docChanges()) {
+            if (change.type === "added") {
+                messagesToRender.push(change.doc.data());
+            }
         }
-      }
+        
+        messagesToRender.sort((a, b) => a.ts.seconds - b.ts.seconds);
+
+        for(const msg of messagesToRender) {
+             const messageDiv = await createMessageDiv(msg);
+             chatContainer.prepend(messageDiv);
+        }
+
+        if(initialLoad) {
+            const allMessages = chatContainer.querySelectorAll('.chat-message');
+            allMessages.forEach((msg, index) => {
+                if(index >= 5) msg.classList.add('hidden');
+            });
+        }
+        
+        const visibleMessages = Array.from(chatContainer.querySelectorAll('.chat-message:not(.hidden)'));
+        if (visibleMessages.length > 5) {
+            const oldestVisibleMessage = visibleMessages[visibleMessages.length - 1]; // Oldest is last because we prepend
+            if (!oldestVisibleMessage.dataset.timer) {
+                oldestVisibleMessage.dataset.timer = setTimeout(() => {
+                    oldestVisibleMessage.classList.add('fading-out');
+                    oldestVisibleMessage.addEventListener('transitionend', () => oldestVisibleMessage.remove());
+                }, 60000); // 1 minuto
+            }
+        }
     });
     
     document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } });
     if (!botInterval) botInterval = setInterval(sendBotMessage, 600000);
 }
+
+async function createMessageDiv(msg) {
+    let remetenteNome = msg.remetenteNome || "Desconhecido";
+    let classeCSS = "", iconeBase = "", medalhaIcone = "";
+
+    const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
+    if (msg.tipo === "bot") {
+        remetenteNome = `<span style="color: red;">🤖 ${remetenteNome}</span>`;
+    } else if(remetenteDoc.exists) {
+        const remetenteData = remetenteDoc.data();
+        if (remetenteData.tipo === "admin") {
+            classeCSS = `admin-chat`; iconeBase = `👑`;
+        } else if (remetenteData.tipo === "barbeiro") {
+            classeCSS = `barbeiro-chat`; iconeBase = `💈`;
+            medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
+        } else if (remetenteData.vip) {
+            classeCSS = `admin-chat`; iconeBase = `👑`;
+            medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
+        } else {
+            classeCSS = `cliente-chat`; iconeBase = `👤`;
+            medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
+        }
+        remetenteNome = `<span class="${classeCSS}">${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+    }
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${msg.remetenteUid === auth.currentUser.uid ? "chat-sent" : "chat-received"}`;
+    messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
+    return messageDiv;
+}
+
 
 const botMessages = [ "Dica: Avalie seu barbeiro após o serviço para ganhar 10 pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos via Pix de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos nos depósitos!", "Barbeiros: mantenham sua agenda e serviços atualizados para atrair mais clientes e facilitar os agendamentos.", "Fique de olho no nosso Blog! Administradores podem postar códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!" ];
 let lastBotMessageIndex = -1;
@@ -2525,15 +2673,19 @@ function carregarListaBlog() {
   const lista = document.getElementById("listaBlog");
   lista.innerHTML = "<p>⏳ Carregando...</p>";
   db.collection("blog").orderBy("ts", "desc").onSnapshot(snap => {
-    lista.innerHTML = snap.empty ? "<p>Nenhum post no blog.</p>" : "";
+    lista.innerHTML = "";
     const umDiaAtras = new Date().getTime() - (24 * 60 * 60 * 1000);
+    let postsExibidos = 0;
     snap.forEach(doc => {
       const p = doc.data();
       if (p.ts && p.ts.toDate().getTime() > umDiaAtras) {
         lista.innerHTML += `<div class="card" style="margin-bottom:15px;"><h4>${p.titulo}</h4><p>${p.conteudo}</p><p style="font-size:12px;opacity:0.7;">Por: ${p.autor}</p></div>`;
+        postsExibidos++;
       }
     });
-    if (lista.innerHTML === "") lista.innerHTML = "<p>Nenhum post recente (últimas 24h).</p>";
+    if (postsExibidos === 0) {
+        lista.innerHTML = "<p>Nenhum post recente (últimas 24h).</p>";
+    }
   });
 }
 
@@ -2978,6 +3130,49 @@ async function abrirModalDashboardBarbeiro() {
     }
 }
 
+// Funções de Portfólio
+function abrirModalPortfolioBarbeiro() {
+    abrirModal('modalPortfolioBarbeiro');
+    const container = document.getElementById('portfolioInputsContainer');
+    container.innerHTML = '';
+    const portfolioAtual = perfil.portfolio || [];
+    for (let i = 0; i < 10; i++) {
+        container.innerHTML += `<input type="url" class="portfolio-url-input" placeholder="🔗 Link da Imagem ${i + 1}" value="${portfolioAtual[i] || ''}">`;
+    }
+}
+
+function salvarPortfolio() {
+    const inputs = document.querySelectorAll('.portfolio-url-input');
+    const novasUrls = Array.from(inputs).map(input => input.value.trim()).filter(url => url);
+    
+    db.collection('usuarios').doc(auth.currentUser.uid).update({
+        portfolio: novasUrls
+    }).then(() => {
+        alert('Portfólio salvo com sucesso!');
+        fecharModal({ target: document.getElementById('modalPortfolioBarbeiro') });
+    }).catch(e => alert('Erro ao salvar portfólio: ' + e.message));
+}
+
+async function abrirPortfolioCliente(barbeiroUid, barbeiroNome) {
+    const doc = await db.collection('usuarios').doc(barbeiroUid).get();
+    if (!doc.exists) return;
+    const portfolio = doc.data().portfolio || [];
+    
+    const grid = document.getElementById('portfolioClienteGrid');
+    grid.innerHTML = '';
+    document.getElementById('portfolioClienteNome').textContent = `🖼️ Portfólio de ${barbeiroNome}`;
+    
+    if (portfolio.length > 0) {
+        portfolio.forEach(url => {
+            grid.innerHTML += `<img src="${url}" alt="Foto do portfólio" onerror="this.src='https://via.placeholder.com/150?text=Erro'">`;
+        });
+    } else {
+        grid.innerHTML = '<p>Este barbeiro ainda não adicionou imagens ao portfólio.</p>';
+    }
+    
+    abrirModal('modalPortfolioCliente');
+}
+
 
 // NOVO: Função para exibir a versão do App
 async function exibirVersaoApp() {
@@ -3037,4 +3232,3 @@ if (firebase.messaging.isSupported()) {
 </script>
 </body>
 </html>
-
