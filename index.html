@@ -100,6 +100,8 @@
       max-width: 480px;
       box-sizing: border-box;
       animation: fadeIn 0.5s ease-in-out;
+      position: relative;
+      overflow: hidden;
     }
     .hidden {
       display: none;
@@ -298,6 +300,22 @@
       0% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
       50% { box-shadow: 0 0 16px #4CAF50, 0 0 24px #4CAF50; }
       100% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
+    }
+    @keyframes gold-flash-background {
+        0%, 100% { background-color: var(--cor-card); }
+        50% { background-color: #2c250e; }
+    }
+    .boosted-card {
+        border: 2px solid var(--cor-destaque-ouro);
+        animation: gold-flash-background 3s ease-in-out infinite, fadeIn 0.5s;
+    }
+    .boost-icon {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 20px;
+        text-shadow: 0 0 8px var(--cor-destaque-ouro);
+        animation: vip-glow 2s ease-in-out infinite;
     }
     /* NOVO: Animação para notificação de chat */
     @keyframes gold-flash {
@@ -567,6 +585,7 @@
         border-top: 1px solid var(--cor-borda);
         display: flex;
         gap: 10px;
+        justify-content: flex-end;
     }
     #chatPreview {
         position: absolute;
@@ -683,7 +702,7 @@
       border-radius: 8px;
       border: 2px solid var(--cor-borda);
     }
-    #modalPortfolioCliente .modal-content {
+    #modalPortfolioCliente .modal-content, #modalLoja .modal-content {
         width: 100%;
         height: 100%;
         max-width: 100%;
@@ -691,6 +710,42 @@
         display: flex;
         flex-direction: column;
     }
+    /* Estilos da Loja */
+    .loja-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 10px;
+        flex-grow: 1;
+        overflow-y: auto;
+    }
+    .produto-card {
+        background: var(--cor-botoes);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--cor-borda);
+    }
+    .produto-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    .produto-info {
+        padding: 10px;
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .produto-nome { font-weight: 600; font-size: 1em; }
+    .produto-preco { font-size: 1.1em; color: var(--cor-destaque-ouro); margin-top: 5px; }
+    .produto-preco-original { text-decoration: line-through; opacity: 0.7; font-size: 0.9em; }
+    .produto-card button { font-size: 14px; padding: 8px; margin-top: 10px;}
+    .loja-header { display: flex; justify-content: space-between; align-items: center; }
+
   </style>
 </head>
 <body>
@@ -732,6 +787,7 @@
         <option value="">🏙️ Selecione sua cidade</option>
       </select>
       <input id="indicador" type="text" placeholder="📨 Email de quem te indicou? (opcional)">
+      <button onclick="obterLocalizacaoCadastro()" id="btnLocalizacaoCadastro" class="hidden">📍 Usar minha localização atual</button>
     </div>
     <button onclick="entrar()">➡️ Entrar</button>
     <button id="btnCriarConta" onclick="prepararCriarConta()">🆕 Criar conta</button>
@@ -745,7 +801,7 @@
       <button onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
       <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirChatGlobal()" style="width:45%">💬 Chat</button>
+      <button onclick="abrirLoja()" style="width:45%">🛍️ Loja</button>
       <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
       <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
@@ -762,6 +818,7 @@
       <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
       <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+      <button onclick="abrirLoja()" style="width:45%">🛍️ Loja</button>
       <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
       <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
       <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
@@ -771,6 +828,7 @@
       <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
       <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
+      <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-ouro), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
     </div>
   </div>
 
@@ -782,6 +840,7 @@
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
       <button onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+      <button onclick="abrirLoja()" style="width:45%">🛍️ Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
       <button onclick="abrirModal('modalNotificacaoMarketing')" style="width:92%">📣 Enviar Notificação Geral</button>
     </div>
@@ -919,8 +978,8 @@
     
     <div class="modal-footer">
         <button id="btnAcessarPortfolio" class="hidden" style="width: auto; background-color: var(--cor-botoes);">🖼️ Ver Portfólio</button>
+        <button id="btnAbrirRota" class="hidden" style="width: auto; background-color: var(--cor-botoes);">🗺️ Rota</button>
         <button id="btnConfirmarAgendamento" disabled>Agendar</button>
-        <button onclick="fecharModal(event)">❌ Fechar</button>
     </div>
   </div>
 </div>
@@ -1007,6 +1066,7 @@
     <h3>📍 Alterar Endereço</h3>
     <input id="novoEnderecoRua" type="text" placeholder="Nova Rua">
     <input id="novoEnderecoNumero" type="text" placeholder="Novo Número">
+    <button onclick="obterLocalizacaoCadastro('barbeiro')">📍 Usar minha localização atual</button>
     <button onclick="alterarEnderecoBarbeiro(event)">Salvar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
@@ -1140,7 +1200,7 @@
 <div id="modalPortfolioBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🖼️ Gerenciar Portfólio</h3>
-    <p style="font-size: 12px; opacity: 0.8;">Cole os links (URLs) das suas imagens. Use serviços como <a href="https://postimages.org/" target="_blank">Postimages</a> para hospedar suas fotos gratuitamente. Máximo de 10 imagens.</p>
+    <p style="font-size: 12px; opacity: 0.8;">Cole os links das suas imagens. Use serviços como <a href="https://postimages.org/" target="_blank">Postimages</a> para hospedar suas fotos gratuitamente. Máximo de 10 imagens.</p>
     <div id="portfolioInputsContainer" class="scrollable-list" style="max-height: 250px;"></div>
     <button onclick="salvarPortfolio()">💾 Salvar Portfólio</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
@@ -1153,6 +1213,53 @@
     <div id="portfolioClienteGrid" class="portfolio-grid"></div>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
+</div>
+
+<div id="modalLoja" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="loja-header">
+            <h3>🛍️ Loja Navalha de Ouro</h3>
+            <button id="btnVenderProduto" onclick="abrirModalAdicionarProduto()" style="width: auto; font-size: 14px; padding: 8px 12px;">+ Vender</button>
+        </div>
+        <div id="lojaContainer" class="loja-grid"></div>
+        <button onclick="fecharModal(event)" style="margin-top: 15px;">❌ Fechar</button>
+    </div>
+</div>
+
+<div id="modalLiberarLoja" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>🛍️ Acesso à Loja de Vendedores</h3>
+        <p>Para começar a vender seus produtos no aplicativo, você precisa de uma liberação do administrador.</p>
+        <p>Clique no botão abaixo para enviar uma solicitação de liberação diretamente no WhatsApp.</p>
+        <button onclick="solicitarLiberacaoLoja()">
+            <img src="https://logopng.com.br/logos/whatsapp-33.png" alt="WhatsApp" style="width:20px; height:20px; vertical-align: middle; margin-right: 8px;">
+            Solicitar Liberação
+        </button>
+        <button onclick="fecharModal(event)">❌ Fechar</button>
+    </div>
+</div>
+
+<div id="modalAdicionarProduto" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>📦 Adicionar Novo Produto</h3>
+        <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
+        <input id="produtoNome" type="text" placeholder="Nome do Produto">
+        <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
+        <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional)">
+        <textarea id="produtoDescricao" placeholder="Descrição curta do produto" rows="3"></textarea>
+        <button onclick="salvarProduto()">Salvar Produto</button>
+        <button onclick="fecharModal(event)">❌ Fechar</button>
+    </div>
+</div>
+
+<div id="modalTurbinar" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>🚀 Turbinar seu Perfil</h3>
+        <p>Destaque seu perfil no topo da lista de barbearias por <strong>24 horas</strong> e alcance mais clientes!</p>
+        <p style="font-size: 22px; color: var(--cor-destaque-ouro); font-weight: bold; text-align: center;">Apenas R$ 9,99</p>
+        <button onclick="confirmarTurbinar()">Confirmar e Turbinar</button>
+        <button onclick="fecharModal(event)">❌ Cancelar</button>
+    </div>
 </div>
 
 
@@ -1219,6 +1326,7 @@ const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.
 const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
 const PRECO_VIP = 100;
+const PRECO_TURBINAR = 9.99;
 let fcmSetupDone = false;
 let isSending = false;
 let perfil = null;
@@ -1230,6 +1338,8 @@ let tempSelectedHorarios = {};
 const CHAT_GLOBAL_ID = "chatGlobal";
 let botInterval = null;
 let newWorker;
+let localizacaoCliente = null;
+let cadastroCoords = null;
 
 let userView = {
     originalType: null,
@@ -1241,6 +1351,8 @@ let agendamentoState = {
     barbeiroNome: null,
     servico: null,
     horario: null, 
+    barbeiroLat: null,
+    barbeiroLon: null,
 };
 
 let adminBalanceListener = null;
@@ -1525,6 +1637,7 @@ function prepararCriarConta() {
     document.getElementById("btnVoltar").classList.remove("hidden");
     document.getElementById("senha-cadastro").type = "text";
     document.getElementById("senha-confirm").type = "text";
+    obterLocalizacaoCadastro('cliente'); // Pedir localização para o cliente
 }
 
 function voltarParaLogin() {
@@ -1539,6 +1652,7 @@ function voltarParaLogin() {
     document.getElementById("senha-confirm").value = "";
     document.getElementById("senha-cadastro").type = "password";
     document.getElementById("senha-confirm").type = "password";
+    cadastroCoords = null;
 }
 
 function criarConta() {
@@ -1560,6 +1674,8 @@ function criarConta() {
   if (senha !== senhaConfirm) return alert("As senhas não coincidem.");
   if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos).");
   if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) return alert("Preencha todos os campos obrigatórios");
+  if (!cadastroCoords) return alert("Por favor, permita o acesso à localização para continuar o cadastro.");
+
 
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
@@ -1571,8 +1687,10 @@ function criarConta() {
         email, nome, tipo: tipoFinal, telefone, estado: estadoFinal, cidade: cidadeFinal,
         saldo: 0, reputacao: 100, cortesSemana: 0,
         disponivel: "nao", listaServicos: [], promocoes: [], portfolio: [],
-        chatAtivo: true, vip: false,
-        rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
+        chatAtivo: true, vip: false, lojaLiberada: false,
+        rua: rua || null, numero: numero || null, 
+        latitude: cadastroCoords.latitude, longitude: cadastroCoords.longitude,
+        usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
         codigosResgatados: [],
         indicadoPorEmail: indicadorEmail || null,
         bonusIndicacaoPendente: !!indicadorEmail,
@@ -1592,6 +1710,9 @@ document.getElementById('tipo').addEventListener('change', (e) => {
   const isBarbeiro = e.target.value === 'barbeiro';
   document.getElementById('rua').classList.toggle('hidden', !isBarbeiro);
   document.getElementById('numero').classList.toggle('hidden', !isBarbeiro);
+  document.getElementById('btnLocalizacaoCadastro').classList.toggle('hidden', !isBarbeiro);
+  cadastroCoords = null; // Reseta as coordenadas ao mudar o tipo
+  if(isBarbeiro) obterLocalizacaoCadastro('barbeiro');
 });
 
 auth.onAuthStateChanged(async user => {
@@ -1740,7 +1861,7 @@ async function abrirPortaSecreta() {
 // Funções do Cliente
 function abrirBarbeiros() {
   abrirModal('modalBarbeariasCliente');
-  carregarBarbeirosPorCidade();
+  carregarBarbeiros();
 }
 
 function filtrarBarbeiros() {
@@ -1757,43 +1878,117 @@ function filtrarBarbeiros() {
   });
 }
 
-function carregarBarbeirosPorCidade() {
-  const lista = document.getElementById("listaBarbeiros");
-  lista.innerHTML = "<p>⏳ Carregando barbeiros...</p>";
-  if (barbeirosListener) barbeirosListener(); 
-  let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
-  // Removido filtro de cidade para mostrar todos
-  barbeirosListener = query.onSnapshot(snap => {
-    lista.innerHTML = "";
-    if (snap.empty) {
-      lista.innerHTML = "<p>😔 Nenhum barbeiro cadastrado no momento.</p>";
-      return;
+async function carregarBarbeiros() {
+    const lista = document.getElementById("listaBarbeiros");
+    lista.innerHTML = "<p>⏳ Obtendo sua localização e carregando barbeiros...</p>";
+
+    try {
+        localizacaoCliente = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error("Geolocalização não é suportada pelo seu navegador."));
+            }
+            navigator.geolocation.getCurrentPosition(
+                (position) => resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                }),
+                (error) => {
+                    console.warn("Não foi possível obter a localização: ", error.message);
+                    reject(new Error("Permissão de localização negada."));
+                }
+            );
+        });
+        if(!perfil.latitude || !perfil.longitude) {
+            await db.collection('usuarios').doc(auth.currentUser.uid).update({
+                latitude: localizacaoCliente.latitude,
+                longitude: localizacaoCliente.longitude
+            });
+        }
+
+    } catch (error) {
+        lista.innerHTML = `<p>⚠️ ${error.message} Mostrando todos os barbeiros.</p>`;
+        localizacaoCliente = null; // Continua sem localização
     }
-    snap.forEach(doc => {
-      const b = doc.data();
-      const reputacaoEstrelas = '⭐'.repeat(Math.round((b.reputacao || 100) / 20));
-      const promosHtml = (b.promocoes || []).map(p => `<div class="promocao-card">🎁 ${p.desconto}% OFF - ${p.nome}</div>`).join('');
-      let statusHtml = '';
-      if (b.vagaImediata) {
-          statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata Disponível!</div>`;
-      } else if (b.usaAgendaManual) {
-          const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
-          if (horarios.length > 0) {
-              statusHtml = `<div class="card-status status-manual">📅 Agende seu horário<div class="card-horarios-disponiveis">${horarios.map(h => `<span>${h}</span>`).join('')}</div></div>`;
-          } else {
-              statusHtml = `<div class="card-status status-indisponivel">📋 Agenda manual (sem horários hoje)</div>`;
-          }
-      } else {
-          statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível no momento</div>`;
-      }
-      const servicosDisponiveis = (b.listaServicos || []).slice(0, 3).map(s => `<li>${s.nome}</li>`).join('');
-      lista.innerHTML += `<div class="card barbeiro-card" onclick="abrirBarbeiroPerfil('${doc.id}')"><div class="card-header"><div class="card-header-info"><h4>💈 ${b.nome}</h4><p>🏙️ ${b.cidade}</p></div><div class="card-reputacao">${reputacaoEstrelas}<br><span>(${b.reputacao || 100})</span></div></div>${statusHtml}${servicosDisponiveis ? `<div><div class="card-servicos-title">Principais Serviços:</div><ul class="card-servicos-list">${servicosDisponiveis}</ul></div>` : ''}${promosHtml}</div>`;
+
+    if (barbeirosListener) barbeirosListener();
+    let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
+    
+    barbeirosListener = query.onSnapshot(snap => {
+        if (snap.empty) {
+            lista.innerHTML = "<p>😔 Nenhum barbeiro cadastrado no momento.</p>";
+            return;
+        }
+
+        let barbeiros = [];
+        snap.forEach(doc => {
+            const b = doc.data();
+            b.uid = doc.id;
+            if (localizacaoCliente && b.latitude && b.longitude) {
+                b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
+            } else {
+                b.distancia = null;
+            }
+            barbeiros.push(b);
+        });
+
+        // LÓGICA DE ORDENAÇÃO
+        barbeiros.sort((a, b) => {
+            const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
+            const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
+            const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+
+            if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
+            if (!aDisponivel && !bDisponivel) return 0;
+            if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
+            if (a.distancia !== null && b.distancia !== null) return a.distancia - b.distancia;
+            if (a.distancia !== null) return -1;
+            if (b.distancia !== null) return 1;
+            return 0;
+        });
+        
+        lista.innerHTML = "";
+        barbeiros.forEach(b => {
+            const reputacaoEstrelas = '⭐'.repeat(Math.round((b.reputacao || 100) / 20));
+            let statusHtml = '';
+            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+
+            if (!isDisponivel) {
+                 statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível no momento</div>`;
+            } else if (b.vagaImediata) {
+                statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata Disponível!</div>`;
+            } else if (b.usaAgendaManual) {
+                const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
+                if (horarios.length > 0) {
+                    statusHtml = `<div class="card-status status-manual">📅 Agende seu horário<div class="card-horarios-disponiveis">${horarios.map(h => `<span>${h}</span>`).join('')}</div></div>`;
+                } else {
+                    statusHtml = `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
+                }
+            }
+            
+            const distanciaTexto = b.distancia !== null ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
+            const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
+
+            lista.innerHTML += `
+              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}')">
+                  ${boostIcon}
+                  <div class="card-header">
+                      <div class="card-header-info">
+                          <h4>💈 ${b.nome}</h4>
+                          ${distanciaTexto}
+                      </div>
+                      <div class="card-reputacao">${reputacaoEstrelas}<br><span>(${b.reputacao || 100})</span></div>
+                  </div>
+                  ${statusHtml}
+              </div>`;
+        });
     });
-  });
 }
 
+
 function resetAgendamentoState() {
-    agendamentoState = { barbeiroUid: null, barbeiroNome: null, servico: null, horario: null };
+    agendamentoState = { barbeiroUid: null, barbeiroNome: null, servico: null, horario: null, barbeiroLat: null, barbeiroLon: null };
 }
 
 function selecionarServico(element, servico) {
@@ -1822,6 +2017,8 @@ async function abrirBarbeiroPerfil(barbeiroUid) {
         const b = barbeiroDoc.data();
         agendamentoState.barbeiroUid = barbeiroUid;
         agendamentoState.barbeiroNome = b.nome;
+        agendamentoState.barbeiroLat = b.latitude;
+        agendamentoState.barbeiroLon = b.longitude;
 
         document.getElementById("barbeiroPerfilNome").textContent = `💈 ${b.nome}`;
         document.getElementById("barbeiroPerfilEndereco").textContent = (b.rua && b.numero) ? `${b.rua}, ${b.numero} - ${b.cidade}` : b.cidade;
@@ -1866,6 +2063,14 @@ async function abrirBarbeiroPerfil(barbeiroUid) {
             btnPortfolio.classList.add('hidden');
         }
 
+        const btnRota = document.getElementById('btnAbrirRota');
+        if (b.latitude && b.longitude) {
+            btnRota.classList.remove('hidden');
+            btnRota.onclick = () => abrirRota(b.latitude, b.longitude);
+        } else {
+            btnRota.classList.add('hidden');
+        }
+        
         document.getElementById('btnConfirmarAgendamento').onclick = confirmarAgendamento;
         verificarEstadoBotaoAgendar();
         abrirModal('modalBarbeiroPerfil');
@@ -2272,9 +2477,16 @@ function alterarEnderecoBarbeiro(event) {
     const rua = document.getElementById("novoEnderecoRua").value.trim();
     const numero = document.getElementById("novoEnderecoNumero").value.trim();
     if (!rua || !numero) return alert("Por favor, preencha a rua e o número.");
-    db.collection("usuarios").doc(auth.currentUser.uid).update({ rua, numero })
-    .then(() => {
+    if (!cadastroCoords) return alert("Por favor, use o botão para definir a localização no mapa antes de salvar.");
+    
+    db.collection("usuarios").doc(auth.currentUser.uid).update({ 
+        rua, 
+        numero,
+        latitude: cadastroCoords.latitude,
+        longitude: cadastroCoords.longitude,
+    }).then(() => {
         alert("Endereço alterado com sucesso!");
+        cadastroCoords = null;
         fecharModal(event);
     }).catch(e => alert("Erro ao alterar endereço: " + e.message));
 }
@@ -2787,7 +2999,7 @@ function abrirModalSolicitacoes() {
       lista.innerHTML = snap.empty ? "<p>Nenhuma solicitação pendente.</p>" : "";
       snap.forEach(doc => {
         const s = doc.data();
-        lista.innerHTML += `<div class="card" onclick="verDetalhesSolicitacao('${doc.id}')"><b>${s.tipo.toUpperCase()}</b> de ${s.usuarioNome}<br><p>Valor: R$ ${s.valor.toFixed(2)}</p><p style="color: #ff9800;">Status: <b>PENDENTE</b></p></div>`;
+        lista.innerHTML += `<div class="card" onclick="verDetalhesSolicitacao('${doc.id}')"><b>${s.tipo.toUpperCase()}</b> de ${s.usuarioNome}<br><p>Valor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}</p><p style="color: #ff9800;">Status: <b>PENDENTE</b></p></div>`;
       });
     });
 }
@@ -2796,10 +3008,17 @@ async function verDetalhesSolicitacao(id) {
   const doc = await db.collection("solicitacoes").doc(id).get();
   const s = doc.data();
   if (!s || s.status !== 'pendente') return alert(`Esta solicitação já foi ${s.status}.`);
-  const confirmar = confirm(`Detalhes:\nTipo: ${s.tipo}\nUsuário: ${s.usuarioNome}\nValor: R$ ${s.valor.toFixed(2)}\n${s.tipo === 'saque' ? `Chave: ${s.chavePix}\nNome: ${s.nomeRecebedor}\n` : ''}\nAprovar?`);
+
+  let detalhes = `Detalhes:\nTipo: ${s.tipo}\nUsuário: ${s.usuarioNome}\n`;
+  if(s.valor) detalhes += `Valor: R$ ${s.valor.toFixed(2)}\n`;
+  if(s.tipo === 'saque') detalhes += `Chave: ${s.chavePix}\nNome: ${s.nomeRecebedor}\n`;
+  detalhes += `\nAprovar?`;
+
+  const confirmar = confirm(detalhes);
   if (confirmar) {
     if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
     else if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
+    else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
   } else if (confirm("Deseja recusar a solicitação?")) {
     recusarSolicitacao(id, s.usuarioUid, s.tipo);
   }
@@ -3137,7 +3356,7 @@ function abrirModalPortfolioBarbeiro() {
     container.innerHTML = '';
     const portfolioAtual = perfil.portfolio || [];
     for (let i = 0; i < 10; i++) {
-        container.innerHTML += `<input type="url" class="portfolio-url-input" placeholder="🔗 Link da Imagem ${i + 1}" value="${portfolioAtual[i] || ''}">`;
+        container.innerHTML += `<input type="url" class="portfolio-url-input" placeholder="🔗 Link direto que termina com .png/.jpg aqui" value="${portfolioAtual[i] || ''}">`;
     }
 }
 
@@ -3171,6 +3390,200 @@ async function abrirPortfolioCliente(barbeiroUid, barbeiroNome) {
     }
     
     abrirModal('modalPortfolioCliente');
+}
+
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Raio da Terra em km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distância em km
+}
+
+function obterLocalizacaoCadastro(tipo) {
+    const btn = document.getElementById('btnLocalizacaoCadastro');
+    if(btn) btn.textContent = 'Obtendo localização...';
+    if (!navigator.geolocation) {
+        alert("Geolocalização não é suportada pelo seu navegador.");
+        if(btn) btn.textContent = '📍 Usar minha localização atual';
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            cadastroCoords = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            };
+            alert("Localização obtida com sucesso!");
+            if(btn) btn.textContent = '✅ Localização Obtida!';
+        },
+        (error) => {
+            alert("Não foi possível obter a localização. Por favor, verifique as permissões no seu navegador.");
+            if(btn) btn.textContent = '📍 Usar minha localização atual';
+        }
+    );
+}
+
+function abrirRota(barbeiroLat, barbeiroLon) {
+    if (localizacaoCliente) {
+        window.open(`https://www.google.com/maps/dir/${localizacaoCliente.latitude},${localizacaoCliente.longitude}/${barbeiroLat},${barbeiroLon}`, '_blank');
+    } else {
+        window.open(`https://www.google.com/maps/search/?api=1&query=${barbeiroLat},${barbeiroLon}`, '_blank');
+    }
+}
+
+function abrirModalTurbinar(){
+    abrirModal('modalTurbinar');
+}
+
+function confirmarTurbinar() {
+    if (perfil.saldo < PRECO_TURBINAR) {
+        return alert(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
+    }
+    if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
+        const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        db.collection('usuarios').doc(auth.currentUser.uid).update({
+            saldo: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR),
+            boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao)
+        }).then(() => {
+            alert('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
+            fecharModal({target: document.getElementById('modalTurbinar')});
+        }).catch(e => alert('Erro ao turbinar perfil: ' + e.message));
+    }
+}
+
+// Funções da Loja
+function abrirLoja() {
+    document.getElementById('btnVenderProduto').classList.toggle('hidden', !perfil.lojaLiberada && perfil.tipo !== 'admin');
+    abrirModal('modalLoja');
+    carregarProdutos();
+}
+
+function solicitarLiberacaoLoja() {
+    const mensagem = encodeURIComponent(`Olá, gostaria de solicitar liberação para vender na loja do app Navalha de Ouro. Meu nome de usuário é ${perfil.nome}.`);
+    window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
+    db.collection("solicitacoes").add({
+        tipo: "liberacao_loja",
+        usuarioUid: auth.currentUser.uid,
+        usuarioNome: perfil.nome,
+        status: "pendente",
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        alert("Sua solicitação foi enviada ao administrador. Você será redirecionado para o WhatsApp para confirmar.");
+    }).catch(e => alert("Erro ao criar solicitação: " + e.message));
+}
+
+function aprovarLiberacaoLoja(solicitacaoId, uid) {
+    db.runTransaction(async t => {
+        t.update(db.collection("usuarios").doc(uid), { lojaLiberada: true });
+        t.update(db.collection("solicitacoes").doc(solicitacaoId), { status: "aprovado" });
+    }).then(() => {
+        alert("Acesso à loja liberado!");
+        notifyUser(uid, "🛍️ Acesso à Loja Liberado!", "Parabéns! Você já pode cadastrar seus produtos para vender no app.");
+    }).catch(e => alert("Erro ao aprovar: " + e.message));
+}
+
+function abrirModalAdicionarProduto(){
+    abrirModal('modalAdicionarProduto');
+}
+
+async function salvarProduto() {
+    const nome = document.getElementById('produtoNome').value.trim();
+    const imagemUrl = document.getElementById('produtoImagemUrl').value.trim();
+    const preco = parseFloat(document.getElementById('produtoPreco').value);
+    const desconto = parseInt(document.getElementById('produtoDesconto').value) || 0;
+    const descricao = document.getElementById('produtoDescricao').value.trim();
+
+    if(!nome || !imagemUrl || isNaN(preco) || preco <= 0) {
+        return alert('Por favor, preencha nome, imagem e preço corretamente.');
+    }
+    await db.collection('loja_produtos').add({
+        nome, imagemUrl, preco, desconto, descricao,
+        vendedorUid: auth.currentUser.uid,
+        vendedorNome: perfil.nome,
+        vendedorTelefone: perfil.telefone,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert('Produto adicionado com sucesso!');
+    document.getElementById('produtoNome').value = '';
+    document.getElementById('produtoImagemUrl').value = '';
+    document.getElementById('produtoPreco').value = '';
+    document.getElementById('produtoDesconto').value = '';
+    document.getElementById('produtoDescricao').value = '';
+    fecharModal({target: document.getElementById('modalAdicionarProduto')});
+    carregarProdutos();
+}
+
+function carregarProdutos() {
+    const container = document.getElementById('lojaContainer');
+    container.innerHTML = '<h4>⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
+    
+    const produtosOficiais = [
+         { id: 'pod1', nome: 'Camiseta Premium Logo', preco: 89.90, imagemUrl: 'https://i.postimg.cc/mD4D4N1g/camiseta-preta.png' },
+         { id: 'pod2', nome: 'Boné Trucker Dourado', preco: 69.90, imagemUrl: 'https://i.postimg.cc/QdGzHdD9/bone-preto-dourado.png' },
+         { id: 'pod3', nome: 'Moletom com Capuz', preco: 159.90, imagemUrl: 'https://i.postimg.cc/8z0TkYj4/moletom-preto.png' },
+         { id: 'pod4', nome: 'Kit Pente e Óleo para Barba', preco: 79.90, imagemUrl: 'https://i.postimg.cc/qv0gTQ0j/kit-barba.png' },
+         { id: 'pod5', nome: 'Copo Térmico Exclusivo', preco: 99.90, imagemUrl: 'https://i.postimg.cc/W34d1N9b/copo-termico.png' },
+    ];
+    
+    produtosOficiais.forEach(p => container.innerHTML += renderProdutoCard(p, true));
+    
+    container.innerHTML += '<h4 style="grid-column: 1 / -1; margin-top: 20px;"> Marketplace da Comunidade </h4>';
+
+    db.collection('loja_produtos').orderBy('ts', 'desc').onSnapshot(snap => {
+        document.querySelectorAll('.produto-comunidade').forEach(el => el.remove()); // Limpa apenas os da comunidade
+        if(snap.empty) {
+            container.innerHTML += '<p style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
+        }
+        snap.forEach(doc => {
+            const produto = { ...doc.data(), id: doc.id };
+            container.innerHTML += renderProdutoCard(produto, false);
+        });
+    });
+}
+
+function renderProdutoCard(p, isOficial) {
+    const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
+    const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
+    const botaoComprar = isOficial 
+        ? `<button onclick="comprarProdutoOficial('${p.nome}')">Comprar Agora</button>`
+        : `<button onclick="contatarVendedor('${p.vendedorTelefone}', '${p.nome}')">Contatar Vendedor</button>`;
+    const botaoDeletar = perfil.tipo === 'admin' && !isOficial ? `<button style="background-color:#772014" onclick="deletarProduto('${p.id}')">Deletar</button>` : '';
+
+    return `
+        <div class="produto-card produto-comunidade">
+            <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
+            <div class="produto-info">
+                <div>
+                    <div class="produto-nome">${p.nome}</div>
+                    <div class="produto-preco">${precoHtml}</div>
+                </div>
+                <div>
+                    ${botaoComprar}
+                    ${botaoDeletar}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function comprarProdutoOficial(nomeProduto) {
+    alert(`Simulação de Compra\n\nProduto: ${nomeProduto}\n\nPara implementar a venda real (Print-on-Demand), é necessário contratar um desenvolvedor para integrar o app com o sistema de uma empresa especializada. Isso envolve um trabalho de backend mais complexo.`);
+}
+
+function contatarVendedor(telefone, nomeProduto) {
+    if(!telefone) return alert('Este vendedor não cadastrou um telefone.');
+    const msg = encodeURIComponent(`Olá! Vi seu produto "${nomeProduto}" na loja do app Navalha de Ouro e tenho interesse.`);
+    window.open(`https://wa.me/55${telefone}?text=${msg}`, '_blank');
+}
+
+function deletarProduto(id) {
+    if(confirm('Tem certeza que deseja deletar este produto?')) {
+        db.collection('loja_produtos').doc(id).delete();
+    }
 }
 
 
@@ -3232,3 +3645,4 @@ if (firebase.messaging.isSupported()) {
 </script>
 </body>
 </html>
+
