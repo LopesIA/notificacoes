@@ -871,8 +871,6 @@
 
 <button id="btnSair" class="hidden" onclick="auth.signOut()">Sair</button>
 
-<!-- MODAIS -->
-
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Carteira</h3>
@@ -950,8 +948,7 @@
 <div id="modalVip" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div id="vipContentContainer">
-            <!-- O conteúdo será injetado aqui pelo JavaScript -->
-        </div>
+            </div>
         <button onclick="fecharModal(event)">❌ Fechar</button>
     </div>
 </div>
@@ -1030,7 +1027,6 @@
   </div>
 </div>
 
-<!-- NOVO: Modal de Ranking Unificado -->
 <div id="modalRankingUnificado" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🏆 Ranking Geral 🏆</h3>
@@ -2040,7 +2036,7 @@ async function abrirBarbeiroPerfil(barbeiroUid) {
         servicosList.innerHTML = "";
         if (b.listaServicos?.length > 0) {
             b.listaServicos.forEach(s => {
-                const servicoJSON = JSON.stringify(s).replace(/"/g, '&quot;');
+                const servicoJSON = JSON.stringify(s).replace(/"/g, '"');
                 servicosList.innerHTML += `<div class="selectable-item" onclick='selecionarServico(this, ${servicoJSON})'>${s.nome} - R$ ${s.valor.toFixed(2)}${s.duracao ? ` - ${s.duracao} min` : ''}</div>`;
             });
         } else {
@@ -2300,6 +2296,7 @@ function assinarVip() {
     }).catch(e => alert("Erro ao assinar VIP: " + e.message));
 }
 
+// ALTERAÇÃO INICIADA: Chat otimizado para carregar apenas 6 mensagens
 async function abrirChatGlobal() {
     const badge = document.querySelector('.notification-badge');
     newMessagesCount = 0;
@@ -2315,10 +2312,10 @@ async function abrirChatGlobal() {
     document.getElementById("chatTitle").innerHTML = perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
     if (chatListener) chatListener();
 
+    // A alteração principal está aqui: limit(6) em vez de limit(100)
     chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-      .orderBy("ts", "desc").limit(100)
+      .orderBy("ts", "desc").limit(6)
       .onSnapshot(async snapshot => {
-        const initialLoad = chatContainer.innerHTML === "";
         const messagesToRender = [];
 
         snapshot.docChanges().forEach(change => {
@@ -2329,45 +2326,36 @@ async function abrirChatGlobal() {
             }
         });
         
+        // Ordena para garantir que a mais recente seja adicionada por último (e apareça no topo)
         messagesToRender.sort((a, b) => a.ts.seconds - b.ts.seconds);
 
         for(const msg of messagesToRender) {
              const messageDiv = await createMessageDiv(msg);
              chatContainer.prepend(messageDiv);
         }
-
-        if(initialLoad) {
-            const allMessages = chatContainer.querySelectorAll('.chat-message');
-            allMessages.forEach((msg, index) => {
-                if(index >= 6) msg.classList.add('hidden');
-            });
-        }
-        
-        const visibleMessages = Array.from(chatContainer.querySelectorAll('.chat-message:not(.hidden)'));
-        if (visibleMessages.length > 6) {
-            const oldestVisibleMessage = visibleMessages[visibleMessages.length - 1]; // Oldest is last because we prepend
-            if (!oldestVisibleMessage.dataset.timer) {
-                oldestVisibleMessage.dataset.timer = setTimeout(() => {
-                    oldestVisibleMessage.classList.add('fading-out');
-                    oldestVisibleMessage.addEventListener('transitionend', () => oldestVisibleMessage.remove());
-                }, 30000); // 30 segundos
-            }
-        }
     });
     
     document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } });
     if (!botInterval) botInterval = setInterval(sendBotMessage, 600000);
 }
+// ALTERAÇÃO FINALIZADA
 
+// ALTERAÇÃO INICIADA: Adicionado suporte ao emoji de item exclusivo
 async function createMessageDiv(msg) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
-    let classeCSS = "", iconeBase = "", medalhaIcone = "";
+    let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = ""; // Nova variável para o ícone
 
     const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
     if (msg.tipo === "bot") {
         remetenteNome = `<span style="color: red;">🤖 ${remetenteNome}</span>`;
     } else if(remetenteDoc.exists) {
         const remetenteData = remetenteDoc.data();
+
+        // Lógica para adicionar o ícone da camisa
+        if (remetenteData.possuiItemExclusivo) {
+            itemExclusivoIcone = '👕✨';
+        }
+
         if (remetenteData.tipo === "admin") {
             classeCSS = `admin-chat`; iconeBase = `👑`;
         } else if (remetenteData.tipo === "barbeiro") {
@@ -2380,7 +2368,8 @@ async function createMessageDiv(msg) {
             classeCSS = `cliente-chat`; iconeBase = `👤`;
             medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
         }
-        remetenteNome = `<span class="${classeCSS}">${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+        // Monta o nome do remetente com todos os ícones
+        remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
     }
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${msg.remetenteUid === auth.currentUser.uid ? "chat-sent" : "chat-received"}`;
@@ -2388,6 +2377,7 @@ async function createMessageDiv(msg) {
     messageDiv.id = `msg-${msg.id}`;
     return messageDiv;
 }
+// ALTERAÇÃO FINALIZADA
 
 
 const botMessages = [ "Dica: Avalie seu barbeiro após o serviço para ganhar 10 pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos via Pix de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos nos depósitos!", "Barbeiros: mantenham sua agenda e serviços atualizados para atrair mais clientes e facilitar os agendamentos.", "Fique de olho no nosso Blog! Administradores podem postar códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!" ];
@@ -3534,38 +3524,82 @@ async function salvarProduto() {
     fecharModal({target: document.getElementById('modalAdicionarProduto')});
 }
 
-function carregarProdutos() {
+// ALTERAÇÃO INICIADA: Loja corrigida e com nova ordenação
+async function carregarProdutos() {
     const container = document.getElementById('lojaContainer');
-    container.innerHTML = '';
-    
-    // Carrega Produtos Oficiais
-    db.collection('loja_produtos').where('isOficial', '==', true).orderBy('ts', 'desc').onSnapshot(snap => {
-        document.querySelectorAll('.produto-oficial, .header-oficial').forEach(el => el.remove());
-        if (!snap.empty) {
-            let officialHtml = '<h4 class="header-oficial" style="grid-column: 1 / -1;">⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
-            snap.forEach(doc => {
-                const produto = { ...doc.data(), id: doc.id };
-                officialHtml += renderProdutoCard(produto);
-            });
-            container.insertAdjacentHTML('afterbegin', officialHtml);
-        }
-    });
+    container.innerHTML = '<p>Carregando loja...</p>';
 
-    // Carrega Produtos da Comunidade
-    db.collection('loja_produtos').where('isOficial', '==', false).orderBy('ts', 'desc').onSnapshot(snap => {
-        document.querySelectorAll('.produto-comunidade, .header-comunidade').forEach(el => el.remove());
-        let communityHtml = '<h4 class="header-comunidade" style="grid-column: 1 / -1; margin-top: 20px;"> Marketplace da Comunidade </h4>';
-        if (snap.empty) {
-            communityHtml += '<p class="produto-comunidade" style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
+    try {
+        // 1. Busca todos os usuários para obter seus status (vip, boost, tipo)
+        const usersSnap = await db.collection('usuarios').get();
+        const usersData = {};
+        usersSnap.forEach(doc => {
+            usersData[doc.id] = doc.data();
+        });
+
+        // 2. Busca todos os produtos
+        const produtosSnap = await db.collection('loja_produtos').orderBy('ts', 'desc').get();
+        
+        let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
+        let communityProducts = [];
+        let officialProductsFound = false;
+
+        produtosSnap.forEach(doc => {
+            const produto = { ...doc.data(), id: doc.id };
+            if (produto.isOficial) {
+                officialHtml += renderProdutoCard(produto);
+                officialProductsFound = true;
+            } else {
+                communityProducts.push(produto);
+            }
+        });
+
+        // Adiciona o texto de incentivo se houver produtos oficiais
+        if (officialProductsFound) {
+            officialHtml += `
+              <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: var(--cor-botoes); border-radius: 10px; margin-top: 10px;">
+                ✨ Compre um produto oficial e ganhe <strong>200 pontos</strong> de fidelidade + um ícone exclusivo <strong>👕✨</strong> no chat!
+              </div>
+            `;
+        }
+
+        // 3. Ordena os produtos da comunidade
+        const getUserScore = (uid) => {
+            const user = usersData[uid];
+            if (!user) return 0;
+            if (user.vip) return 4;
+            const isBoosted = user.boostExpiracao && user.boostExpiracao.toDate() > new Date();
+            if (isBoosted) return 3;
+            if (user.tipo === 'barbeiro') return 2;
+            if (user.tipo === 'cliente') return 1;
+            return 0;
+        };
+
+        communityProducts.sort((a, b) => {
+            const scoreA = getUserScore(a.vendedorUid);
+            const scoreB = getUserScore(b.vendedorUid);
+            return scoreB - scoreA; // Ordena do maior para o menor score
+        });
+
+        // 4. Constrói o HTML da comunidade
+        let communityHtml = '<h4 style="grid-column: 1 / -1; margin-top: 20px;">🛒 Marketplace da Comunidade</h4>';
+        if (communityProducts.length === 0) {
+            communityHtml += '<p style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
         } else {
-            snap.forEach(doc => {
-                const produto = { ...doc.data(), id: doc.id };
+            communityProducts.forEach(produto => {
                 communityHtml += renderProdutoCard(produto);
             });
         }
-        container.insertAdjacentHTML('beforeend', communityHtml);
-    });
+        
+        // 5. Renderiza tudo na tela
+        container.innerHTML = officialHtml + communityHtml;
+
+    } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
+        container.innerHTML = '<p>Ocorreu um erro ao carregar a loja.</p>';
+    }
 }
+// ALTERAÇÃO FINALIZADA
 
 
 function renderProdutoCard(p) {
@@ -3575,10 +3609,9 @@ function renderProdutoCard(p) {
         ? `<button onclick="comprarProdutoOficial('${p.nome}')">Comprar Agora</button>`
         : `<button onclick="contatarVendedor('${p.vendedorTelefone}', '${p.nome}')">Contatar Vendedor</button>`;
     const botaoDeletar = perfil.tipo === 'admin' ? `<button style="background-color:#772014" onclick="deletarProduto('${p.id}')">Deletar</button>` : '';
-    const cardClass = p.isOficial ? 'produto-oficial' : 'produto-comunidade';
 
     return `
-        <div class="produto-card ${cardClass}">
+        <div class="produto-card">
             <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
             <div class="produto-info">
                 <div>
@@ -3594,9 +3627,25 @@ function renderProdutoCard(p) {
     `;
 }
 
-function comprarProdutoOficial(nomeProduto) {
-    alert(`Simulação de Compra\n\nProduto: ${nomeProduto}\n\nPara implementar a venda real (Print-on-Demand), é necessário contratar um desenvolvedor para integrar o app com o sistema de uma empresa especializada. Isso envolve um trabalho de backend mais complexo.`);
+// ALTERAÇÃO INICIADA: Lógica de compra de item oficial
+async function comprarProdutoOficial(nomeProduto) {
+    if (confirm(`Confirmar a compra do produto oficial "${nomeProduto}"? Você ganhará 200 pontos de fidelidade e um ícone exclusivo no chat! 👕✨`)) {
+        try {
+            const userRef = db.collection("usuarios").doc(auth.currentUser.uid);
+            await userRef.update({
+                pontosFidelidade: firebase.firestore.FieldValue.increment(200),
+                possuiItemExclusivo: true
+            });
+            alert("✅ Compra confirmada! Seus benefícios foram adicionados à sua conta.");
+            notifyUser(auth.currentUser.uid, "🏆 Recompensa Exclusiva!", "Você ganhou 200 pontos + ícone 👕✨ por comprar um item oficial!");
+        } catch (error) {
+            console.error("Erro ao processar compra de item oficial:", error);
+            alert("Ocorreu um erro ao processar sua compra. Tente novamente.");
+        }
+    }
 }
+// ALTERAÇÃO FINALIZADA
+
 
 function contatarVendedor(telefone, nomeProduto) {
     if(!telefone) return alert('Este vendedor não cadastrou um telefone.');
