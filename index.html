@@ -3540,9 +3540,9 @@ function carregarProdutos() {
     
     // Carrega Produtos Oficiais
     db.collection('loja_produtos').where('isOficial', '==', true).orderBy('ts', 'desc').onSnapshot(snap => {
-        document.querySelectorAll('.produto-oficial').forEach(el => el.remove());
+        document.querySelectorAll('.produto-oficial, .header-oficial').forEach(el => el.remove());
         if (!snap.empty) {
-            let officialHtml = '<h4 class="produto-oficial" style="grid-column: 1 / -1;">⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
+            let officialHtml = '<h4 class="header-oficial" style="grid-column: 1 / -1;">⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
             snap.forEach(doc => {
                 const produto = { ...doc.data(), id: doc.id };
                 officialHtml += renderProdutoCard(produto);
@@ -3553,8 +3553,8 @@ function carregarProdutos() {
 
     // Carrega Produtos da Comunidade
     db.collection('loja_produtos').where('isOficial', '==', false).orderBy('ts', 'desc').onSnapshot(snap => {
-        document.querySelectorAll('.produto-comunidade').forEach(el => el.remove());
-        let communityHtml = '<h4 class="produto-comunidade" style="grid-column: 1 / -1; margin-top: 20px;"> Marketplace da Comunidade </h4>';
+        document.querySelectorAll('.produto-comunidade, .header-comunidade').forEach(el => el.remove());
+        let communityHtml = '<h4 class="header-comunidade" style="grid-column: 1 / -1; margin-top: 20px;"> Marketplace da Comunidade </h4>';
         if (snap.empty) {
             communityHtml += '<p class="produto-comunidade" style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
         } else {
