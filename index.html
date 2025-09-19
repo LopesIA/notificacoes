@@ -1821,35 +1821,39 @@ function setupFCM(uid) {
         return;
     }
 
-    navigator.serviceWorker.ready.then(registration => {
-        Notification.requestPermission().then((permission) => {
-            if (permission === 'granted') {
-                fcmSetupDone = true; 
-                garantirTokenAtualizadoNoPerfil(uid);
+    navigator.serviceWorker.ready.then(async (registration) => {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            fcmSetupDone = true;
 
-                messaging.onTokenRefresh(async () => {
-                    try {
-                        const refreshedToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
-                        if (refreshedToken) {
-                            const user = auth.currentUser;
-                            if(user) {
-                               await db.collection('usuarios').doc(user.uid).update({
-                                    fcmTokens: firebase.firestore.FieldValue.arrayUnion(refreshedToken)
-                               });
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Não foi possível obter o token atualizado.', err);
-                    }
+            try {
+                // Obtém o token do dispositivo. Essa função já gerencia a renovação.
+                const currentToken = await firebase.messaging().getToken({
+                    vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE'
                 });
 
+                if (currentToken) {
+                    // Salva o token no perfil do usuário
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        await firebase.firestore().collection('usuarios').doc(user.uid).update({
+                            fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
+                        });
+                        console.log('Token FCM salvo com sucesso:', currentToken);
+                    }
+                } else {
+                    console.log('Nenhum token de notificação disponível. O usuário pode ter bloqueado as notificações.');
+                }
+            } catch (err) {
+                console.error('Erro ao obter ou atualizar o token de notificação.', err);
             }
-        });
+        } else {
+            console.warn('Permissão de notificação negada. O usuário não receberá notificações.');
+        }
     }).catch(err => {
-        console.error('Service Worker não está pronto, não é possível configurar o FCM.', err);
+        console.error('Service Worker não está pronto.', err);
     });
 }
-
 
 function alternarTema() {
   const body = document.body;
