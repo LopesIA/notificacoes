@@ -312,7 +312,7 @@
     .boost-icon {
         position: absolute;
         top: 8px;
-        right: 8px;
+        left: 8px;
         font-size: 20px;
         text-shadow: 0 0 8px var(--cor-destaque-ouro);
         animation: vip-glow 2s ease-in-out infinite;
@@ -783,6 +783,22 @@
       0%, 100% { background-color: #c0392b; }
       50% { background-color: #e74c3c; }
     }
+    
+    /* NOVOS ESTILOS */
+    .barbeiro-list-container {
+      width: 100%;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+    .promo-info {
+      font-size: 0.8em;
+      color: var(--cor-destaque-ouro);
+      margin: 8px 0 0 0;
+      padding-top: 8px;
+      border-top: 1px dashed var(--cor-borda);
+    }
 
   </style>
 </head>
@@ -834,55 +850,69 @@
   
   <div id="guestView" class="card">
     <h2>🙋 Painel de Visitante</h2>
-    <p style="text-align: center; font-size: 14px; opacity: 0.8;">Bem-vindo! Explore o app. Para interagir, por favor, crie uma conta ou faça login.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
-      <button>💈 Barbearias</button>
-      <button>📜 Histórico</button>
-      <button>💎 VIP</button>
-      <button>💰 Carteira</button>
-      <button>🏆 Fidelidade</button>
-      <button>📰 Blog</button>
-      <button>🏅 Conquistas</button>
-      <button>📊 Ranking</button>
+    <p style="text-align: center; font-size: 14px; opacity: 0.8;">Bem-vindo! Para interagir, crie uma conta ou faça login.</p>
+    <button onclick="toggleFuncoes('guestFuncoesContainer')">⚙️ Funções do Visitante</button>
+    <div id="guestFuncoesContainer" class="hidden">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
+          <button>📜 Histórico</button>
+          <button>💎 VIP</button>
+          <button>💰 Carteira</button>
+          <button>🏆 Fidelidade</button>
+          <button>📰 Blog</button>
+          <button>🏅 Conquistas</button>
+          <button>📊 Ranking</button>
+          <button>🛍️ Loja</button>
+        </div>
     </div>
+    <hr style="border-color: var(--cor-borda); margin: 20px 0;">
+    <div id="listaBarbeirosPrincipalGuest" class="barbeiro-list-container"></div>
   </div>
 
   <div id="clienteView" class="hidden card">
     <h2>🙋 Painel do Cliente</h2>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
-      <button onclick="abrirBarbeiros()" style="width:45%">💈 Barbearias</button>
-      <button onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
-      <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
-      <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
-      <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
-      <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
-      <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
-      <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:92%">🏪 Gerenciar Minha Loja</button>
+    <button onclick="toggleFuncoes('clienteFuncoesContainer')">⚙️ Funções do Cliente</button>
+    <div id="clienteFuncoesContainer" class="hidden">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
+          <button onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
+          <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
+          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+          <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
+          <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
+          <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
+          <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
+          <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:92%">🏪 Gerenciar Minha Loja</button>
+        </div>
     </div>
+    <hr style="border-color: var(--cor-borda); margin: 20px 0;">
+    <div id="listaBarbeirosPrincipalCliente" class="barbeiro-list-container"></div>
   </div>
 
   <div id="barbeiroView" class="hidden card">
     <h2>💈 Painel do Barbeiro</h2>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
-      <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
-      <button onclick="abrirAgenda()" style="width:45%">📅 Agenda</button>
-      <button onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
-      <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
-      <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
-      <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
-      <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
-      <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
-      <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
-      <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
-      <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
-      <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
-      <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
-      <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
-      <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
-      <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-ouro), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
+    <button onclick="toggleFuncoes('barbeiroFuncoesContainer')">⚙️ Funções do Barbeiro</button>
+    <div id="barbeiroFuncoesContainer" class="hidden">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
+          <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
+          <button onclick="abrirAgenda()" style="width:45%">📅 Agenda</button>
+          <button onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
+          <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
+          <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
+          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+          <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
+          <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
+          <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
+          <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
+          <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
+          <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
+          <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
+          <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
+          <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
+          <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
+          <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-ouro), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
+        </div>
     </div>
+     <hr style="border-color: var(--cor-borda); margin: 20px 0;">
+    <div id="listaBarbeirosPrincipalBarbeiro" class="barbeiro-list-container"></div>
   </div>
 
   <div id="adminView" class="hidden card">
@@ -904,11 +934,10 @@
         <h3>🛍️ Loja Navalha de Ouro</h3>
         <div style="display: flex; gap: 10px;">
             <button onclick="abrirModalParaVender()" style="width: auto; font-size: 14px; padding: 8px 12px;">🛍️ Vender</button>
-            <button onclick="mostrarPainelAtual()" style="width: auto; font-size: 14px; padding: 8px 12px;">↩️ Voltar</button>
         </div>
     </div>
     <div id="lojaContainer" class="loja-grid">
-        </div>
+    </div>
 </div>
 
 
@@ -1679,16 +1708,11 @@ function mostrar(id) {
   ["authView", "guestView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
   document.getElementById(id)?.classList.remove("hidden");
   
-  const isGuestOrAuth = (id === 'authView' || id === 'guestView');
+  const isGuestOrAuth = (id === 'authView');
   document.getElementById("topbar").classList.toggle("hidden", isGuestOrAuth);
-  document.getElementById("bottomButtons").classList.toggle("hidden", true); // Ocultar para todos inicialmente
-  document.getElementById("redeemContainer").classList.toggle("hidden", true);
+  document.getElementById("bottomButtons").classList.toggle("hidden", isGuestOrAuth);
+  document.getElementById("redeemContainer").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
   
-  if (!isGuestOrAuth) { // Mostrar botões do rodapé apenas se logado
-      document.getElementById("bottomButtons").classList.remove("hidden");
-      document.getElementById("redeemContainer").classList.remove("hidden");
-  }
-
   document.getElementById("btnTema").classList.toggle("hidden", isGuestOrAuth);
   document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
   document.getElementById("botaoExtra").classList.toggle("hidden", isGuestOrAuth);
@@ -1698,11 +1722,17 @@ function mostrar(id) {
 
 function configurarBotoesGuest() {
     const guestView = document.getElementById('guestView');
-    const buttons = guestView.querySelectorAll('button');
+    const buttons = guestView.querySelectorAll('#guestFuncoesContainer button');
     buttons.forEach(btn => {
         btn.onclick = () => {
-            alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
-            mostrar('authView');
+            const textoBotao = btn.textContent.trim();
+            if (textoBotao === '🛍️ Loja') {
+                mostrar('lojaView');
+                carregarProdutos();
+            } else {
+                alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
+                mostrar('authView');
+            }
         };
     });
 }
@@ -1846,15 +1876,18 @@ function setupViewSwitcher() {
         mostrar('lojaView'); 
         carregarProdutos(); 
     };
-    container.appendChild(btnLoja);
-
+    
     if (userView.originalType === 'admin') {
         createButton("🧠 Admin", "admin");
         createButton("💈 Barbeiro", "barbeiro");
         createButton("🙋 Cliente", "cliente");
+        container.appendChild(btnLoja);
     } else if (userView.originalType === 'barbeiro') {
         createButton("💈 Barbeiro", "barbeiro");
-        createButton("🙋 Cliente", "cliente");
+        container.appendChild(btnLoja);
+    } else if (userView.originalType === 'cliente') {
+        createButton("🙋‍♂️ Cliente", "cliente");
+        container.appendChild(btnLoja);
     }
 }
 
@@ -1885,9 +1918,11 @@ function renderCurrentView() {
             break;
         case 'barbeiro':
             mostrar("barbeiroView");
+            carregarBarbeirosPrincipal('listaBarbeirosPrincipalBarbeiro', false);
             break;
         case 'cliente':
             mostrar("clienteView");
+            carregarBarbeirosPrincipal('listaBarbeirosPrincipalCliente', false);
             break;
         case 'loja':
             mostrar("lojaView");
@@ -2007,7 +2042,8 @@ function criarConta() {
         cortesRealizados: 0, 
         conquistas: [], 
         clientesAtendidos: 0, 
-        somaAvaliacoes: 0, numAvaliacoes: 0
+        somaAvaliacoes: 0, numAvaliacoes: 0,
+        ultimoBoostComprado: null
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
@@ -2030,6 +2066,7 @@ auth.onAuthStateChanged(async user => {
     userView = { originalType: null, currentType: null };
     mostrar("guestView");
     configurarBotoesGuest();
+    carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
     document.getElementById("btnSair").classList.add("hidden");
     document.getElementById("redeemContainer").classList.add("hidden");
     if(globalChatListener) globalChatListener(); 
@@ -2053,6 +2090,7 @@ auth.onAuthStateChanged(async user => {
 
   const snap = await ref.get();
   if (!snap.exists) { mostrar("authView"); return; }
+  perfil = snap.data(); 
 
   const config = await db.collection("config").doc("sistema").get();
   if (config.exists && config.data().ativo === false && perfil.tipo !== "admin") {
@@ -2205,20 +2243,23 @@ function filtrarBarbeiros() {
   });
 }
 
-async function carregarBarbeiros() {
-    const lista = document.getElementById("listaBarbeiros");
+async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
+    const lista = document.getElementById(containerId);
     lista.innerHTML = "<p>⏳ Carregando barbeiros...</p>";
 
     if (!localizacaoCliente) {
-       await obterLocalizacaoAtual();
+       await obterLocalizacaoAtual().catch(() => {});
     }
     
     if (barbeirosListener) barbeirosListener();
     let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
+    if(!isGuest && perfil && perfil.cidade) {
+        query = query.where("cidade", "==", perfil.cidade);
+    }
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-            lista.innerHTML = "<p>😔 Nenhum barbeiro cadastrado no momento.</p>";
+            lista.innerHTML = `<p>😔 Nenhum barbeiro encontrado ${isGuest ? 'no momento' : `em ${perfil.cidade}`}.</p>`;
             return;
         }
 
@@ -2229,7 +2270,7 @@ async function carregarBarbeiros() {
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
             } else {
-                b.distancia = null;
+                b.distancia = Infinity;
             }
             barbeiros.push(b);
         });
@@ -2239,14 +2280,9 @@ async function carregarBarbeiros() {
             const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
             const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-
             if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
-            if (!aDisponivel && !bDisponivel) return 0;
             if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
-            if (a.distancia !== null && b.distancia !== null) return a.distancia - b.distancia;
-            if (a.distancia !== null) return -1;
-            if (b.distancia !== null) return 1;
-            return 0;
+            return a.distancia - b.distancia;
         });
         
         lista.innerHTML = "";
@@ -2255,6 +2291,15 @@ async function carregarBarbeiros() {
             let statusHtml = '';
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+            
+            let promocoesHtml = '';
+            if (b.promocoes && b.promocoes.length > 0) {
+              promocoesHtml = '<div class="promo-info">';
+              b.promocoes.forEach(p => {
+                  promocoesHtml += `🎁 ${p.nome} (${p.desconto}% OFF)<br>`;
+              });
+              promocoesHtml += '</div>';
+            }
 
             if (!isDisponivel) {
                  statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível no momento</div>`;
@@ -2269,7 +2314,7 @@ async function carregarBarbeiros() {
                 }
             }
             
-            const distanciaTexto = b.distancia !== null ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
+            const distanciaTexto = b.distancia !== Infinity ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
 
             lista.innerHTML += `
@@ -2283,6 +2328,7 @@ async function carregarBarbeiros() {
                       <div class="card-reputacao">${reputacaoEstrelas}<br><span>(${b.reputacao || 100})</span></div>
                   </div>
                   ${statusHtml}
+                  ${promocoesHtml}
               </div>`;
         });
     });
@@ -2312,6 +2358,10 @@ function verificarEstadoBotaoAgendar() {
 }
 
 async function abrirBarbeiroPerfil(barbeiroUid) {
+    if (!auth.currentUser) {
+        alert("Para agendar um horário, por favor, faça login ou crie uma conta.");
+        return mostrar('authView');
+    }
     try {
         resetAgendamentoState();
         const barbeiroDoc = await db.collection("usuarios").doc(barbeiroUid).get();
@@ -2602,7 +2652,7 @@ async function abrirChatGlobal() {
 
     const chatContainer = document.getElementById("chatMessages");
     chatContainer.innerHTML = "";
-    document.getElementById("chatTitle").innerHTML = perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
+    document.getElementById("chatTitle").innerHTML = perfil && perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
     if (chatListener) chatListener();
 
     chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
@@ -2658,7 +2708,7 @@ async function createMessageDiv(msg) {
         remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
     }
     const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${msg.remetenteUid === auth.currentUser.uid ? "chat-sent" : "chat-received"}`;
+    messageDiv.className = `chat-message ${auth.currentUser && msg.remetenteUid === auth.currentUser.uid ? "chat-sent" : "chat-received"}`;
     messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
     messageDiv.id = `msg-${msg.id}`;
     return messageDiv;
@@ -2679,17 +2729,23 @@ function sendBotMessage() {
 }
 
 function enviarMensagem() {
-  if (isSending) return;
-  const texto = document.getElementById("chatInput").value.trim();
-  if (!texto) return;
-  isSending = true;
-  db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
-    remetenteUid: auth.currentUser.uid, remetenteNome: perfil.nome, tipo: perfil.tipo, texto,
-    ts: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    document.getElementById("chatInput").value = "";
-    setTimeout(() => { isSending = false; }, 1000);
-  }).catch(error => { isSending = false; });
+    if (!auth.currentUser) {
+        alert("Para enviar mensagens, por favor, faça login ou crie uma conta.");
+        mostrar('authView');
+        fecharModal({ target: document.getElementById('janelaChat') });
+        return;
+    }
+    if (isSending) return;
+    const texto = document.getElementById("chatInput").value.trim();
+    if (!texto) return;
+    isSending = true;
+    db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
+        remetenteUid: auth.currentUser.uid, remetenteNome: perfil.nome, tipo: perfil.tipo, texto,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        document.getElementById("chatInput").value = "";
+        setTimeout(() => { isSending = false; }, 1000);
+    }).catch(error => { isSending = false; });
 }
 
 function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
@@ -3740,11 +3796,18 @@ function confirmarTurbinar() {
     if (perfil.saldo < PRECO_TURBINAR) {
         return alert(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
     }
+    if (perfil.ultimoBoostComprado) {
+        const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        if (perfil.ultimoBoostComprado.toDate() > vinteQuatroHorasAtras) {
+            return alert("Você só pode turbinar o perfil uma vez a cada 24 horas.");
+        }
+    }
     if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
         const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
         db.collection('usuarios').doc(auth.currentUser.uid).update({
             saldo: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR),
-            boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao)
+            boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao),
+            ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             alert('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
             fecharModal({target: document.getElementById('modalTurbinar')});
@@ -3861,7 +3924,7 @@ function renderProdutoCard(p, pJson) {
     const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
     
     return `
-        <div class="produto-card" onclick='abrirDetalhesProduto(${pJson})'>
+        <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
             <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
             <div class="produto-info">
                 <div class="produto-nome">${p.nome}</div>
@@ -4132,6 +4195,20 @@ async function abrirClientesVendedor() {
             </div>`;
     });
 }
+function toggleFuncoes(containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.classList.toggle('hidden');
+    }
+}
+function handleProdutoClick(produto) {
+    if (!auth.currentUser) {
+        alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
+        mostrar('authView');
+    } else {
+        abrirDetalhesProduto(produto);
+    }
+}
 </script>
 <script>
     if ('serviceWorker' in navigator) {
@@ -4167,3 +4244,4 @@ async function abrirClientesVendedor() {
 </script>
 </body>
 </html>
+}
