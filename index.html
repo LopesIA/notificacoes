@@ -847,12 +847,16 @@
   </div>
 
   <div id="lojaView" class="hidden card">
-      <div class="card-header">
-          <h3>🛍️ Loja Navalha de Ouro</h3>
-          <button onclick="mostrarPainelAtual()" style="width: auto; font-size: 14px; padding: 8px 12px;">Voltar</button>
-      </div>
-      <div id="lojaContainer" class="loja-grid"></div>
-  </div>
+    <div class="card-header">
+        <h3>🛍️ Loja Navalha de Ouro</h3>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="abrirModalParaVender()" style="width:45%">🛍️ Vender na Loja</button>
+            <button onclick="mostrarPainelAtual()" style="width: auto; font-size: 14px; padding: 8px 12px;">Voltar</button>
+        </div>
+    </div>
+    <div id="lojaContainer" class="loja-grid">
+        </div>
+</div>
 
 
 </div>
@@ -1553,9 +1557,12 @@ function setupViewSwitcher() {
     
     // Botão da Loja principal
     const btnLoja = document.createElement("button");
-    btnLoja.textContent = "🛍️ Loja";
-    btnLoja.onclick = () => mostrar('lojaView');
-    container.appendChild(btnLoja);
+btnLoja.textContent = "🛍️ Loja";
+btnLoja.onclick = () => { 
+    mostrar('lojaView'); 
+    carregarProdutos(); // << ADICIONE ESTA LINHA
+};
+container.appendChild(btnLoja);
 
     if (userView.originalType === 'admin') {
         createButton("🧠 Admin", "admin");
@@ -3461,7 +3468,9 @@ function confirmarTurbinar() {
 }
 
 // Funções da Loja
-function abrirModalLoja() {
+// Substitua a função abrirModalLoja() inteira por esta nova versão
+function abrirModalParaVender() {
+    // A lógica aqui é a mesma da sua função antiga, apenas com um nome mais claro
     if (perfil.lojaLiberada || perfil.tipo === 'admin') {
         abrirModal('modalAdicionarProduto');
     } else {
