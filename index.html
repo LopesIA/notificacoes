@@ -702,7 +702,7 @@
       border-radius: 8px;
       border: 2px solid var(--cor-borda);
     }
-    #modalPortfolioCliente .modal-content, #modalLoja .modal-content {
+    #modalPortfolioCliente .modal-content, #lojaView .modal-content {
         width: 100%;
         height: 100%;
         max-width: 100%;
@@ -744,7 +744,7 @@
     .produto-preco { font-size: 1.1em; color: var(--cor-destaque-ouro); margin-top: 5px; }
     .produto-preco-original { text-decoration: line-through; opacity: 0.7; font-size: 0.9em; }
     .produto-card button { font-size: 14px; padding: 8px; margin-top: 10px;}
-    .loja-header { display: flex; justify-content: space-between; align-items: center; }
+    #lojaView .card-header { display: flex; justify-content: space-between; align-items: center; }
 
   </style>
 </head>
@@ -787,7 +787,7 @@
         <option value="">🏙️ Selecione sua cidade</option>
       </select>
       <input id="indicador" type="text" placeholder="📨 Email de quem te indicou? (opcional)">
-      <button onclick="obterLocalizacaoCadastro()" id="btnLocalizacaoCadastro" class="hidden">📍 Usar minha localização atual</button>
+      <button onclick="obterLocalizacaoCadastro()" id="btnLocalizacaoCadastro">📍 Usar minha localização atual</button>
     </div>
     <button onclick="entrar()">➡️ Entrar</button>
     <button id="btnCriarConta" onclick="prepararCriarConta()">🆕 Criar conta</button>
@@ -801,7 +801,7 @@
       <button onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
       <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirLoja()" style="width:45%">🛍️ Loja</button>
+      <button onclick="abrirModalLoja()" style="width:45%">🛍️ Vender na Loja</button>
       <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
       <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
       <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
@@ -818,7 +818,7 @@
       <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
       <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirLoja()" style="width:45%">🛍️ Loja</button>
+      <button onclick="abrirModalLoja()" style="width:45%">🛍️ Vender na Loja</button>
       <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
       <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
       <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
@@ -840,11 +840,20 @@
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
       <button onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirLoja()" style="width:45%">🛍️ Loja</button>
+      <button onclick="abrirModalLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
       <button onclick="abrirModal('modalNotificacaoMarketing')" style="width:92%">📣 Enviar Notificação Geral</button>
     </div>
   </div>
+
+  <div id="lojaView" class="hidden card">
+      <div class="card-header">
+          <h3>🛍️ Loja Navalha de Ouro</h3>
+          <button onclick="mostrarPainelAtual()" style="width: auto; font-size: 14px; padding: 8px 12px;">Voltar</button>
+      </div>
+      <div id="lojaContainer" class="loja-grid"></div>
+  </div>
+
 
 </div>
 
@@ -1215,27 +1224,17 @@
   </div>
 </div>
 
-<div id="modalLoja" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="loja-header">
-            <h3>🛍️ Loja Navalha de Ouro</h3>
-            <button id="btnVenderProduto" onclick="abrirModalAdicionarProduto()" style="width: auto; font-size: 14px; padding: 8px 12px;">+ Vender</button>
-        </div>
-        <div id="lojaContainer" class="loja-grid"></div>
-        <button onclick="fecharModal(event)" style="margin-top: 15px;">❌ Fechar</button>
-    </div>
-</div>
-
 <div id="modalLiberarLoja" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>🛍️ Acesso à Loja de Vendedores</h3>
-        <p>Para começar a vender seus produtos no aplicativo, você precisa de uma liberação do administrador.</p>
-        <p>Clique no botão abaixo para enviar uma solicitação de liberação diretamente no WhatsApp.</p>
-        <button onclick="solicitarLiberacaoLoja()">
-            <img src="https://logopng.com.br/logos/whatsapp-33.png" alt="WhatsApp" style="width:20px; height:20px; vertical-align: middle; margin-right: 8px;">
-            Solicitar Liberação
-        </button>
-        <button onclick="fecharModal(event)">❌ Fechar</button>
+        <p>Você ainda não tem permissão pra cadastrar produtos na loja. Peça autorização pro administrador no WhatsApp.</p>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="fecharModal(event)" style="background-color: #555;">Cancelar</button>
+            <button onclick="solicitarLiberacaoLoja()" style="flex-grow: 1;">
+                <img src="https://logopng.com.br/logos/whatsapp-33.png" alt="WhatsApp" style="width:20px; height:20px; vertical-align: middle; margin-right: 8px;">
+                WhatsApp
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1415,15 +1414,20 @@ async function notifyAdmins(title, body) {
 
 // Funções de UI
 function mostrar(id) {
-  ["authView", "clienteView", "barbeiroView", "adminView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
+  ["authView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
   document.getElementById(id)?.classList.remove("hidden");
-  document.getElementById("topbar").classList.toggle("hidden", id === "authView");
-  document.getElementById("bottomButtons").classList.toggle("hidden", id === "authView");
-  document.getElementById("redeemContainer").classList.toggle("hidden", id === "authView");
-  document.getElementById("btnTema").classList.toggle("hidden", id === "authView");
-  document.getElementById("btnCarteiraTop").classList.toggle("hidden", id === "authView");
-  document.getElementById("botaoExtra").classList.toggle("hidden", id === "authView");
-  document.getElementById("btnSair").classList.toggle("hidden", id === "authView");
+  const isAuth = id === 'authView';
+  document.getElementById("topbar").classList.toggle("hidden", isAuth);
+  document.getElementById("bottomButtons").classList.toggle("hidden", isAuth);
+  document.getElementById("redeemContainer").classList.toggle("hidden", isAuth);
+  document.getElementById("btnTema").classList.toggle("hidden", isAuth);
+  document.getElementById("btnCarteiraTop").classList.toggle("hidden", isAuth);
+  document.getElementById("botaoExtra").classList.toggle("hidden", isAuth);
+  document.getElementById("btnSair").classList.toggle("hidden", isAuth);
+}
+
+function mostrarPainelAtual() {
+    mostrar(`${userView.currentType}View`);
 }
 
 function fecharModal(event) {
@@ -1550,6 +1554,12 @@ function setupViewSwitcher() {
         }
         container.appendChild(btn);
     };
+    
+    // Botão da Loja principal
+    const btnLoja = document.createElement("button");
+    btnLoja.textContent = "🛍️ Loja";
+    btnLoja.onclick = () => mostrar('lojaView');
+    container.appendChild(btnLoja);
 
     if (userView.originalType === 'admin') {
         createButton("🧠 Admin", "admin");
@@ -1583,6 +1593,10 @@ function renderCurrentView() {
             break;
         case 'cliente':
             mostrar("clienteView");
+            break;
+        case 'loja':
+            mostrar("lojaView");
+            carregarProdutos();
             break;
         default:
             mostrar("authView");
@@ -1637,7 +1651,7 @@ function prepararCriarConta() {
     document.getElementById("btnVoltar").classList.remove("hidden");
     document.getElementById("senha-cadastro").type = "text";
     document.getElementById("senha-confirm").type = "text";
-    obterLocalizacaoCadastro('cliente'); // Pedir localização para o cliente
+    obterLocalizacaoCadastro(); 
 }
 
 function voltarParaLogin() {
@@ -1710,9 +1724,7 @@ document.getElementById('tipo').addEventListener('change', (e) => {
   const isBarbeiro = e.target.value === 'barbeiro';
   document.getElementById('rua').classList.toggle('hidden', !isBarbeiro);
   document.getElementById('numero').classList.toggle('hidden', !isBarbeiro);
-  document.getElementById('btnLocalizacaoCadastro').classList.toggle('hidden', !isBarbeiro);
-  cadastroCoords = null; // Reseta as coordenadas ao mudar o tipo
-  if(isBarbeiro) obterLocalizacaoCadastro('barbeiro');
+  cadastroCoords = null; 
 });
 
 auth.onAuthStateChanged(async user => {
@@ -2309,11 +2321,13 @@ async function abrirChatGlobal() {
         const initialLoad = chatContainer.innerHTML === "";
         const messagesToRender = [];
 
-        for (const change of snapshot.docChanges()) {
+        snapshot.docChanges().forEach(change => {
             if (change.type === "added") {
-                messagesToRender.push(change.doc.data());
+                const msgData = change.doc.data();
+                msgData.id = change.doc.id;
+                messagesToRender.push(msgData);
             }
-        }
+        });
         
         messagesToRender.sort((a, b) => a.ts.seconds - b.ts.seconds);
 
@@ -2325,18 +2339,18 @@ async function abrirChatGlobal() {
         if(initialLoad) {
             const allMessages = chatContainer.querySelectorAll('.chat-message');
             allMessages.forEach((msg, index) => {
-                if(index >= 5) msg.classList.add('hidden');
+                if(index >= 6) msg.classList.add('hidden');
             });
         }
         
         const visibleMessages = Array.from(chatContainer.querySelectorAll('.chat-message:not(.hidden)'));
-        if (visibleMessages.length > 5) {
+        if (visibleMessages.length > 6) {
             const oldestVisibleMessage = visibleMessages[visibleMessages.length - 1]; // Oldest is last because we prepend
             if (!oldestVisibleMessage.dataset.timer) {
                 oldestVisibleMessage.dataset.timer = setTimeout(() => {
                     oldestVisibleMessage.classList.add('fading-out');
                     oldestVisibleMessage.addEventListener('transitionend', () => oldestVisibleMessage.remove());
-                }, 60000); // 1 minuto
+                }, 30000); // 30 segundos
             }
         }
     });
@@ -2371,6 +2385,7 @@ async function createMessageDiv(msg) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${msg.remetenteUid === auth.currentUser.uid ? "chat-sent" : "chat-received"}`;
     messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
+    messageDiv.id = `msg-${msg.id}`;
     return messageDiv;
 }
 
@@ -3403,7 +3418,7 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
     return R * c; // Distância em km
 }
 
-function obterLocalizacaoCadastro(tipo) {
+function obterLocalizacaoCadastro() {
     const btn = document.getElementById('btnLocalizacaoCadastro');
     if(btn) btn.textContent = 'Obtendo localização...';
     if (!navigator.geolocation) {
@@ -3456,14 +3471,16 @@ function confirmarTurbinar() {
 }
 
 // Funções da Loja
-function abrirLoja() {
-    document.getElementById('btnVenderProduto').classList.toggle('hidden', !perfil.lojaLiberada && perfil.tipo !== 'admin');
-    abrirModal('modalLoja');
-    carregarProdutos();
+function abrirModalLoja() {
+    if (perfil.lojaLiberada || perfil.tipo === 'admin') {
+        abrirModal('modalAdicionarProduto');
+    } else {
+        abrirModal('modalLiberarLoja');
+    }
 }
 
 function solicitarLiberacaoLoja() {
-    const mensagem = encodeURIComponent(`Olá, gostaria de solicitar liberação para vender na loja do app Navalha de Ouro. Meu nome de usuário é ${perfil.nome}.`);
+    const mensagem = encodeURIComponent(`Olá, gostaria de solicitar autorização para cadastrar produtos na loja. Meu nome de usuário é ${perfil.nome}.`);
     window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
     db.collection("solicitacoes").add({
         tipo: "liberacao_loja",
@@ -3505,6 +3522,7 @@ async function salvarProduto() {
         vendedorUid: auth.currentUser.uid,
         vendedorNome: perfil.nome,
         vendedorTelefone: perfil.telefone,
+        isOficial: perfil.tipo === 'admin',
         ts: firebase.firestore.FieldValue.serverTimestamp()
     });
     alert('Produto adicionado com sucesso!');
@@ -3514,47 +3532,53 @@ async function salvarProduto() {
     document.getElementById('produtoDesconto').value = '';
     document.getElementById('produtoDescricao').value = '';
     fecharModal({target: document.getElementById('modalAdicionarProduto')});
-    carregarProdutos();
 }
 
 function carregarProdutos() {
     const container = document.getElementById('lojaContainer');
-    container.innerHTML = '<h4>⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
+    container.innerHTML = '';
     
-    const produtosOficiais = [
-         { id: 'pod1', nome: 'Camiseta Premium Logo', preco: 89.90, imagemUrl: 'https://i.postimg.cc/mD4D4N1g/camiseta-preta.png' },
-         { id: 'pod2', nome: 'Boné Trucker Dourado', preco: 69.90, imagemUrl: 'https://i.postimg.cc/QdGzHdD9/bone-preto-dourado.png' },
-         { id: 'pod3', nome: 'Moletom com Capuz', preco: 159.90, imagemUrl: 'https://i.postimg.cc/8z0TkYj4/moletom-preto.png' },
-         { id: 'pod4', nome: 'Kit Pente e Óleo para Barba', preco: 79.90, imagemUrl: 'https://i.postimg.cc/qv0gTQ0j/kit-barba.png' },
-         { id: 'pod5', nome: 'Copo Térmico Exclusivo', preco: 99.90, imagemUrl: 'https://i.postimg.cc/W34d1N9b/copo-termico.png' },
-    ];
-    
-    produtosOficiais.forEach(p => container.innerHTML += renderProdutoCard(p, true));
-    
-    container.innerHTML += '<h4 style="grid-column: 1 / -1; margin-top: 20px;"> Marketplace da Comunidade </h4>';
-
-    db.collection('loja_produtos').orderBy('ts', 'desc').onSnapshot(snap => {
-        document.querySelectorAll('.produto-comunidade').forEach(el => el.remove()); // Limpa apenas os da comunidade
-        if(snap.empty) {
-            container.innerHTML += '<p style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
+    // Carrega Produtos Oficiais
+    db.collection('loja_produtos').where('isOficial', '==', true).orderBy('ts', 'desc').onSnapshot(snap => {
+        document.querySelectorAll('.produto-oficial').forEach(el => el.remove());
+        if (!snap.empty) {
+            let officialHtml = '<h4 class="produto-oficial" style="grid-column: 1 / -1;">⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
+            snap.forEach(doc => {
+                const produto = { ...doc.data(), id: doc.id };
+                officialHtml += renderProdutoCard(produto);
+            });
+            container.insertAdjacentHTML('afterbegin', officialHtml);
         }
-        snap.forEach(doc => {
-            const produto = { ...doc.data(), id: doc.id };
-            container.innerHTML += renderProdutoCard(produto, false);
-        });
+    });
+
+    // Carrega Produtos da Comunidade
+    db.collection('loja_produtos').where('isOficial', '==', false).orderBy('ts', 'desc').onSnapshot(snap => {
+        document.querySelectorAll('.produto-comunidade').forEach(el => el.remove());
+        let communityHtml = '<h4 class="produto-comunidade" style="grid-column: 1 / -1; margin-top: 20px;"> Marketplace da Comunidade </h4>';
+        if (snap.empty) {
+            communityHtml += '<p class="produto-comunidade" style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
+        } else {
+            snap.forEach(doc => {
+                const produto = { ...doc.data(), id: doc.id };
+                communityHtml += renderProdutoCard(produto);
+            });
+        }
+        container.insertAdjacentHTML('beforeend', communityHtml);
     });
 }
 
-function renderProdutoCard(p, isOficial) {
+
+function renderProdutoCard(p) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
     const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
-    const botaoComprar = isOficial 
+    const botaoComprar = p.isOficial 
         ? `<button onclick="comprarProdutoOficial('${p.nome}')">Comprar Agora</button>`
         : `<button onclick="contatarVendedor('${p.vendedorTelefone}', '${p.nome}')">Contatar Vendedor</button>`;
-    const botaoDeletar = perfil.tipo === 'admin' && !isOficial ? `<button style="background-color:#772014" onclick="deletarProduto('${p.id}')">Deletar</button>` : '';
+    const botaoDeletar = perfil.tipo === 'admin' ? `<button style="background-color:#772014" onclick="deletarProduto('${p.id}')">Deletar</button>` : '';
+    const cardClass = p.isOficial ? 'produto-oficial' : 'produto-comunidade';
 
     return `
-        <div class="produto-card produto-comunidade">
+        <div class="produto-card ${cardClass}">
             <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
             <div class="produto-info">
                 <div>
@@ -3645,4 +3669,3 @@ if (firebase.messaging.isSupported()) {
 </script>
 </body>
 </html>
-
