@@ -440,10 +440,10 @@
     .horario-disponivel:hover {
       background: var(--cor-destaque-ouro);
     }
-    .admin-chat-pink {
-      color: hotpink;
+    .admin-chat-red {
+      color: red;
       font-weight: bold;
-      text-shadow: 0 0 4px #ffffff, 0 0 6px #ffffff;
+      text-shadow: 0 0 5px #000, 0 0 8px #000;
     }
     .barbeiro-chat {
         color: var(--cor-texto-principal);
@@ -747,6 +747,9 @@
     .produto-preco-original { text-decoration: line-through; opacity: 0.7; font-size: 0.9em; }
     .produto-card button { font-size: 14px; padding: 8px; margin-top: 10px;}
     #lojaView .card-header { display: flex; justify-content: space-between; align-items: center; }
+    #lojaView .card-header h3 { font-size: 1.1em; white-space: nowrap; }
+    #lojaContainer h4 { font-size: 1.0em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     .tamanho-options { display: flex; gap: 5px; justify-content: center; margin: 10px 0; }
     .tamanho-options label {
       padding: 5px 10px;
@@ -1708,15 +1711,15 @@ function mostrar(id) {
   ["authView", "guestView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
   document.getElementById(id)?.classList.remove("hidden");
   
-  const isGuestOrAuth = (id === 'authView');
-  document.getElementById("topbar").classList.toggle("hidden", isGuestOrAuth);
-  document.getElementById("bottomButtons").classList.toggle("hidden", isGuestOrAuth);
+  const isAuth = (id === 'authView');
+  document.getElementById("topbar").classList.toggle("hidden", isAuth);
+  document.getElementById("bottomButtons").classList.toggle("hidden", isAuth);
   document.getElementById("redeemContainer").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
   
-  document.getElementById("btnTema").classList.toggle("hidden", isGuestOrAuth);
+  document.getElementById("btnTema").classList.toggle("hidden", isAuth);
   document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
-  document.getElementById("botaoExtra").classList.toggle("hidden", isGuestOrAuth);
-  document.getElementById("btnSair").classList.toggle("hidden", isGuestOrAuth);
+  document.getElementById("botaoExtra").classList.toggle("hidden", id === 'authView' || id === 'guestView');
+  document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
 }
 
 
@@ -1863,9 +1866,10 @@ function setupViewSwitcher() {
         const btn = document.createElement("button");
         btn.textContent = text;
         btn.onclick = () => switchView(view);
-        if (userView.currentType === view) {
-            btn.style.borderColor = "var(--cor-destaque-ouro)";
-            btn.disabled = true;
+        const lojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
+        if (userView.currentType === view && !lojaVisivel) {
+             btn.disabled = true;
+             btn.style.borderColor = "var(--cor-destaque-ouro)";
         }
         container.appendChild(btn);
     };
@@ -1874,8 +1878,13 @@ function setupViewSwitcher() {
     btnLoja.textContent = "🛍️ Loja";
     btnLoja.onclick = () => { 
         mostrar('lojaView'); 
-        carregarProdutos(); 
+        carregarProdutos();
+        setupViewSwitcher();
     };
+    if(!document.getElementById('lojaView').classList.contains('hidden')){
+        btnLoja.disabled = true;
+        btnLoja.style.borderColor = "var(--cor-destaque-ouro)";
+    }
     
     if (userView.originalType === 'admin') {
         createButton("🧠 Admin", "admin");
@@ -2315,7 +2324,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             }
             
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
-            const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
+            const boostIcon = '';
 
             lista.innerHTML += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}')">
@@ -2656,7 +2665,7 @@ async function abrirChatGlobal() {
     if (chatListener) chatListener();
 
     chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-      .orderBy("ts", "desc").limit(6)
+      .orderBy("ts", "desc").limit(20)
       .onSnapshot(async snapshot => {
         const messagesToRender = [];
 
@@ -2682,33 +2691,39 @@ async function abrirChatGlobal() {
 async function createMessageDiv(msg) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
     let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = "";
+    const messageDiv = document.createElement('div');
+    const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
+    messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
-    const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
     if (msg.tipo === "bot") {
         remetenteNome = `<span style="color: red;">🤖 ${remetenteNome}</span>`;
-    } else if(remetenteDoc.exists) {
-        const remetenteData = remetenteDoc.data();
+    } else {
+        const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
+        if(remetenteDoc.exists) {
+            const remetenteData = remetenteDoc.data();
 
-        if (remetenteData.possuiItemExclusivo) {
-            itemExclusivoIcone = '👕✨';
-        }
+            if (remetenteData.possuiItemExclusivo) {
+                itemExclusivoIcone = '👕✨';
+            }
 
-        if (remetenteData.tipo === "admin") {
-            classeCSS = `admin-chat-pink`; iconeBase = `🧠`;
-        } else if (remetenteData.tipo === "barbeiro") {
-            classeCSS = `barbeiro-chat`; iconeBase = `💈`;
-            medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
-        } else if (remetenteData.vip) {
-            classeCSS = `cliente-chat`; iconeBase = `👑`; // VIP continua como coroa
-            medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
-        } else {
-            classeCSS = `cliente-chat`; iconeBase = `👤`;
-            medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
+            if (remetenteData.tipo === "admin") {
+                classeCSS = `admin-chat-red`; 
+                iconeBase = `🧠`;
+                messageDiv.style.textShadow = '0 0 5px #000';
+            } else if (remetenteData.tipo === "barbeiro") {
+                classeCSS = `barbeiro-chat`; iconeBase = `💈`;
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
+            } else if (remetenteData.vip) {
+                classeCSS = `cliente-chat`; iconeBase = `👑`;
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
+            } else {
+                classeCSS = `cliente-chat`; iconeBase = `👤`;
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
+            }
+            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
         }
-        remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
     }
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${auth.currentUser && msg.remetenteUid === auth.currentUser.uid ? "chat-sent" : "chat-received"}`;
+    
     messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
     messageDiv.id = `msg-${msg.id}`;
     return messageDiv;
