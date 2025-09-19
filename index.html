@@ -1293,15 +1293,26 @@
 
 <div id="modalPromocoesBarbeiro" class="modal">
   <div class="modal-content">
-    
-    <h2>Promoções</h2>
-    
-    <button onclick="abrirModalAddPromocao()">Adicionar Promoção</button>
-    
-    <div id="listaPromocoes"></div>
-    
-    <button onclick="fecharModal('modalPromocoesBarbeiro')">Fechar</button>
-    
+    <h2>Promoções Ativas</h2>
+    <div id="listaPromocoes">
+      </div>
+    <div class="modal-botoes">
+      <button onclick="abrirModalAddPromocao()">Adicionar Promoção</button>
+      <button onclick="fecharModal('modalPromocoesBarbeiro')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalAddPromocao" class="modal">
+  <div class="modal-content">
+    <h2>Adicionar Nova Promoção</h2>
+    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
+    <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
+    <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
+    <div class="modal-botoes">
+      <button onclick="salvarNovaPromocao()">Salvar</button>
+      <button onclick="fecharModal('modalAddPromocao')">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -1415,6 +1426,98 @@ let newMessagesCount = 0;
 let deferredInstallPrompt = null;
 let chatPreviewTimeout = null; 
 
+
+function abrirModal(id) {
+  if (currentModal && currentModal.id !== id) {
+    currentModal.classList.remove('show');
+  }
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.add("show");
+    currentModal = modal;
+  }
+}
+
+function fecharModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.remove("show");
+  }
+}
+
+// FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
+function abrirPromocoes() {
+  abrirModal('modalPromocoesBarbeiro');
+  const lista = document.getElementById("listaPromocoes");
+  if (!lista) {
+    console.error("Erro: Elemento com ID 'listaPromocoes' não encontrado no HTML.");
+    return;
+  }
+  lista.innerHTML = "<p>⏳ Carregando...</p>";
+  db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
+    perfil = doc.data();
+    lista.innerHTML = "";
+    if (!perfil.promocoes || perfil.promocoes.length === 0) {
+      lista.innerHTML = "<p>Nenhuma promoção ativa.</p>";
+      return;
+    }
+    perfil.promocoes.forEach((p, index) => {
+      lista.innerHTML += `<div class="promocao-card">
+        <b>${p.nome}</b>
+        <p>${p.descricao} (${p.desconto}%)</p>
+        <button onclick="removerPromocao(${index})" style="background:none;border:none;color:#fff;float:right;">❌</button>
+      </div>`;
+    });
+  });
+}
+
+// FUNÇÃO PARA ABRIR O MODAL DE ADICIONAR PROMOÇÃO
+function abrirModalAddPromocao() {
+  abrirModal('modalAddPromocao');
+}
+
+// FUNÇÃO PARA SALVAR A PROMOÇÃO NO FIREBASE
+function salvarNovaPromocao() {
+  const nome = document.getElementById('addPromocaoNome').value;
+  const descricao = document.getElementById('addPromocaoDescricao').value;
+  const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
+  
+  if (!nome || !descricao || isNaN(desconto)) {
+    alert("Por favor, preencha todos os campos corretamente.");
+    return;
+  }
+  
+  const novaPromocao = {
+    nome: nome,
+    descricao: descricao,
+    desconto: desconto,
+  };
+
+  const userId = auth.currentUser.uid;
+  const userRef = db.collection("usuarios").doc(userId);
+
+  userRef.update({
+    promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
+  })
+  .then(() => {
+    alert("Promoção adicionada com sucesso!");
+    fecharModal('modalAddPromocao');
+    document.getElementById('addPromocaoNome').value = '';
+    document.getElementById('addPromocaoDescricao').value = '';
+    document.getElementById('addPromocaoDesconto').value = '';
+  })
+  .catch(error => {
+    console.error("Erro ao adicionar promoção:", error);
+    alert("Erro ao adicionar promoção. Tente novamente.");
+  });
+}
+
+function fecharModal(idDoModal) {
+    const modal = document.getElementById(idDoModal);
+    if (modal) {
+        modal.classList.remove("show");
+    }
+}
 
 async function enviarNotificacaoParaBackend(uid, title, body) {
   const backendUrl = "https://navalhabackend.onrender.com";
@@ -1987,14 +2090,15 @@ function salvarNovaPromocao() {
   userRef.update({
     promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
   })
-  .then(() => {
-    alert("Promoção adicionada com sucesso!");
-    fecharModal('modalAddPromocao');
-    // Limpar os campos do formulário após o salvamento
-    document.getElementById('addPromocaoNome').value = '';
-    document.getElementById('addPromocaoDescricao').value = '';
-    document.getElementById('addPromocaoDesconto').value = '';
-  })
+  // Dentro da sua função salvarNovaPromocao
+.then(() => {
+  alert("Promoção adicionada com sucesso!");
+  // Corrija a chamada para fechar o modal, passando apenas o ID
+  fecharModal('modalAddPromocao');
+  document.getElementById('addPromocaoNome').value = '';
+  document.getElementById('addPromocaoDescricao').value = '';
+  document.getElementById('addPromocaoDesconto').value = '';
+})
   .catch(error => {
     console.error("Erro ao adicionar promoção:", error);
     alert("Erro ao adicionar promoção. Tente novamente.");
