@@ -1291,6 +1291,58 @@
     </div>
 </div>
 
+<div id="modalPromocoesBarbeiro" class="modal">
+  <div class="modal-content">
+    
+    <h2>Promoções</h2>
+    
+    <button onclick="abrirModalAddPromocao()">Adicionar Promoção</button>
+    
+    <div id="listaPromocoes"></div>
+    
+    <button onclick="fecharModal('modalPromocoesBarbeiro')">Fechar</button>
+    
+  </div>
+</div>
+
+<div id="modalAddPromocao" class="modal">
+  <div class="modal-content">
+    <h2>Adicionar Nova Promoção</h2>
+    
+    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
+    <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
+    <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
+    
+    <button onclick="salvarNovaPromocao()">Salvar Promoção</button>
+    <button onclick="fecharModal('modalAddPromocao')">Cancelar</button>
+    
+  </div>
+</div>
+
+<div id="modalAddPromocao" class="modal">
+  <div class="modal-content">
+    <h2>Adicionar Nova Promoção</h2>
+    
+    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
+    <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
+    <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
+    
+    <button onclick="salvarNovaPromocao()">Salvar Promoção</button>
+    <button onclick="fecharModal('modalAddPromocao')">Cancelar</button>
+  </div>
+</div>
+
+	
+<div id="modalLoja" class="modal">
+  <div class="modal-content">
+    <h3>🛒 Produtos da Loja</h3>
+    
+    <div id="listaProdutos" class="loja-grid"></div>
+    
+    <button onclick="fecharModal('modalLoja')">Fechar</button>
+  </div>
+</div>
+
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
@@ -1462,6 +1514,37 @@ function abrirModal(id) {
     }
 }
 
+function abrirModalLoja() {
+  abrirModal('modalLoja');
+  const listaProdutos = document.getElementById("listaProdutos");
+  
+  if (!listaProdutos) {
+    console.error("Erro: Elemento com ID 'listaProdutos' não encontrado no HTML.");
+    return;
+  }
+
+  listaProdutos.innerHTML = "<p>⏳ Carregando produtos...</p>";
+
+  // Substitua a lógica abaixo pela sua, para carregar os produtos
+  db.collection("loja_produtos").onSnapshot(snapshot => {
+    listaProdutos.innerHTML = "";
+    if (snapshot.empty) {
+      listaProdutos.innerHTML = "<p>Nenhum produto cadastrado na loja.</p>";
+      return;
+    }
+    snapshot.forEach(doc => {
+      const produto = doc.data();
+      listaProdutos.innerHTML += `<div class="produto-card">
+        <img src="${produto.imagemUrl}" alt="${produto.nome}">
+        <div class="produto-info">
+          <p class="produto-nome">${produto.nome}</p>
+          <p class="produto-preco">R$ ${produto.preco.toFixed(2)}</p>
+          <button onclick="comprarProduto('${doc.id}')">Comprar</button>
+        </div>
+      </div>`;
+    });
+  });
+}
 
 function solicitarPermissaoNotificacao() {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -1877,6 +1960,45 @@ async function abrirPortaSecreta() {
 function abrirBarbeiros() {
   abrirModal('modalBarbeariasCliente');
   carregarBarbeiros();
+}
+
+function salvarNovaPromocao() {
+  const nome = document.getElementById('addPromocaoNome').value;
+  const descricao = document.getElementById('addPromocaoDescricao').value;
+  const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
+  
+  if (!nome || !descricao || isNaN(desconto)) {
+    alert("Por favor, preencha todos os campos corretamente.");
+    return;
+  }
+  
+  // Cria o objeto da nova promoção
+  const novaPromocao = {
+    nome: nome,
+    descricao: descricao,
+    desconto: desconto,
+    // Você pode adicionar mais campos aqui, como data de criação, etc.
+  };
+
+  const userId = auth.currentUser.uid;
+  const userRef = db.collection("usuarios").doc(userId);
+
+  // Usa a função 'update' para adicionar a nova promoção à lista 'promocoes' do usuário
+  userRef.update({
+    promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
+  })
+  .then(() => {
+    alert("Promoção adicionada com sucesso!");
+    fecharModal('modalAddPromocao');
+    // Limpar os campos do formulário após o salvamento
+    document.getElementById('addPromocaoNome').value = '';
+    document.getElementById('addPromocaoDescricao').value = '';
+    document.getElementById('addPromocaoDesconto').value = '';
+  })
+  .catch(error => {
+    console.error("Erro ao adicionar promoção:", error);
+    alert("Erro ao adicionar promoção. Tente novamente.");
+  });
 }
 
 function filtrarBarbeiros() {
@@ -2772,14 +2894,24 @@ function abrirFinancasBarbeiro() {
 function abrirPromocoes() {
   abrirModal('modalPromocoesBarbeiro');
   const lista = document.getElementById("listaPromocoes");
+
+  // A CORREÇÃO É AQUI: Verifique se o elemento existe antes de usá-lo.
+  if (!lista) {
+    console.error("Erro: Elemento com ID 'listaPromocoes' não encontrado no HTML.");
+    return;
+  }
+
   lista.innerHTML = "<p>⏳ Carregando...</p>";
+
   db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
     perfil = doc.data();
-    lista.innerHTML = "";
     if (!perfil.promocoes || perfil.promocoes.length === 0) {
       lista.innerHTML = "<p>Nenhuma promoção ativa.</p>";
       return;
     }
+
+    lista.innerHTML = ""; // Limpe o conteúdo antes de adicionar as promoções
+    
     perfil.promocoes.forEach((p, index) => {
       lista.innerHTML += `<div class="promocao-card"><b>${p.nome}</b><p>${p.descricao} (${p.desconto}%)</p><button onclick="removerPromocao(${index})" style="background:none;border:none;color:#fff;float:right;">❌</button></div>`;
     });
