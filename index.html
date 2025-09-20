@@ -961,8 +961,11 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
     <p>Seu saldo atual é: <b style="color: var(--cor-destaque-ouro);">R$ <span id="saldoModal">0,00</span></b></p>
-    <button onclick="abrirModalEscolhaDeposito()">📥 Depositar</button>
-    <button onclick="solicitarSaque()">📤 Sacar</button>
+    <div class="deposit-form-container">
+    <input type="number" id="valorDepositoInput" class="input-moderno" placeholder="Valor do Depósito" required>
+    <button class="btn-moderno" onclick="processarDeposito()">🔒 Pagar com PagBank</button>
+</div>
+<button onclick="solicitarSaque()">📤 Sacar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
