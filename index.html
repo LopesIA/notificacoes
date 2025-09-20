@@ -977,36 +977,6 @@
   </div>
 </div>
 
-<div id="modalDepositoPix" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🔵 Depósito via PIX</h3>
-    <p>Preencha os dados para gerar a cobrança PIX.</p>
-    <input id="depositoValorPix" type="number" placeholder="Valor do depósito (Ex: 50.00)">
-    <input id="clienteNomePix" type="text" placeholder="Seu Nome Completo">
-    <input id="clienteCpfPix" type="text" placeholder="Seu CPF (apenas números)">
-    <button onclick="processarDeposito('pix')">✅ Gerar PIX</button>
-    <button onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-
-<div id="modalDepositoCartao" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💳 Depósito com Cartão</h3>
-    <p>Preencha os dados do seu cartão de crédito.</p>
-    <input id="depositoValorCartao" type="number" placeholder="Valor do depósito (Ex: 50.00)">
-    <input id="cartaoNumero" type="text" inputmode="numeric" placeholder="Número do Cartão">
-    <input id="cartaoNome" type="text" placeholder="Nome impresso no Cartão">
-    <div style="display: flex; gap: 10px;">
-      <input id="cartaoValidadeMes" type="text" inputmode="numeric" placeholder="Mês (MM)" style="flex: 1;">
-      <input id="cartaoValidadeAno" type="text" inputmode="numeric" placeholder="Ano (AAAA)" style="flex: 1;">
-    </div>
-    <input id="cartaoCvv" type="text" inputmode="numeric" placeholder="CVV">
-    <input id="clienteCpfCartao" type="text" placeholder="Seu CPF (para o titular do cartão)">
-    <button onclick="processarDeposito('cartao')">🔒 Pagar com Cartão</button>
-    <button onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-
 <div id="modalPagamentoSaque" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>📤 Solicitar Saque</h3>
