@@ -3880,7 +3880,7 @@ async function carregarProdutos() {
 
         const produtosSnap = await db.collection('loja_produtos').orderBy('ts', 'desc').get();
         
-        let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Produtos Oficiais Navalha de Ouro ⭐</h4>';
+        let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Oficiais Navalha de Ouro ⭐</h4>';
         let communityProducts = [];
         let officialProductsFound = false;
 
