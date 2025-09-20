@@ -3285,34 +3285,15 @@ function abrirModalEscolhaDeposito() {
   abrirModal('modalEscolhaDeposito');
 }
 
-// Abre o modal específico de PIX ou Cartão
-function abrirModalDeposito(metodo) {
-  fecharTodosModais();
-  if (metodo === 'pix') {
-    abrirModal('modalDepositoPix');
-    document.getElementById('clienteNomePix').value = perfil.nome || '';
-  } else if (metodo === 'cartao') {
-    // Alerta importante sobre segurança de cartão de crédito
-    alert("Atenção: Para produção, a integração de cartão de crédito deve ser feita com a biblioteca do PagBank para tokenizar os dados do cartão no navegador. Enviar dados de cartão diretamente não é seguro (PCI compliance).");
-    abrirModal('modalDepositoCartao');
-  }
-}
-
-// Função unificada para processar depósitos (VERSÃO FINAL)
-async function processarDeposito(metodo) {
-    let btn;
-    if (metodo === 'pix') {
-        btn = document.querySelector("#modalDepositoPix button");
-    } else if (metodo === 'cartao') {
-        btn = document.querySelector("#modalDepositoCartao button");
-    }
-
+// Função unificada para processar depósitos (VERSÃO FINAL E CORRIGIDA)
+async function processarDeposito() {
+    let btn = document.querySelector(".deposit-form-container button");
     if (btn) {
         btn.disabled = true;
         btn.textContent = 'Aguarde...';
     }
 
-    const valor = parseFloat(document.getElementById(metodo === 'pix' ? 'depositoValorPix' : 'depositoValorCartao').value);
+    const valor = parseFloat(document.getElementById('valorDepositoInput').value);
 
     try {
         if (isNaN(valor) || valor <= 0) {
@@ -3334,7 +3315,7 @@ async function processarDeposito(metodo) {
             throw new Error(data.message || "Erro desconhecido ao contatar o servidor.");
         }
 
-        // Se o checkout foi criado com sucesso, redirecione a cliente para a URL do PagBank
+        // Se o checkout foi criado com sucesso, redirecione para a URL do PagBank
         if (data.data.links && data.data.links.length > 0) {
             const checkoutLink = data.data.links.find(link => link.rel === 'checkout');
             if (checkoutLink) {
@@ -3351,8 +3332,7 @@ async function processarDeposito(metodo) {
     } finally {
         if (btn) {
             btn.disabled = false;
-            if (metodo === 'pix') btn.textContent = '✅ Gerar PIX';
-            if (metodo === 'cartao') btn.textContent = '🔒 Pagar com Cartão';
+            btn.textContent = '🔒 Pagar com PagBank';
         }
     }
 }
