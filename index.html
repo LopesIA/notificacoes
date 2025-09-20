@@ -3330,72 +3330,21 @@ function abrirModalDeposito(metodo) {
 
 // Função unificada para processar depósitos (VERSÃO FINAL)
 async function processarDeposito(metodo) {
-    let valor, dadosCliente, dadosPagamento;
-    const btn = event.target;
-    btn.disabled = true;
-    btn.textContent = '⏳ Processando...';
+    let btn;
+    if (metodo === 'pix') {
+        btn = document.querySelector("#modalDepositoPix button");
+    } else if (metodo === 'cartao') {
+        btn = document.querySelector("#modalDepositoCartao button");
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Aguarde...';
+    }
+
+    const valor = parseFloat(document.getElementById(metodo === 'pix' ? 'depositoValorPix' : 'depositoValorCartao').value);
 
     try {
-        if (metodo === 'pix') {
-            valor = parseFloat(document.getElementById('depositoValorPix').value);
-            dadosCliente = {
-                nome: document.getElementById('clienteNomePix').value.trim(),
-                cpf: document.getElementById('clienteCpfPix').value.trim(),
-                email: perfil.email,
-                telefone: perfil.telefone,
-            };
-            dadosPagamento = { metodo: 'PIX' };
-            if (!dadosCliente.nome || !dadosCliente.cpf) throw new Error("Nome e CPF são obrigatórios para o PIX.");
-
-        } else if (metodo === 'cartao') {
-            valor = parseFloat(document.getElementById('depositoValorCartao').value);
-            const numeroCartao = document.getElementById('cartaoNumero').value.replace(/\s/g, '');
-            const nomeCartao = document.getElementById('cartaoNome').value.trim();
-            const mesValidade = document.getElementById('cartaoValidadeMes').value.trim();
-            const anoValidade = document.getElementById('cartaoValidadeAno').value.trim();
-            const cvvCartao = document.getElementById('cartaoCvv').value.trim();
-            const cpfCartao = document.getElementById('clienteCpfCartao').value.trim();
-
-            if (!numeroCartao || !nomeCartao || !mesValidade || !anoValidade || !cvvCartao || !cpfCartao) {
-                throw new Error("Todos os campos do cartão e o CPF são obrigatórios.");
-            }
-
-            // Primeiro, obtenha a chave pública do seu backend
-const responsePublicKey = await fetch("https://navalhabackend.onrender.com/public-key", {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
-});
-
-if (!responsePublicKey.ok) {
-    const errorData = await responsePublicKey.json();
-    throw new Error(errorData.message || "Erro ao obter a chave de criptografia do PagBank.");
-}
-
-const publicKeyData = await responsePublicKey.json();
-const publicKey = publicKeyData.public_key;
-
-// Agora, use a chave pública dinâmica para criptografar o cartão
-const card = PagSeguro.encryptCard({
-    publicKey: publicKey,
-    holder: nomeCartao,
-    number: numeroCartao,
-    expMonth: mesValidade,
-    expYear: anoValidade,
-    securityCode: cvvCartao
-});
-
-if (!card.hasErrors) {
-    dadosPagamento = {
-        metodo: 'CREDIT_CARD',
-        encryptedCard: card.encryptedCard
-    };
-    dadosCliente = { nome: perfil.nome, email: perfil.email, telefone: perfil.telefone, cpf: cpfCartao };
-} else {
-    const errorMsg = card.errors.map(e => e.message).join(', ');
-    throw new Error(`Erro ao validar o cartão: ${errorMsg}`);
-}
-        }
-
         if (isNaN(valor) || valor <= 0) {
             throw new Error("Por favor, insira um valor de depósito válido.");
         }
@@ -3406,34 +3355,35 @@ if (!card.hasErrors) {
             body: JSON.stringify({
                 clienteUid: auth.currentUser.uid,
                 valor: valor,
-                dadosPagamento: dadosPagamento,
-                dadosCliente: dadosCliente
             }),
         });
+
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Erro desconhecido ao contatar o servidor.");
 
-        if (metodo === 'pix' && data.data.qr_codes && data.data.qr_codes.length > 0) {
-            const qrCodeData = data.data.qr_codes[0];
-            const qrCodeImageUrl = qrCodeData.links.find(link => link.media === 'image/png').href;
-            const copiaECola = qrCodeData.text;
+        if (!response.ok) {
+            throw new Error(data.message || "Erro desconhecido ao contatar o servidor.");
+        }
 
-            document.getElementById('pixQrCodeImg').src = qrCodeImageUrl;
-            document.getElementById('pixCopiaECola').value = copiaECola;
-
-            fecharTodosModais();
-            abrirModal('modalExibirPix');
+        // Se o checkout foi criado com sucesso, redirecione a cliente para a URL do PagBank
+        if (data.data.links && data.data.links.length > 0) {
+            const checkoutLink = data.data.links.find(link => link.rel === 'checkout');
+            if (checkoutLink) {
+                window.location.href = checkoutLink.href;
+            } else {
+                throw new Error("Link de checkout não encontrado.");
+            }
         } else {
-            fecharTodosModais();
-            abrirModal('modalDeposito');
+            throw new Error("A resposta da API do PagBank não contém um link de checkout.");
         }
 
     } catch (error) {
         alert("Ocorreu um erro: " + error.message);
     } finally {
-        btn.disabled = false;
-        if (metodo === 'pix') btn.textContent = '✅ Gerar PIX';
-        if (metodo === 'cartao') btn.textContent = '🔒 Pagar com Cartão';
+        if (btn) {
+            btn.disabled = false;
+            if (metodo === 'pix') btn.textContent = '✅ Gerar PIX';
+            if (metodo === 'cartao') btn.textContent = '🔒 Pagar com Cartão';
+        }
     }
 }
 
