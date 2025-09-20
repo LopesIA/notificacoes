@@ -997,12 +997,14 @@
     <h3>💳 Depósito com Cartão</h3>
     <p>Preencha os dados do seu cartão de crédito.</p>
     <input id="depositoValorCartao" type="number" placeholder="Valor do depósito (Ex: 50.00)">
-    <!-- AQUI ENTRARIAM OS CAMPOS SEGUROS DO PAGBANK -->
-    <!-- Como Platzhalter, usaremos campos simples. O ideal é usar a biblioteca do PagBank para tokenizar o cartão -->
-    <input id="cartaoNumero" type="text" placeholder="Número do Cartão">
-    <input id="cartaoNome" type="text" placeholder="Nome no Cartão">
-    <input id="cartaoValidade" type="text" placeholder="Validade (MM/AA)">
-    <input id="cartaoCvv" type="text" placeholder="CVV">
+    <input id="cartaoNumero" type="text" inputmode="numeric" placeholder="Número do Cartão">
+    <input id="cartaoNome" type="text" placeholder="Nome impresso no Cartão">
+    <div style="display: flex; gap: 10px;">
+      <input id="cartaoValidadeMes" type="text" inputmode="numeric" placeholder="Mês (MM)" style="flex: 1;">
+      <input id="cartaoValidadeAno" type="text" inputmode="numeric" placeholder="Ano (AAAA)" style="flex: 1;">
+    </div>
+    <input id="cartaoCvv" type="text" inputmode="numeric" placeholder="CVV">
+    <input id="clienteCpfCartao" type="text" placeholder="Seu CPF (para o titular do cartão)">
     <button onclick="processarDeposito('cartao')">🔒 Pagar com Cartão</button>
     <button onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
@@ -1039,6 +1041,19 @@
     <h3>✅ Saque Solicitado</h3>
     <p>Sua solicitação de saque foi enviada e está aguardando aprovação e processamento pelo PagSeguro.</p>
     <button onclick="fecharModal(event)">✅ Entendi</button>
+  </div>
+</div>
+
+<div id="modalExibirPix" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🔵 Pague com PIX</h3>
+    <p>Escaneie o QR Code abaixo com o app do seu banco ou use o "Copia e Cola".</p>
+    <div style="text-align: center; margin: 20px 0;">
+        <img id="pixQrCodeImg" src="" alt="QR Code PIX" style="width: 200px; height: 200px; border: 1px solid var(--cor-borda);">
+    </div>
+    <textarea id="pixCopiaECola" rows="3" style="width: 100%; font-size: 12px; text-align: center;" readonly></textarea>
+    <button onclick="copiarCodigoPix()">📋 Copiar Código</button>
+    <button onclick="fecharModal(event)">✅ Já Paguei</button>
   </div>
 </div>
 
@@ -1532,6 +1547,7 @@
   <div id="appVersion"></div>
 </footer>
 
+<script type="text/javascript" src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/pagseguro.min.js"></script>
 
 <!-- SCRIPTS DO FIREBASE ATUALIZADOS PARA v11.0.1 -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
@@ -3316,43 +3332,64 @@ function abrirModalDeposito(metodo) {
   }
 }
 
-// Função unificada para processar depósitos
+// Função unificada para processar depósitos (VERSÃO FINAL)
 async function processarDeposito(metodo) {
     let valor, dadosCliente, dadosPagamento;
-
-    if (metodo === 'pix') {
-        valor = parseFloat(document.getElementById('depositoValorPix').value);
-        dadosCliente = {
-            nome: document.getElementById('clienteNomePix').value.trim(),
-            cpf: document.getElementById('clienteCpfPix').value.trim(),
-            email: perfil.email,
-            telefone: perfil.telefone,
-        };
-        dadosPagamento = { metodo: 'PIX' };
-        if (!dadosCliente.nome || !dadosCliente.cpf) {
-            return alert("Nome e CPF são obrigatórios para o PIX.");
-        }
-    } else if (metodo === 'cartao') {
-        valor = parseFloat(document.getElementById('depositoValorCartao').value);
-        // **IMPORTANTE**: Em um ambiente real, você usaria a biblioteca do PagBank para criar um 'tokenCartao' aqui
-        // e enviaria o token, não os dados brutos do cartão.
-        dadosPagamento = {
-            metodo: 'CREDIT_CARD',
-            tokenCartao: 'TOKEN_GERADO_PELO_PAGBANK_JS', // Placeholder
-            // dados brutos para fins de exemplo, NÃO USAR EM PRODUÇÃO
-            numeroCartao: document.getElementById('cartaoNumero').value,
-            nomeCartao: document.getElementById('cartaoNome').value,
-            validadeCartao: document.getElementById('cartaoValidade').value,
-            cvvCartao: document.getElementById('cartaoCvv').value,
-        };
-        dadosCliente = { nome: perfil.nome, email: perfil.email, telefone: perfil.telefone, cpf: '00000000000' /* Obter CPF real */ };
-    }
-
-    if (isNaN(valor) || valor <= 0) {
-        return alert("Por favor, insira um valor de depósito válido.");
-    }
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '⏳ Processando...';
 
     try {
+        if (metodo === 'pix') {
+            valor = parseFloat(document.getElementById('depositoValorPix').value);
+            dadosCliente = {
+                nome: document.getElementById('clienteNomePix').value.trim(),
+                cpf: document.getElementById('clienteCpfPix').value.trim(),
+                email: perfil.email,
+                telefone: perfil.telefone,
+            };
+            dadosPagamento = { metodo: 'PIX' };
+            if (!dadosCliente.nome || !dadosCliente.cpf) throw new Error("Nome e CPF são obrigatórios para o PIX.");
+
+        } else if (metodo === 'cartao') {
+            valor = parseFloat(document.getElementById('depositoValorCartao').value);
+            const numeroCartao = document.getElementById('cartaoNumero').value.replace(/\s/g, '');
+            const nomeCartao = document.getElementById('cartaoNome').value.trim();
+            const mesValidade = document.getElementById('cartaoValidadeMes').value.trim();
+            const anoValidade = document.getElementById('cartaoValidadeAno').value.trim();
+            const cvvCartao = document.getElementById('cartaoCvv').value.trim();
+            const cpfCartao = document.getElementById('clienteCpfCartao').value.trim();
+
+            if (!numeroCartao || !nomeCartao || !mesValidade || !anoValidade || !cvvCartao || !cpfCartao) {
+                throw new Error("Todos os campos do cartão e o CPF são obrigatórios.");
+            }
+
+            // **CRIPTOGRAFIA FUNCIONAL DO CARTÃO**
+            const card = PagSeguro.encryptCard({
+                publicKey: 'e0b09080-b4c4-415c-a4c9-69c81a8633555752595d44139297a6e7ab7b0771f43e2004-7414-417c-bda6-d77eecdc5292', // Use sua Chave Pública de Criptografia do PagBank
+                holder: nomeCartao,
+                number: numeroCartao,
+                expMonth: mesValidade,
+                expYear: anoValidade,
+                securityCode: cvvCartao
+            });
+
+            if (!card.hasErrors) {
+                dadosPagamento = {
+                    metodo: 'CREDIT_CARD',
+                    encryptedCard: card.encryptedCard // O dado seguro a ser enviado
+                };
+                dadosCliente = { nome: perfil.nome, email: perfil.email, telefone: perfil.telefone, cpf: cpfCartao };
+            } else {
+                const errorMsg = card.errors.map(e => e.message).join(', ');
+                throw new Error(`Erro ao validar o cartão: ${errorMsg}`);
+            }
+        }
+
+        if (isNaN(valor) || valor <= 0) {
+            throw new Error("Por favor, insira um valor de depósito válido.");
+        }
+
         const response = await fetch("https://navalhabackend.onrender.com/criar-deposito", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3366,11 +3403,27 @@ async function processarDeposito(metodo) {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Erro desconhecido ao contatar o servidor.");
 
-        fecharTodosModais();
-        abrirModal('modalDeposito'); // Mostra a mensagem de sucesso
+        if (metodo === 'pix' && data.data.qr_codes && data.data.qr_codes.length > 0) {
+            const qrCodeData = data.data.qr_codes[0];
+            const qrCodeImageUrl = qrCodeData.links.find(link => link.media === 'image/png').href;
+            const copiaECola = qrCodeData.text;
+
+            document.getElementById('pixQrCodeImg').src = qrCodeImageUrl;
+            document.getElementById('pixCopiaECola').value = copiaECola;
+
+            fecharTodosModais();
+            abrirModal('modalExibirPix');
+        } else {
+            fecharTodosModais();
+            abrirModal('modalDeposito');
+        }
 
     } catch (error) {
-        alert("Erro ao gerar cobrança: " + error.message);
+        alert("Ocorreu um erro: " + error.message);
+    } finally {
+        btn.disabled = false;
+        if (metodo === 'pix') btn.textContent = '✅ Gerar PIX';
+        if (metodo === 'cartao') btn.textContent = '🔒 Pagar com Cartão';
     }
 }
 
@@ -3414,6 +3467,14 @@ async function confirmarSaque() {
     } catch (error) {
         alert("Erro ao solicitar saque: " + error.message);
     }
+}
+
+// Nova função para copiar o código PIX
+function copiarCodigoPix() {
+    const textarea = document.getElementById('pixCopiaECola');
+    textarea.select();
+    document.execCommand('copy');
+    alert("Código PIX copiado para a área de transferência!");
 }
 
 // Função utilitária para fechar todos os modais abertos
