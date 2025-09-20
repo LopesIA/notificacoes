@@ -959,29 +959,58 @@
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💰 Carteira</h3>
-    <p>📌 Todos os pagamentos são feitos via Pix.<br>
-    O saldo é liberado após confirmação manual.</p>
-    <p>🔑 Chave Pix:<br>📇 CPF: 18912553712<br>👤 Nome: JOSIEL LOPES AZEREDO</p>
-    <button onclick="solicitarDeposito()">📥 Solicitar depósito</button>
-    <button onclick="solicitarSaque()">📤 Solicitar saque</button>
+    <h3>💰 Minha Carteira</h3>
+    <p>Seu saldo atual é: <b style="color: var(--cor-destaque-ouro);">R$ <span id="saldoModal">0,00</span></b></p>
+    <button onclick="solicitarDeposito()">📥 Depositar</button>
+    <button onclick="solicitarSaque()">📤 Sacar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
+<!-- NOVO MODAL DE DEPÓSITO -->
+<div id="modalPagamentoDeposito" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📥 Novo Depósito</h3>
+    <p>Digite o valor que deseja adicionar à sua carteira.</p>
+    <input id="depositoValor" type="number" placeholder="Ex: 50.00" style="font-size: 20px; text-align: center;">
+    <button onclick="gerarCobrancaPix()">💳 Gerar Cobrança</button>
+    <button onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- NOVO MODAL DE SAQUE -->
+<div id="modalPagamentoSaque" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📤 Solicitar Saque</h3>
+    <p>O valor será transferido para sua chave PIX.</p>
+    <input id="saqueValor" type="number" placeholder="Valor do saque">
+    <select id="saqueChavePixTipo">
+        <option value="">Tipo de Chave PIX</option>
+        <option value="cpf">CPF</option>
+        <option value="email">E-mail</option>
+        <option value="telefone">Telefone</option>
+        <option value="aleatoria">Aleatória</option>
+    </select>
+    <input id="saqueChavePix" type="text" placeholder="Sua chave PIX">
+    <button onclick="confirmarSaque()">✅ Confirmar Saque</button>
+    <button onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+
 <div id="modalDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✅ Solicitação Enviada!</h3>
-    <p>Depósito enviado. Aguardando a confirmação do PagSeguro para o valor ser creditado em sua carteira.</p>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
+    <h3>✅ Depósito em Processamento</h3>
+    <p>Depósito enviado! O saldo será atualizado automaticamente assim que o PagSeguro confirmar o pagamento.</p>
+    <button onclick="fecharModal(event)">✅ Entendi</button>
   </div>
 </div>
 
 <div id="modalSaqueEnviado" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✅ Solicitação de Saque Enviada!</h3>
-    <p>Saque solicitado, aguardando aprovação e processamento pelo PagSeguro.</p>
-    <button onclick="fecharModal(event)">❌ Fechar</button>
+    <h3>✅ Saque Solicitado</h3>
+    <p>Sua solicitação de saque foi enviada e está aguardando aprovação e processamento pelo PagSeguro.</p>
+    <button onclick="fecharModal(event)">✅ Entendi</button>
   </div>
 </div>
 
@@ -1475,10 +1504,12 @@
 </footer>
 
 
+<!-- SCRIPTS DO FIREBASE ATUALIZADOS PARA v11.0.1 -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
+
 <script>
 // Firebase e variáveis globais
 const firebaseConfig = {
@@ -1649,7 +1680,7 @@ function fecharModal(idOuEvento) {
     }
 }
 
-async function enviarNotificacaoParaBackend(uid, title, body) {
+async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   const backendUrl = "https://navalhabackend.onrender.com";
   const notificationEndpoint = "/enviar-notificacao";
   const fullUrl = backendUrl + notificationEndpoint;
@@ -1663,32 +1694,33 @@ async function enviarNotificacaoParaBackend(uid, title, body) {
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid, title, body }),
+      body: JSON.stringify({ uid, title, body, data }),
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
     if (response.ok) {
-      console.log('Notificação enviada com sucesso via backend:', data);
+      console.log('Notificação enviada com sucesso via backend:', responseData);
     } else {
-      console.error('Falha ao enviar a notificação via backend:', data.message);
+      console.error('Falha ao enviar a notificação via backend:', responseData.message);
     }
   } catch (error) {
     console.error('Erro de rede ou na chamada da API de notificação:', error);
   }
 }
 
-async function notifyUser(uid, title, body) {
+
+async function notifyUser(uid, title, body, data = {}) {
     if (!uid) return;
     console.log(`Disparando notificação para UID: ${uid} - Título: ${title}`);
-    await enviarNotificacaoParaBackend(uid, title, body);
+    await enviarNotificacaoParaBackend(uid, title, body, data);
 }
 
-async function notifyAdmins(title, body) {
+async function notifyAdmins(title, body, data = {}) {
     try {
         const adminQuery = await db.collection("usuarios").where("tipo", "==", "admin").get();
         if (!adminQuery.empty) {
             adminQuery.forEach(adminDoc => {
-                notifyUser(adminDoc.id, title, body);
+                notifyUser(adminDoc.id, title, body, data);
             });
         }
     } catch(e) {
@@ -2081,7 +2113,9 @@ auth.onAuthStateChanged(async user => {
   ref.onSnapshot(s => {
     if (!s.exists) return;
     perfil = s.data(); 
-    document.getElementById("saldoHeader").textContent = (s.data().saldo || 0).toFixed(2);
+    const saldo = (s.data().saldo || 0).toFixed(2);
+    document.getElementById("saldoHeader").textContent = saldo;
+    document.getElementById("saldoModal").textContent = saldo;
     const btnVip = document.getElementById('btnVip');
     if (s.data().vip) {
       btnVip.textContent = '👑 Sou VIP';
@@ -3172,44 +3206,89 @@ function abrirAvaliacoesBarbeiro() {
 }
 
 async function solicitarDeposito() {
-  const valor = parseFloat(prompt("Valor do depósito:"));
-  if (isNaN(valor) || valor <= 0) return alert("Valor inválido.");
-  try {
-    const solicitacoesRef = await db.collection("solicitacoes").add({
-        tipo: "deposito", valor, usuarioUid: auth.currentUser.uid, usuarioNome: perfil.nome,
-        status: "pendente", ts: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    abrirModal('modalDeposito');
-    const mensagem = encodeURIComponent(`Olá, solicitei um depósito de R$ ${valor.toFixed(2)}. ID: ${solicitacoesRef.id}`);
-    document.getElementById("btnWhatsappDeposito").href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
-    notifyAdmins("💰 Solicitação de Depósito", `${perfil.nome} solicitou um depósito de R$ ${valor.toFixed(2)}.`);
-  } catch(e) {
-      alert("Erro ao enviar solicitação: " + e.message);
-  }
+  fecharModal({ target: document.getElementById('modalCarteira') });
+  abrirModal('modalPagamentoDeposito');
 }
 
 async function solicitarSaque() {
-  const valor = parseFloat(prompt("Valor do saque:"));
-  if (isNaN(valor) || valor <= 0) return alert("Valor inválido.");
-  if ((perfil.saldo || 0) < valor) return alert("💸 Saldo insuficiente.");
-  const chavePix = prompt("Chave Pix:");
-  if (!chavePix) return alert("Chave Pix é obrigatória.");
-  const nomeRecebedor = prompt("Nome completo do recebedor:");
-  if (!nomeRecebedor) return alert("O nome do recebedor é obrigatório.");
-  if (!confirm(`Solicitar saque de R$ ${valor.toFixed(2)} para "${chavePix}" em nome de "${nomeRecebedor}"?`)) return;
-  try {
-    const solicitacoesRef = await db.collection("solicitacoes").add({
-        tipo: "saque", valor, chavePix, nomeRecebedor, usuarioUid: auth.currentUser.uid, usuarioNome: perfil.nome,
-        status: "pendente", ts: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    abrirModal('modalSaqueEnviado');
-    const mensagem = encodeURIComponent(`Solicitei um saque de R$ ${valor.toFixed(2)}. ID: ${solicitacoesRef.id}\nChave: ${chavePix}\nNome: ${nomeRecebedor}`);
-    document.getElementById("btnWhatsappSaque").href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
-    notifyAdmins("🏧 Solicitação de Saque", `${perfil.nome} solicitou um saque de R$ ${valor.toFixed(2)}.`);
-  } catch(e) {
-      alert("Erro ao enviar solicitação: " + e.message);
-  }
+  fecharModal({ target: document.getElementById('modalCarteira') });
+  abrirModal('modalPagamentoSaque');
 }
+
+async function gerarCobrancaPix() {
+    const valor = parseFloat(document.getElementById('depositoValor').value);
+    if (isNaN(valor) || valor <= 0) {
+        return alert("Por favor, insira um valor de depósito válido.");
+    }
+    
+    // AQUI: Chamar o backend para criar a cobrança no PagSeguro
+    console.log("Chamando backend para criar depósito de R$", valor);
+    // Exemplo de chamada (requer adaptação do seu backend para aceitar este formato)
+    try {
+        const response = await fetch("https://navalhabackend.onrender.com/criar-deposito", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                clienteUid: auth.currentUser.uid,
+                valor: valor,
+                // O backend precisa ser ajustado para gerar um PIX em vez de esperar um token de cartão
+                metodoPagamento: 'PIX', 
+                dadosCliente: {
+                    nome: perfil.nome,
+                    email: perfil.email,
+                    cpf: "12345678900", // IMPORTANTE: Obter o CPF real do usuário
+                    ddd: perfil.telefone.substring(0,2),
+                    telefone: perfil.telefone.substring(2)
+                }
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Erro desconhecido");
+
+        fecharModal({ target: document.getElementById('modalPagamentoDeposito') });
+        abrirModal('modalDeposito');
+
+    } catch (error) {
+        alert("Erro ao gerar cobrança: " + error.message);
+    }
+}
+
+async function confirmarSaque() {
+    const valor = parseFloat(document.getElementById('saqueValor').value);
+    const chaveTipo = document.getElementById('saqueChavePixTipo').value;
+    const chave = document.getElementById('saqueChavePix').value.trim();
+
+    if (isNaN(valor) || valor <= 0) return alert("Valor de saque inválido.");
+    if (!chaveTipo) return alert("Selecione o tipo da chave PIX.");
+    if (!chave) return alert("Insira sua chave PIX.");
+    if (perfil.saldo < valor) return alert("Saldo insuficiente.");
+
+    console.log("Chamando backend para solicitar saque de R$", valor);
+    try {
+        const response = await fetch("https://navalhabackend.onrender.com/solicitar-saque", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                barbeiroUid: auth.currentUser.uid,
+                valorSaque: valor,
+                // O backend deve ser ajustado para usar esses dados e fazer a transferência
+                dadosContaBancaria: { 
+                    tipoChave: chaveTipo,
+                    chave: chave,
+                    nomeCompleto: perfil.nome
+                }
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Erro desconhecido");
+
+        fecharModal({ target: document.getElementById('modalPagamentoSaque') });
+        abrirModal('modalSaqueEnviado');
+    } catch (error) {
+        alert("Erro ao solicitar saque: " + error.message);
+    }
+}
+
 
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
@@ -3376,7 +3455,7 @@ function aprovarDeposito(id, uid, valor) {
     if (pontos > 0) notifyUser(uid, "🏆 Você Ganhou Pontos!", `+${pontos} pontos adicionados pelo seu depósito.`);
   }).then(() => {
     alert("Depósito aprovado!");
-    notifyUser(uid, "✅ Pagamento Recebido!", `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`);
+    notifyUser(uid, "✅ Pagamento Recebido!", `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`, { tipo: 'atualizar_saldo' });
   }).catch(e => alert("Erro: " + e.message));
 }
 
@@ -3389,7 +3468,7 @@ function aprovarSaque(id, uid, valor) {
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
   }).then(() => {
     alert("Saque aprovado!");
-    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`);
+    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { tipo: 'atualizar_saldo' });
   }).catch(e => alert("Erro: " + e.message));
 }
 
@@ -3459,7 +3538,7 @@ async function verDetalhesUsuario(uid) {
       const valor = parseFloat(prompt("Valor para adicionar (use '-' para remover):"));
       if (!isNaN(valor)) {
         await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
-        notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`);
+        notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { tipo: 'atualizar_saldo' });
         alert("Saldo alterado!");
       } else alert("Valor inválido.");
       break;
@@ -3983,10 +4062,33 @@ async function exibirVersaoApp() {
     }
 }
 
+function recarregarSaldoDoUsuario() {
+    alert("💰 Seu saldo foi atualizado! A interface irá refletir a mudança em instantes.");
+    // O listener onSnapshot já cuidará de atualizar o valor na tela.
+    // Esta função serve apenas para notificar o usuário da mudança.
+}
+
 if (firebase.messaging.isSupported()) {
     messaging.onMessage((payload) => {
-        console.log('Mensagem recebida:', payload);
-        alert(`🔔 ${payload.notification.title}\n\n${payload.notification.body}`);
+        console.log('Mensagem de primeiro plano recebida:', payload);
+
+        // **AQUI ESTÁ A CORREÇÃO**
+        // Se a mensagem for sobre saldo, recarregue a interface
+        if (payload.data && payload.data.tipo === 'atualizar_saldo') {
+            recarregarSaldoDoUsuario();
+        }
+
+        // Exibe uma notificação no navegador para o usuário
+        if (payload.notification) {
+            const notificationTitle = payload.notification.title;
+            const notificationOptions = {
+                body: payload.notification.body,
+                icon: payload.notification.icon || '/icone.png'
+            };
+            if (Notification.permission === 'granted') {
+                new Notification(notificationTitle, notificationOptions);
+            }
+        }
     });
 }
 // NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
