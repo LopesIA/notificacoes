@@ -3360,26 +3360,40 @@ async function processarDeposito(metodo) {
                 throw new Error("Todos os campos do cartão e o CPF são obrigatórios.");
             }
 
-            // **CRIPTOGRAFIA FUNCIONAL DO CARTÃO**
-            const card = PagSeguro.encryptCard({
-                publicKey: 'e0b09080-b4c4-415c-a4c9-69c81a8633555752595d44139297a6e7ab7b0771f43e2004-7414-417c-bda6-d77eecdc5292', // Use sua Chave Pública de Criptografia do PagBank
-                holder: nomeCartao,
-                number: numeroCartao,
-                expMonth: mesValidade,
-                expYear: anoValidade,
-                securityCode: cvvCartao
-            });
+            // Primeiro, obtenha a chave pública do seu backend
+const responsePublicKey = await fetch("https://navalhabackend.onrender.com/public-key", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+});
 
-            if (!card.hasErrors) {
-                dadosPagamento = {
-                    metodo: 'CREDIT_CARD',
-                    encryptedCard: card.encryptedCard // O dado seguro a ser enviado
-                };
-                dadosCliente = { nome: perfil.nome, email: perfil.email, telefone: perfil.telefone, cpf: cpfCartao };
-            } else {
-                const errorMsg = card.errors.map(e => e.message).join(', ');
-                throw new Error(`Erro ao validar o cartão: ${errorMsg}`);
-            }
+if (!responsePublicKey.ok) {
+    const errorData = await responsePublicKey.json();
+    throw new Error(errorData.message || "Erro ao obter a chave de criptografia do PagBank.");
+}
+
+const publicKeyData = await responsePublicKey.json();
+const publicKey = publicKeyData.public_key;
+
+// Agora, use a chave pública dinâmica para criptografar o cartão
+const card = PagSeguro.encryptCard({
+    publicKey: publicKey,
+    holder: nomeCartao,
+    number: numeroCartao,
+    expMonth: mesValidade,
+    expYear: anoValidade,
+    securityCode: cvvCartao
+});
+
+if (!card.hasErrors) {
+    dadosPagamento = {
+        metodo: 'CREDIT_CARD',
+        encryptedCard: card.encryptedCard
+    };
+    dadosCliente = { nome: perfil.nome, email: perfil.email, telefone: perfil.telefone, cpf: cpfCartao };
+} else {
+    const errorMsg = card.errors.map(e => e.message).join(', ');
+    throw new Error(`Erro ao validar o cartão: ${errorMsg}`);
+}
         }
 
         if (isNaN(valor) || valor <= 0) {
