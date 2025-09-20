@@ -188,9 +188,6 @@
       justify-content: space-between;
       z-index: 15;
     }
-    .bottom-buttons-container button {
-      width: auto;
-    }
     .redeem-container {
       position: fixed;
       bottom: 25px; /* Posição ajustada */
@@ -975,10 +972,7 @@
 <div id="modalDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>✅ Solicitação Enviada!</h3>
-    <p>Aguarde a confirmação para o valor ser creditado na sua carteira.</p>
-    <a id="btnWhatsappDeposito" href="#" target="_blank">
-      <button>💬 Avisar no WhatsApp</button>
-    </a>
+    <p>Depósito enviado. Aguardando a confirmação do PagSeguro para o valor ser creditado em sua carteira.</p>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -986,10 +980,7 @@
 <div id="modalSaqueEnviado" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>✅ Solicitação de Saque Enviada!</h3>
-    <p>Sua solicitação está sendo analisada.<br>Para agilizar, envie uma mensagem para o administrador no WhatsApp.</p>
-    <a id="btnWhatsappSaque" href="#" target="_blank">
-      <button>💬 Acelerar via WhatsApp</button>
-    </a>
+    <p>Saque solicitado, aguardando aprovação e processamento pelo PagSeguro.</p>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
