@@ -1509,6 +1509,9 @@
 
 <script type="text/javascript" src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/pagseguro.min.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
@@ -1524,6 +1527,8 @@ const firebaseConfig = {
   messagingSenderId: "434474263075",
   appId: "1:434474263075:web:163893d68a1b5dbe74c796"
 };
+
+// Inicialize o Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
 
