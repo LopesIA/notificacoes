@@ -821,6 +821,12 @@
         margin-bottom: 15px;
         border: 1px solid var(--cor-borda);
     }
+    .metodos-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+    }
 
   </style>
 </head>
@@ -983,92 +989,63 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
     <p>Seu saldo atual é: <b style="color: var(--cor-destaque-ouro);">R$ <span id="saldoModal">0,00</span></b></p>
-    <button class="btn btn-primary" onclick="abrirModalMetodosPagamento()">Depositar</button>
-
+    <button onclick="iniciarDeposito()">📥 Depositar</button>
     <button onclick="solicitarSaque()">📤 Sacar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
-  <div class="row items-center justify-between">
-    <div class="flex-grow">
-        <label for="valorDepositoInput" class="text-sm">Valor do Depósito (R$)</label>
-        <input type="number" id="valorDepositoInput" placeholder="Ex: 50.00" min="1" step="0.01" class="w-full mt-1 p-2 bg-gray-700 text-white rounded-md">
-    </div>
-    <div class="ml-4">
-        <button class="btn btn-primary" onclick="abrirModalMetodosPagamento()">
-            <i class="fas fa-wallet"></i> Depositar
-        </button>
-    </div>
-</div>
-
-<!-- Modal de Métodos de Pagamento -->
-<div id="modalMetodosPagamento" class="modal hidden">
-    <div class="modal-content">
-        <span class="close-btn" onclick="fecharModal('modalMetodosPagamento')">&times;</span>
-        <h2 class="text-center">Escolha o método de pagamento</h2>
-        <div class="modal-metodos-grid">
-            <button class="btn btn-primary" onclick="abrirModalPix()">
-                <i class="fas fa-qrcode"></i> Pagar com Pix ⚡
-            </button>
-            <button class="btn btn-primary" onclick="abrirModalCartao()">
-                <i class="fas fa-credit-card"></i> Pagar com Cartão 💳
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-    window.abrirModalMetodosPagamento = () => {
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.classList.add('hidden');
-        });
-
-        const valorInput = document.getElementById('valorDepositoInput');
-        
-        // Verifica se o elemento foi encontrado antes de tentar usar .value
-        if (!valorInput) {
-            console.error('Erro: Elemento com ID "valorDepositoInput" não foi encontrado.');
-            return;
-        }
-
-        const valor = parseFloat(valorInput.value);
-        if (isNaN(valor) || valor <= 0) {
-            mostrarMensagem('erro', 'Por favor, insira um valor válido para o depósito.');
-            return;
-        }
-
-        document.getElementById('qrCodeContainer').classList.add('hidden');
-        abrirModal('modalMetodosPagamento');
-    };
-
-    window.abrirModalPix = () => {
-        fecharModal('modalMetodosPagamento');
-        gerarCobrancaPix();
-    };
-
-    window.abrirModalCartao = () => {
-        fecharModal('modalMetodosPagamento');
-        const valor = document.getElementById('valorDepositoInput').value;
-        document.getElementById('cardValorInput').value = parseFloat(valor).toFixed(2);
-        abrirModal('modalCartaoCredito');
-    };
-</script>
-
-
-<!-- MODAL DE DEPÓSITO ATUALIZADO -->
 <div id="modalPagamentoDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📥 Depósito via PIX</h3>
-    <p>Digite o valor e seu CPF para gerar um QR Code de pagamento.</p>
+    <h3>📥 Fazer um Depósito</h3>
+    <p>Digite o valor que deseja adicionar à sua carteira.</p>
     <input id="depositoValor" type="number" placeholder="Ex: 50.00" style="font-size: 20px; text-align: center;">
-    <input id="depositoCpf" type="text" placeholder="Seu CPF (para o comprovante)">
-    <button id="btnGerarPix" onclick="gerarCobrancaPix()">📲 Gerar QR Code PIX</button>
+    <input id="depositoCpf" type="text" placeholder="Seu CPF (necessário para o pagamento)">
+    <button id="btnContinuarDeposito" onclick="abrirModalMetodosPagamento()">➡️ Continuar</button>
     <button onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
 </div>
 
-<!-- MODAL DE SAQUE (Estrutura mantida) -->
+<div id="modalMetodosPagamento" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>💳 Método de Pagamento</h3>
+      <p>Como você gostaria de pagar?</p>
+      <div class="metodos-grid">
+        <button onclick="processarPagamentoPix()">⚡ Pagar com Pix</button>
+        <button onclick="abrirModalCartao()">💳 Pagar com Cartão</button>
+      </div>
+      <button onclick="fecharModal(event)">❌ Voltar</button>
+    </div>
+</div>
+
+<div id="modalExibirPix" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" style="text-align: center;" onclick="event.stopPropagation()">
+      <h3> Pague com PIX</h3>
+      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
+      <div id="pixQrCodeContainer">
+        </div>
+      <p>Ou use o PIX Copia e Cola:</p>
+      <div id="pix-cod-copia">
+        </div>
+      <button onclick="copiarCodigoPix()">📋 Copiar Código</button>
+      <p style="font-size: 12px; opacity: 0.8; margin-top: 15px;">O saldo será atualizado automaticamente após a confirmação do pagamento.</p>
+      <button onclick="fecharModal(event)">✅ Fechar</button>
+    </div>
+</div>
+
+<div id="modalCartaoCredito" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💳 Dados do Cartão</h3>
+    <p>Valor do depósito: <b id="valorCartaoDisplay">R$ 0,00</b></p>
+    <input id="cardHolderName" type="text" placeholder="Nome no Cartão">
+    <input id="cardNumber" type="text" placeholder="Número do Cartão">
+    <input id="cardExpiry" type="text" placeholder="Validade (MM/AA)">
+    <input id="cardCvv" type="text" placeholder="CVV">
+    <button id="btnPagarComCartao" onclick="processarPagamentoCartao()"> Pagar com Cartão</button>
+    <button onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
 <div id="modalPagamentoSaque" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>📤 Solicitar Saque</h3>
@@ -1086,25 +1063,6 @@
     <button onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
 </div>
-
-<!-- NOVO MODAL PARA EXIBIR O PIX GERADO -->
-<div id="modalExibirPix" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" style="text-align: center;" onclick="event.stopPropagation()">
-      <h3> Pague com PIX</h3>
-      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      <div id="pixQrCodeContainer">
-        <!-- O QR Code será inserido aqui -->
-      </div>
-      <p>Ou use o PIX Copia e Cola:</p>
-      <div id="pix-cod-copia">
-        <!-- O código copia e cola será inserido aqui -->
-      </div>
-      <button onclick="copiarCodigoPix()">📋 Copiar Código</button>
-      <p style="font-size: 12px; opacity: 0.8; margin-top: 15px;">O saldo será atualizado automaticamente após a confirmação do pagamento.</p>
-      <button onclick="fecharModal(event)">✅ Fechar</button>
-    </div>
-</div>
-
 
 <div id="modalSaqueEnviado" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1605,11 +1563,12 @@
 </footer>
 
 
-<!-- SCRIPTS DO FIREBASE ATUALIZADOS PARA v11.0.1 -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
+
+<script src="https://assets.pagbank.com.br/checkout-sdk/pagbank-checkout-v2.min.js"></script>
 
 <script>
 // Firebase e variáveis globais
@@ -3360,73 +3319,146 @@ function abrirAvaliacoesBarbeiro() {
     });
 }
 
-// FUNÇÕES DE PAGAMENTO ATUALIZADAS
-async function solicitarDeposito() {
+// ======================================================================
+// --- NOVAS FUNÇÕES DE PAGAMENTO ---
+// ======================================================================
+
+function iniciarDeposito() {
   fecharModal({ target: document.getElementById('modalCarteira') });
   abrirModal('modalPagamentoDeposito');
 }
 
-async function solicitarSaque() {
+function solicitarSaque() {
   fecharModal({ target: document.getElementById('modalCarteira') });
   abrirModal('modalPagamentoSaque');
 }
 
-// A função que é chamada quando você clica no botão "Gerar QR Code Pix"
-async function gerarCobrancaPix() {
+function abrirModalMetodosPagamento() {
     const valor = parseFloat(document.getElementById('depositoValor').value);
     const cpf = document.getElementById('depositoCpf').value.trim();
-    const btn = document.getElementById('btnGerarPix');
-
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        return alert("Você precisa estar logado para fazer um depósito.");
-    }
-    const uid = user.uid;
-    const userType = 'cliente'; // <--- Altere essa lógica se o usuário puder ser um barbeiro
 
     if (isNaN(valor) || valor <= 0) {
         return alert("Por favor, insira um valor de depósito válido.");
     }
-    if (!cpf || cpf.length < 11) {
+    if (!cpf || cpf.replace(/\D/g, '').length !== 11) {
         return alert("Por favor, insira um CPF válido.");
     }
-    
+    fecharModal({ target: document.getElementById('modalPagamentoDeposito') });
+    abrirModal('modalMetodosPagamento');
+}
+
+function abrirModalCartao() {
+    const valor = parseFloat(document.getElementById('depositoValor').value);
+    document.getElementById('valorCartaoDisplay').textContent = `R$ ${valor.toFixed(2)}`;
+    fecharModal({ target: document.getElementById('modalMetodosPagamento') });
+    abrirModal('modalCartaoCredito');
+}
+
+async function processarPagamentoPix() {
+    fecharModal({ target: document.getElementById('modalMetodosPagamento') });
+    const valor = parseFloat(document.getElementById('depositoValor').value);
+    const uid = auth.currentUser.uid;
+
+    const btn = document.querySelector('#modalMetodosPagamento button');
     btn.textContent = 'Gerando...';
     btn.disabled = true;
 
     try {
-        const response = await fetch("https://navalhabackend.onrender.com/criar-deposito", {
+        const response = await fetch("https://navalhabackend.onrender.com/criar-cobranca-pix", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                uid: uid,
-                userType: userType,
-                valor: valor,
-                dadosCliente: {
-                    nome: perfil.nome,
-                    email: perfil.email,
-                    cpf: cpf
-                }
-            }), // Parêntese e chave corrigidos aqui
+            body: JSON.stringify({ valor, uid }),
         });
-
         const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Erro desconhecido ao gerar cobrança.");
-        }
+        if (!response.ok) throw new Error(data.error || "Erro ao gerar cobrança.");
         
-        document.getElementById('pixQrCodeContainer').innerHTML = `<img src="${data.qrCodeUrl}" id="pix-qrcode" alt="PIX QR Code">`;
-        document.getElementById('pix-cod-copia').textContent = data.pixCopyPaste;
-
-        fecharModal({ target: document.getElementById('modalPagamentoDeposito') });
+        document.getElementById('pixQrCodeContainer').innerHTML = `<img src="${data.qrCodeImageUrl}" id="pix-qrcode" alt="PIX QR Code">`;
+        document.getElementById('pix-cod-copia').textContent = data.qrCodeText;
         abrirModal('modalExibirPix');
 
     } catch (error) {
-        console.error('Erro ao gerar cobrança Pix:', error);
-        alert("Erro ao gerar cobrança: " + error.message);
+        alert("Erro ao gerar cobrança PIX: " + error.message);
     } finally {
-        btn.textContent = '📲 Gerar QR Code PIX';
+        btn.textContent = '⚡ Pagar com Pix';
+        btn.disabled = false;
+    }
+}
+
+async function processarPagamentoCartao() {
+    const btn = document.getElementById('btnPagarComCartao');
+    btn.textContent = 'Processando...';
+    btn.disabled = true;
+
+    try {
+        // Obtenção dos dados
+        const valor = parseFloat(document.getElementById('depositoValor').value);
+        const cpf = document.getElementById('depositoCpf').value.trim().replace(/\D/g, '');
+        const holderName = document.getElementById('cardHolderName').value.trim();
+        const cardNumber = document.getElementById('cardNumber').value.trim().replace(/\s/g, '');
+        const expiry = document.getElementById('cardExpiry').value.trim();
+        const cvv = document.getElementById('cardCvv').value.trim();
+        const [expMonth, expYear] = expiry.split('/').map(s => s.trim());
+
+        if (!valor || !cpf || !holderName || !cardNumber || !expiry || !cvv) {
+            throw new Error("Preencha todos os dados do cartão.");
+        }
+        
+        // 1. Criar a "charge" no backend para obter o ID
+        const chargeResponse = await fetch("https://navalhabackend.onrender.com/criar-sessao-pagamento", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ valor, uid: auth.currentUser.uid }),
+        });
+        const chargeData = await chargeResponse.json();
+        if (!chargeResponse.ok) throw new Error(chargeData.error || "Falha ao iniciar pagamento.");
+        const { chargeId } = chargeData;
+
+        // 2. Criptografar o cartão no frontend
+        // TODO: Substitua 'SUA_CHAVE_PUBLICA_PAGBANK' pela sua chave pública real obtida no painel do PagBank
+        const publicKey = 'SUA_CHAVE_PUBLICA_PAGBANK'; 
+        if (publicKey === 'SUA_CHAVE_PUBLICA_PAGBANK') {
+           console.error("ERRO: Chave pública do PagBank não configurada.");
+           throw new Error("O pagamento com cartão não está configurado. Contate o suporte.");
+        }
+        
+        const encryptedCard = await PagBank.encryptCard({
+            publicKey: publicKey,
+            holder: holderName,
+            number: cardNumber,
+            expMonth: expMonth,
+            expYear: '20' + expYear, // Formato AAAA
+            securityCode: cvv
+        });
+
+        if (encryptedCard.hasErrors) {
+            const error = encryptedCard.errors[0];
+            throw new Error(`Erro de validação (${error.code}): ${error.message}`);
+        }
+
+        // 3. Enviar os dados para finalizar o pagamento no backend
+        const finalResponse = await fetch("https://navalhabackend.onrender.com/finalizar-pagamento-cartao", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chargeId,
+                valor,
+                encryptedCard: encryptedCard.encryptedCard,
+                holderData: { name: holderName, tax_id: cpf }
+            }),
+        });
+
+        const finalData = await finalResponse.json();
+        if (!finalResponse.ok || !finalData.success) {
+             throw new Error(finalData.message || "Pagamento recusado.");
+        }
+
+        alert("Pagamento com cartão aprovado com sucesso!");
+        fecharModal({ target: document.getElementById('modalCartaoCredito') });
+
+    } catch (error) {
+        alert("Erro no pagamento: " + error.message);
+    } finally {
+        btn.textContent = ' Pagar com Cartão';
         btn.disabled = false;
     }
 }
@@ -3451,28 +3483,29 @@ async function confirmarSaque() {
     if (perfil.saldo < valor) return alert("Saldo insuficiente.");
 
     try {
-        const response = await fetch("https://navalhabackend.onrender.com/solicitar-saque", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                barbeiroUid: auth.currentUser.uid,
-                valorSaque: valor,
-                dadosPix: { 
-                    tipoChave: chaveTipo,
-                    chave: chave
-                }
-            }),
+        await db.collection("solicitacoes").add({
+            tipo: 'saque',
+            usuarioUid: auth.currentUser.uid,
+            usuarioNome: perfil.nome,
+            valor: valor,
+            chavePixTipo: chaveTipo,
+            chavePix: chave,
+            status: 'pendente',
+            ts: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Erro desconhecido");
 
         fecharModal({ target: document.getElementById('modalPagamentoSaque') });
         abrirModal('modalSaqueEnviado');
+        notifyAdmins("📤 Novo Pedido de Saque", `${perfil.nome} solicitou um saque de R$ ${valor.toFixed(2)}.`);
+
     } catch (error) {
         alert("Erro ao solicitar saque: " + error.message);
     }
 }
 
+// ======================================================================
+// --- FIM DAS FUNÇÕES DE PAGAMENTO ---
+// ======================================================================
 
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
@@ -3616,8 +3649,8 @@ async function verDetalhesSolicitacao(id) {
 
   let detalhes = `Detalhes:\nTipo: ${s.tipo}\nUsuário: ${s.usuarioNome}\n`;
   if(s.valor) detalhes += `Valor: R$ ${s.valor.toFixed(2)}\n`;
-  if(s.tipo === 'saque') detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nNome: ${s.nomeRecebedor}\n`;
-  detalhes += `\nAprovar? (Esta ação é irreversível e deve ser feita APÓS a transferência manual via PIX)`;
+  if(s.tipo === 'saque') detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\n`;
+  detalhes += `\nAprovar? (Para saques, esta ação é irreversível e deve ser feita APÓS a transferência manual via PIX)`;
 
   const confirmar = confirm(detalhes);
   if (confirmar) {
