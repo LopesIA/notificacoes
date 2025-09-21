@@ -992,19 +992,53 @@
 
   <!-- Modal de Métodos de Pagamento -->
   <div id="modalMetodosPagamento" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-btn" onclick="fecharModal('modalMetodosPagamento')">&times;</span>
-      <h2 class="text-center">Escolha o método de pagamento</h2>
-      <div class="modal-metodos-grid">
-        <button class="btn btn-primary" onclick="abrirModalPix()">
-          <i class="fas fa-qrcode"></i> Pagar com Pix ⚡
-        </button>
-        <button class="btn btn-primary" onclick="abrirModalCartao()">
-          <i class="fas fa-credit-card"></i> Pagar com Cartão 💳
-        </button>
-      </div>
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModal('modalMetodosPagamento')">&times;</span>
+    <h2 class="text-center">Escolha o método de pagamento</h2>
+    <div class="modal-metodos-grid">
+      <button class="btn btn-primary" onclick="abrirModalPix()">
+        <i class="fas fa-qrcode"></i> Pagar com Pix ⚡
+      </button>
+      <button class="btn btn-primary" onclick="abrirModalCartao()">
+        <i class="fas fa-credit-card"></i> Pagar com Cartão 💳
+      </button>
     </div>
   </div>
+</div>
+
+<script>
+    // As funções JavaScript precisam estar dentro da tag <script>
+    window.abrirModalMetodosPagamento = () => {
+        // Fecha todos os outros popups antes de abrir este
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.classList.add('hidden');
+        });
+
+        const valorInput = document.getElementById('valorDepositoInput');
+        const valor = parseFloat(valorInput.value);
+        if (isNaN(valor) || valor <= 0) {
+            mostrarMensagem('erro', 'Por favor, insira um valor válido para o depósito.');
+            return;
+        }
+
+        document.getElementById('qrCodeContainer').classList.add('hidden');
+        abrirModal('modalMetodosPagamento');
+    };
+
+    // Abre o modal Pix
+    window.abrirModalPix = () => {
+        fecharModal('modalMetodosPagamento');
+        gerarCobrancaPix();
+    };
+
+    // Abre o modal Cartão
+    window.abrirModalCartao = () => {
+        fecharModal('modalMetodosPagamento');
+        const valor = document.getElementById('valorDepositoInput').value;
+        document.getElementById('cardValorInput').value = parseFloat(valor).toFixed(2);
+        abrirModal('modalCartaoCredito');
+    };
+</script>
 
 <!-- MODAL DE DEPÓSITO ATUALIZADO -->
 <div id="modalPagamentoDeposito" class="modal" onclick="fecharModal(event)">
