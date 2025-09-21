@@ -3332,24 +3332,23 @@ async function gerarCobrancaPix() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-    uid: uid,
-    userType: userType, // Não se esqueça de definir esta variável antes da requisição
-    valor: valor,
-    dadosCliente: {
-        nome: perfil.nome,
-        email: perfil.email,
-        cpf: cpf
-            }),
+                uid: uid,
+                userType: userType,
+                valor: valor,
+                dadosCliente: {
+                    nome: perfil.nome,
+                    email: perfil.email,
+                    cpf: cpf
+                }
+            }), // Parêntese e chave corrigidos aqui
         });
 
-        const data = await response.json(); // Lê o corpo da resposta uma única vez
+        const data = await response.json();
 
         if (!response.ok) {
-            // Se a resposta não for OK, lança um erro com a mensagem do backend
             throw new Error(data.error || "Erro desconhecido ao gerar cobrança.");
         }
         
-        // Se a resposta for OK, processa os dados de sucesso
         document.getElementById('pixQrCodeContainer').innerHTML = `<img src="${data.qrCodeUrl}" id="pix-qrcode" alt="PIX QR Code">`;
         document.getElementById('pix-cod-copia').textContent = data.pixCopyPaste;
 
