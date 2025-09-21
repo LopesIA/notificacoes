@@ -971,6 +971,12 @@
         <h4>📥 Adicionar Saldo</h4>
         <input type="number" id="valorDepositoInput" class="input-moderno" placeholder="Valor do Depósito (Ex: 50.00)" required>
         <button class="btn-moderno" id="btnProcessarDeposito" onclick="processarDeposito()">🔒 Pagar com PagBank</button>
+<div id="pixContainer" style="display:none; text-align:center; margin-top: 20px;">
+    <h4>Escaneie o QR Code ou use o código Pix:</h4>
+    <img id="qrCodeImage" src="" alt="QR Code PIX" style="width: 200px; height: 200px;">
+    <input type="text" id="pixCode" class="input-moderno" readonly style="margin-top: 10px;">
+    <button onclick="copiarPix()" class="btn-moderno" style="background-color: #222; border: 1px solid #d4af37; color: #d4af37; font-size: 14px;">Copiar código PIX</button>
+</div>
     </div>
     <div class="deposit-form-container">
         <h4>📤 Sacar Saldo</h4>
@@ -1876,6 +1882,126 @@ function setupFCM(uid) {
     }).catch(err => {
         console.error('Service Worker não está pronto.', err);
     });
+}
+
+// Exemplo de como iniciar um pagamento para depósito
+// Você pode chamar essa função com o valor que o usuário quer depositar
+async function iniciarDepositoComPagBank(valorDeposito) {
+  const backendUrl = 'https://navalha-de-ouro-v11.onrender.com'; // Sua URL do backend
+
+  const dadosPagamento = {
+    // A descrição é importante para identificar a transação
+    descricao: `Depósito de R$ ${valorDeposito.toFixed(2).replace('.', ',')} para saldo virtual`,
+    valor: valorDeposito * 100 // PagBank usa centavos
+  };
+
+  try {
+    // Exibe a tela de carregamento enquanto o pedido é processado
+    mostrar('loadingView');
+
+    const response = await fetch(`${backendUrl}/criar-deposito`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dadosPagamento)
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Recebe a URL do QR Code e o código Pix Copia e Cola
+      const qrCodeUrl = data.qrCodeUrl;
+      const pixCopyPaste = data.pixCopyPaste;
+      
+      // Esconde o carregamento e mostra a tela com os dados do Pix
+      esconder('loadingView');
+      mostrar('paymentView');
+
+      // Atualiza a imagem do QR Code e o campo de texto na tela
+      document.getElementById('qrCodeImage').src = qrCodeUrl;
+      document.getElementById('pixCode').value = pixCopyPaste;
+      
+    } else {
+      esconder('loadingView');
+      alert(`Erro ao iniciar o depósito: ${data.message || 'Erro desconhecido.'}`);
+      console.error('Erro na resposta do backend:', data);
+    }
+
+  } catch (error) {
+    esconder('loadingView');
+    console.error('Erro na requisição para o backend:', error);
+    alert('Não foi possível se conectar ao servidor para processar o depósito.');
+  }
+}
+
+// Função para exibir uma view e esconder todas as outras
+function mostrar(viewId) {
+    document.querySelectorAll('.view').forEach(view => {
+        view.style.display = 'none';
+    });
+    document.getElementById(viewId).style.display = 'block';
+}
+
+// Função para copiar o código Pix para a área de transferência
+function copiarPix() {
+    const pixCode = document.getElementById('pixCode');
+    pixCode.select();
+    pixCode.setSelectionRange(0, 99999); // Para mobile
+    document.execCommand('copy');
+    alert('Código PIX copiado com sucesso!');
+}
+
+// Função que inicia o processo de depósito, chamando o backend
+async function iniciarDeposito() {
+    const valorInput = document.getElementById('valorDeposito').value;
+    if (!valorInput || isNaN(valorInput) || valorInput <= 0) {
+        alert('Por favor, insira um valor válido para o depósito.');
+        return;
+    }
+
+    // Seu URL de backend no Render
+    const backendUrl = 'https://navalha-de-ouro-v11.onrender.com';
+
+    const dadosDeposito = {
+        // Envia o valor em centavos
+        valor: parseFloat(valorInput) * 100,
+        // O ID do usuário logado, para que o backend saiba quem creditar
+        userId: firebase.auth().currentUser.uid,
+        // Outros dados que você precise, como 'deposito' para identificar a transação
+        descricao: "Depósito para saldo virtual"
+    };
+
+    try {
+        // Exibe um modal de carregamento ou uma mensagem
+        mostrar('loadingView'); // Assumindo que você tem uma view de carregamento
+
+        const response = await fetch(`${backendUrl}/criar-deposito`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dadosDeposito)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Sucesso! Exibe a tela com o QR Code
+            document.getElementById('qrCodeImage').src = data.qrCodeUrl;
+            document.getElementById('pixCode').value = data.pixCode;
+            fecharModal('loadingView');
+            abrirModal('modalPix');
+            
+        } else {
+            // Se o backend retornou um erro
+            fecharModal('loadingView');
+            alert(`Erro ao iniciar o depósito: ${data.message || 'Erro desconhecido.'}`);
+            console.error(data);
+        }
+
+    } catch (error) {
+        // Se houve um erro de conexão
+        fecharModal('loadingView');
+        alert('Falha na comunicação com o servidor. Tente novamente mais tarde.');
+        console.error('Erro na requisição:', error);
+    }
 }
 
 function alternarTema() {
@@ -3278,7 +3404,7 @@ async function processarDeposito() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 clienteUid: auth.currentUser.uid,
-                valor: valor,
+                valor: valor * 100, // Envia o valor em centavos
                 clienteNome: perfil.nome,
                 clienteEmail: perfil.email,
                 clienteTelefone: perfil.telefone,
@@ -3292,18 +3418,43 @@ async function processarDeposito() {
             throw new Error(data.message || "Erro desconhecido ao contatar o servidor.");
         }
         
-        if (data.checkoutUrl) {
-            // Redireciona para o checkout do PagBank
-            window.location.href = data.checkoutUrl;
-        } else {
-            throw new Error("Link de checkout não foi retornado pelo servidor.");
-        }
+        if (data.qrCodeUrl && data.pixCode) {
+            document.getElementById('qrCodeImage').src = data.qrCodeUrl;
+            document.getElementById('pixCode').value = data.pixCode;
 
+            // Se você quiser mostrar o modal do Pix
+            const modalPix = document.getElementById('modalPix');
+            if (modalPix) {
+                modalPix.style.display = 'block';
+            }
+            
+            // Opcional: Esconder a área de depósito e mostrar o QR Code
+            const pixContainer = document.getElementById('pixContainer');
+            if (pixContainer) {
+                pixContainer.style.display = 'block';
+            }
+        } else {
+            throw new Error("Dados do Pix não foram retornados pelo servidor.");
+        }
     } catch (error) {
         alert("Ocorreu um erro: " + error.message);
         btn.disabled = false;
         btn.textContent = '🔒 Pagar com PagBank';
+        console.error("Erro na função processarDeposito:", error);
     }
+}
+
+// Nova função para copiar o código Pix
+function copiarPix() {
+    const pixCode = document.getElementById('pixCode');
+    pixCode.select();
+    pixCode.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(pixCode.value).then(() => {
+        alert('Código PIX copiado com sucesso!');
+    }).catch(err => {
+        console.error('Falha ao copiar o texto:', err);
+        alert('Erro ao copiar o código Pix.');
+    });
 }
 
 function solicitarSaque() {
