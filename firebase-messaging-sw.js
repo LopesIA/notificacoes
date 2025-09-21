@@ -15,15 +15,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// NOVO: Listener para pular a espera e ativar o novo Service Worker imediatamente
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-// ALTERAÇÃO INICIADA: Adicionado listener para o evento 'push'
-// Este é o principal responsável por exibir a notificação quando o app está fechado.
+// Listener para o evento 'push' (notificação recebida com app fechado/em segundo plano)
 self.addEventListener('push', event => {
   console.log('[Service Worker] Push Recebido.');
   const payload = event.data.json();
@@ -33,8 +31,10 @@ self.addEventListener('push', event => {
   const notificationOptions = {
     body: payload.notification.body,
     icon: payload.notification.icon || '/icone.png',
+    // A mágica do deep linking acontece aqui:
+    // O backend envia um 'link' dentro do campo 'data'
     data: {
-      click_action: payload.fcmOptions ? payload.fcmOptions.link : 'https://navalha-de-ouro-v11.web.app/'
+      url: payload.data.link || '/' // Se nenhum link for fornecido, abre a página inicial
     }
   };
 
@@ -49,24 +49,29 @@ self.addEventListener('notificationclick', event => {
   
   event.notification.close();
   
-  const clickAction = event.notification.data.click_action;
-  
+  // Abre a URL que foi definida no 'data' da notificação
+  const urlToOpen = new URL(event.notification.data.url, self.location.origin).href;
+
   event.waitUntil(
-    clients.openWindow(clickAction)
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then(clientList => {
+      // Se uma janela do app já estiver aberta, foca nela
+      for (const client of clientList) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Se não, abre uma nova janela
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
   );
 });
-// ALTERAÇÃO FINALIZADA
 
-// Manipulador para mensagens de dados recebidas em segundo plano (quando o app não está em foco)
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[service-worker.js] Mensagem de segundo plano recebida.', payload);
-
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/icone.png', // Opcional: Adiciona um ícone à notificação
-    click_action: 'https://navalha-de-ouro-v11.web.app/' // Opcional: Abre a URL do seu site ao clicar na notificação
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  console.log('[service-worker.js] Mensagem de segundo plano recebida (onBackgroundMessage).', payload);
+  // Este método é um fallback, a lógica principal está no 'push' event listener.
 });
