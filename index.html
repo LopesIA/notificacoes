@@ -985,68 +985,22 @@
 
 <button id="btnSair" class="hidden" onclick="auth.signOut()">🚪 Sair</button>
 
+<!-- ====================================================================== -->
+<!-- --- MODAIS DE CARTEIRA, DEPÓSITO E SAQUE (FLUXO IMPLEMENTADO) --- -->
+<!-- ====================================================================== -->
+
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
     <p>Seu saldo atual é: <b style="color: var(--cor-destaque-ouro);">R$ <span id="saldoModal">0,00</span></b></p>
     <button onclick="iniciarDeposito()">📥 Depositar</button>
-    <button onclick="solicitarSaque()">📤 Sacar</button>
+    <button onclick="iniciarSaque()">📤 Sacar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
-<div id="modalPagamentoDeposito" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📥 Fazer um Depósito</h3>
-    <p>Digite o valor que deseja adicionar à sua carteira.</p>
-    <input id="depositoValor" type="number" placeholder="Ex: 50.00" style="font-size: 20px; text-align: center;">
-    <input id="depositoCpf" type="text" placeholder="Seu CPF (necessário para o pagamento)">
-    <button id="btnContinuarDeposito" onclick="abrirModalMetodosPagamento()">➡️ Continuar</button>
-    <button onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-
-<div id="modalMetodosPagamento" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>💳 Método de Pagamento</h3>
-      <p>Como você gostaria de pagar?</p>
-      <div class="metodos-grid">
-        <button onclick="processarPagamentoPix()">⚡ Pagar com Pix</button>
-        <button onclick="abrirModalCartao()">💳 Pagar com Cartão</button>
-      </div>
-      <button onclick="fecharModal(event)">❌ Voltar</button>
-    </div>
-</div>
-
-<div id="modalExibirPix" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" style="text-align: center;" onclick="event.stopPropagation()">
-      <h3> Pague com PIX</h3>
-      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      <div id="pixQrCodeContainer">
-        </div>
-      <p>Ou use o PIX Copia e Cola:</p>
-      <div id="pix-cod-copia">
-        </div>
-      <button onclick="copiarCodigoPix()">📋 Copiar Código</button>
-      <p style="font-size: 12px; opacity: 0.8; margin-top: 15px;">O saldo será atualizado automaticamente após a confirmação do pagamento.</p>
-      <button onclick="fecharModal(event)">✅ Fechar</button>
-    </div>
-</div>
-
-<div id="modalCartaoCredito" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💳 Dados do Cartão</h3>
-    <p>Valor do depósito: <b id="valorCartaoDisplay">R$ 0,00</b></p>
-    <input id="cardHolderName" type="text" placeholder="Nome no Cartão">
-    <input id="cardNumber" type="text" placeholder="Número do Cartão">
-    <input id="cardExpiry" type="text" placeholder="Validade (MM/AA)">
-    <input id="cardCvv" type="text" placeholder="CVV">
-    <button id="btnPagarComCartao" onclick="processarPagamentoCartao()"> Pagar com Cartão</button>
-    <button onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-
-<div id="modalPagamentoSaque" class="modal" onclick="fecharModal(event)">
+<!-- ETAPA 1: SAQUE -->
+<div id="modalSaque" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>📤 Solicitar Saque</h3>
     <p>O valor será transferido para sua chave PIX após aprovação do administrador.</p>
@@ -1059,8 +1013,65 @@
         <option value="aleatoria">Aleatória</option>
     </select>
     <input id="saqueChavePix" type="text" placeholder="Sua chave PIX">
-    <button onclick="confirmarSaque()">✅ Confirmar Saque</button>
+    <button id="btnConfirmarSaque" onclick="confirmarSaque()">✅ Confirmar Saque</button>
     <button onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- ETAPA 1: DEPÓSITO -->
+<div id="modalDeposito" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📥 Fazer um Depósito</h3>
+    <p>Digite o valor que deseja adicionar à sua carteira.</p>
+    <input id="depositoValor" type="number" placeholder="Ex: 50.00" style="font-size: 20px; text-align: center;">
+    <input id="depositoCpf" type="text" placeholder="Seu CPF (necessário para o pagamento)">
+    <button id="btnContinuarDeposito" onclick="abrirModalMetodosPagamento()">➡️ Continuar</button>
+    <button onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- ETAPA 2: ESCOLHA DO MÉTODO -->
+<div id="modalMetodosPagamento" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>💳 Método de Pagamento</h3>
+      <p>Como você gostaria de pagar?</p>
+      <div class="metodos-grid">
+        <button id="btnPagarComPix" onclick="processarPagamentoPix()">⚡ Pagar com Pix</button>
+        <button id="btnAbrirFormCartao" onclick="abrirModalCartao()">💳 Pagar com Cartão</button>
+      </div>
+      <button onclick="fecharModal(event); abrirModal('modalDeposito');">⬅️ Voltar</button>
+    </div>
+</div>
+
+<!-- ETAPA 3: EXIBIR PIX -->
+<div id="modalExibirPix" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" style="text-align: center;" onclick="event.stopPropagation()">
+      <h3> Pague com PIX</h3>
+      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
+      <div id="pixQrCodeContainer">
+          <!-- O QR Code será inserido aqui pelo Javascript -->
+      </div>
+      <p>Ou use o PIX Copia e Cola:</p>
+      <div id="pix-cod-copia">
+          <!-- O código será inserido aqui pelo Javascript -->
+      </div>
+      <button onclick="copiarCodigoPix()">📋 Copiar Código</button>
+      <p style="font-size: 12px; opacity: 0.8; margin-top: 15px;">O saldo será atualizado automaticamente após a confirmação do pagamento.</p>
+      <button onclick="fecharModal(event)">✅ Fechar</button>
+    </div>
+</div>
+
+<!-- ETAPA 3: FORMULÁRIO DO CARTÃO -->
+<div id="modalCartaoCredito" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💳 Dados do Cartão</h3>
+    <p>Valor do depósito: <b id="valorCartaoDisplay">R$ 0,00</b></p>
+    <input id="cardHolderName" type="text" placeholder="Nome no Cartão">
+    <input id="cardNumber" type="text" placeholder="Número do Cartão">
+    <input id="cardExpiry" type="text" placeholder="Validade (MM/AA)">
+    <input id="cardCvv" type="text" placeholder="CVV">
+    <button id="btnPagarComCartao" onclick="processarPagamentoCartao()"> Pagar com Cartão</button>
+    <button onclick="fecharModal(event); abrirModal('modalMetodosPagamento');">⬅️ Voltar</button>
   </div>
 </div>
 
@@ -1071,6 +1082,11 @@
     <button onclick="fecharModal(event)">✅ Entendi</button>
   </div>
 </div>
+
+<!-- ====================================================================== -->
+<!-- --- FIM DOS MODAIS DE PAGAMENTO --- -->
+<!-- ====================================================================== -->
+
 
 <div id="janelaChat" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1164,7 +1180,7 @@
         <p style="font-size: 1.2em; text-align: center;"><b>Você tem 10 minutos para chegar à barbearia.</b></p>
         <p style="text-align: center;">Não se atrase para não perder a vaga e o seu dinheiro!</p>
         <div style="display:flex; gap: 10px; margin-top: 20px;">
-            <button onclick="fecharModal({ target: this.closest('.modal') })" style="background:white; color:#e74c3c; flex: 1;">✅ Entendi</button>
+            <button onclick="fecharModal(event)" style="background:white; color:#e74c3c; flex: 1;">✅ Entendi</button>
             <button id="btnCancelarVagaAprovada" style="background: #333; color: white; flex: 1;">❌ Cancelar Agendamento</button>
         </div>
     </div>
@@ -1638,15 +1654,36 @@ let deferredInstallPrompt = null;
 let chatPreviewTimeout = null; 
 
 
+// --- [NOVA LÓGICA DE MODAIS] ---
+function fecharModalAtual() {
+    if (currentModal) {
+        currentModal.classList.remove('show');
+        // Limpezas específicas ao fechar certos modais
+        if (currentModal.id === 'janelaChat') {
+            if (chatListener) { chatListener(); chatListener = null; }
+            if (botInterval) { clearInterval(botInterval); botInterval = null; }
+        }
+        currentModal = null;
+    }
+}
+
 function abrirModal(id) {
-  if (currentModal && currentModal.id !== id) {
-    currentModal.classList.remove('show');
-  }
-  const modal = document.getElementById(id);
-  if (modal) {
-    modal.classList.add("show");
-    currentModal = modal;
-  }
+    fecharModalAtual(); // Garante que qualquer modal aberto seja fechado primeiro
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add("show");
+        currentModal = modal;
+    } else {
+        console.error(`Modal com id "${id}" não encontrado.`);
+    }
+}
+
+function fecharModal(event) {
+    // Se o clique foi no backdrop (o próprio elemento .modal) ou se a função foi chamada sem evento
+    if (!event || event.target.classList.contains('modal')) {
+        fecharModalAtual();
+    }
+    // event.stopPropagation() no .modal-content impede que cliques dentro do conteúdo fechem o modal
 }
 
 
@@ -1706,7 +1743,7 @@ function salvarNovaPromocao() {
   })
   .then(() => {
     alert("Promoção adicionada com sucesso!");
-    fecharModal({target: document.getElementById('modalAddPromocao')});
+    fecharModalAtual();
     document.getElementById('addPromocaoNome').value = '';
     document.getElementById('addPromocaoDescricao').value = '';
     document.getElementById('addPromocaoDesconto').value = '';
@@ -1715,30 +1752,6 @@ function salvarNovaPromocao() {
     console.error("Erro ao adicionar promoção:", error);
     alert("Erro ao adicionar promoção. Tente novamente.");
   });
-}
-
-function fecharModal(idOuEvento) {
-    let modal;
-    if (idOuEvento && typeof idOuEvento === 'object' && idOuEvento.target) {
-        modal = idOuEvento.target.closest('.modal');
-    }
-    else if (typeof idOuEvento === 'string') {
-        modal = document.getElementById(idOuEvento);
-    }
-
-    if (modal) {
-        modal.classList.remove("show");
-        if (modal.id === 'janelaChat') {
-            if (chatListener) {
-                chatListener();
-                chatListener = null;
-            }
-            if (botInterval) {
-                clearInterval(botInterval);
-                botInterval = null;
-            }
-        }
-    }
 }
 
 async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
@@ -1876,7 +1889,7 @@ function pedirPermissaoEFechar() {
             }
         }
     });
-    fecharModal({ target: document.getElementById('modalPermissaoNotificacao') });
+    fecharModalAtual();
 }
 
 async function garantirTokenAtualizadoNoPerfil(uid) {
@@ -2279,7 +2292,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
             deferredInstallPrompt.prompt();
             await deferredInstallPrompt.userChoice;
             deferredInstallPrompt = null;
-            fecharModal({ target: modalInstalar });
+            fecharModalAtual();
         };
     }
 });
@@ -2560,7 +2573,7 @@ function confirmarAgendamento() {
         criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do barbeiro.");
         notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`);
         alert("Pedido enviado com sucesso!");
-        fecharModal({ target: document.getElementById('modalBarbeiroPerfil') });
+        fecharModalAtual();
     }).catch(e => alert("Erro ao enviar pedido: " + e.message));
 }
 
@@ -2593,7 +2606,7 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
         criarAviso(barbeiroUid, `❌ O cliente ${perfil.nome} cancelou a vaga imediata. O valor foi estornado.`);
         notifyUser(barbeiroUid, "❌ Agendamento Cancelado", `${perfil.nome} cancelou a vaga imediata.`);
         alert("Agendamento cancelado e valor reembolsado com sucesso.");
-        fecharModal({ target: document.getElementById('modalVagaImediataAprovada') });
+        fecharModalAtual();
     } catch (e) {
         alert("Erro ao cancelar agendamento: " + e.message);
     }
@@ -2735,7 +2748,7 @@ function assinarVip() {
     }).then(() => {
         alert("Parabéns! Você agora é um membro VIP!");
         notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite 10% de desconto e benefícios exclusivos!");
-        fecharModal({target: document.getElementById('modalVip')});
+        fecharModalAtual();
     }).catch(e => alert("Erro ao assinar VIP: " + e.message));
 }
 
@@ -2890,7 +2903,7 @@ function enviarMensagem() {
     if (!auth.currentUser) {
         alert("Para enviar mensagens, por favor, faça login ou crie uma conta.");
         mostrar('authView');
-        fecharModal({ target: document.getElementById('janelaChat') });
+        fecharModalAtual();
         return;
     }
     if (isSending) return;
@@ -3288,7 +3301,7 @@ function criarPromocao() {
     promocoes: firebase.firestore.FieldValue.arrayUnion({ nome, descricao, desconto })
   }).then(() => {
     alert("Promoção criada!");
-    fecharModal({ target: document.getElementById('modalCriarPromocao') });
+    fecharModalAtual();
   }).catch(e => alert("Erro: " + e.message));
 }
 
@@ -3324,13 +3337,11 @@ function abrirAvaliacoesBarbeiro() {
 // ======================================================================
 
 function iniciarDeposito() {
-  fecharModal({ target: document.getElementById('modalCarteira') });
-  abrirModal('modalPagamentoDeposito');
+  abrirModal('modalDeposito');
 }
 
-function solicitarSaque() {
-  fecharModal({ target: document.getElementById('modalCarteira') });
-  abrirModal('modalPagamentoSaque');
+function iniciarSaque() {
+  abrirModal('modalSaque');
 }
 
 function abrirModalMetodosPagamento() {
@@ -3343,23 +3354,21 @@ function abrirModalMetodosPagamento() {
     if (!cpf || cpf.replace(/\D/g, '').length !== 11) {
         return alert("Por favor, insira um CPF válido.");
     }
-    fecharModal({ target: document.getElementById('modalPagamentoDeposito') });
     abrirModal('modalMetodosPagamento');
 }
 
 function abrirModalCartao() {
     const valor = parseFloat(document.getElementById('depositoValor').value);
     document.getElementById('valorCartaoDisplay').textContent = `R$ ${valor.toFixed(2)}`;
-    fecharModal({ target: document.getElementById('modalMetodosPagamento') });
     abrirModal('modalCartaoCredito');
 }
 
 async function processarPagamentoPix() {
-    fecharModal({ target: document.getElementById('modalMetodosPagamento') });
     const valor = parseFloat(document.getElementById('depositoValor').value);
+    const cpf = document.getElementById('depositoCpf').value.trim().replace(/\D/g, '');
     const uid = auth.currentUser.uid;
-
-    const btn = document.querySelector('#modalMetodosPagamento button');
+    const btn = document.getElementById('btnPagarComPix');
+    
     btn.textContent = 'Gerando...';
     btn.disabled = true;
 
@@ -3367,7 +3376,15 @@ async function processarPagamentoPix() {
         const response = await fetch("https://navalhabackend.onrender.com/criar-cobranca-pix", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ valor, uid }),
+            body: JSON.stringify({ 
+                valor, 
+                uid,
+                dadosCliente: {
+                    nome: perfil.nome,
+                    email: perfil.email,
+                    cpf: cpf
+                }
+            }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Erro ao gerar cobrança.");
@@ -3397,6 +3414,8 @@ async function processarPagamentoCartao() {
         const cardNumber = document.getElementById('cardNumber').value.trim().replace(/\s/g, '');
         const expiry = document.getElementById('cardExpiry').value.trim();
         const cvv = document.getElementById('cardCvv').value.trim();
+        
+        if (!expiry.includes('/')) throw new Error("Data de validade inválida. Use o formato MM/AA.");
         const [expMonth, expYear] = expiry.split('/').map(s => s.trim());
 
         if (!valor || !cpf || !holderName || !cardNumber || !expiry || !cvv) {
@@ -3414,10 +3433,11 @@ async function processarPagamentoCartao() {
         const { chargeId } = chargeData;
 
         // 2. Criptografar o cartão no frontend
-        // TODO: Substitua 'SUA_CHAVE_PUBLICA_PAGBANK' pela sua chave pública real obtida no painel do PagBank
+        // !!! IMPORTANTE !!! Substitua 'SUA_CHAVE_PUBLICA_PAGBANK' pela sua chave pública real.
+        // Você pode obter essa chave no painel do PagBank em Produção > Credenciais.
         const publicKey = 'SUA_CHAVE_PUBLICA_PAGBANK'; 
         if (publicKey === 'SUA_CHAVE_PUBLICA_PAGBANK') {
-           console.error("ERRO: Chave pública do PagBank não configurada.");
+           console.error("ERRO: Chave pública do PagBank não configurada no index.html.");
            throw new Error("O pagamento com cartão não está configurado. Contate o suporte.");
         }
         
@@ -3452,8 +3472,8 @@ async function processarPagamentoCartao() {
              throw new Error(finalData.message || "Pagamento recusado.");
         }
 
-        alert("Pagamento com cartão aprovado com sucesso!");
-        fecharModal({ target: document.getElementById('modalCartaoCredito') });
+        alert("Pagamento com cartão aprovado com sucesso! O saldo será atualizado em instantes.");
+        fecharModalAtual();
 
     } catch (error) {
         alert("Erro no pagamento: " + error.message);
@@ -3465,8 +3485,10 @@ async function processarPagamentoCartao() {
 
 function copiarCodigoPix() {
     const texto = document.getElementById('pix-cod-copia').textContent;
+    const btn = event.target;
     navigator.clipboard.writeText(texto).then(() => {
-        alert("Código PIX copiado para a área de transferência!");
+        btn.textContent = '✅ Copiado!';
+        setTimeout(() => { btn.textContent = '📋 Copiar Código'; }, 2000);
     }).catch(err => {
         alert("Não foi possível copiar o código. Por favor, selecione e copie manualmente.");
     });
@@ -3476,30 +3498,37 @@ async function confirmarSaque() {
     const valor = parseFloat(document.getElementById('saqueValor').value);
     const chaveTipo = document.getElementById('saqueChavePixTipo').value;
     const chave = document.getElementById('saqueChavePix').value.trim();
+    const btn = document.getElementById('btnConfirmarSaque');
 
     if (isNaN(valor) || valor <= 0) return alert("Valor de saque inválido.");
     if (!chaveTipo) return alert("Selecione o tipo da chave PIX.");
     if (!chave) return alert("Insira sua chave PIX.");
     if (perfil.saldo < valor) return alert("Saldo insuficiente.");
 
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+
     try {
-        await db.collection("solicitacoes").add({
-            tipo: 'saque',
-            usuarioUid: auth.currentUser.uid,
-            usuarioNome: perfil.nome,
-            valor: valor,
-            chavePixTipo: chaveTipo,
-            chavePix: chave,
-            status: 'pendente',
-            ts: firebase.firestore.FieldValue.serverTimestamp()
+        const response = await fetch("https://navalhabackend.onrender.com/solicitar-saque", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                barbeiroUid: auth.currentUser.uid,
+                valorSaque: valor,
+                dadosPix: { tipoChave: chaveTipo, chave: chave }
+            }),
         });
 
-        fecharModal({ target: document.getElementById('modalPagamentoSaque') });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
         abrirModal('modalSaqueEnviado');
-        notifyAdmins("📤 Novo Pedido de Saque", `${perfil.nome} solicitou um saque de R$ ${valor.toFixed(2)}.`);
 
     } catch (error) {
         alert("Erro ao solicitar saque: " + error.message);
+    } finally {
+        btn.textContent = '✅ Confirmar Saque';
+        btn.disabled = false;
     }
 }
 
@@ -3516,7 +3545,7 @@ async function publicarBlog() {
     ts: firebase.firestore.FieldValue.serverTimestamp()
   });
   alert("Postagem publicada!");
-  fecharModal({ target: document.getElementById('modalBlogAdmin') });
+  fecharModalAtual();
 }
 
 function carregarListaBlog() {
@@ -3773,7 +3802,7 @@ async function enviarNotificacaoMarketing() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
-        fecharModal({ target: document.getElementById('modalNotificacaoMarketing') });
+        fecharModalAtual();
     } catch (error) {
         alert('Falha ao enviar: ' + error.message);
     }
@@ -3991,7 +4020,7 @@ function salvarPortfolio() {
         portfolio: novasUrls
     }).then(() => {
         alert('Portfólio salvo com sucesso!');
-        fecharModal({ target: document.getElementById('modalPortfolioBarbeiro') });
+        fecharModalAtual();
     }).catch(e => alert('Erro ao salvar portfólio: ' + e.message));
 }
 
@@ -4101,7 +4130,7 @@ function confirmarTurbinar() {
             ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             alert('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
-            fecharModal({target: document.getElementById('modalTurbinar')});
+            fecharModalAtual();
         }).catch(e => alert('Erro ao turbinar perfil: ' + e.message));
     }
 }
@@ -4322,7 +4351,6 @@ function iniciarCompra(produto) {
         return alert('Por favor, selecione um tamanho.');
     }
     
-    fecharModal({ target: document.getElementById('modalProdutoDetalhes') });
     document.getElementById('compraEndereco').value = '';
     document.getElementById('compraTelefone').value = perfil.telefone || '';
     document.getElementById('compraMapsLink').value = '';
@@ -4378,7 +4406,7 @@ async function confirmarCompra(produto, tamanho) {
         alert("Pedido realizado com sucesso!");
         notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`);
         notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`);
-        fecharModal({ target: document.getElementById('modalConfirmarCompra') });
+        fecharModalAtual();
     } catch (e) {
         alert('Erro ao processar a compra: ' + e.message);
     }
@@ -4473,7 +4501,7 @@ async function salvarProdutoVendedor() {
     }
     
     alert('Produto salvo com sucesso!');
-    fecharModal({target: document.getElementById('modalAddEditProduto')});
+    fecharModalAtual();
     abrirGerenciarLoja(); // Recarrega a lista
 }
 
