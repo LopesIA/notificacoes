@@ -7,14 +7,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-<link rel="manifest" href="/manifest.json">
-  <meta charset="UTF-8">
-  
   <link rel="icon" href="/icone.png" type="image/png">
   <link rel="apple-touch-icon" href="/icone.png">
-  <title>💈 Navalha de Ouro</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -54,13 +48,13 @@
       width: 100%;
       max-width: 500px;
       padding-top: 60px;
-      padding-bottom: 80px; /* Espaço para os botões do rodapé */
+      padding-bottom: 80px;
       box-sizing: border-box;
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative; /* Adicionado para posicionamento do chat preview */
+      position: relative;
     }
     input, select, button, textarea {
       width: 100%;
@@ -73,7 +67,7 @@
       font-size: 16px;
       transition: all 0.3s ease-in-out;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-      box-sizing: border-box; /* CORREÇÃO: Garante que padding não estoure a div */
+      box-sizing: border-box;
     }
     button {
       cursor: pointer;
@@ -164,9 +158,8 @@
       transition: transform 0.3s ease-in-out;
       border: 1px solid var(--cor-borda);
     }
-    /* Estilo para o modal de ranking maior */
     #modalRankingUnificado .modal-content {
-        max-width: 600px; /* Maior para caber as duas colunas */
+        max-width: 600px;
     }
     .modal.show .modal-content {
       transform: scale(1);
@@ -190,7 +183,7 @@
     }
     .redeem-container {
       position: fixed;
-      bottom: 25px; /* Posição ajustada */
+      bottom: 25px;
       width: 100%;
       max-width: 500px;
       text-align: center;
@@ -213,10 +206,10 @@
       width: auto;
       height: auto;
       text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-      position: relative; /* Para o contador de notificação */
+      position: relative;
     }
     #btnSair {
-      font-size: 20px; /* Reduzido */
+      font-size: 20px;
       background: none;
       border: none;
       padding: 0;
@@ -226,7 +219,7 @@
       height: auto;
       text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
       position: fixed;
-      bottom: 72px; /* Posição alterada para ficar acima do botão de denúncia */
+      bottom: 72px;
       left: 12px;
       z-index: 15;
     }
@@ -237,7 +230,7 @@
       z-index: 15;
     }
     #btnTema {
-      font-size: 18px; /* Ajuste aqui */
+      font-size: 18px;
       background: none;
       border: none;
       padding: 0;
@@ -283,15 +276,9 @@
       to { opacity: 1; transform: translateY(0); }
     }
     @keyframes vip-glow {
-      0% {
-        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
-      }
-      50% {
-        box-shadow: 0 0 10px var(--cor-destaque-ouro), 0 0 20px var(--cor-destaque-ouro), 0 0 30px var(--cor-destaque-ouro);
-      }
-      100% {
-        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
-      }
+      0% { box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro); }
+      50% { box-shadow: 0 0 10px var(--cor-destaque-ouro), 0 0 20px var(--cor-destaque-ouro), 0 0 30px var(--cor-destaque-ouro); }
+      100% { box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro); }
     }
      @keyframes vaga-glow {
       0% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
@@ -314,7 +301,6 @@
         text-shadow: 0 0 8px var(--cor-destaque-ouro);
         animation: vip-glow 2s ease-in-out infinite;
     }
-    /* NOVO: Animação para notificação de chat */
     @keyframes gold-flash {
       0%, 100% { background-color: transparent; transform: scale(1); }
       50% { background-color: rgba(212, 175, 55, 0.8); transform: scale(1.2); }
@@ -323,7 +309,6 @@
         animation: gold-flash 1.5s ease-in-out infinite;
         border-radius: 50%;
     }
-    /* NOVO: Contador de notificação */
     .notification-badge {
         position: absolute;
         top: -5px;
@@ -349,7 +334,7 @@
     }
     .chat-container {
       height: 100%;
-      flex-grow: 1; /* Faz o container crescer */
+      flex-grow: 1; 
       overflow-y: auto;
       border: 1px solid var(--cor-borda);
       padding: 10px;
@@ -357,27 +342,26 @@
       background: #0d0d0d;
       margin-bottom: 10px;
       display: flex;
-      flex-direction: column-reverse; /* <<< CORREÇÃO DO CHAT: MANTÉM ISSO */
+      flex-direction: column;
     }
     .chat-message {
       padding: 8px 12px;
       margin-bottom: 8px;
       border-radius: 12px;
+      max-width: 80%;
       animation: fadeIn 0.3s ease-in-out;
-      transition: opacity 1.5s ease-out; /* Transição para o fade out */
+      transition: opacity 1.5s ease-out;
     }
     .chat-message.fading-out {
         opacity: 0;
     }
     .chat-sent {
-      text-align: right;
+      align-self: flex-end;
       background: #333;
-      margin-left: 20%;
     }
     .chat-received {
-      text-align: left;
+      align-self: flex-start;
       background: #555;
-      margin-right: 20%;
     }
     .scrollable-list {
       max-height: 400px;
@@ -668,7 +652,6 @@
         z-index: 5;
         pointer-events: none;
     }
-    /* Estilos do Chat Fullscreen */
     #janelaChat.fullscreen {
         padding: 0;
         border-radius: 0;
@@ -684,7 +667,6 @@
     #janelaChat.fullscreen #chatInput {
         margin-bottom: 0;
     }
-    /* Estilos do Portfólio */
     .portfolio-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -708,7 +690,6 @@
         display: flex;
         flex-direction: column;
     }
-    /* Estilos da Loja */
     .loja-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -746,7 +727,6 @@
     #lojaView .card-header { display: flex; justify-content: space-between; align-items: center; }
     #lojaView .card-header h3 { font-size: 1.1em; white-space: nowrap; }
     #lojaContainer h4 { font-size: 1.0em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
     .tamanho-options { display: flex; gap: 5px; justify-content: center; margin: 10px 0; }
     .tamanho-options label {
       padding: 5px 10px;
@@ -764,7 +744,6 @@
     .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .checkbox-group label { display: flex; align-items: center; gap: 5px; }
     .checkbox-group input { width: auto; margin: 0; }
-
     .modal-venda {
       z-index: 99;
     }
@@ -783,8 +762,6 @@
       0%, 100% { background-color: #c0392b; }
       50% { background-color: #e74c3c; }
     }
-    
-    /* NOVOS ESTILOS */
     .barbeiro-list-container {
       width: 100%;
       max-height: 70vh;
@@ -804,7 +781,19 @@
         margin-top: 20px;
         padding-top: 20px;
     }
-
+    .loading-spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--cor-destaque-ouro);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -832,14 +821,14 @@
       <div class="show-password-container">
         <input id="senha-confirm" type="password" placeholder="🔑 Confirmar Senha (visível)">
       </div>
-       <input id="cpfCadastro" type="text" placeholder="CPF (somente números)">
+       <input id="cpfCadastro" type="text" placeholder="📝 CPF (somente números)">
       <select id="tipo">
         <option value="cliente">🙋 Cliente</option>
         <option value="barbeiro">💈 Barbeiro</option>
       </select>
       <input id="telefone" type="tel" placeholder="📞 Telefone com DDD (ex: 27999999999)">
-      <input id="rua" type="text" placeholder="Endereço (Rua)" class="hidden">
-      <input id="numero" type="text" placeholder="Endereço (Número)" class="hidden">
+      <input id="rua" type="text" placeholder="🏠 Endereço (Rua)" class="hidden">
+      <input id="numero" type="text" placeholder="🔢 Endereço (Número)" class="hidden">
       <select id="estado" onchange="carregarCidades()">
         <option value="">🌎 Selecione seu estado</option>
       </select>
@@ -946,7 +935,6 @@
     </div>
 </div>
 
-
 </div>
 
 <div class="redeem-container hidden" id="redeemContainer">
@@ -967,25 +955,34 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
     <p>Seu saldo atual é: <b style="color: var(--cor-destaque-ouro);">R$ <span id="saldoModal">0,00</span></b></p>
-    <div class="deposit-form-container">
+    
+    <div id="depositoContainer" class="deposit-form-container">
         <h4>📥 Adicionar Saldo</h4>
-        <input type="number" id="valorInput" class="input-moderno" placeholder="Valor do Depósito (Ex: 50.00)" required>
-        <button class="btn-moderno" id="btnProcessarDeposito">🔒 Pagar com PagBank</button>
-<div id="pixContainer" style="display:none; text-align:center; margin-top: 20px;">
-    <h4>Escaneie o QR Code ou use o código Pix:</h4>
-    <img id="qrCodeImage" src="" alt="QR Code PIX" style="width: 200px; height: 200px;">
-    <input type="text" id="pixCode" class="input-moderno" readonly style="margin-top: 10px;">
-    <button onclick="copiarPix()" class="btn-moderno" style="background-color: #222; border: 1px solid #d4af37; color: #d4af37; font-size: 14px;">Copiar código PIX</button>
-</div>
+        <input type="number" id="valorInput" placeholder="Valor do Depósito (Ex: 50.00)" required>
+        <div style="display: flex; gap: 10px;">
+          <button id="btnPagarPix" onclick="processarDeposito('PIX')">💳 Pagar com PIX</button>
+          <button id="btnPagarCartao" onclick="alert('Função de Cartão de Crédito em desenvolvimento.')">💳 Pagar com Cartão</button>
+        </div>
     </div>
+    
+    <div id="pixContainer" class="hidden" style="text-align:center; margin-top: 20px;">
+        <div id="loadingSpinner" class="loading-spinner"></div>
+        <h4>Escaneie o QR Code ou use o código Pix:</h4>
+        <img id="qrCodeImage" src="" alt="QR Code PIX" style="width: 200px; height: 200px; border-radius: 10px; margin-bottom: 10px;">
+        <div style="position: relative;">
+          <input type="text" id="pixCode" readonly style="margin-top: 10px; text-align: center; padding-right: 40px;">
+          <button onclick="copiarPix()" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: auto; padding: 8px; font-size: 18px; background: none; border: none;">📋</button>
+        </div>
+        <p style="font-size: 12px; opacity: 0.8; margin-top: 15px;">Aguardando confirmação do pagamento... Você será notificado.</p>
+    </div>
+
     <div class="deposit-form-container">
         <h4>📤 Sacar Saldo</h4>
-        <button onclick="solicitarSaque()">📤 Solicitar Saque</button>
+        <button onclick="solicitarSaque()">💸 Solicitar Saque</button>
     </div>
     <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
-
 
 <div id="modalPagamentoSaque" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1005,7 +1002,6 @@
   </div>
 </div>
 
-<!-- NOVO MODAL DE SAQUE EM ANÁLISE -->
 <div id="modalSaqueAnalisado" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>✅ Saque Solicitado!</h3>
@@ -1022,7 +1018,7 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3 id="chatTitle">💬 Chat Global</h3>
     <button id="btnCarregarMais" onclick="carregarMaisMensagens()" style="width: 100%; margin-bottom: 10px; background: #333; display: none;">⬆️ Exibir mais</button>
-<div id="chatMessages" class="chat-container"></div>
+    <div id="chatMessages" class="chat-container"></div>
     <input id="chatInput" placeholder="Digite sua mensagem">
     <button onclick="enviarMensagem()">➡️ Enviar</button>
     <button onclick="fecharModal(event)">❌ Fechar</button>
@@ -1528,70 +1524,36 @@ const firebaseConfig = {
   appId: "1:434474263075:web:163893d68a1b5dbe74c796"
 };
 
-// Inicialize o Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
 
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-  .then(() => {
-    console.log("Persistência de autenticação definida para 'local'. O usuário ficará logado.");
-  })
-  .catch((error) => {
-    console.error("Erro ao definir a persistência de autenticação:", error);
-  });
-const messaging = firebase.messaging(); 
-const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.05, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
+  .then(() => console.log("Persistência de autenticação definida para 'local'."))
+  .catch((error) => console.error("Erro ao definir a persistência de autenticação:", error));
+
+const messaging = firebase.messaging.isSupported() ? firebase.messaging() : null;
+
+// --- SUAS CONSTANTES E VARIÁVEIS GLOBAIS ---
+const ADMIN_EMAIL = "josiel70c@gmail.com", TAXA = 0.05, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
 const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
 const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
-let fcmSetupDone = false;
-let isSending = false;
-let perfil = null;
-let agendamentoListener = null;
-let currentModal = null;
-let chatListener = null;
-let barbeirosListener = null;
-let tempSelectedHorarios = {};
 const CHAT_GLOBAL_ID = "chatGlobal";
-let botInterval = null;
-let newWorker;
-let localizacaoCliente = null;
-let cadastroCoords = null;
-let vendaListener = null;
-let produtoEmEdicaoId = null; 
-let produtoParaCompra = null;
+let perfil = null, currentModal = null, newWorker, localizacaoCliente = null, cadastroCoords = null;
+let agendamentoListener = null, chatListener = null, barbeirosListener = null, globalChatListener = null;
+let botInterval = null, vendaListener = null;
+let produtoEmEdicaoId = null, produtoParaCompra = null;
+let ultimoDocumentoChat = null, carregandoMaisMsgs = false;
+let lastGlobalMessageTimestamp = null, newMessagesCount = 0;
+let deferredInstallPrompt = null, chatPreviewTimeout = null; 
 
-let userView = {
-    originalType: null,
-    currentType: null
-};
+let userView = { originalType: null, currentType: null };
+let agendamentoState = { barbeiroUid: null, barbeiroNome: null, servico: null, horario: null, barbeiroLat: null, barbeiroLon: null };
 
-let agendamentoState = {
-    barbeiroUid: null,
-    barbeiroNome: null,
-    servico: null,
-    horario: null, 
-    barbeiroLat: null,
-    barbeiroLon: null,
-};
-
-let adminBalanceListener = null;
-let adminUserBalances = {};
-let globalChatListener = null;
-let ultimoDocumentoChat = null; // Controla o último item carregado para paginação
-let carregandoMaisMsgs = false; // Evita cliques duplos
-let lastGlobalMessageTimestamp = null;
-let newMessagesCount = 0;
-
-let deferredInstallPrompt = null;
-let chatPreviewTimeout = null; 
-
-
+// --- LÓGICA DE MODAIS ---
 function abrirModal(id) {
-  if (currentModal && currentModal.id !== id) {
-    currentModal.classList.remove('show');
-  }
+  fecharTodosModais(); 
   const modal = document.getElementById(id);
   if (modal) {
     modal.classList.add("show");
@@ -1599,163 +1561,211 @@ function abrirModal(id) {
   }
 }
 
-
-// FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
-function abrirPromocoes() {
-  abrirModal('modalPromocoesBarbeiro');
-  const lista = document.getElementById("listaPromocoes");
-  if (!lista) {
-    console.error("Erro: Elemento com ID 'listaPromocoes' não encontrado no HTML.");
-    return;
-  }
-  lista.innerHTML = "<p>⏳ Carregando...</p>";
-  db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
-    perfil = doc.data();
-    lista.innerHTML = "";
-    if (!perfil.promocoes || perfil.promocoes.length === 0) {
-      lista.innerHTML = "<p>Nenhuma promoção ativa.</p>";
-      return;
-    }
-    perfil.promocoes.forEach((p, index) => {
-      lista.innerHTML += `<div class="promocao-card">
-        <b>${p.nome}</b>
-        <p>${p.descricao} (${p.desconto}%)</p>
-        <button onclick="removerPromocao(${index})" style="background:none;border:none;color:#fff;float:right;">❌</button>
-      </div>`;
-    });
-  });
-}
-
-// FUNÇÃO PARA ABRIR O MODAL DE ADICIONAR PROMOÇÃO
-function abrirModalAddPromocao() {
-  abrirModal('modalAddPromocao');
-}
-
-// FUNÇÃO PARA SALVAR A PROMOÇÃO NO FIREBASE
-function salvarNovaPromocao() {
-  const nome = document.getElementById('addPromocaoNome').value;
-  const descricao = document.getElementById('addPromocaoDescricao').value;
-  const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
-  
-  if (!nome || !descricao || isNaN(desconto)) {
-    alert("Por favor, preencha todos os campos corretamente.");
-    return;
-  }
-  
-  const novaPromocao = {
-    nome: nome,
-    descricao: descricao,
-    desconto: desconto,
-  };
-
-  const userId = auth.currentUser.uid;
-  const userRef = db.collection("usuarios").doc(userId);
-
-  userRef.update({
-    promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
-  })
-  .then(() => {
-    alert("Promoção adicionada com sucesso!");
-    fecharModal({target: document.getElementById('modalAddPromocao')});
-    document.getElementById('addPromocaoNome').value = '';
-    document.getElementById('addPromocaoDescricao').value = '';
-    document.getElementById('addPromocaoDesconto').value = '';
-  })
-  .catch(error => {
-    console.error("Erro ao adicionar promoção:", error);
-    alert("Erro ao adicionar promoção. Tente novamente.");
-  });
-}
-
 function fecharModal(idOuEvento) {
     let modal;
     if (idOuEvento && typeof idOuEvento === 'object' && idOuEvento.target) {
         modal = idOuEvento.target.closest('.modal');
-    }
-    else if (typeof idOuEvento === 'string') {
+    } else if (typeof idOuEvento === 'string') {
         modal = document.getElementById(idOuEvento);
     }
-
+    
     if (modal) {
         modal.classList.remove("show");
+        if (modal.id === 'modalCarteira') { 
+            document.getElementById('depositoContainer').classList.remove('hidden');
+            document.getElementById('pixContainer').classList.add('hidden');
+            document.getElementById('valorInput').value = '';
+        }
         if (modal.id === 'janelaChat') {
-            if (chatListener) {
-                chatListener();
-                chatListener = null;
-            }
-            if (botInterval) {
-                clearInterval(botInterval);
-                botInterval = null;
-            }
+            if (chatListener) { chatListener(); chatListener = null; }
+            if (botInterval) { clearInterval(botInterval); botInterval = null; }
         }
     }
 }
 
-async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
-  const backendUrl = "https://navalhabackend.onrender.com";
-  const notificationEndpoint = "/enviar-notificacao";
-  const fullUrl = backendUrl + notificationEndpoint;
+function fecharTodosModais() {
+    document.querySelectorAll('.modal.show').forEach(modal => {
+        modal.classList.remove('show');
+    });
+    currentModal = null;
+}
 
-  if (!uid) {
-    console.error("Tentativa de enviar notificação sem um UID de usuário.");
-    return;
-  }
-  
+// --- LÓGICA DE DEEP LINKING E NOTIFICAÇÕES ---
+function handleUrlActions() {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    if (!action) return;
+
+    setTimeout(() => {
+        switch (action) {
+            case 'open_wallet': abrirModal('modalCarteira'); break;
+            case 'view_barber_bookings': abrirAgendamentosBarbeiro(); break;
+            case 'view_admin_requests': abrirModalSolicitacoes(); break;
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }, 1500);
+}
+
+async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
+  const backendUrl = "https://navalhabackend.onrender.com"; 
   try {
-    const response = await fetch(fullUrl, {
+    await fetch(`${backendUrl}/enviar-notificacao`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uid, title, body, data }),
     });
-
-    const responseData = await response.json();
-    if (response.ok) {
-      console.log('Notificação enviada com sucesso via backend:', responseData);
-    } else {
-      console.error('Falha ao enviar a notificação via backend:', responseData.message);
-    }
   } catch (error) {
-    console.error('Erro de rede ou na chamada da API de notificação:', error);
+    console.error('Erro de rede ao enviar notificação:', error);
   }
 }
 
-
 async function notifyUser(uid, title, body, data = {}) {
     if (!uid) return;
-    console.log(`Disparando notificação para UID: ${uid} - Título: ${title}`);
     await enviarNotificacaoParaBackend(uid, title, body, data);
 }
 
 async function notifyAdmins(title, body, data = {}) {
     try {
         const adminQuery = await db.collection("usuarios").where("tipo", "==", "admin").get();
-        if (!adminQuery.empty) {
-            adminQuery.forEach(adminDoc => {
-                notifyUser(adminDoc.id, title, body, data);
-            });
-        }
-    } catch(e) {
-        console.error("Erro ao notificar admins:", e);
+        adminQuery.forEach(adminDoc => notifyUser(adminDoc.id, title, body, data));
+    } catch(e) { console.error("Erro ao notificar admins:", e); }
+}
+
+function solicitarPermissaoNotificacao() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        abrirModal('modalPermissaoNotificacao');
     }
 }
 
+function pedirPermissaoEFechar() {
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted' && auth.currentUser) {
+            setupFCM(auth.currentUser.uid);
+        }
+    });
+    fecharModal({ target: document.getElementById('modalPermissaoNotificacao') });
+}
+
+function setupFCM(uid) {
+    if (!messaging) return;
+    messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' })
+        .then(currentToken => {
+            if (currentToken) {
+                db.collection('usuarios').doc(uid).update({
+                    fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
+                });
+            }
+        }).catch(err => console.error('Erro ao obter token FCM.', err));
+}
+
+// --- LÓGICA DE DEPÓSITO COM PAGBANK ---
+async function processarDeposito() {
+    const valorInput = document.getElementById('valorInput');
+    const valor = parseFloat(valorInput.value);
+    const user = auth.currentUser;
+
+    if (!user) return alert("Você precisa estar logado para depositar.");
+    if (isNaN(valor) || valor <= 0) return alert("Por favor, insira um valor válido.");
+
+    const depositoContainer = document.getElementById('depositoContainer');
+    const pixContainer = document.getElementById('pixContainer');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const qrCodeImage = document.getElementById('qrCodeImage');
+    const pixCodeInput = document.getElementById('pixCode');
+
+    depositoContainer.classList.add('hidden');
+    pixContainer.classList.remove('hidden');
+    loadingSpinner.classList.remove('hidden');
+    qrCodeImage.classList.add('hidden');
+    pixCodeInput.parentElement.classList.add('hidden');
+
+    try {
+        const response = await fetch('https://navalhabackend.onrender.com/criar-deposito', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ valor: valor, uid: user.uid })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erro do servidor.');
+        }
+
+        const data = await response.json();
+        loadingSpinner.classList.add('hidden');
+        qrCodeImage.src = data.qrCodeUrl;
+        pixCodeInput.value = data.pixCopyPaste;
+        qrCodeImage.classList.remove('hidden');
+        pixCodeInput.parentElement.classList.remove('hidden');
+
+    } catch (error) {
+        alert(`Falha ao gerar cobrança: ${error.message}`);
+        pixContainer.classList.add('hidden');
+        depositoContainer.classList.remove('hidden');
+    }
+}
+
+function copiarPix() {
+    const pixCode = document.getElementById('pixCode');
+    pixCode.select();
+    pixCode.setSelectionRange(0, 99999);
+    try {
+        document.execCommand('copy');
+        alert('Código PIX copiado com sucesso!');
+    } catch (err) {
+        alert('Não foi possível copiar o código. Por favor, faça manualmente.');
+    }
+}
+
+// --- CORREÇÃO DO CHAT ---
+async function abrirChatGlobal() {
+    const badge = document.querySelector('#btnChat .notification-badge');
+    newMessagesCount = 0;
+    badge.textContent = '0';
+    badge.classList.add('hidden');
+    
+    abrirModal('janelaChat');
+    document.getElementById('janelaChat').classList.add('fullscreen');
+
+    const chatContainer = document.getElementById("chatMessages");
+    chatContainer.innerHTML = "";
+    
+    if (chatListener) chatListener();
+    chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
+        .orderBy("ts", "asc") 
+        .limitToLast(20) 
+        .onSnapshot(async snapshot => {
+            snapshot.docChanges().forEach(async change => {
+                if (change.type === "added") {
+                    const msgData = { ...change.doc.data(), id: change.doc.id };
+                    const messageDiv = await createMessageDiv(msgData);
+                    if (!document.getElementById(messageDiv.id)) {
+                        chatContainer.appendChild(messageDiv);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }
+            });
+        });
+    if (!botInterval) botInterval = setInterval(sendBotMessage, 600000);
+}
+
+// --- FUNÇÕES GERAIS E LÓGICA DO APP ---
 
 // Funções de UI
 function mostrar(id) {
   ["authView", "guestView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
   document.getElementById(id)?.classList.remove("hidden");
   
-  const isAuth = (id === 'authView');
-  document.getElementById("topbar").classList.toggle("hidden", isAuth);
-  document.getElementById("bottomButtons").classList.toggle("hidden", isAuth);
+  const isAuthOrGuest = (id === 'authView' || id === 'guestView');
+  document.getElementById("topbar").classList.toggle("hidden", id === 'authView');
+  document.getElementById("bottomButtons").classList.toggle("hidden", isAuthOrGuest);
   document.getElementById("redeemContainer").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
   
-  document.getElementById("btnTema").classList.toggle("hidden", isAuth);
+  document.getElementById("btnTema").classList.toggle("hidden", id === 'authView');
   document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
-  document.getElementById("botaoExtra").classList.toggle("hidden", id === 'authView' || id === 'guestView');
-  document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
+  document.getElementById("botaoExtra").classList.toggle("hidden", isAuthOrGuest);
+  document.getElementById("btnSair").classList.toggle("hidden", isAuthOrGuest);
 }
-
 
 function configurarBotoesGuest() {
     const guestView = document.getElementById('guestView');
@@ -1776,237 +1786,6 @@ function configurarBotoesGuest() {
 
 function mostrarPainelAtual() {
     mostrar(`${userView.currentType}View`);
-}
-
-
-function abrirModalLoja() {
-  abrirModal('modalLoja');
-  const listaProdutos = document.getElementById("listaProdutos");
-  
-  if (!listaProdutos) {
-    console.error("Erro: Elemento com ID 'listaProdutos' não encontrado no HTML.");
-    return;
-  }
-
-  listaProdutos.innerHTML = "<p>⏳ Carregando produtos...</p>";
-
-  // Substitua a lógica abaixo pela sua, para carregar os produtos
-  db.collection("loja_produtos").onSnapshot(snapshot => {
-    listaProdutos.innerHTML = "";
-    if (snapshot.empty) {
-      listaProdutos.innerHTML = "<p>Nenhum produto cadastrado na loja.</p>";
-      return;
-    }
-    snapshot.forEach(doc => {
-      const produto = doc.data();
-      listaProdutos.innerHTML += `<div class="produto-card">
-        <img src="${produto.imagemUrl}" alt="${produto.nome}">
-        <div class="produto-info">
-          <p class="produto-nome">${produto.nome}</p>
-          <p class="produto-preco">R$ ${produto.preco.toFixed(2)}</p>
-          <button onclick="comprarProduto('${doc.id}')">Comprar</button>
-        </div>
-      </div>`;
-    });
-  });
-}
-
-function solicitarPermissaoNotificacao() {
-    if ('Notification' in window && Notification.permission === 'default') {
-        abrirModal('modalPermissaoNotificacao');
-    }
-}
-
-function pedirPermissaoEFechar() {
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            const user = auth.currentUser;
-            if (user) {
-                setupFCM(user.uid);
-            }
-        }
-    });
-    fecharModal({ target: document.getElementById('modalPermissaoNotificacao') });
-}
-
-async function garantirTokenAtualizadoNoPerfil(uid) {
-    try {
-        const currentToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
-        if (currentToken) {
-            const userRef = db.collection('usuarios').doc(uid);
-            const userDoc = await userRef.get();
-            if (userDoc.exists) {
-                const tokens = userDoc.data().fcmTokens || [];
-                if (!tokens.includes(currentToken)) {
-                    await userRef.update({
-                        fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
-                    });
-                }
-            }
-        }
-    } catch(err) {
-        console.error('Erro ao garantir token atualizado:', err);
-    }
-}
-
-
-function setupFCM(uid) {
-    if (fcmSetupDone || !('serviceWorker' in navigator) || !firebase.messaging.isSupported()) {
-        return;
-    }
-
-    navigator.serviceWorker.ready.then(async (registration) => {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            fcmSetupDone = true;
-
-            try {
-                // Obtém o token do dispositivo. Essa função já gerencia a renovação.
-                const currentToken = await firebase.messaging().getToken({
-                    vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE'
-                });
-
-                if (currentToken) {
-                    // Salva o token no perfil do usuário
-                    const user = firebase.auth().currentUser;
-                    if (user) {
-                        await firebase.firestore().collection('usuarios').doc(user.uid).update({
-                            fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
-                        });
-                        console.log('Token FCM salvo com sucesso:', currentToken);
-                    }
-                } else {
-                    console.log('Nenhum token de notificação disponível. O usuário pode ter bloqueado as notificações.');
-                }
-            } catch (err) {
-                console.error('Erro ao obter ou atualizar o token de notificação.', err);
-            }
-        } else {
-            console.warn('Permissão de notificação negada. O usuário não receberá notificações.');
-        }
-    }).catch(err => {
-        console.error('Service Worker não está pronto.', err);
-    });
-}
-
-// Exemplo de como iniciar um pagamento para depósito
-// Você pode chamar essa função com o valor que o usuário quer depositar
-async function iniciarDepositoComPagBank(valorDeposito) {
-  const backendUrl = 'https://navalha-de-ouro-v11.onrender.com'; // Sua URL do backend
-
-  const dadosPagamento = {
-    // A descrição é importante para identificar a transação
-    descricao: `Depósito de R$ ${valorDeposito.toFixed(2).replace('.', ',')} para saldo virtual`,
-    valor: valorDeposito * 100 // PagBank usa centavos
-  };
-
-  try {
-    // Exibe a tela de carregamento enquanto o pedido é processado
-    mostrar('loadingView');
-
-    const response = await fetch(`${backendUrl}/criar-deposito`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dadosPagamento)
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      // Recebe a URL do QR Code e o código Pix Copia e Cola
-      const qrCodeUrl = data.qrCodeUrl;
-      const pixCopyPaste = data.pixCopyPaste;
-      
-      // Esconde o carregamento e mostra a tela com os dados do Pix
-      esconder('loadingView');
-      mostrar('paymentView');
-
-      // Atualiza a imagem do QR Code e o campo de texto na tela
-      document.getElementById('qrCodeImage').src = qrCodeUrl;
-      document.getElementById('pixCode').value = pixCopyPaste;
-      
-    } else {
-      esconder('loadingView');
-      alert(`Erro ao iniciar o depósito: ${data.message || 'Erro desconhecido.'}`);
-      console.error('Erro na resposta do backend:', data);
-    }
-
-  } catch (error) {
-    esconder('loadingView');
-    console.error('Erro na requisição para o backend:', error);
-    alert('Não foi possível se conectar ao servidor para processar o depósito.');
-  }
-}
-
-// Função para exibir uma view e esconder todas as outras
-function mostrar(viewId) {
-    document.querySelectorAll('.view').forEach(view => {
-        view.style.display = 'none';
-    });
-    document.getElementById(viewId).style.display = 'block';
-}
-
-// Função para copiar o código Pix para a área de transferência
-function copiarPix() {
-    const pixCode = document.getElementById('pixCode');
-    pixCode.select();
-    pixCode.setSelectionRange(0, 99999); // Para mobile
-    document.execCommand('copy');
-    alert('Código PIX copiado com sucesso!');
-}
-
-// Função que inicia o processo de depósito, chamando o backend
-async function iniciarDeposito() {
-    const valorInput = document.getElementById('valorDeposito').value;
-    if (!valorInput || isNaN(valorInput) || valorInput <= 0) {
-        alert('Por favor, insira um valor válido para o depósito.');
-        return;
-    }
-
-    // Seu URL de backend no Render
-    const backendUrl = 'https://navalha-de-ouro-v11.onrender.com';
-
-    const dadosDeposito = {
-        // Envia o valor em centavos
-        valor: parseFloat(valorInput) * 100,
-        // O ID do usuário logado, para que o backend saiba quem creditar
-        userId: firebase.auth().currentUser.uid,
-        // Outros dados que você precise, como 'deposito' para identificar a transação
-        descricao: "Depósito para saldo virtual"
-    };
-
-    try {
-        // Exibe um modal de carregamento ou uma mensagem
-        mostrar('loadingView'); // Assumindo que você tem uma view de carregamento
-
-        const response = await fetch(`${backendUrl}/criar-deposito`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dadosDeposito)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Sucesso! Exibe a tela com o QR Code
-            document.getElementById('qrCodeImage').src = data.qrCodeUrl;
-            document.getElementById('pixCode').value = data.pixCode;
-            fecharModal('loadingView');
-            abrirModal('modalPix');
-            
-        } else {
-            // Se o backend retornou um erro
-            fecharModal('loadingView');
-            alert(`Erro ao iniciar o depósito: ${data.message || 'Erro desconhecido.'}`);
-            console.error(data);
-        }
-
-    } catch (error) {
-        // Se houve um erro de conexão
-        fecharModal('loadingView');
-        alert('Falha na comunicação com o servidor. Tente novamente mais tarde.');
-        console.error('Erro na requisição:', error);
-    }
 }
 
 function alternarTema() {
@@ -2049,11 +1828,8 @@ function setupViewSwitcher() {
         createButton("💈 Barbeiro", "barbeiro");
         createButton("🙋 Cliente", "cliente");
         container.appendChild(btnLoja);
-    } else if (userView.originalType === 'barbeiro') {
-        createButton("💈 Barbeiro", "barbeiro");
-        container.appendChild(btnLoja);
-    } else if (userView.originalType === 'cliente') {
-        createButton("🙋‍♂️ Cliente", "cliente");
+    } else if (userView.originalType === 'barbeiro' || userView.originalType === 'cliente') {
+        createButton(`🙋‍♂️ Painel`, userView.originalType);
         container.appendChild(btnLoja);
     }
 }
@@ -2100,7 +1876,6 @@ function renderCurrentView() {
     }
 }
 
-
 const cidadesPorEstado = {
   "ES": ["Aracruz", "Vitória", "Serra", "Linhares", "Colatina", "Cachoeiro de Itapemirim", "Guarapari", "Vila Velha", "São Mateus", "Barra de São Francisco"], "SP": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba"], "RJ": ["Rio de Janeiro", "Niterói", "Petrópolis", "Volta Redonda", "Campos dos Goytacazes"], "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Montes Claros"], "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Ilhéus", "Barreiras"], "PR": ["Curitiba", "Londrina", "Maringá", "Cascavel", "Ponta Grossa"], "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Santa Maria", "Novo Hamburgo"], "SC": ["Florianópolis", "Joinville", "Blumenau", "Chapecó", "Criciúma"], "PE": ["Recife", "Olinda", "Caruaru", "Petrolina", "Garanhuns"], "CE": ["Fortaleza", "Juazeiro do Norte", "Sobral", "Crato", "Iguatu"], "DF": ["Brasília"]
 };
@@ -2124,6 +1899,8 @@ function carregarCidades() {
 }
 
 carregarEstados();
+
+// --- LÓGICA DE AUTENTICAÇÃO E CONTA ---
 
 function entrar() {
   const email = document.getElementById("email").value.trim();
@@ -2189,7 +1966,6 @@ function criarConta() {
   if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) return alert("Preencha todos os campos obrigatórios");
   if (!cadastroCoords) return alert("Por favor, permita o acesso à localização para continuar o cadastro.");
 
-
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
   const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
@@ -2228,8 +2004,8 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 });
 
 auth.onAuthStateChanged(async user => {
-  solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
+  handleUrlActions();
 
   if (!user) {
     userView = { originalType: null, currentType: null };
@@ -2237,9 +2013,9 @@ auth.onAuthStateChanged(async user => {
     configurarBotoesGuest();
     carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
     document.getElementById("btnSair").classList.add("hidden");
-    document.getElementById("redeemContainer").classList.add("hidden");
     if(globalChatListener) globalChatListener(); 
     if(vendaListener) vendaListener();
+    solicitarPermissaoNotificacao();
     return;
   }
   const ref = db.collection("usuarios").doc(user.uid);
@@ -2323,7 +2099,6 @@ auth.onAuthStateChanged(async user => {
             lastGlobalMessageTimestamp = msg.ts;
         });
     
-    // Listener de vendas para vendedores
     if (vendaListener) vendaListener();
     if(perfil.lojaLiberada || perfil.tipo === 'admin') {
       vendaListener = db.collection("loja_pedidos")
@@ -2397,7 +2172,7 @@ async function abrirPortaSecreta() {
 // Funções do Cliente
 function abrirBarbeiros() {
   abrirModal('modalBarbeariasCliente');
-  carregarBarbeiros();
+  carregarBarbeirosPorCidade();
 }
 
 function filtrarBarbeiros() {
@@ -2424,13 +2199,10 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     
     if (barbeirosListener) barbeirosListener();
     let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
-    if(!isGuest && perfil && perfil.cidade) {
-        query = query.where("cidade", "==", perfil.cidade);
-    }
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-            lista.innerHTML = `<p>😔 Nenhum barbeiro encontrado ${isGuest ? 'no momento' : `em ${perfil.cidade}`}.</p>`;
+            lista.innerHTML = `<p>😔 Nenhum barbeiro encontrado no momento.</p>`;
             return;
         }
 
@@ -2505,7 +2277,6 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     });
 }
 
-
 function resetAgendamentoState() {
     agendamentoState = { barbeiroUid: null, barbeiroNome: null, servico: null, horario: null, barbeiroLat: null, barbeiroLon: null };
 }
@@ -2551,7 +2322,7 @@ async function abrirBarbeiroPerfil(barbeiroUid) {
         servicosList.innerHTML = "";
         if (b.listaServicos?.length > 0) {
             b.listaServicos.forEach(s => {
-                const servicoJSON = JSON.stringify(s).replace(/"/g, '"');
+                const servicoJSON = JSON.stringify(s).replace(/"/g, "'");
                 servicosList.innerHTML += `<div class="selectable-item" onclick='selecionarServico(this, ${servicoJSON})'>${s.nome} - R$ ${s.valor.toFixed(2)}${s.duracao ? ` - ${s.duracao} min` : ''}</div>`;
             });
         } else {
@@ -2630,7 +2401,7 @@ function confirmarAgendamento() {
         const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
         criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`);
         criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do barbeiro.");
-        notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`);
+        notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: `/?action=view_barber_bookings` });
         alert("Pedido enviado com sucesso!");
         fecharModal({ target: document.getElementById('modalBarbeiroPerfil') });
     }).catch(e => alert("Erro ao enviar pedido: " + e.message));
@@ -2670,7 +2441,6 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
         alert("Erro ao cancelar agendamento: " + e.message);
     }
 }
-
 
 function abrirHistoricoCliente() {
   abrirModal('modalHistoricoCliente');
@@ -2787,7 +2557,6 @@ function abrirModalVip() {
     abrirModal('modalVip');
 }
 
-
 function assinarVip() {
     if (perfil.saldo < PRECO_VIP) {
         alert("Saldo insuficiente para assinar o VIP.");
@@ -2810,61 +2579,6 @@ function assinarVip() {
         fecharModal({target: document.getElementById('modalVip')});
     }).catch(e => alert("Erro ao assinar VIP: " + e.message));
 }
-
-async function abrirChatGlobal() {
-    const badge = document.querySelector('.notification-badge');
-    newMessagesCount = 0;
-    badge.textContent = '0';
-    badge.classList.add('hidden');
-
-    const modal = document.getElementById('janelaChat');
-    modal.classList.add('fullscreen');
-    abrirModal('janelaChat');
-
-    const chatContainer = document.getElementById("chatMessages");
-    const btnCarregarMais = document.getElementById("btnCarregarMais");
-    chatContainer.innerHTML = "";
-    btnCarregarMais.style.display = 'none'; // Esconde o botão inicialmente
-    document.getElementById("chatTitle").innerHTML = perfil && perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
-
-    if (chatListener) chatListener();
-    ultimoDocumentoChat = null; // Reseta a paginação
-
-    // Busca inicial das últimas 6 mensagens
-    chatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-      .orderBy("ts", "desc").limit(6)
-      .onSnapshot(async snapshot => {
-        if (snapshot.empty) {
-            chatContainer.innerHTML = "<p>Nenhuma mensagem ainda. Seja o primeiro!</p>";
-            return;
-        }
-
-        ultimoDocumentoChat = snapshot.docs[snapshot.docs.length - 1];
-        btnCarregarMais.style.display = 'block';
-
-        for (const change of snapshot.docChanges().reverse()) { // <<< CORREÇÃO DO CHAT
-            if (change.type === "added") {
-                const msgData = change.doc.data();
-                msgData.id = change.doc.id;
-                const messageDiv = await createMessageDiv(msgData);
-
-                if (document.getElementById(messageDiv.id)) continue;
-
-                const isScrolledToBottom = chatContainer.scrollHeight - chatContainer.clientHeight <= chatContainer.scrollTop + 1;
-
-                chatContainer.appendChild(messageDiv);
-
-                if (isScrolledToBottom) {
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                }
-            }
-        }
-    });
-
-    document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } });
-    if (!botInterval) botInterval = setInterval(sendBotMessage, 600000);
-}
-
 
 async function createMessageDiv(msg) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
@@ -2931,7 +2645,7 @@ async function carregarMaisMensagens() {
 
     ultimoDocumentoChat = snapshot.docs[snapshot.docs.length - 1];
 
-    for (const doc of snapshot.docs.reverse()) { // <<< CORREÇÃO DO CHAT
+    for (const doc of snapshot.docs.reverse()) { 
         const msgData = doc.data();
         msgData.id = doc.id;
         const messageDiv = await createMessageDiv(msgData);
@@ -3155,7 +2869,6 @@ function toggleHorario(horario) {
     }
 }
 
-
 function salvarAgendaManual() {
     db.collection("usuarios").doc(auth.currentUser.uid).update({ agenda: tempSelectedHorarios })
       .then(() => alert("Agenda salva!"))
@@ -3217,7 +2930,7 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
   }).then(() => {
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo barbeiro ${perfil.nome}!`);
-      notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
+      notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`, { link: `/?action=view_historic` });
       alert("Agendamento aprovado!");
   }).catch(e => alert("Erro ao aprovar: " + e));
 }
@@ -3388,86 +3101,8 @@ function abrirAvaliacoesBarbeiro() {
     });
 }
 
-
-document.addEventListener('DOMContentLoaded', (event) => {
-    const valorInput = document.getElementById('valorDeposito');
-    const botaoDeposito = document.getElementById('btnProcessarDeposito');
-
-    if (!valorInput || !botaoDeposito) {
-        console.error("Erro no código: Elemento de depósito ou botão não encontrado.");
-        return;
-    }
-
-    botaoDeposito.addEventListener('click', async () => {
-        const valor = parseFloat(valorInput.value);
-        const user = firebase.auth().currentUser;
-
-        if (!user) {
-            alert("Você precisa estar logado para fazer um depósito.");
-            return;
-        }
-        const uid = user.uid;
-        const descricao = "Depósito de saldo para Navalha de Ouro";
-
-        if (isNaN(valor) || valor <= 0) {
-            alert("Por favor, insira um valor válido para o depósito.");
-            return;
-        }
-
-        try {
-            const response = await fetch('https://navalhabackend.onrender.com/criar-deposito', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    valor: valor,
-                    descricao: descricao,
-                    uid: uid
-                })
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Erro do servidor: ${errorText}`);
-            }
-
-            const data = await response.json();
-            
-            console.log("Depósito criado com sucesso!");
-            console.log("QR Code (URL):", data.qrcode);
-            console.log("Código Pix:", data.text_qr_code);
-
-            const qrCodeElement = document.getElementById('qrCodeImage');
-            const pixCodeElement = document.getElementById('pixCodeText');
-            
-            if (qrCodeElement && pixCodeElement) {
-                qrCodeElement.src = data.qrcode;
-                pixCodeElement.innerText = data.text_qr_code;
-            }
-
-        } catch (error) {
-            console.error('Ocorreu um erro:', error);
-            alert('Ocorreu um erro ao processar o depósito: ' + error.message);
-        }
-    });
-});
-
-// Nova função para copiar o código Pix
-function copiarPix() {
-    const pixCode = document.getElementById('pixCode');
-    pixCode.select();
-    pixCode.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(pixCode.value).then(() => {
-        alert('Código PIX copiado com sucesso!');
-    }).catch(err => {
-        console.error('Falha ao copiar o texto:', err);
-        alert('Erro ao copiar o código Pix.');
-    });
-}
-
 function solicitarSaque() {
-  fecharModal({target: document.getElementById('modalCarteira')});
+  fecharTodosModais();
   abrirModal('modalPagamentoSaque');
 }
 
@@ -3493,23 +3128,16 @@ async function confirmarSaque() {
             ts: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        fecharModal({target: document.getElementById('modalPagamentoSaque')});
+        fecharTodosModais();
         const mensagem = encodeURIComponent(`🚨 Nova solicitação de SAQUE no valor de R$${valor.toFixed(2)}\n\nDe: ${perfil.nome}\n\nChave PIX (${chaveTipo}): ${chave}`);
         document.getElementById("btnWhatsappSaque").href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
         abrirModal('modalSaqueAnalisado');
 
-        notifyAdmins("📤 Nova Solicitação de Saque!", `${perfil.nome} solicitou um saque de R$ ${valor.toFixed(2)}.`);
+        notifyAdmins("📤 Nova Solicitação de Saque!", `${perfil.nome} solicitou um saque de R$ ${valor.toFixed(2)}.`, { link: `/?action=view_admin_requests` });
     } catch (error) {
         alert("Erro ao criar solicitação de saque: " + error.message);
     }
 }
-
-function fecharTodosModais() {
-    document.querySelectorAll('.modal.show').forEach(modal => {
-        modal.classList.remove('show');
-    });
-}
-
 
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
@@ -3631,7 +3259,6 @@ async function abrirModalEstatisticas() {
     }
 }
 
-
 function abrirModalSolicitacoes() {
   abrirModal('modalSolicitacoes');
   const lista = document.getElementById("listaSolicitacoes");
@@ -3674,7 +3301,7 @@ function aprovarSaque(id, uid, valor) {
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
   }).then(() => {
     alert("Saque aprovado!");
-    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { tipo: 'atualizar_saldo' });
+    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { link: `/?action=open_wallet` });
   }).catch(e => alert("Erro: " + e.message));
 }
 
@@ -3805,7 +3432,6 @@ const conquistasBarbeiroDefinidas = {
 };
 const conquistasBarbeiroOrdem = ['cortes_1000', 'cortes_100', 'cortes_50', 'cortes_20', 'cortes_10', 'cortes_5', 'cortes_1'];
 
-
 async function verificarConquistas(uid) {
     const userRef = db.collection('usuarios').doc(uid);
     const userDoc = await userRef.get();
@@ -3901,7 +3527,6 @@ async function abrirModalRankingUnificado() {
         }
     } catch(e) { containerBarbeiros.innerHTML = '<p>Erro ao carregar ranking.</p>'; }
 }
-
 
 function obterIconeMaiorConquista(conquistas, tipo) {
     if (!conquistas || conquistas.length === 0) return '';
@@ -4020,14 +3645,14 @@ async function abrirPortfolioCliente(barbeiroUid, barbeiroNome) {
 }
 
 function calcularDistancia(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Raio da Terra em km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distância em km
+    return R * c;
 }
 
 function obterLocalizacaoAtual() {
@@ -4213,7 +3838,6 @@ async function carregarProdutos() {
     }
 }
 
-
 function renderProdutoCard(p, pJson) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
     const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
@@ -4246,7 +3870,6 @@ async function comprarProdutoOficial(nomeProduto) {
     }
 }
 
-
 function contatarVendedor(telefone, nomeProduto) {
     if(!telefone) return alert('Este vendedor não cadastrou um telefone.');
     const msg = encodeURIComponent(`Olá! Vi seu produto "${nomeProduto}" na loja do app Navalha de Ouro e tenho interesse.`);
@@ -4268,7 +3891,6 @@ async function exibirVersaoApp() {
     }
 }
 
-
 if (firebase.messaging.isSupported()) {
     messaging.onMessage((payload) => {
         console.log('Mensagem de primeiro plano recebida:', payload);
@@ -4289,7 +3911,7 @@ if (firebase.messaging.isSupported()) {
         }
     });
 }
-// NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
+
 function abrirDetalhesProduto(produto) {
     produtoParaCompra = produto;
     document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
@@ -4319,7 +3941,7 @@ function iniciarCompra(produto) {
         return alert('Por favor, selecione um tamanho.');
     }
     
-    fecharModal({ target: document.getElementById('modalProdutoDetalhes') });
+    fecharTodosModais();
     document.getElementById('compraEndereco').value = '';
     document.getElementById('compraTelefone').value = perfil.telefone || '';
     document.getElementById('compraMapsLink').value = '';
@@ -4375,7 +3997,7 @@ async function confirmarCompra(produto, tamanho) {
         alert("Pedido realizado com sucesso!");
         notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`);
         notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`);
-        fecharModal({ target: document.getElementById('modalConfirmarCompra') });
+        fecharTodosModais();
     } catch (e) {
         alert('Erro ao processar a compra: ' + e.message);
     }
@@ -4412,7 +4034,6 @@ async function abrirFormularioProduto(produtoId = null) {
     const form = document.getElementById('modalAddEditProduto');
     document.getElementById('formProdutoTitulo').textContent = produtoId ? '✏️ Editar Produto' : '📦 Adicionar Novo Produto';
     
-    // Reset form
     form.querySelector('#produtoNome').value = '';
     form.querySelector('#produtoImagemUrl').value = '';
     form.querySelector('#produtoPreco').value = '';
@@ -4470,8 +4091,8 @@ async function salvarProdutoVendedor() {
     }
     
     alert('Produto salvo com sucesso!');
-    fecharModal({target: document.getElementById('modalAddEditProduto')});
-    abrirGerenciarLoja(); // Recarrega a lista
+    fecharTodosModais();
+    abrirGerenciarLoja();
 }
 
 async function deletarProdutoVendedor(produtoId) {
@@ -4509,78 +4130,6 @@ function toggleFuncoes(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
         container.classList.toggle('hidden');
-    }
-}
-
-async function processarDeposito() {
-    // 1. Pega os valores que o usuário inseriu usando o ID CORRETO: valorDeposito
-    const valorInput = document.getElementById('valorDeposito');
-    
-    if (!valorInput) {
-        // Se o elemento não for encontrado, exibe um alerta e para a função.
-        // Isso é uma medida de segurança e deve ser removido após o funcionamento.
-        alert("Erro no código: O campo de depósito não foi encontrado.");
-        console.error("Erro: Elemento com ID 'valorDeposito' não encontrado.");
-        return;
-    }
-    
-    const valor = parseFloat(valorInput.value);
-
-    // 2. Obtém o usuário logado do Firebase Authentication
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        alert("Você precisa estar logado para fazer um depósito.");
-        return;
-    }
-    const uid = user.uid; // Pega o UID (ID do usuário)
-
-    // 3. Define uma descrição para o depósito
-    const descricao = "Depósito de saldo para Navalha de Ouro";
-
-    // 4. Verifica se o valor é válido
-    if (isNaN(valor) || valor <= 0) {
-        alert("Por favor, insira um valor válido para o depósito.");
-        return;
-    }
-
-    try {
-        // 5. Envia os dados para a sua rota `/criar-deposito`
-        const response = await fetch('https://navalhabackend.onrender.com/criar-deposito', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                valor: valor,
-                descricao: descricao,
-                uid: uid // Adicionando o UID à requisição
-            })
-        });
-
-        // 6. Verifica a resposta do servidor e lida com erros
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Erro do servidor: ${errorText}`);
-        }
-
-        const data = await response.json();
-        
-        // 7. Se tudo der certo, processa o JSON da resposta
-        console.log("Depósito criado com sucesso!");
-        console.log("QR Code (URL):", data.qrcode);
-        console.log("Código Pix:", data.text_qr_code);
-
-        const qrCodeElement = document.getElementById('qrCodeImage');
-        const pixCodeElement = document.getElementById('pixCodeText');
-        
-        if (qrCodeElement && pixCodeElement) {
-            qrCodeElement.src = data.qrcode;
-            pixCodeElement.innerText = data.text_qr_code;
-        }
-
-    } catch (error) {
-        console.error('Ocorreu um erro:', error);
-        alert('Ocorreu um erro ao processar o depósito: ' + error.message);
     }
 }
 
@@ -4627,3 +4176,4 @@ function handleProdutoClick(produto) {
 </script>
 </body>
 </html>
+
