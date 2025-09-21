@@ -3332,9 +3332,13 @@ async function gerarCobrancaPix() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                uid: uid,
-                userType: userType,
-                valor: valor
+    uid: uid,
+    userType: userType, // Não se esqueça de definir esta variável antes da requisição
+    valor: valor,
+    dadosCliente: {
+        nome: perfil.nome,
+        email: perfil.email,
+        cpf: cpf
             }),
         });
 
