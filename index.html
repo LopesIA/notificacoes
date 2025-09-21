@@ -989,6 +989,22 @@
   </div>
 </div>
 
+  <!-- Modal de Métodos de Pagamento -->
+  <div id="modalMetodosPagamento" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" onclick="fecharModal('modalMetodosPagamento')">&times;</span>
+      <h2 class="text-center">Escolha o método de pagamento</h2>
+      <div class="modal-metodos-grid">
+        <button class="btn btn-primary" onclick="abrirModalPix()">
+          <i class="fas fa-qrcode"></i> Pagar com Pix ⚡
+        </button>
+        <button class="btn btn-primary" onclick="abrirModalCartao()">
+          <i class="fas fa-credit-card"></i> Pagar com Cartão 💳
+        </button>
+      </div>
+    </div>
+  </div>
+
 <!-- MODAL DE DEPÓSITO ATUALIZADO -->
 <div id="modalPagamentoDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
