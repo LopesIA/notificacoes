@@ -1631,6 +1631,7 @@ const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
 const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
+let modalAberto = null;
 let fcmSetupDone = false;
 let isSending = false;
 let perfil = null;
@@ -1694,30 +1695,38 @@ function fecharModal(eventOrId) {
     }
 }
 
-function abrirModal(id) {
-    fecharModalAtual(); // Garante que qualquer modal aberto seja fechado primeiro
-    const modal = document.getElementById(id);
-    if (modal) {
-        modal.classList.add("show");
-        currentModal = modal;
-    } else {
-        console.error(`Modal com id "${id}" não encontrado.`);
-    }
-}
-
-function fecharModal(event) {
-    // Se o clique veio de um botão com o atributo data-modal-id, ele pega o ID de lá.
-    const modalId = event.currentTarget.getAttribute('data-modal-id');
-    if (modalId) {
-        document.getElementById(modalId).style.display = 'none';
-        return;
+function abrirModal(modalId) {
+        if (modalAberto) {
+            fecharModal({ target: modalAberto, custom: true });
+        }
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+            modalAberto = modal;
+        }
     }
 
-    // Se o clique foi na área escura do modal, ele fecha.
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
+    function fecharModal(event) {
+        let modal = null;
+        if (event.custom) {
+            modal = event.target;
+        } else {
+            const target = event.target;
+            const modalId = target.getAttribute('data-modal-id');
+            if (modalId) {
+                modal = document.getElementById(modalId);
+            } else {
+                modal = target.closest('.modal');
+            }
+        }
+        
+        if (modal) {
+            modal.style.display = 'none';
+            if (modal === modalAberto) {
+                modalAberto = null;
+            }
+        }
     }
-}
 
 
 // FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
