@@ -1021,12 +1021,17 @@
 <!-- ETAPA 1: DEPÓSITO -->
 <div id="modalDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📥 Fazer um Depósito</h3>
-    <p>Digite o valor que deseja adicionar à sua carteira.</p>
-    <input id="depositoValor" type="number" placeholder="Ex: 50.00" style="font-size: 20px; text-align: center;">
-    <input id="depositoCpf" type="text" placeholder="Seu CPF (necessário para o pagamento)">
-    <button id="btnContinuarDeposito" onclick="abrirModalMetodosPagamento()">➡️ Continuar</button>
-    <button onclick="fecharModal(event)">❌ Cancelar</button>
+    <h3>💰 Depósito de Créditos</h3>
+    <p style="font-size: 12px; color: #aaa; margin-top: -10px; margin-bottom: 15px;">
+      Para continuar, informe seus dados para o pagamento.
+    </p>
+    <input id="depositoValor" type="number" step="0.01" placeholder="R$ Valor do Depósito" required>
+    <input id="depositoNome" type="text" placeholder="Nome Completo" required>
+    <input id="depositoEmail" type="email" placeholder="E-mail" required>
+    <input id="depositoTelefone" type="tel" placeholder="Telefone (com DDD)" required>
+    <input id="depositoCpf" type="text" placeholder="CPF (somente números)" required>
+    <button onclick="abrirModalMetodosPagamento()">Continuar</button>
+    <button onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
