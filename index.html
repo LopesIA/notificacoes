@@ -3410,11 +3410,15 @@ async function processarPagamentoPix() {
     // Mostra o modal de carregamento
     abrirModal('modalCarregandoPix');
 
+    // Remove caracteres não-numéricos do CPF e telefone
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    const telefoneLimpo = telefone.replace(/\D/g, '');
+
     const dadosCliente = {
         nome: nome,
         email: email,
-        cpf: cpf,
-        telefone: telefone // Agora o telefone está sendo enviado corretamente
+        cpf: cpfLimpo, // Enviando o CPF limpo
+        telefone: telefoneLimpo // Enviando o telefone limpo
     };
     
     try {
@@ -3430,11 +3434,13 @@ async function processarPagamentoPix() {
             })
         });
 
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error);
+        // Verificação para saber se a requisição foi bem-sucedida ou não
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Erro desconhecido ao processar pagamento.");
         }
+
+        const data = await response.json();
 
         // Fecha o modal de carregamento e abre o modal do QR Code
         fecharModal('modalCarregandoPix');
@@ -3446,7 +3452,7 @@ async function processarPagamentoPix() {
     } catch (error) {
         fecharModal('modalCarregandoPix');
         console.error("Erro ao criar cobrança PIX:", error);
-        alert("Ocorreu um erro ao gerar a cobrança PIX. Tente novamente mais tarde.");
+        alert(`Ocorreu um erro ao gerar a cobrança PIX. Detalhes: ${error.message}`);
     }
 }
 
@@ -3491,15 +3497,19 @@ async function processarPagamentoCartao() {
     // Mostra o modal de carregamento
     abrirModal('modalCarregando');
 
+    // Remove caracteres não-numéricos do CPF e telefone
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    const telefoneLimpo = telefone.replace(/\D/g, '');
+    
     const dadosCliente = {
         nome: nome,
         email: email,
-        cpf: cpf,
-        telefone: telefone
+        cpf: cpfLimpo,
+        telefone: telefoneLimpo
     };
     
     const dadosCartao = {
-        numero: numeroCartao,
+        numero: numeroCartao.replace(/\s/g, ''), // Remove espaços do número do cartão
         nomeTitular: nomeTitular,
         mes: mesValidade,
         ano: anoValidade,
@@ -3520,11 +3530,12 @@ async function processarPagamentoCartao() {
             })
         });
 
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Erro desconhecido ao processar pagamento.");
         }
+
+        const data = await response.json();
 
         fecharModal('modalCarregando');
         alert("Pagamento processado com sucesso! Seu saldo será atualizado em breve.");
@@ -3534,7 +3545,7 @@ async function processarPagamentoCartao() {
     } catch (error) {
         fecharModal('modalCarregando');
         console.error("Erro ao processar pagamento com cartão:", error);
-        alert("Ocorreu um erro ao processar seu pagamento. Verifique seus dados e tente novamente.");
+        alert(`Ocorreu um erro ao processar seu pagamento. Verifique seus dados e tente novamente. Detalhes: ${error.message}`);
     }
 }
 
