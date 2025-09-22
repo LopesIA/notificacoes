@@ -4618,11 +4618,11 @@ function toggleFuncoes(containerId) {
 
 function fecharModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) { // Essa checagem evita o erro
+    if (modal) { // Adiciona essa checagem para garantir que o modal existe
         modal.classList.remove('show');
         setTimeout(() => {
             modal.style.display = 'none';
-        }, 300);
+        }, 300); // tempo da transição
     }
 }
 
