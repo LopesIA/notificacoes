@@ -4615,6 +4615,17 @@ function toggleFuncoes(containerId) {
         container.classList.toggle('hidden');
     }
 }
+
+function fecharModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) { // Essa checagem evita o erro
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+}
+
 function handleProdutoClick(produto) {
     if (!auth.currentUser) {
         alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
