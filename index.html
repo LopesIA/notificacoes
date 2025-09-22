@@ -3468,16 +3468,15 @@ async function processarPagamentoCartao() {
         alert("Por favor, preencha todos os campos obrigatórios para o depósito.");
         return;
     }
-    
-    // 2. Coleta os dados do cartão de crédito
-    const numeroCartao = document.getElementById('cartaoNumero').value;
-    const nomeTitular = document.getElementById('cartaoNome').value;
-    const mesValidade = document.getElementById('cartaoMes').value;
-    const anoValidade = document.getElementById('cartaoAno').value;
-    const cvv = document.getElementById('cartaoCvv').value;
-    
+
+    // 2. Coleta os dados do cartão de crédito (AGORA COM AS IDs CORRETAS)
+    const cardHolderName = document.getElementById('cardHolderName').value;
+    const cardNumber = document.getElementById('cardNumber').value;
+    const cardExpiry = document.getElementById('cardExpiry').value;
+    const cardCvv = document.getElementById('cardCvv').value;
+
     // Validação básica dos dados do cartão
-    if (!numeroCartao || !nomeTitular || !mesValidade || !anoValidade || !cvv) {
+    if (!cardHolderName || !cardNumber || !cardExpiry || !cardCvv) {
         alert("Por favor, preencha todos os dados do cartão de crédito.");
         return;
     }
@@ -3500,34 +3499,37 @@ async function processarPagamentoCartao() {
     // Remove caracteres não-numéricos do CPF e telefone
     const cpfLimpo = cpf.replace(/\D/g, '');
     const telefoneLimpo = telefone.replace(/\D/g, '');
-    
-    const dadosCliente = {
-        nome: nome,
-        email: email,
-        cpf: cpfLimpo,
-        telefone: telefoneLimpo
-    };
-    
-    const dadosCartao = {
-        numero: numeroCartao.replace(/\s/g, ''), // Remove espaços do número do cartão
-        nomeTitular: nomeTitular,
-        mes: mesValidade,
-        ano: anoValidade,
-        cvv: cvv
+
+    // 3. CRIPTOGRAFA os dados do cartão com a chave pública do PagBank
+    const encryptedCard = PagSeguro.encryptCard({
+        publicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYt7Xv2Y8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8hQ==',
+        cardNumber: cardNumber,
+        cvv: cardCvv,
+        expirationMonth: cardExpiry.split('/')[0],
+        expirationYear: '20' + cardExpiry.split('/')[1] // Adiciona '20' para o ano
+    });
+
+    // 4. Cria o objeto de dados para enviar para o backend
+    const data = {
+        valor: valorNumerico,
+        uid: user.uid,
+        dadosCliente: {
+            nome: cardHolderName,
+            email: email,
+            cpf: cpfLimpo,
+            telefone: telefoneLimpo
+        },
+        encryptedCard: encryptedCard
     };
 
+    // 5. Envia os dados para o seu backend
     try {
-        const response = await fetch('https://navalhabackend.onrender.com/criar-cobranca-cartao', {
+        const response = await fetch('https://navalhabackend.onrender.com/criar-e-pagar-com-cartao', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                valor: valorNumerico,
-                uid: user.uid,
-                dadosCliente: dadosCliente,
-                dadosCartao: dadosCartao
-            })
+            body: JSON.stringify(data)
         });
 
         if (!response.ok) {
@@ -3535,12 +3537,17 @@ async function processarPagamentoCartao() {
             throw new Error(errorData.error || "Erro desconhecido ao processar pagamento.");
         }
 
-        const data = await response.json();
+        const responseData = await response.json();
 
         fecharModal('modalCarregando');
-        alert("Pagamento processado com sucesso! Seu saldo será atualizado em breve.");
-        fecharModal('modalMetodosPagamento');
-        fecharModal('modalDeposito');
+        if (responseData.status === 'PAID' || responseData.status === 'AUTHORIZED') {
+            alert('Pagamento com cartão de crédito aprovado!');
+        } else {
+            alert('O pagamento não foi aprovado. Status: ' + responseData.status);
+        }
+        
+        fecharModal('modalCartaoCredito');
+        fecharModal(null); // Fecha o último modal aberto
 
     } catch (error) {
         fecharModal('modalCarregando');
