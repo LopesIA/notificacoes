@@ -985,10 +985,6 @@
 
 <button id="btnSair" class="hidden" onclick="auth.signOut()">🚪 Sair</button>
 
-<!-- ====================================================================== -->
-<!-- --- MODAIS DE CARTEIRA, DEPÓSITO E SAQUE (FLUXO IMPLEMENTADO) --- -->
-<!-- ====================================================================== -->
-
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
@@ -999,7 +995,6 @@
   </div>
 </div>
 
-<!-- ETAPA 1: SAQUE -->
 <div id="modalSaque" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>📤 Solicitar Saque</h3>
@@ -1018,7 +1013,6 @@
   </div>
 </div>
 
-<!-- ETAPA 1: DEPÓSITO -->
 <div id="modalDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Depósito de Créditos</h3>
@@ -1035,7 +1029,6 @@
   </div>
 </div>
 
-<!-- ETAPA 2: ESCOLHA DO MÉTODO -->
 <div id="modalMetodosPagamento" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <h3>💳 Método de Pagamento</h3>
@@ -1064,25 +1057,21 @@
     </div>
 </div>
 
-<!-- ETAPA 3: EXIBIR PIX -->
 <div id="modalExibirPix" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" style="text-align: center;" onclick="event.stopPropagation()">
       <h3> Pague com PIX</h3>
       <p>Escaneie o QR Code abaixo com seu app de banco.</p>
       <div id="pixQrCodeContainer">
-          <!-- O QR Code será inserido aqui pelo Javascript -->
-      </div>
+          </div>
       <p>Ou use o PIX Copia e Cola:</p>
       <div id="pix-cod-copia">
-          <!-- O código será inserido aqui pelo Javascript -->
-      </div>
+          </div>
       <button onclick="copiarCodigoPix()">📋 Copiar Código</button>
       <p style="font-size: 12px; opacity: 0.8; margin-top: 15px;">O saldo será atualizado automaticamente após a confirmação do pagamento.</p>
       <button onclick="fecharModal(event)">✅ Fechar</button>
     </div>
 </div>
 
-<!-- ETAPA 3: FORMULÁRIO DO CARTÃO -->
 <div id="modalCartaoCredito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💳 Dados do Cartão</h3>
@@ -1103,11 +1092,6 @@
     <button onclick="fecharModal(event)">✅ Entendi</button>
   </div>
 </div>
-
-<!-- ====================================================================== -->
-<!-- --- FIM DOS MODAIS DE PAGAMENTO --- -->
-<!-- ====================================================================== -->
-
 
 <div id="janelaChat" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1631,7 +1615,7 @@ const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
 const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
-let modalAberto = null;
+
 let fcmSetupDone = false;
 let isSending = false;
 let perfil = null;
@@ -1674,59 +1658,64 @@ let deferredInstallPrompt = null;
 let chatPreviewTimeout = null; 
 
 
-// --- [NOVA LÓGICA DE MODAIS] ---
-function fecharModal(eventOrId) {
-    let modal;
+// --- [LÓGICA DE MODAIS CORRIGIDA] ---
+let modalAberto = null; // Rastreia o modal que está atualmente visível
 
-    // Checa se o parâmetro é um objeto de evento (clique na área externa)
-    if (eventOrId && eventOrId.target && eventOrId.target.classList.contains('modal')) {
-        // Encontra o modal que foi clicado
-        modal = eventOrId.target;
-    // Se o parâmetro for uma string, trata como um ID (clique no botão)
-    } else if (typeof eventOrId === 'string') {
-        modal = document.getElementById(eventOrId);
+/**
+ * Abre um modal específico pelo seu ID. Se outro modal já estiver aberto,
+ * ele será fechado primeiro para evitar sobreposição.
+ * @param {string} modalId O ID do elemento do modal a ser aberto.
+ */
+function abrirModal(modalId) {
+    // Se um modal já estiver aberto, fecha-o primeiro.
+    if (modalAberto) {
+        modalAberto.classList.remove('show');
+        const modalAnterior = modalAberto;
+        setTimeout(() => {
+            modalAnterior.style.display = 'none';
+        }, 300); // Deve ser igual à duração da transição CSS
     }
 
-    if (modal) {
-        modal.classList.remove('show');
+    const novoModal = document.getElementById(modalId);
+    if (novoModal) {
+        modalAberto = novoModal; // Define o novo modal como o ativo
+        novoModal.style.display = 'flex'; // Torna o contêiner do modal visível
+        
+        // Adiciona a classe 'show' após um pequeno delay.
+        // Isso força o navegador a aplicar o 'display: flex' antes de iniciar a animação,
+        // garantindo que a transição de opacidade e transformação funcione corretamente.
         setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300); // tempo da transição
+            novoModal.classList.add('show');
+        }, 10);
     }
 }
 
-function abrirModal(modalId) {
+/**
+ * Fecha o modal ativo. Esta função é acionada por um evento de clique,
+ * seja no fundo do modal ou em um botão de fechar.
+ * @param {MouseEvent} event O objeto de evento do clique.
+ */
+function fecharModal(event) {
+    // O fechamento só deve ocorrer se o clique for:
+    // 1. Diretamente no elemento de fundo (que tem a classe 'modal').
+    // 2. Em um elemento com o atributo 'data-modal-id' (o botão "Fechar").
+    // Clicar dentro do 'modal-content' não fecha o modal, pois o HTML tem `event.stopPropagation()`.
+    const target = event.target;
+    if (target.classList.contains('modal') || target.getAttribute('data-modal-id')) {
         if (modalAberto) {
-            fecharModal({ target: modalAberto, custom: true });
-        }
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-            modalAberto = modal;
-        }
-    }
-
-    function fecharModal(event) {
-        let modal = null;
-        if (event.custom) {
-            modal = event.target;
-        } else {
-            const target = event.target;
-            const modalId = target.getAttribute('data-modal-id');
-            if (modalId) {
-                modal = document.getElementById(modalId);
-            } else {
-                modal = target.closest('.modal');
-            }
-        }
-        
-        if (modal) {
-            modal.style.display = 'none';
-            if (modal === modalAberto) {
-                modalAberto = null;
-            }
+            modalAberto.classList.remove('show'); // Inicia a animação de fechamento
+            
+            // Após a animação, esconde o modal e limpa a variável de rastreamento.
+            setTimeout(() => {
+                if (modalAberto) { // Verificação extra de segurança
+                    modalAberto.style.display = 'none';
+                    modalAberto = null;
+                }
+            }, 300); // Sincronizado com a transição CSS
         }
     }
+}
+// --- [FIM DA LÓGICA DE MODAIS CORRIGIDA] ---
 
 
 // FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
@@ -3524,7 +3513,7 @@ async function processarPagamentoCartao() {
 
     // 3. CRIPTOGRAFA os dados do cartão com a chave pública do PagBank
     const encryptedCard = PagSeguro.encryptCard({
-        publicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYt7Xv2Y8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8hQ==',
+        publicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYt7Xv2Y8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8hQ==',
         cardNumber: cardNumber,
         cvv: cardCvv,
         expirationMonth: cardExpiry.split('/')[0],
@@ -4638,13 +4627,10 @@ function toggleFuncoes(containerId) {
     }
 }
 
-function fecharModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) { // Adiciona essa checagem para garantir que o modal existe
-        modal.classList.remove('show');
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300); // tempo da transição
+function fecharModalAtual() {
+    if(modalAberto) {
+        const event = { target: modalAberto };
+        fecharModal(event);
     }
 }
 
