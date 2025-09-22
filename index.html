@@ -3461,7 +3461,7 @@ async function processarPagamentoPix() {
         document.getElementById('qrCodeText').value = data.qrCodeText;
 
     } catch (error) {
-        fecharModal('modalCarregandoPix');
+        fecharModalAtual();
         console.error("Erro ao criar cobrança PIX:", error);
         alert(`Ocorreu um erro ao gerar a cobrança PIX. Detalhes: ${error.message}`);
     }
