@@ -1,3 +1,5 @@
+// firebase-messaging-sw.js (REVISADO E OTIMIZADO)
+
 // Importa os scripts do Firebase necessários para o Service Worker
 importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js');
@@ -31,8 +33,7 @@ self.addEventListener('push', event => {
   const notificationOptions = {
     body: payload.notification.body,
     icon: payload.notification.icon || '/icone.png',
-    // A mágica do deep linking acontece aqui:
-    // O backend envia um 'link' dentro do campo 'data'
+    // O backend envia um 'link' dentro do campo 'data' para o deep linking
     data: {
       url: payload.data.link || '/' // Se nenhum link for fornecido, abre a página inicial
     }
@@ -43,7 +44,7 @@ self.addEventListener('push', event => {
   );
 });
 
-// Listener para quando o usuário clica na notificação (MELHORADO)
+// Listener para quando o usuário clica na notificação (lógica de deep linking)
 self.addEventListener('notificationclick', event => {
   console.log('[Service Worker] Clique na notificação recebido.');
   
@@ -57,9 +58,10 @@ self.addEventListener('notificationclick', event => {
       type: 'window',
       includeUncontrolled: true
     }).then(clientList => {
-      // Se uma janela do app já estiver aberta e na mesma URL, foca nela
+      // Se uma janela do app já estiver aberta, foca nela
       for (const client of clientList) {
-        if (client.url === urlToOpen && 'focus' in client) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          client.navigate(urlToOpen); // Navega para a URL correta
           return client.focus();
         }
       }
