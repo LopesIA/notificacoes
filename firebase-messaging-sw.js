@@ -29,13 +29,13 @@ self.addEventListener('push', event => {
   const payload = event.data.json();
   console.log('[Service Worker] Payload:', payload);
 
-  const notificationTitle = payload.notification?.title || 'Notificação';
+  const notificationTitle = payload.notification.title;
   const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: payload.notification?.icon || '/icone.png',
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/icone.png',
     // O backend envia um 'link' dentro do campo 'data' para o deep linking
     data: {
-      url: payload.data?.link || '/' // Se nenhum link for fornecido, abre a página inicial
+      url: payload.data.link || '/' // Se nenhum link for fornecido, abre a página inicial
     }
   };
 
@@ -77,12 +77,12 @@ self.addEventListener('notificationclick', event => {
 messaging.onBackgroundMessage(function(payload) {
   console.log('[service-worker.js] Mensagem de segundo plano recebida.', payload);
   
-  const notificationTitle = payload.notification?.title || 'Notificação';
+  const notificationTitle = payload.notification.title;
   const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: payload.notification?.icon || '/icone.png',
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/icone.png',
     data: {
-      url: payload.data?.link || '/'
+      url: payload.data.link || '/'
     }
   };
 
