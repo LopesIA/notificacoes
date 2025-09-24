@@ -4244,19 +4244,38 @@ async function carregarProdutos() {
 }
 
 
-function renderProdutoCard(p, pJson) {
-    const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
-    const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
-    
-    return `
-        <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
-            <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
-            <div class="produto-info">
-                <div class="produto-nome">${p.nome}</div>
-                <div class="produto-preco">${precoHtml}</div>
-            </div>
-        </div>
-    `;
+function renderProdutoCard(p) {
+  const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
+  const precoHtml = p.desconto
+    ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}`
+    : `R$ ${p.preco.toFixed(2)}`;
+
+  const produtoStr = encodeURIComponent(JSON.stringify(p));
+
+  return `
+    <div class="produto-card" onclick='handleProdutoClick("${produtoStr}")'>
+      <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
+      <div class="produto-info">
+        <div class="produto-nome">${p.nome}</div>
+        <div class="produto-preco">${precoHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+function handleProdutoClick(produtoStr) {
+  try {
+    const produto = JSON.parse(decodeURIComponent(produtoStr));
+    if (!auth.currentUser) {
+      alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
+      mostrar('authView');
+    } else {
+      abrirDetalhesProduto(produto);
+    }
+  } catch (e) {
+    console.error("Erro ao abrir produto:", e);
+    alert("Não foi possível abrir os detalhes do produto.");
+  }
 }
 
 async function exibirVersaoApp() {
@@ -4600,13 +4619,19 @@ function toggleFuncoes(containerId) {
     }
 }
 
-function handleProdutoClick(produto) {
+function handleProdutoClick(produtoStr) {
+  try {
+    const produto = JSON.parse(decodeURIComponent(produtoStr));
     if (!auth.currentUser) {
-        alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
-        mostrar('authView');
+      alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
+      mostrar('authView');
     } else {
-        abrirDetalhesProduto(produto);
+      abrirDetalhesProduto(produto);
     }
+  } catch (e) {
+    console.error("Erro ao abrir produto:", e);
+    alert("Não foi possível abrir os detalhes do produto.");
+  }
 }
 
 // Lógica de verificação de pendências e notificações
@@ -5099,8 +5124,19 @@ async function abrirDetalhesProduto(produto) {
     document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra(produto, "único");
   };
 
-  abrirModal('modalProdutoDetalhes');
-}
+  <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <img id="detalhesProdutoImg" src="" alt="Produto">
+    <h3 id="detalhesProdutoNome"></h3>
+    <p id="detalhesProdutoPreco"></p>
+    <p id="detalhesProdutoDescricao"></p>
+    <p id="detalhesProdutoEntrega"></p>
+    <div id="detalhesProdutoTamanhos"></div>
+    <div id="detalhesProdutoAvaliacao"></div>
+    <button id="btnComprarAgora">🛒 Comprar Agora</button>
+    <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
 
 async function confirmarCompra(produto, tamanho) {
   const endereco = document.getElementById('compraEndereco').value.trim();
