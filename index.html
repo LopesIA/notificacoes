@@ -312,7 +312,7 @@
         left: 8px;
         font-size: 20px;
         text-shadow: 0 0 8px var(--cor-destaque-ouro);
-        animation: vip-glow 2s ease-in-out infinite;
+        animation: vip-glow 10s ease-in-out infinite;
     }
     /* NOVO: Animação para notificação de chat */
     @keyframes gold-flash {
@@ -857,6 +857,105 @@
   </style>
 </head>
 <body>
+
+  <!-- Modais existentes da loja, agendamentos, etc... -->
+  <div id="modalGerenciarLoja" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" style="max-width: 600px;">
+      <h3>🏪 Gerenciar Minha Loja</h3>
+      <div id="listaMeusProdutos" class="scrollable-list"></div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+        <button onclick="abrirFormularioProduto()">➕ Adicionar Produto</button>
+        <button id="btnEntregasVendedor" onclick="abrirEntregasVendedor()">🚚 Entregas</button>
+        <button data-modal-id="modalGerenciarLoja" onclick="fecharModal(event)">❌ Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de adicionar/editar produto -->
+  <div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3 id="formProdutoTitulo">📦 Adicionar Novo Produto</h3>
+      <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
+      <input id="produtoNome" type="text" placeholder="Nome do Produto">
+      <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
+      <p>Tamanhos disponíveis:</p>
+      <div class="checkbox-group">
+        <label><input type="checkbox" name="tamanhos" value="P"> P</label>
+        <label><input type="checkbox" name="tamanhos" value="M"> M</label>
+        <label><input type="checkbox" name="tamanhos" value="G"> G</label>
+        <label><input type="checkbox" name="tamanhos" value="GG"> GG</label>
+      </div>
+      <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional)">
+      <input id="produtoEntrega" type="text" placeholder="Tempo de entrega (Ex: 3-5 dias)">
+      <textarea id="produtoDescricao" placeholder="Descrição curta do produto" rows="3"></textarea>
+      <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
+      <button data-modal-id="modalAddEditProduto" onclick="fecharModal(event)">❌ Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal de entregas -->
+  <div id="modalEntregasVendedor" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content">
+      <h3>🚚 Minhas Entregas</h3>
+      <div id="listaEntregas" class="scrollable-list"></div>
+      <button data-modal-id="modalEntregasVendedor" onclick="fecharModal(event)">❌ Fechar</button>
+    </div>
+  </div>
+
+  <!-- Modal de compras -->
+  <div id="modalMinhasCompras" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content">
+      <h3>🛍️ Minhas Compras</h3>
+      <div id="listaMinhasCompras" class="scrollable-list"></div>
+      <button data-modal-id="modalMinhasCompras" onclick="fecharModal(event)">❌ Fechar</button>
+    </div>
+  </div>
+
+  <!-- Modal de venda realizada -->
+  <div id="modalVendaRealizada" class="modal modal-venda" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>🎉 VENDA REALIZADA! 🎉</h3>
+      <p style="font-size: 1.1em;">Parabéns, você vendeu um produto!</p>
+      <p>Acesse <strong>Gerenciar Loja > Entregas</strong> para ver os detalhes.</p>
+      <button data-modal-id="modalVendaRealizada" onclick="fecharModal(event)" style="background: white; color: #c0392b;">✅ OK</button>
+    </div>
+  </div>
+
+  <!-- Modal de confirmação do comprador -->
+  <div id="modalConfirmacaoComprador" class="modal">
+    <div class="modal-content">
+      <h3 id="confirmacaoCompradorTitulo">Confirmar Recebimento</h3>
+      <p id="confirmacaoCompradorTexto">O vendedor marcou o produto como entregue. Você confirma o recebimento?</p>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button id="btnRecusarEntrega" style="background: #c0392b;">❌ Recusar</button>
+        <button id="btnAceitarEntrega" style="background: #27ae60;">✅ Aceitar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Novos modais para depósito e PIX expirado -->
+  <div id="modalDadosDeposito" class="modal" onclick="fecharModal(event)" style="display:none;">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>🧾 Dados para Depósito</h3>
+      <input id="depPrimeiroNome" type="text" placeholder="Primeiro nome">
+      <input id="depSegundoNome" type="text" placeholder="Segundo nome">
+      <input id="depCPF" type="text" placeholder="CPF">
+      <input id="depTelefone" type="tel" placeholder="Telefone">
+      <button id="btnContinuarDadosDeposito" disabled>➡️ Continuar</button>
+      <button data-modal-id="modalDadosDeposito" onclick="fecharModal(event)">❌ Cancelar</button>
+    </div>
+  </div>
+
+  <div id="modalPixExpirado" class="modal" onclick="fecharModal(event)" style="display:none; z-index: 101;">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>⏳ Tempo expirado</h3>
+      <p>Seu QR Code PIX expirou após 10 minutos.</p>
+      <div style="display:flex; gap:10px;">
+        <button onclick="fecharModalAtual(); processarPagamentoPixAprimorado()">🔁 Tentar novamente</button>
+        <button data-modal-id="modalPixExpirado" onclick="fecharModal(event)">❌ Fechar</button>
+      </div>
+    </div>
+  </div>
 
 <div class="topbar hidden" id="topbar">
   <div class="logo">💈 Navalha de Ouro</div>
@@ -4625,6 +4724,468 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
         });
       });
     }
+/* ============================================
+   PART 2 — IMPLEMENTAÇÕES 1–7 (APENAS ADIÇÕES)
+   Cole este bloco no FINAL do seu <script> atual
+   ============================================ */
+
+// [1] VIP: brilho dourado sem pulsar quando VIP; pulsar removido
+const GOLD_PULSE_CLASS = 'notificacao-pulsante-gold';
+(function injectGoldPulseCSS(){
+  const style = document.createElement('style');
+  style.textContent = `
+    .notificacao-pulsante-gold {
+      position: relative;
+      animation: gold-pulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+      border-color: var(--cor-destaque-ouro) !important;
+    }
+    @keyframes gold-pulse {
+      0% { box-shadow: 0 0 6px rgba(255,215,0,0.3); transform: scale(1); }
+      50% { box-shadow: 0 0 16px rgba(255,215,0,0.7); transform: scale(1.02); }
+      100% { box-shadow: 0 0 6px rgba(255,215,0,0.3); transform: scale(1); }
+    }
+    .vip-brilho-dourado {
+      box-shadow: inset 0 0 0 999px rgba(255, 215, 0, 0.12), 0 0 10px rgba(255,215,0,0.5);
+      border-color: var(--cor-destaque-ouro) !important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+function atualizarEstadoBotaoVip() {
+  const btnVip = document.getElementById('btnVip');
+  if (!btnVip || !perfil) return;
+  btnVip.classList.remove('notificacao-pulsante', GOLD_PULSE_CLASS, 'vip-glow');
+  if (perfil.vip) {
+    btnVip.textContent = '👑 Sou VIP';
+    btnVip.classList.add('vip-brilho-dourado');
+  } else {
+    btnVip.textContent = '💎 VIP';
+    btnVip.classList.remove('vip-brilho-dourado');
+  }
+}
+(function hookVipButtonState(){
+  const applyVipStateInterval = setInterval(() => {
+    if (perfil) {
+      atualizarEstadoBotaoVip();
+      clearInterval(applyVipStateInterval);
+    }
+  }, 500);
+})();
+
+// [2] Admin: botões Solicitações/Denúncias com pulsação dourada e notificações por minuto
+function atualizarPendenciasAdminBotoes() {
+  const btnSolicitacoes = document.querySelector('#adminView button[onclick="abrirModalSolicitacoes()"]');
+  const btnDenuncias = document.querySelector('#adminView button[onclick="abrirDenuncias()"]');
+  if (!btnSolicitacoes || !btnDenuncias) return;
+
+  db.collection("solicitacoes").where("status", "==", "pendente")
+    .get().then(snap => {
+      btnSolicitacoes.classList.toggle(GOLD_PULSE_CLASS, !snap.empty);
+    });
+
+  db.collection("denuncias").where("status", "==", "aberta")
+    .get().then(snap => {
+      btnDenuncias.classList.toggle(GOLD_PULSE_CLASS, !snap.empty);
+    });
+}
+
+function iniciarNotificacoesPendentesPorMinuto() {
+  if (window.__navalhaPendenciasTimer) return;
+  window.__navalhaPendenciasTimer = setInterval(async () => {
+    if (!perfil || !auth.currentUser) return;
+    try {
+      if (perfil.tipo === 'admin') {
+        atualizarPendenciasAdminBotoes();
+        const pendSolicit = await db.collection("solicitacoes").where("status", "==", "pendente").get();
+        const pendDenun = await db.collection("denuncias").where("status", "==", "aberta").get();
+        const totalPend = pendSolicit.size + pendDenun.size;
+        if (totalPend > 0) {
+          notifyUser(auth.currentUser.uid, "⏰ Pendências no Sistema", `Existem ${totalPend} itens pendentes para ação.`, { deepLink: 'admin_pendencias' });
+        }
+      }
+      if (perfil.tipo === 'barbeiro') {
+        const pendAg = await db.collection('agendamentos').where('barbeiroUid', '==', auth.currentUser.uid).where('status', '==', 'pendente').get();
+        if (!pendAg.empty) {
+          notifyUser(auth.currentUser.uid, '⏰ Agendamento Pendente', `Você tem ${pendAg.size} agendamento(s) para aprovar.`, { deepLink: 'barbeiro_agendamentos' });
+        }
+      }
+      if (perfil.tipo === 'cliente') {
+        const pendAv = await db.collection('agendamentos')
+          .where('clienteUid', '==', auth.currentUser.uid)
+          .where('status', '==', 'concluido')
+          .where('avaliado', '==', false).get();
+        if (!pendAv.empty) {
+          notifyUser(auth.currentUser.uid, '⭐ Avaliação Pendente', `Você tem ${pendAv.size} serviço(s) para avaliar!`, { deepLink: 'cliente_historico' });
+        }
+      }
+    } catch (e) { console.warn('Falha ao checar pendências por minuto:', e); }
+  }, 60000);
+}
+(function autoStartPendenciasAdmin(){
+  const startInterval = setInterval(() => {
+    if (auth && auth.currentUser) {
+      iniciarNotificacoesPendentesPorMinuto();
+      clearInterval(startInterval);
+    }
+  }, 800);
+})();
+
+// [3] Carteira depósito: formulário de dados + overlay expirado PIX + fechar popups ao confirmar + notificação admin ao copiar chave
+// Modal de dados já foi injetado na Parte 1; aqui está o fluxo
+(function patchDepositoFluxo(){
+  const originalIniciarDeposito = iniciarDeposito;
+  iniciarDeposito = function() {
+    abrirModal('modalDadosDeposito');
+    const inputs = ['depPrimeiroNome','depSegundoNome','depCPF','depTelefone'].map(id => document.getElementById(id));
+    const btnCont = document.getElementById('btnContinuarDadosDeposito');
+    const validate = () => {
+      const filled = inputs.every(i => i && i.value.trim().length > 0);
+      btnCont.disabled = !filled;
+    };
+    inputs.forEach(i => i.addEventListener('input', validate));
+    validate();
+    btnCont.onclick = () => {
+      fecharModalAtual();
+      abrirModal('modalDeposito');
+    };
+  };
+
+  // Fechar todos os popups
+  window.fecharTodosOsPopups = function() {
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(m => {
+      m.classList.remove('show');
+      setTimeout(() => { m.style.display = 'none'; }, 300);
+    });
+  };
+
+  // Timer PIX com overlay
+  const originalIniciarTimerPix = iniciarTimerPix;
+  iniciarTimerPix = function(duracao){
+    let timer = duracao;
+    const display = document.getElementById('pixTimer');
+    if (window.pixTimerInterval) clearInterval(window.pixTimerInterval);
+    window.pixTimerInterval = setInterval(() => {
+      const minutos = parseInt(timer / 60, 10);
+      const segundos = parseInt(timer % 60, 10);
+      display.textContent = `${minutos < 10 ? "0" + minutos : minutos}:${segundos < 10 ? "0" + segundos : segundos}`;
+      if (--timer < 0) {
+        clearInterval(window.pixTimerInterval);
+        display.textContent = "EXPIRADO";
+        abrirModal('modalPixExpirado');
+      }
+    }, 1000);
+  };
+
+  // Confirmar comprovante fecha tudo e abre WhatsApp (mantém original)
+  const originalConfirmarEnvioComprovante = confirmarEnvioComprovante;
+  confirmarEnvioComprovante = function(){
+    fecharTodosOsPopups();
+    originalConfirmarEnvioComprovante();
+  };
+
+  // Copiar chave PIX dispara notificação verde para admin
+  const originalCopiarCodigoPixAprimorado = copiarCodigoPixAprimorado;
+  copiarCodigoPixAprimorado = function() {
+    originalCopiarCodigoPixAprimorado();
+    notifyAdmins("🟩 Possível Depósito via PIX", "Um usuário copiou a chave PIX. Fique atento!", { tipo: 'deposito_pix_copiado' });
+  };
+})();
+
+// [3b] Logout recarrega página
+(function attachLogoutReload(){
+  const btnSair = document.getElementById('btnSair');
+  if (btnSair) {
+    btnSair.onclick = async () => {
+      try { await auth.signOut(); } finally { location.reload(); }
+    };
+  }
+})();
+
+// [4] Alternador de painel simplificado (não-admin): único botão Loja/Painel
+(function patchViewSwitcher(){
+  const originalSetup = setupViewSwitcher;
+  setupViewSwitcher = function(){
+    const container = document.getElementById("botaoExtra");
+    if (!container) return originalSetup();
+    container.innerHTML = "";
+    if (!userView.originalType) return;
+
+    if (userView.originalType === 'admin') {
+      return originalSetup(); // Admin mantém como está
+    }
+    const lojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
+    const btn = document.createElement("button");
+    btn.textContent = lojaVisivel ? "🏠 Painel principal" : "🛍️ Loja";
+    btn.onclick = () => {
+      if (lojaVisivel) {
+        mostrarPainelAtual();
+      } else {
+        mostrar('lojaView'); carregarProdutos();
+      }
+      setupViewSwitcher();
+    };
+    btn.style.borderColor = "var(--cor-destaque-ouro)";
+    container.appendChild(btn);
+  };
+})();
+
+// [5] Confirmação de entrega: modal sem fechar, vendedor só conclui quando cliente aceitar
+(function patchConfirmacaoEntrega(){
+  const originalAbrirModalConfirmacaoComprador = abrirModalConfirmacaoComprador;
+  abrirModalConfirmacaoComprador = function(pedido) {
+    const modal = document.getElementById('modalConfirmacaoComprador');
+    // Bloqueia fechar clicando fora
+    modal.onclick = (e) => { e.stopPropagation(); }; // ignore close by backdrop
+    const btnAceitar = document.getElementById('btnAceitarEntrega');
+    const btnRecusar = document.getElementById('btnRecusarEntrega');
+    btnAceitar.onclick = () => responderConfirmacaoEntrega(pedido.id, true);
+    btnRecusar.onclick = () => responderConfirmacaoEntrega(pedido.id, false);
+    abrirModal('modalConfirmacaoComprador');
+  };
+
+  const originalResponderConfirmacaoEntrega = responderConfirmacaoEntrega;
+  responderConfirmacaoEntrega = async function(pedidoId, aceito) {
+    const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
+    try {
+      const pedidoDoc = await db.collection('loja_pedidos').doc(pedidoId).get();
+      const vendedorUid = pedidoDoc.data().vendedorUid;
+      await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
+      const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
+      notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { deepLink: 'vendedor_entregas' });
+      alert('Resposta enviada com sucesso!');
+      fecharModalAtual();
+    } catch (e) {
+      alert('Erro ao enviar resposta: ' + e.message);
+    }
+  };
+})();
+
+// [6] Cartão de crédito: popup taxa administrativa + notificação verde para admin ao continuar
+(function patchCartaoCreditoFluxo(){
+  // Injetar modal de taxa administrativa
+  const modalTaxaHTML = `
+    <div id="modalTaxaCartao" class="modal" onclick="fecharModal(event)" style="display:none;">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>💳 Taxa Administrativa</h3>
+        <p>Transações por cartão possuem taxa fixa cobrada pela plataforma segura de pagamentos.</p>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button id="btnContinuarTaxaCartao">✅ Continuar</button>
+          <button data-modal-id="modalTaxaCartao" onclick="fecharModal(event)">❌ Cancelar</button>
+        </div>
+      </div>
+    </div>`;
+  const div = document.createElement('div'); div.innerHTML = modalTaxaHTML; document.body.appendChild(div);
+
+  const originalProcessarPagamentoCartaoAprimorado = processarPagamentoCartaoAprimorado;
+  processarPagamentoCartaoAprimorado = function() {
+    abrirModal('modalTaxaCartao');
+    const btnContinuar = document.getElementById('btnContinuarTaxaCartao');
+    btnContinuar.onclick = () => {
+      // Notificação bem chamativa ao admin
+      notifyAdmins("🟩 Pagamento por Cartão Iniciado", "Um usuário iniciou pagamento por cartão. Verifique.", { tipo: 'pagamento_cartao' });
+      // Segue fluxo original
+      document.getElementById('carregandoGenericoTitulo').textContent = 'Aguarde...';
+      document.getElementById('carregandoGenericoTexto').textContent = 'Você está sendo redirecionado para um ambiente de pagamento seguro.';
+      abrirModal('modalCarregandoGenerico');
+      setTimeout(() => { window.location.href = 'https://pay.kiwify.com.br/T3M9m1C'; }, 3000);
+      fecharModalAtual(); // fecha taxa
+    };
+  };
+})();
+
+// [7] Notificações clicáveis com deep link para telas específicas
+(function enableNotificationDeepLinks(){
+  // já recebemos payload em messaging.onMessage; vamos abrir telas baseado em data.deepLink
+  if (firebase.messaging.isSupported()) {
+    messaging.onMessage((payload) => {
+      const data = payload.data || {};
+      if (data.deepLink) {
+        setTimeout(() => {
+          switch(data.deepLink) {
+            case 'barbeiro_agendamentos': abrirAgendamentosBarbeiro(); break;
+            case 'cliente_historico': abrirHistoricoCliente(); break;
+            case 'admin_pendencias': abrirModalSolicitacoes(); abrirDenuncias(); break;
+            case 'vendedor_entregas': abrirEntregasVendedor(); break;
+            case 'saque_solicitacoes': abrirModalSolicitacoes(); break;
+            default: break;
+          }
+        }, 300);
+      }
+    });
+  }
+})();
+
+/* ============================================
+   PART 3 — IMPLEMENTAÇÕES 8–12
+   ============================================ */
+
+// [8] Publicação automática de blogs com códigos de resgate às 00:00
+function publicarBlogAutomatico() {
+  const agora = new Date();
+  if (agora.getHours() === 0 && agora.getMinutes() === 0) {
+    // Gera palavra aleatória relacionada a cortes/barbearia
+    const palavras = ["(fade)", "(degradê)", "(moicano)", "(barba)", "(tesoura)", "(máquina)", "(undercut)", "(pompadour)", "(navalha)", "(barbearia)"];
+    const palavra = palavras[Math.floor(Math.random() * palavras.length)];
+    db.collection("blog").add({
+      titulo: "💈 Código Relâmpago!",
+      conteudo: `Use este código hoje: ${palavra}`,
+      autor: "Sistema Navalha de Ouro",
+      autorUid: "system",
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
+// Checagem a cada minuto
+setInterval(publicarBlogAutomatico, 60000);
+
+// [9] Correção da notificação em massa (tratamento de JSON)
+async function enviarNotificacaoMarketing() {
+  const title = document.getElementById('marketingTitulo').value.trim();
+  const body = document.getElementById('marketingCorpo').value.trim();
+  if (!title || !body || !confirm(`Confirma o envio da notificação em massa?`)) return;
+  try {
+    const response = await fetch("https://navalhabackend.onrender.com/enviar-notificacao-massa", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, body, adminUid: auth.currentUser.uid }),
+    });
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error("Resposta inválida do servidor: " + text); }
+    if (!response.ok) throw new Error(data.message || "Erro desconhecido");
+    alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
+    fecharModalAtual();
+  } catch (error) {
+    alert('Falha ao enviar: ' + error.message);
+  }
+}
+
+// [10] Correção do popup de produto com formulário completo e confirmação de débito
+async function abrirDetalhesProduto(produto) {
+  produtoParaCompra = produto;
+  document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
+  document.getElementById('detalhesProdutoNome').textContent = produto.nome;
+  const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+  document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
+  document.getElementById('detalhesProdutoDescricao').textContent = produto.descricao;
+  document.getElementById('detalhesProdutoEntrega').textContent = produto.tempoEntrega;
+
+  const tamanhosContainer = document.getElementById('detalhesProdutoTamanhos');
+  tamanhosContainer.innerHTML = '';
+  if (produto.tamanhos && produto.tamanhos.length > 0) {
+    produto.tamanhos.forEach(t => {
+      tamanhosContainer.innerHTML += `<input type="radio" name="tamanho_selecionado" value="${t}" id="tamanho_${t}"><label for="tamanho_${t}">${t}</label>`;
+    });
+  } else {
+    tamanhosContainer.innerHTML = 'Tamanho único';
+  }
+
+  // Avaliação
+  const avaliacaoContainer = document.getElementById('detalhesProdutoAvaliacao');
+  await carregarAvaliacaoProduto(produto.id, produto.nome, avaliacaoContainer);
+
+  // Botão continuar leva ao formulário
+  document.getElementById('btnComprarAgora').onclick = () => {
+    abrirModal('modalConfirmarCompra');
+    document.getElementById('compraEndereco').value = '';
+    document.getElementById('compraTelefone').value = perfil.telefone || '';
+    document.getElementById('compraCep').value = '';
+    document.getElementById('compraEmail').value = perfil.email || '';
+    document.getElementById('compraRua').value = '';
+    document.getElementById('compraNumero').value = '';
+    document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra(produto, "único");
+  };
+
+  abrirModal('modalProdutoDetalhes');
+}
+
+async function confirmarCompra(produto, tamanho) {
+  const endereco = document.getElementById('compraEndereco').value.trim();
+  const telefone = document.getElementById('compraTelefone').value.trim();
+  const cep = document.getElementById('compraCep').value.trim();
+  const email = document.getElementById('compraEmail').value.trim();
+  const rua = document.getElementById('compraRua').value.trim();
+  const numero = document.getElementById('compraNumero').value.trim();
+  if (!endereco || !telefone || !cep || !email || !rua || !numero) return alert('Preencha todos os campos obrigatórios.');
+
+  const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+  if (perfil.saldo < precoFinal) return alert('Saldo insuficiente.');
+
+  abrirModal('modalConfirmacaoDebito');
+  document.getElementById('btnConfirmarDebitoSim').onclick = async () => {
+    try {
+      await db.runTransaction(async t => {
+        const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        const vendedorRef = db.collection("usuarios").doc(produto.vendedorUid);
+        const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+        const adminRef = db.collection("usuarios").doc(adminSnap.docs[0].id);
+        const produtoRef = db.collection("loja_produtos").doc(produto.id);
+
+        const valorVendedor = precoFinal * (1 - TAXA);
+        const valorAdmin = precoFinal * TAXA;
+
+        t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-precoFinal) });
+        t.update(vendedorRef, { saldo: firebase.firestore.FieldValue.increment(valorVendedor) });
+        t.update(adminRef, { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+        t.update(produtoRef, { vendasRealizadas: firebase.firestore.FieldValue.increment(1) });
+
+        t.set(db.collection("loja_pedidos").doc(), {
+          produtoId: produto.id,
+          produtoNome: produto.nome,
+          valor: precoFinal,
+          tamanho,
+          clienteUid: auth.currentUser.uid,
+          clienteNome: perfil.nome,
+          endereco, telefone, cep, email, rua, numero,
+          vendedorUid: produto.vendedorUid,
+          vendedorNotificado: false,
+          status: "pendente",
+          ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      alert("Pedido realizado com sucesso!");
+      notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`);
+      notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`);
+      fecharModalAtual();
+    } catch (e) {
+      alert('Erro ao processar a compra: ' + e.message);
+    }
+  };
+  document.getElementById('btnConfirmarDebitoNao').onclick = () => fecharModalAtual();
+}
+
+// [11] Ajuste da imagem no modal de produto para não cortar
+(function ajustarImagemProdutoModal(){
+  const style = document.createElement('style');
+  style.textContent = `
+    #detalhesProdutoImg {
+      object-fit: contain !important;
+      max-height: 250px;
+      width: 100%;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// [12] Mensagens de feedback intuitivas
+function mostrarMensagemProcesso(texto) {
+  const modal = document.createElement('div');
+  modal.className = 'modal show';
+  modal.innerHTML = `<div class="modal-content"><p>${texto}</p></div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    modal.classList.remove('show');
+    setTimeout(() => modal.remove(), 300);
+  }, 2000);
+}
+
+// Exemplo de uso em pontos críticos
+function iniciarProcessoCompra() { mostrarMensagemProcesso("⏳ Estamos preparando seu pedido..."); }
+function finalizarProcessoCompra() { mostrarMensagemProcesso("✅ Pedido concluído!"); }
+
 </script>
 </body>
 </html>
