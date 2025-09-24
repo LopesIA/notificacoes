@@ -43,7 +43,7 @@ self.addEventListener('push', event => {
   );
 });
 
-// Listener para quando o usuário clica na notificação
+// Listener para quando o usuário clica na notificação (MELHORADO)
 self.addEventListener('notificationclick', event => {
   console.log('[Service Worker] Clique na notificação recebido.');
   
@@ -57,13 +57,13 @@ self.addEventListener('notificationclick', event => {
       type: 'window',
       includeUncontrolled: true
     }).then(clientList => {
-      // Se uma janela do app já estiver aberta, foca nela
+      // Se uma janela do app já estiver aberta e na mesma URL, foca nela
       for (const client of clientList) {
         if (client.url === urlToOpen && 'focus' in client) {
           return client.focus();
         }
       }
-      // Se não, abre uma nova janela
+      // Se não, abre uma nova janela com a URL correta
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
@@ -71,7 +71,18 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
+// Handler para mensagens em segundo plano (onBackgroundMessage)
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[service-worker.js] Mensagem de segundo plano recebida (onBackgroundMessage).', payload);
-  // Este método é um fallback, a lógica principal está no 'push' event listener.
+  console.log('[service-worker.js] Mensagem de segundo plano recebida.', payload);
+  
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/icone.png',
+    data: {
+      url: payload.data.link || '/'
+    }
+  };
+
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
