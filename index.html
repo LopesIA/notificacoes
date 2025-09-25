@@ -264,7 +264,6 @@
       display: flex;
       gap: 10px;
       justify-content: center;
-      transition: opacity 0.3s ease-in-out;
     }
     .vantagens ul {
       list-style-type: '✅';
@@ -282,6 +281,17 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes vip-glow {
+      0% {
+        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
+      }
+      50% {
+        box-shadow: 0 0 10px var(--cor-destaque-ouro), 0 0 20px var(--cor-destaque-ouro), 0 0 30px var(--cor-destaque-ouro);
+      }
+      100% {
+        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
+      }
     }
      @keyframes vaga-glow {
       0% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
@@ -302,6 +312,7 @@
         left: 8px;
         font-size: 20px;
         text-shadow: 0 0 8px var(--cor-destaque-ouro);
+        animation: vip-glow 2s ease-in-out infinite;
     }
     /* NOVO: Animação para notificação de chat */
     @keyframes gold-flash {
@@ -334,14 +345,10 @@
         font-weight: bold;
         border: 2px solid var(--cor-fundo);
     }
-    
-    /* */
-    .vip-active-glow {
-        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
-        border: 2px solid var(--cor-destaque-ouro);
+    .vip-glow {
+      animation: vip-glow 2s ease-in-out infinite;
+      border: 2px solid var(--cor-destaque-ouro);
     }
-    /* */
-
     .promocao-card {
       background: linear-gradient(45deg, #181818, var(--cor-destaque-ouro));
       padding: 15px;
@@ -847,15 +854,6 @@
         padding: 8px;
         border-radius: 8px;
     }
-     /* */
-    #detalhesProdutoImg {
-        width: 100%;
-        height: 200px; /* Ajuste a altura conforme necessário */
-        object-fit: cover; /* MUDANÇA: de 'contain' para 'cover' */
-        border-radius: 10px;
-        margin-bottom: 15px;
-    }
-    /* */
   </style>
 </head>
 <body>
@@ -870,10 +868,7 @@
 
 <div class="content-container">
   
-  <div id="chatPreview"></div> 
-  
-  <div id="botaoExtra" class="hidden"></div>
- 
+  <div id="chatPreview"></div> <div id="botaoExtra" class="hidden"></div>
 
   <div id="authView" class="card hidden">
     <h2>🔐 Entrar ou Criar Conta</h2>
@@ -979,11 +974,9 @@
     <h2>🧠 Painel do Admin</h2>
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
       <button onclick="abrirModalEstatisticas()" style="width:45%">📊 Estatísticas</button>
-      
-      <button id="btnSolicitacoesAdmin" onclick="abrirModalSolicitacoes()" style="width:45%">📥 Solicitações</button>
+      <button onclick="abrirModalSolicitacoes()" style="width:45%">📥 Solicitações</button>
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
-      <button id="btnDenunciasAdmin" onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
-      
+      <button onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirGerenciarLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
@@ -995,7 +988,8 @@
     <div class="card-header">
         <h3>🛍️ Loja Navalha de Ouro</h3>
         <div style="display: flex; gap: 10px;">
-            </div>
+            <!-- O botão vender foi movido para o painel de funções para melhor UX -->
+        </div>
     </div>
     <div id="lojaContainer" class="loja-grid">
     </div>
@@ -1016,9 +1010,11 @@
   </button>
 </div>
 
+<button id="btnSair" class="hidden" onclick="auth.signOut()">🚪 Sair</button>
 
-<button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
-
+<!-- ============================================= -->
+<!-- MODAIS DE FLUXO FINANCEIRO (NOVOS E REFINADOS) -->
+<!-- ============================================= -->
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1030,24 +1026,10 @@
   </div>
 </div>
 
-
-<div id="modalDadosDeposito" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>📝 Informações para Depósito</h3>
-      <p>Precisamos de alguns dados para processar seu pagamento com segurança.</p>
-      <input id="depositoPrimeiroNome" type="text" placeholder="Primeiro Nome" oninput="verificarFormularioDeposito()">
-      <input id="depositoSegundoNome" type="text" placeholder="Segundo Nome" oninput="verificarFormularioDeposito()">
-      <input id="depositoCpf" type="text" placeholder="CPF" oninput="verificarFormularioDeposito()">
-      <input id="depositoTelefone" type="tel" placeholder="Telefone com DDD" oninput="verificarFormularioDeposito()">
-      <button id="btnContinuarDeposito" onclick="abrirModalMetodosPagamento()" disabled>Continuar</button>
-      <button data-modal-id="modalDadosDeposito" onclick="fecharModal(event)">❌ Cancelar</button>
-    </div>
-</div>
-
 <div id="modalDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💳 Método de Pagamento</h3>
-    <p>Escolha um método para adicionar saldo à sua carteira.</p>
+    <h3>💰 Depósito de Créditos</h3>
+    <p>Escolha um método de pagamento para adicionar saldo à sua carteira.</p>
     <div class="metodos-grid">
         <button id="btnPagarComPix" onclick="processarPagamentoPixAprimorado()">⚡ PIX (QR Code)</button>
         <button id="btnPagarComCartao" onclick="processarPagamentoCartaoAprimorado()">💳 Cartão de Crédito</button>
@@ -1055,8 +1037,6 @@
     <button data-modal-id="modalDeposito" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
-
-
 
 <div id="modalGerandoQRCode" class="modal">
     <div class="modal-content" style="text-align: center;">
@@ -1076,9 +1056,7 @@
     <div class="modal-content" style="text-align: center;">
       <h3> Pague com PIX</h3>
       <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      
       <img src="https://i.imgur.com/g2512hL.png" id="pix-qrcode" alt="QR Code PIX">
-      
       <div class="pix-copia-cola-container">
           <textarea id="pixChaveAleatoria">00020126770014BR.GOV.BCB.PIX0136ec4a8f0f-ec59-44bc-afcf-dff364f971de0215NAVALHA DE OURO5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510vuyKg7Qnmx63041C39</textarea>
           <button onclick="copiarCodigoPixAprimorado()">Copiar Chave Aleatória PIX</button>
@@ -1087,20 +1065,6 @@
       <button onclick="confirmarEnvioComprovante()">CONFIRMAR</button>
     </div>
 </div>
-
-
-<div id="modalPixExpirado" class="modal" style="z-index: 25;">
-    <div class="modal-content" style="text-align: center;">
-        <h3>⏳ Tempo Expirado</h3>
-        <p>O tempo para pagamento deste PIX acabou. Deseja gerar um novo código?</p>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="fecharTodosModais()" style="background-color: #555;">❌ Fechar</button>
-            <button onclick="processarPagamentoPixAprimorado()" style="flex-grow: 1;">🔄 Tentar Novamente</button>
-        </div>
-    </div>
-</div>
-
-
 
 <div id="modalSaque" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1128,6 +1092,10 @@
     <button onclick="contatarAdminSaque()">OK</button>
   </div>
 </div>
+
+<!-- ============================================= -->
+<!-- MODAIS GERAIS (EXISTENTES E NOVOS)            -->
+<!-- ============================================= -->
 
 <div id="janelaChat" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1537,68 +1505,34 @@
 </div>
 
 
-
 <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <img id="detalhesProdutoImg" src="" alt="Imagem do Produto">
+        <img id="detalhesProdutoImg" src="" style="width: 100%; height: 200px; object-fit: contain; border-radius: 10px; margin-bottom: 15px;">
         <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque-ouro);"></h3>
-        
-        <div id="detalhesProdutoTamanhosContainer" class="hidden">
-            <p style="margin-top: 15px; margin-bottom: 5px;"><strong>Tamanho:</strong></p>
-            <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
-        </div>
-
-        <p style="margin-top: 10px;"><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
+        <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
+        <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
+        <p><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
         <p><strong>Descrição:</strong> <span id="detalhesProdutoDescricao"></span></p>
         <p><strong>Entrega estimada:</strong> <span id="detalhesProdutoEntrega"></span></p>
         
         <div id="detalhesProdutoAvaliacao"></div>
 
-        <button id="btnComprarAgora" onclick="iniciarCompra()">🛒 Comprar Agora</button>
+        <button id="btnComprarAgora">🛒 Comprar Agora</button>
         <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
     </div>
 </div>
 
 <div id="modalConfirmarCompra" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>📦 Detalhes para Entrega</h3>
-        <p>Confirme ou preencha os dados para o envio do seu produto.</p>
-        <input id="compraNomeCompleto" type="text" placeholder="🙋 Nome Completo">
+        <h3>📦 Confirmação de Compra</h3>
+        <p>Por favor, confirme os detalhes para a entrega.</p>
+        <input id="compraEndereco" type="text" placeholder="🏠 Endereço Completo para Entrega">
         <input id="compraTelefone" type="tel" placeholder="📞 Telefone para Contato">
-        <input id="compraEmail" type="email" placeholder="📧 Email para Contato">
-        <input id="compraCep" type="text" placeholder="✉️ CEP">
-        <input id="compraEndereco" type="text" placeholder="🏠 Endereço Completo (Rua, Nº, Bairro)">
-        <button id="btnConfirmarEndereco" onclick="abrirConfirmacaoFinal()">✅ Pagar com Saldo da Carteira</button>
+        <input id="compraCep" type="text" placeholder="✉️ CEP (Obrigatório)">
+        <button id="btnConfirmarCompraFinal">✅ Confirmar Pedido</button>
         <button data-modal-id="modalConfirmarCompra" onclick="fecharModal(event)">❌ Cancelar</button>
     </div>
 </div>
-
-<div id="modalConfirmacaoPagamento" class="modal" style="z-index: 25;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>⚠️ Confirmação Final</h3>
-        <p>O valor de <b id="valorFinalCompra">R$ 0,00</b> será debitado do seu saldo na carteira.</p>
-        <p>Você confirma esta operação?</p>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-           <button onclick="fecharModalAtual()" style="background: #c0392b;">❌ Não</button>
-           <button id="btnConfirmarCompraFinal" style="background: #27ae60; flex-grow: 1;">✅ Sim, Confirmar Pedido</button>
-        </div>
-    </div>
-</div>
-
-
-
-<div id="modalTaxaCartao" class="modal" style="z-index: 25;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>ℹ️ Taxa Administrativa</h3>
-        <p>Para pagamentos com cartão de crédito, há uma taxa administrativa fixa para garantir a segurança, transparência e confiabilidade da transação através da nossa plataforma de pagamentos.</p>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-           <button data-modal-id="modalTaxaCartao" onclick="fecharModal(event)" style="background: #555;">Cancelar</button>
-           <button onclick="prosseguirComCartao()" style="flex-grow: 1;">Continuar</button>
-        </div>
-    </div>
-</div>
-
-
 
 <div id="modalGerenciarLoja" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" style="max-width: 600px;">
@@ -1658,9 +1592,8 @@
     </div>
 </div>
 
-
 <div id="modalConfirmacaoComprador" class="modal">
-    <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-content">
         <h3 id="confirmacaoCompradorTitulo">Confirmar Recebimento</h3>
         <p id="confirmacaoCompradorTexto">O vendedor marcou o produto como entregue. Você confirma o recebimento?</p>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -1669,7 +1602,6 @@
         </div>
     </div>
 </div>
-
 
 <footer class="app-footer">
   <div id="appVersion"></div>
@@ -1721,11 +1653,10 @@ let localizacaoCliente = null;
 let cadastroCoords = null;
 let vendaListener = null;
 let produtoEmEdicaoId = null; 
-let produtoParaCompra = null; // Armazena o produto selecionado na loja
-let dadosCompraTemporarios = {}; // Armazena dados do formulário de endereço
+let produtoParaCompra = null;
 let pixTimerInterval = null; 
 let pendenciasInterval = null; 
-let pendenciasAdminInterval = null; // let pedidosVendedorListener = null;
+let pedidosVendedorListener = null;
 let comprasClienteListener = null; 
 
 let userView = {
@@ -1762,12 +1693,9 @@ let modalAberto = null; // Rastreia o modal que está atualmente visível
  * @param {string} modalId O ID do elemento do modal a ser aberto.
  */
 function abrirModal(modalId) {
-    if (modalAberto && document.getElementById(modalId)?.style.zIndex < modalAberto.style.zIndex) {
-      // Não fecha o modal atual se o novo for por baixo
-    } else if (modalAberto) {
+    if (modalAberto) {
         fecharModalAtual();
     }
-
     const novoModal = document.getElementById(modalId);
     if (novoModal) {
         modalAberto = novoModal;
@@ -1803,16 +1731,7 @@ function fecharModalAtual() {
     }
 }
 
-// function fecharTodosModais() {
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('show');
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
-    });
-    modalAberto = null;
-}
-// // --- [FIM DA LÓGICA DE MODAIS] ---
+// --- [FIM DA LÓGICA DE MODAIS] ---
 
 
 // FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
@@ -1894,6 +1813,7 @@ async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   }
   
   try {
+    // Não precisamos mais do 'mode: no-cors' pois o backend está configurado com CORS.
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1944,12 +1864,9 @@ function mostrar(id) {
   
   document.getElementById("btnTema").classList.toggle("hidden", isAuth);
   document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
-  document.getElementById("botaoExtra").classList.toggle("hidden", isAuth || id === 'guestView');
+  document.getElementById("botaoExtra").classList.toggle("hidden", id === 'authView' || id === 'guestView');
   document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
-
-  // // Força a atualização dos botões de navegação sempre que a view muda
-  setupViewSwitcher();
-  // }
+}
 
 
 function configurarBotoesGuest() {
@@ -2053,37 +1970,47 @@ function alternarTema() {
   document.getElementById('btnTema').textContent = isLight ? '☀️' : '🌙';
 }
 
-// function setupViewSwitcher() {
+function setupViewSwitcher() {
     const container = document.getElementById("botaoExtra");
     container.innerHTML = "";
     if (!userView.originalType) return;
-    
-    const createButton = (text, onClick, isDisabled = false) => {
+
+    const createButton = (text, view) => {
         const btn = document.createElement("button");
         btn.textContent = text;
-        btn.onclick = onClick;
-        if (isDisabled) {
-            btn.disabled = true;
-            btn.style.borderColor = "var(--cor-destaque-ouro)";
+        btn.onclick = () => switchView(view);
+        const lojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
+        if (userView.currentType === view && !lojaVisivel) {
+             btn.disabled = true;
+             btn.style.borderColor = "var(--cor-destaque-ouro)";
         }
         container.appendChild(btn);
     };
-
-    const isLojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
-
+    
+    const btnLoja = document.createElement("button");
+    btnLoja.textContent = "🛍️ Loja";
+    btnLoja.onclick = () => { 
+        mostrar('lojaView'); 
+        carregarProdutos();
+        setupViewSwitcher();
+    };
+    if(!document.getElementById('lojaView').classList.contains('hidden')){
+        btnLoja.disabled = true;
+        btnLoja.style.borderColor = "var(--cor-destaque-ouro)";
+    }
+    
     if (userView.originalType === 'admin') {
-        // Admin sempre vê todos os botões para facilitar a navegação
-        createButton("🧠 Admin", () => switchView("admin"), userView.currentType === 'admin' && !isLojaVisivel);
-        createButton("💈 Barbeiro", () => switchView("barbeiro"), userView.currentType === 'barbeiro' && !isLojaVisivel);
-        createButton("🙋 Cliente", () => switchView("cliente"), userView.currentType === 'cliente' && !isLojaVisivel);
-        createButton("🛍️ Loja", () => { mostrar('lojaView'); carregarProdutos(); }, isLojaVisivel);
-    } else {
-        // Lógica simplificada para outros usuários
-        if (isLojaVisivel) {
-            createButton(`⬅️ Voltar ao Painel`, () => switchView(userView.originalType));
-        } else {
-            createButton("🛍️ Acessar Loja", () => { mostrar('lojaView'); carregarProdutos(); });
-        }
+        createButton("🧠 Admin", "admin");
+        createButton("💈 Barbeiro", "barbeiro");
+        createButton("🙋 Cliente", "cliente");
+        container.appendChild(btnLoja);
+    } else if (userView.originalType === 'barbeiro') {
+        createButton("💈 Barbeiro", "barbeiro");
+        createButton("🙋 Cliente", "cliente");
+        container.appendChild(btnLoja);
+    } else if (userView.originalType === 'cliente') {
+        createButton("🙋‍♂️ Cliente", "cliente");
+        container.appendChild(btnLoja);
     }
 }
 
@@ -2091,7 +2018,8 @@ function switchView(view) {
     userView.currentType = view;
     renderCurrentView();
 }
-// function renderCurrentView() {
+
+function renderCurrentView() {
     setupViewSwitcher();
     if (adminBalanceListener) {
         adminBalanceListener();
@@ -2241,7 +2169,7 @@ function criarConta() {
         ultimoBoostComprado: null
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
-      notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`, {click_action: '/#usuarios'});
+      notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
     })
     .catch(e => alert("Erro ao criar conta: " + e.message));
 }
@@ -2253,16 +2181,12 @@ document.getElementById('tipo').addEventListener('change', (e) => {
   cadastroCoords = null; 
 });
 
-// function fazerLogout() {
-    auth.signOut().then(() => {
-        window.location.reload();
-    });
-}
-// auth.onAuthStateChanged(async user => {
+auth.onAuthStateChanged(async user => {
   solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
   if (pendenciasInterval) clearInterval(pendenciasInterval);
-  if (pendenciasAdminInterval) clearInterval(pendenciasAdminInterval); // if (!user) {
+
+  if (!user) {
     userView = { originalType: null, currentType: null };
     mostrar("guestView");
     configurarBotoesGuest();
@@ -2282,15 +2206,14 @@ document.getElementById('tipo').addEventListener('change', (e) => {
     document.getElementById("saldoHeader").textContent = saldo;
     document.getElementById("saldoModal").textContent = saldo;
     const btnVip = document.getElementById('btnVip');
-    
-    // if (s.data().vip) {
+    if (s.data().vip) {
       btnVip.textContent = '👑 Sou VIP';
-      btnVip.classList.add('vip-active-glow');
+      btnVip.classList.add('vip-glow');
     } else {
       btnVip.textContent = '💎 VIP';
-      btnVip.classList.remove('vip-active-glow');
+      btnVip.classList.remove('vip-glow');
     }
-    // });
+  });
 
   const snap = await ref.get();
   if (!snap.exists) { mostrar("authView"); return; }
@@ -2312,11 +2235,8 @@ document.getElementById('tipo').addEventListener('change', (e) => {
   setupFCM(user.uid);
   exibirVersaoApp();
   iniciarVerificacaoDePendencias(user.uid);
-  if(perfil.tipo === 'admin') {
-      iniciarVerificacaoPendenciasAdmin(); // }
 
-  // handleUrlHash();
-  // setTimeout(() => { document.getElementById("btnSair").classList.remove("hidden"); }, 15000);
+  setTimeout(() => { document.getElementById("btnSair").classList.remove("hidden"); }, 15000);
 
   db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
     .onSnapshot(snapshot => {
@@ -2437,7 +2357,7 @@ async function abrirPortaSecreta() {
             codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo)
         });
         alert("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
-        notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!", {click_action: '/#fidelidade'});
+        notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!");
     } else {
         alert("Código inválido ou expirado.");
     }
@@ -2583,7 +2503,6 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         return mostrar('authView');
     }
     try {
-        mostrarCarregando('Carregando Perfil...', 'Buscando informações do barbeiro.');
         resetAgendamentoState();
         const barbeiroDoc = await db.collection("usuarios").doc(barbeiroUid).get();
         if (!barbeiroDoc.exists) throw new Error("Barbeiro não encontrado.");
@@ -2649,12 +2568,10 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         abrirModal('modalBarbeiroPerfil');
     } catch (error) {
         alert("Ocorreu um erro ao carregar as informações do barbeiro.");
-    } finally {
-        esconderCarregando();
     }
 }
 
-async function confirmarAgendamento() {
+function confirmarAgendamento() {
     const { barbeiroUid, barbeiroNome, servico, horario } = agendamentoState;
     if (!servico || !horario) return;
     const preco = perfil.vip ? servico.valor * 0.9 : servico.valor;
@@ -2669,7 +2586,6 @@ async function confirmarAgendamento() {
     detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${perfil.vip ? ' (Desconto VIP de 10% aplicado)' : ''}`;
     if (!confirm(detalhes)) return;
 
-    mostrarCarregando('Enviando Pedido...', 'Aguarde enquanto registramos seu agendamento.');
     const agendamentoData = {
         clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
         barbeiroUid, barbeiroNome, servico: servico.nome, valor: preco,
@@ -2679,19 +2595,14 @@ async function confirmarAgendamento() {
     };
     if (horario !== 'imediato') agendamentoData.horario = horario;
 
-    try {
-        await db.collection("agendamentos").add(agendamentoData);
+    db.collection("agendamentos").add(agendamentoData).then(() => {
         const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
         criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`);
         criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do barbeiro.");
-        notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, {click_action: '/#agendamentos'});
+        notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`);
         alert("Pedido enviado com sucesso!");
         fecharModalAtual();
-    } catch(e) {
-        alert("Erro ao enviar pedido: " + e.message);
-    } finally {
-        esconderCarregando();
-    }
+    }).catch(e => alert("Erro ao enviar pedido: " + e.message));
 }
 
 function abrirModalVagaAprovada(agendamentoId) {
@@ -2705,7 +2616,6 @@ function abrirModalVagaAprovada(agendamentoId) {
 async function cancelarAgendamentoAposAprovacao(agendamentoId) {
     if (!confirm("Tem certeza que deseja cancelar? O valor será reembolsado.")) return;
     try {
-        mostrarCarregando('Cancelando...', 'Processando o reembolso.');
         const agendamentoDoc = await db.collection("agendamentos").doc(agendamentoId).get();
         if (!agendamentoDoc.exists) throw new Error("Agendamento não encontrado.");
         const { valor, barbeiroUid, clienteUid } = agendamentoDoc.data();
@@ -2722,13 +2632,11 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
             t.update(agendamentoRef, { status: "cancelado" });
         });
         criarAviso(barbeiroUid, `❌ O cliente ${perfil.nome} cancelou a vaga imediata. O valor foi estornado.`);
-        notifyUser(barbeiroUid, "❌ Agendamento Cancelado", `${perfil.nome} cancelou a vaga imediata.`, {click_action: '/#agendamentos'});
+        notifyUser(barbeiroUid, "❌ Agendamento Cancelado", `${perfil.nome} cancelou a vaga imediata.`);
         alert("Agendamento cancelado e valor reembolsado com sucesso.");
         fecharModalAtual();
     } catch (e) {
         alert("Erro ao cancelar agendamento: " + e.message);
-    } finally {
-        esconderCarregando();
     }
 }
 
@@ -2742,10 +2650,6 @@ function abrirHistoricoCliente() {
     .orderBy("ts", "desc").limit(20)
     .onSnapshot(snap => {
       painelHistorico.innerHTML = "";
-      if (snap.empty) {
-        painelHistorico.innerHTML = "<p>Nenhum serviço em seu histórico.</p>";
-        return;
-      }
       snap.forEach(doc => {
         const a = doc.data();
         let statusTexto = a.status === "concluido" ? "✂️ Concluído" : "❌ Cancelado";
@@ -2762,39 +2666,33 @@ function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   avaliarServico(agendamentoId, barbeiroUid, nota, comentario);
 }
 
-async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
-  mostrarCarregando('Enviando Avaliação...', 'Obrigado pelo seu feedback!');
+function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
   const reputacaoGanho = nota >= 7 ? 10 : (nota <= 4 ? -10 : 0);
-  try {
-    await db.runTransaction(async t => {
-      const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
-      const barbeiroRef = db.collection("usuarios").doc(barbeiroUid);
-      const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
-      const agendamentoDoc = await t.get(agendamentoRef);
-      if (agendamentoDoc.data().avaliado) throw "Este serviço já foi avaliado.";
-      
-      t.update(agendamentoRef, { avaliado: true });
-      t.update(barbeiroRef, { 
-          reputacao: firebase.firestore.FieldValue.increment(reputacaoGanho),
-          somaAvaliacoes: firebase.firestore.FieldValue.increment(nota),
-          numAvaliacoes: firebase.firestore.FieldValue.increment(1)
-      });
-      t.set(db.collection("avaliacoes").doc(), {
-        barbeiroUid, clienteUid: auth.currentUser.uid, nota,
-        comentario: comentario || "Sem comentário",
-        ts: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      t.update(clienteRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(PONTOS_POR_CORTE) });
+  db.runTransaction(async t => {
+    const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
+    const barbeiroRef = db.collection("usuarios").doc(barbeiroUid);
+    const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
+    const agendamentoDoc = await t.get(agendamentoRef);
+    if (agendamentoDoc.data().avaliado) throw "Este serviço já foi avaliado.";
+    
+    t.update(agendamentoRef, { avaliado: true });
+    t.update(barbeiroRef, { 
+        reputacao: firebase.firestore.FieldValue.increment(reputacaoGanho),
+        somaAvaliacoes: firebase.firestore.FieldValue.increment(nota),
+        numAvaliacoes: firebase.firestore.FieldValue.increment(1)
     });
+    t.set(db.collection("avaliacoes").doc(), {
+      barbeiroUid, clienteUid: auth.currentUser.uid, nota,
+      comentario: comentario || "Sem comentário",
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    t.update(clienteRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(PONTOS_POR_CORTE) });
+  }).then(() => {
     alert(`Avaliação enviada com sucesso! Você ganhou ${PONTOS_POR_CORTE} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
-    notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, {click_action: '/#avaliacoes'});
-    notifyUser(auth.currentUser.uid, "🏆 Pontos Recebidos!", `Você ganhou ${PONTOS_POR_CORTE} pontos por avaliar o serviço.`, {click_action: '/#fidelidade'});
-  } catch(e) {
-    alert("Erro ao avaliar: " + e);
-  } finally {
-    esconderCarregando();
-  }
+    notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`);
+    notifyUser(auth.currentUser.uid, "🏆 Pontos Recebidos!", `Você ganhou ${PONTOS_POR_CORTE} pontos por avaliar o serviço.`);
+  }).catch(e => alert("Erro ao avaliar: " + e));
 }
 
 function resgatarPontos() {
@@ -2802,8 +2700,6 @@ function resgatarPontos() {
     return alert(`Você precisa de ${PONTOS_PARA_RESGATE} pontos para resgatar.`);
   }
   if (!confirm(`Deseja resgatar ${PONTOS_PARA_RESGATE} pontos por R$ ${VALOR_RESGATE.toFixed(2)}?`)) return;
-  
-  mostrarCarregando('Resgatando Pontos...', 'Aguarde um momento.');
   db.runTransaction(async t => {
     const ref = db.collection("usuarios").doc(auth.currentUser.uid);
     const doc = await t.get(ref);
@@ -2814,19 +2710,15 @@ function resgatarPontos() {
     });
   }).then(() => {
     alert(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
-    notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)}.`, {click_action: '/#carteira'});
-  }).catch(e => {
-    alert("Erro ao resgatar pontos: " + e.message);
-  }).finally(() => {
-    esconderCarregando();
-  });
+    notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)}.`);
+  }).catch(e => alert("Erro ao resgatar pontos: " + e.message));
 }
 
 function abrirModalVip() {
     const container = document.getElementById('vipContentContainer');
     if (perfil.vip) {
         container.innerHTML = `
-            <div class="vip-active-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
+            <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-ouro);">👑 Você é um Membro VIP!</h3>
                 <p>Obrigado por fazer parte do nosso clube exclusivo. Sua assinatura é fundamental para o crescimento do nosso aplicativo.</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
@@ -2843,7 +2735,7 @@ function abrirModalVip() {
         `;
     } else {
         container.innerHTML = `
-            <div style="padding: 20px; border-radius: 15px; text-align: center; border: 2px dashed var(--cor-destaque-ouro);">
+            <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-ouro);">💎 Torne-se um Membro VIP!</h3>
                 <p>Eleve sua experiência e apoie o desenvolvimento contínuo do nosso aplicativo com uma adesão única.</p>
                 <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)}</p>
@@ -2865,34 +2757,27 @@ function abrirModalVip() {
 }
 
 
-async function assinarVip() {
+function assinarVip() {
     if (perfil.saldo < PRECO_VIP) {
         alert("Saldo insuficiente para assinar o VIP.");
         return abrirModal('modalCarteira');
     }
     if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)}?`)) return;
-    
-    mostrarCarregando('Tornando você VIP...', 'Um momento, por favor.');
-    try {
-        await db.runTransaction(async t => {
-            const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
-            const financeiroRef = db.collection("config").doc("financeiro");
-            const clienteDoc = await t.get(clienteRef);
-            if (clienteDoc.data().vip) throw "Você já é um membro VIP.";
-            t.update(clienteRef, {
-                saldo: firebase.firestore.FieldValue.increment(-PRECO_VIP),
-                vip: true
-            });
-            t.set(financeiroRef, { arrecadadoVip: firebase.firestore.FieldValue.increment(PRECO_VIP) }, { merge: true });
+    db.runTransaction(async t => {
+        const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        const financeiroRef = db.collection("config").doc("financeiro");
+        const clienteDoc = await t.get(clienteRef);
+        if (clienteDoc.data().vip) throw "Você já é um membro VIP.";
+        t.update(clienteRef, {
+            saldo: firebase.firestore.FieldValue.increment(-PRECO_VIP),
+            vip: true
         });
+        t.set(financeiroRef, { arrecadadoVip: firebase.firestore.FieldValue.increment(PRECO_VIP) }, { merge: true });
+    }).then(() => {
         alert("Parabéns! Você agora é um membro VIP!");
         notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite 10% de desconto e benefícios exclusivos!");
         fecharModalAtual();
-    } catch (e) {
-        alert("Erro ao assinar VIP: " + e.message);
-    } finally {
-        esconderCarregando();
-    }
+    }).catch(e => alert("Erro ao assinar VIP: " + e.message));
 }
 
 // FUNÇÃO DO CHAT ATUALIZADA
@@ -2911,8 +2796,9 @@ function abrirChatGlobal() {
     document.getElementById("chatTitle").innerHTML = perfil && perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
     if (chatListener) chatListener();
 
+    // Carrega as 6 mensagens iniciais
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-      .orderBy("ts", "desc").limit(15);
+      .orderBy("ts", "desc").limit(6);
 
     chatListener = query.onSnapshot(async snapshot => {
         if(snapshot.empty) {
@@ -2920,6 +2806,7 @@ function abrirChatGlobal() {
             return;
         }
 
+        // Guarda a referência da mensagem mais antiga para a paginação
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
 
         const messagesToRender = [];
@@ -2933,8 +2820,14 @@ function abrirChatGlobal() {
         
         messagesToRender.sort((a, b) => a.ts.seconds - b.ts.seconds);
         
+        // Limpa o chat apenas na primeira carga
+        if (!chatContainer.hasChildNodes()) {
+           chatContainer.innerHTML = "";
+        }
+        
         for(const msg of messagesToRender) {
              const messageDiv = await createMessageDiv(msg);
+             // Adiciona novas mensagens em tempo real no final (topo visual)
              if (chatContainer.querySelector(`#msg-${msg.id}`)) continue;
              chatContainer.prepend(messageDiv);
         }
@@ -2946,7 +2839,7 @@ function abrirChatGlobal() {
 
 // NOVA FUNÇÃO PARA CARREGAR MENSAGENS ANTERIORES
 async function carregarMensagensAnteriores() {
-    if (!oldestMessageSnapshot) return; 
+    if (!oldestMessageSnapshot) return; // Não há mais mensagens para carregar
 
     const btn = document.getElementById('carregarMaisMsgBtn');
     btn.textContent = 'Carregando...';
@@ -2963,14 +2856,16 @@ async function carregarMensagensAnteriores() {
         btn.textContent = 'Fim do histórico';
         return;
     }
+
+    // Atualiza a referência para a próxima paginação
     oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
     
     const chatContainer = document.getElementById("chatMessages");
-    for (const doc of snapshot.docs.reverse()) { 
+    for (const doc of snapshot.docs.reverse()) { // Inverte para manter a ordem cronológica
         const msg = doc.data();
         msg.id = doc.id;
         const messageDiv = await createMessageDiv(msg);
-        chatContainer.appendChild(messageDiv); 
+        chatContainer.appendChild(messageDiv); // Adiciona no final (fundo visual)
     }
 
     btn.textContent = 'Ver mensagens anteriores';
@@ -2987,33 +2882,29 @@ async function createMessageDiv(msg) {
     if (msg.tipo === "bot") {
         remetenteNome = `<span style="color: red;">🤖 ${remetenteNome}</span>`;
     } else {
-        try {
-            const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
-            if(remetenteDoc.exists) {
-                const remetenteData = remetenteDoc.data();
+        const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
+        if(remetenteDoc.exists) {
+            const remetenteData = remetenteDoc.data();
 
-                if (remetenteData.possuiItemExclusivo) {
-                    itemExclusivoIcone = '👕✨';
-                }
-
-                if (remetenteData.tipo === "admin") {
-                    classeCSS = `admin-chat-red`; 
-                    iconeBase = `🧠`;
-                    messageDiv.style.textShadow = '0 0 5px #000';
-                } else if (remetenteData.tipo === "barbeiro") {
-                    classeCSS = `barbeiro-chat`; iconeBase = `💈`;
-                    medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
-                } else if (remetenteData.vip) {
-                    classeCSS = `cliente-chat`; iconeBase = `👑`;
-                    medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
-                } else {
-                    classeCSS = `cliente-chat`; iconeBase = `👤`;
-                    medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
-                }
-                remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+            if (remetenteData.possuiItemExclusivo) {
+                itemExclusivoIcone = '👕✨';
             }
-        } catch (e) {
-            console.error("Erro ao buscar dados do remetente:", e);
+
+            if (remetenteData.tipo === "admin") {
+                classeCSS = `admin-chat-red`; 
+                iconeBase = `🧠`;
+                messageDiv.style.textShadow = '0 0 5px #000';
+            } else if (remetenteData.tipo === "barbeiro") {
+                classeCSS = `barbeiro-chat`; iconeBase = `💈`;
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
+            } else if (remetenteData.vip) {
+                classeCSS = `cliente-chat`; iconeBase = `👑`;
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
+            } else {
+                classeCSS = `cliente-chat`; iconeBase = `👤`;
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
+            }
+            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
         }
     }
     
@@ -3047,19 +2938,13 @@ function enviarMensagem() {
     const texto = document.getElementById("chatInput").value.trim();
     if (!texto) return;
     isSending = true;
-    document.getElementById("chatInput").disabled = true;
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
         remetenteUid: auth.currentUser.uid, remetenteNome: perfil.nome, tipo: perfil.tipo, texto,
         ts: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
         document.getElementById("chatInput").value = "";
-    }).catch(error => { 
-        console.error("Erro ao enviar mensagem:", error);
-    }).finally(() => {
-        isSending = false;
-        document.getElementById("chatInput").disabled = false;
-        document.getElementById("chatInput").focus();
-    });
+        setTimeout(() => { isSending = false; }, 1000);
+    }).catch(error => { isSending = false; });
 }
 
 function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
@@ -3079,7 +2964,7 @@ function enviarDenuncia() {
     const mensagem = encodeURIComponent(`🚨 Nova denúncia no app. ID: ${denunciaRef.id}\n\nDe: ${perfil.nome}\n\nDescrição: ${texto}`);
     document.getElementById("btnWhatsappDenuncia").href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
     document.getElementById("textoDenuncia").value = "";
-    notifyAdmins("🚨 Nova Denúncia!", `Uma nova denúncia foi enviada por ${perfil.nome}.`, {click_action: '/#denuncias'});
+    notifyAdmins("🚨 Nova Denúncia!", `Uma nova denúncia foi enviada por ${perfil.nome}.`);
   }).catch(e => alert("Erro ao enviar denúncia: " + e.message));
 }
 
@@ -3255,70 +3140,58 @@ function toggleDisponibilidade() {
 
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
-    mostrarCarregando('Aprovando...', 'Aguarde um instante.');
     const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
-    try {
-        await db.runTransaction(async t => {
-            const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
-            const clienteRef = db.collection("usuarios").doc(clienteUid);
-            const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-            const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroDoc)]);
-            if (agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada.";
-            if (!clienteDoc.exists) throw "Cliente não encontrado.";
-            if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
-            if (barbeiroDoc.data().vagaImediata === false) throw "Vaga imediata não está mais ativa.";
+    db.runTransaction(async t => {
+        const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
+        const clienteRef = db.collection("usuarios").doc(clienteUid);
+        const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+        if (agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada.";
+        if (!clienteDoc.exists) throw "Cliente não encontrado.";
+        if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
+        if (barbeiroDoc.data().vagaImediata === false) throw "Vaga imediata não está mais ativa.";
 
-            t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
-            t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa), vagaImediata: false });
-            t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
-            const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
-            if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
-            t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
-        });
+        t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
+        t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa), vagaImediata: false });
+        t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+        const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+        if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+        t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
+    }).then(() => {
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para a barbearia!`);
         alert("Agendamento aprovado!");
-    } catch(e) {
-        alert("Erro ao aprovar: " + e);
-    } finally {
-        esconderCarregando();
-    }
+    }).catch(e => alert("Erro ao aprovar: " + e));
 }
 
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
   if (!confirm("Aprovar este agendamento?")) return;
-  mostrarCarregando('Aprovando...', 'Aguarde um instante.');
   const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
-  try {
-    await db.runTransaction(async t => {
-        const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
-        const clienteRef = db.collection("usuarios").doc(clienteUid);
-        const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroDoc)]);
-        if (agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada.";
-        if (!clienteDoc.exists) throw "Cliente não encontrado.";
-        if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
+  db.runTransaction(async t => {
+      const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
+      const clienteRef = db.collection("usuarios").doc(clienteUid);
+      const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
+      const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+      if (agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada.";
+      if (!clienteDoc.exists) throw "Cliente não encontrado.";
+      if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
 
-        t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
-        t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
-        t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+      t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
+      t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
+      t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
 
-        if (barbeiroDoc.data().usaAgendaManual && horario) {
-            const agendaAtual = barbeiroDoc.data().agenda || {};
-            if (agendaAtual[horario]) { delete agendaAtual[horario]; t.update(barbeiroRef, { agenda: agendaAtual }); }
-        }
-        const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
-        if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
-        t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
-    });
-    criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo barbeiro ${perfil.nome}!`);
-    notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
-    alert("Agendamento aprovado!");
-  } catch(e) {
-    alert("Erro ao aprovar: " + e);
-  } finally {
-    esconderCarregando();
-  }
+      if (barbeiroDoc.data().usaAgendaManual && horario) {
+          const agendaAtual = barbeiroDoc.data().agenda || {};
+          if (agendaAtual[horario]) { delete agendaAtual[horario]; t.update(barbeiroRef, { agenda: agendaAtual }); }
+      }
+      const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+      if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+      t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
+  }).then(() => {
+      criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo barbeiro ${perfil.nome}!`);
+      notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
+      alert("Agendamento aprovado!");
+  }).catch(e => alert("Erro ao aprovar: " + e));
 }
 
 function recusarAgendamento(agendamentoId, clienteUid) {
@@ -3338,38 +3211,31 @@ function recusarAgendamento(agendamentoId, clienteUid) {
 
 async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) {
   if (!confirm("Cancelar este agendamento? O dinheiro será reembolsado e sua reputação será afetada.")) return;
-  mostrarCarregando('Cancelando...', 'Processando o reembolso.');
   const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
-  try {
-    await db.runTransaction(async t => {
-        const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
-        const agendamentoDoc = await t.get(agendamentoRef);
-        const status = agendamentoDoc.data().status;
-        if (status !== 'confirmado' && status !== 'conclusão pendente') throw "Apenas agendamentos aprovados podem ser cancelados.";
-        
-        const clienteRef = db.collection("usuarios").doc(clienteUid);
-        const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(valor) });
-        t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(-valorComTaxa), reputacao: firebase.firestore.FieldValue.increment(-10) });
-        t.update(agendamentoRef, { status: "cancelado" });
+  db.runTransaction(async t => {
+      const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
+      const agendamentoDoc = await t.get(agendamentoRef);
+      const status = agendamentoDoc.data().status;
+      if (status !== 'confirmado' && status !== 'conclusão pendente') throw "Apenas agendamentos aprovados podem ser cancelados.";
+      
+      const clienteRef = db.collection("usuarios").doc(clienteUid);
+      const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
+      t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(valor) });
+      t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(-valorComTaxa), reputacao: firebase.firestore.FieldValue.increment(-10) });
+      t.update(agendamentoRef, { status: "cancelado" });
 
-        const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
-        if (!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(-valorAdmin) });
-        t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
-    });
-    criarAviso(clienteUid, `❌ O barbeiro ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
-    notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
-    alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
-  } catch(e) {
-      alert("Erro ao cancelar: " + e);
-  } finally {
-      esconderCarregando();
-  }
+      const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+      if (!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(-valorAdmin) });
+      t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
+  }).then(() => {
+      criarAviso(clienteUid, `❌ O barbeiro ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
+      notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
+      alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
+  }).catch(e => alert("Erro ao cancelar: " + e));
 }
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
   try {
-    mostrarCarregando('Finalizando Serviço...', 'Aguarde.');
     const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
     const clienteRef = db.collection("usuarios").doc(clienteUid);
@@ -3385,23 +3251,21 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 
     alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
-    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, {click_action: '/#historico'});
+    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`);
     const clienteDoc = await clienteRef.get();
     const clienteData = clienteDoc.data();
     if (clienteData.bonusIndicacaoPendente) {
         await clienteRef.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO), bonusIndicacaoPendente: false });
-        notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade!`, {click_action: '/#fidelidade'});
+        notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade!`);
         const query = await db.collection("usuarios").where("email", "==", clienteData.indicadoPorEmail).limit(1).get();
         if (!query.empty) {
             const indicadorDoc = query.docs[0];
             await indicadorDoc.ref.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO) });
-            notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o serviço!`, {click_action: '/#fidelidade'});
+            notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o serviço!`);
         }
     }
   } catch(e) {
     alert("Erro ao concluir serviço: " + e);
-  } finally {
-    esconderCarregando();
   }
 }
 
@@ -3500,50 +3364,33 @@ function abrirAvaliacoesBarbeiro() {
 // --- NOVAS FUNÇÕES DE PAGAMENTO (APRIMORADO) ---
 // ======================================================================
 
-// function iniciarDeposito() {
-  abrirModal('modalDadosDeposito');
+function iniciarDeposito() {
+  abrirModal('modalDeposito');
 }
 
-function verificarFormularioDeposito() {
-    const nome = document.getElementById('depositoPrimeiroNome').value.trim();
-    const sobrenome = document.getElementById('depositoSegundoNome').value.trim();
-    const cpf = document.getElementById('depositoCpf').value.trim();
-    const telefone = document.getElementById('depositoTelefone').value.trim();
-    document.getElementById('btnContinuarDeposito').disabled = !(nome && sobrenome && cpf && telefone);
-}
-
-function abrirModalMetodosPagamento() {
-    abrirModal('modalDeposito');
-}
-// function iniciarSaque() {
+function iniciarSaque() {
   abrirModal('modalSaque');
 }
 
 function processarPagamentoPixAprimorado() {
-    fecharModalAtual();
     abrirModal('modalGerandoQRCode');
     setTimeout(() => {
         fecharModalAtual();
         abrirModal('modalExibirPixAprimorado');
         iniciarTimerPix(600); // 10 minutos
-    }, 1500); 
+    }, 3000); // Simula o carregamento de 3 segundos
 }
 
-// function processarPagamentoCartaoAprimorado() {
-    abrirModal('modalTaxaCartao');
-}
-
-function prosseguirComCartao() {
-    notifyAdmins("💳 Tentativa de Pag. Cartão", `${perfil.nome} está indo para a tela de pagamento com cartão.`);
-    fecharModalAtual(); // Fecha o modal da taxa
-    document.getElementById('carregandoGenericoTitulo').textContent = 'Redirecionando...';
-    document.getElementById('carregandoGenericoTexto').textContent = 'Você está sendo levado a um ambiente de pagamento seguro.';
+function processarPagamentoCartaoAprimorado() {
+    document.getElementById('carregandoGenericoTitulo').textContent = 'Aguarde...';
+    document.getElementById('carregandoGenericoTexto').textContent = 'Você está sendo redirecionado para um ambiente de pagamento seguro.';
     abrirModal('modalCarregandoGenerico');
     setTimeout(() => {
         window.location.href = 'https://pay.kiwify.com.br/T3M9m1C';
-    }, 2000); 
+    }, 3000); // Simula o processamento de 3 segundos
 }
-// function iniciarTimerPix(duracao) {
+
+function iniciarTimerPix(duracao) {
     if (pixTimerInterval) clearInterval(pixTimerInterval);
     let timer = duracao;
     const display = document.getElementById('pixTimer');
@@ -3554,8 +3401,9 @@ function prosseguirComCartao() {
         if (--timer < 0) {
             clearInterval(pixTimerInterval);
             display.textContent = "EXPIRADO";
-            // abrirModal('modalPixExpirado');
-            // }
+            alert("O tempo para pagamento via PIX expirou. Por favor, gere um novo código.");
+            fecharModalAtual();
+        }
     }, 1000);
 }
 
@@ -3564,16 +3412,14 @@ function copiarCodigoPixAprimorado() {
     const btn = event.target;
     navigator.clipboard.writeText(texto).then(() => {
         btn.textContent = '✅ Copiado!';
-        // notifyAdmins("✅ Possível Depósito PIX", `${perfil.nome} copiou a chave PIX para depósito.`);
-        // setTimeout(() => { btn.textContent = 'Copiar Chave Aleatória PIX'; }, 2000);
+        setTimeout(() => { btn.textContent = 'Copiar Chave Aleatória PIX'; }, 2000);
     }).catch(err => {
         alert("Não foi possível copiar o código. Por favor, selecione e copie manualmente.");
     });
 }
 
 function confirmarEnvioComprovante() {
-    // fecharTodosModais(); 
-    // const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app Navalha de Ouro.");
+    const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app Navalha de Ouro.");
     window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
 }
 
@@ -3588,18 +3434,6 @@ function confirmarSaque() {
     if (perfil.saldo < valor) return alert("Saldo insuficiente.");
 
     abrirModal('modalSaqueConfirmado');
-    db.collection("solicitacoes").add({
-        tipo: "saque",
-        usuarioUid: auth.currentUser.uid,
-        usuarioNome: perfil.nome,
-        valor: valor,
-        chavePixTipo: chaveTipo,
-        chavePix: chave,
-        status: "pendente",
-        ts: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        notifyAdmins("📤 Solicitação de SAQUE", `Novo saque de R$ ${valor.toFixed(2)} pendente de ${perfil.nome}.`, {click_action: '/#solicitacoes'});
-    });
 }
 
 function contatarAdminSaque() {
@@ -3627,13 +3461,13 @@ async function publicarBlog() {
 function carregarListaBlog() {
   const lista = document.getElementById("listaBlog");
   lista.innerHTML = "<p>⏳ Carregando...</p>";
-  db.collection("blog").orderBy("ts", "desc").limit(10).onSnapshot(snap => {
+  db.collection("blog").orderBy("ts", "desc").onSnapshot(snap => {
     lista.innerHTML = "";
-    const vinteQuatroHorasAtras = new Date().getTime() - (24 * 60 * 60 * 1000);
+    const umDiaAtras = new Date().getTime() - (24 * 60 * 60 * 1000);
     let postsExibidos = 0;
     snap.forEach(doc => {
       const p = doc.data();
-      if (p.ts && p.ts.toDate().getTime() > vinteQuatroHorasAtras) {
+      if (p.ts && p.ts.toDate().getTime() > umDiaAtras) {
         lista.innerHTML += `<div class="card" style="margin-bottom:15px;"><h4>${p.titulo}</h4><p>${p.conteudo}</p><p style="font-size:12px;opacity:0.7;">Por: ${p.autor}</p></div>`;
         postsExibidos++;
       }
@@ -3775,7 +3609,7 @@ function aprovarSaque(id, uid, valor) {
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
   }).then(() => {
     alert("Saque aprovado!");
-    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { tipo: 'atualizar_saldo', click_action: '/#carteira' });
+    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { tipo: 'atualizar_saldo' });
   }).catch(e => alert("Erro: " + e.message));
 }
 
@@ -3845,7 +3679,7 @@ async function verDetalhesUsuario(uid) {
       const valor = parseFloat(prompt("Valor para adicionar (use '-' para remover):"));
       if (!isNaN(valor)) {
         await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
-        notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { tipo: 'atualizar_saldo', click_action: '/#carteira' });
+        notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { tipo: 'atualizar_saldo' });
         alert("Saldo alterado!");
       } else alert("Valor inválido.");
       break;
@@ -3866,33 +3700,25 @@ async function verDetalhesUsuario(uid) {
   }
 }
 
-// async function enviarNotificacaoMarketing() {
+async function enviarNotificacaoMarketing() {
     const title = document.getElementById('marketingTitulo').value.trim();
     const body = document.getElementById('marketingCorpo').value.trim();
     if (!title || !body || !confirm(`Confirma o envio da notificação em massa?`)) return;
-    mostrarCarregando('Enviando Notificações...', 'Isso pode levar alguns instantes.');
     try {
         const response = await fetch("https://navalhabackend.onrender.com/enviar-notificacao-massa", {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, body, adminUid: auth.currentUser.uid }),
         });
-        
-        if (!response.ok) {
-            // Tenta ler como texto para ver o erro HTML
-            const errorText = await response.text();
-            throw new Error(`O servidor respondeu com um erro ${response.status}. Detalhes: ${errorText.substring(0, 200)}`);
-        }
-
         const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
         alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
         fecharModalAtual();
     } catch (error) {
-        alert('Falha ao enviar: ' + error.message + '\n\nO servidor de notificações pode estar indisponível ou inicializando. Tente novamente em um minuto.');
-    } finally {
-        esconderCarregando();
+        alert('Falha ao enviar: ' + error.message);
     }
 }
-// const conquistasDefinidas = {
+
+const conquistasDefinidas = {
     'cortes_1': { nome: 'Primeiro Agendamento', icone: '👶', descricao: 'Concluiu seu primeiro agendamento.', level: 1 },
     'cortes_5': { nome: 'Cliente Iniciante', icone: '👍', descricao: 'Concluiu 5 agendamentos.', level: 2 },
     'cortes_10': { nome: 'Cliente Regular', icone: '⭐', descricao: 'Concluiu 10 agendamentos.', level: 3 },
@@ -3930,7 +3756,7 @@ async function verificarConquistas(uid) {
         if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
             await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
             const conquista = conquistasDefinidas[conquistaId];
-            notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"!`, {click_action: '/#conquistas'});
+            notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"!`);
         }
     }
 }
@@ -3950,7 +3776,7 @@ async function verificarConquistasBarbeiro(uid) {
         if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
             await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
             const conquista = conquistasBarbeiroDefinidas[conquistaId];
-            notifyUser(uid, "🏅 Nova Conquista de Barbeiro!", `Você desbloqueou: "${conquista.nome}"!`, {click_action: '/#conquistasBarbeiro'});
+            notifyUser(uid, "🏅 Nova Conquista de Barbeiro!", `Você desbloqueou: "${conquista.nome}"!`);
         }
     }
 }
@@ -4239,7 +4065,6 @@ function solicitarLiberacaoLoja() {
         ts: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
         alert("Sua solicitação foi enviada ao administrador. Você será redirecionado para o WhatsApp para confirmar.");
-        notifyAdmins("🛍️ Liberação de Loja", `${perfil.nome} quer vender na loja.`, {click_action: '/#solicitacoes'});
     }).catch(e => alert("Erro ao criar solicitação: " + e.message));
 }
 
@@ -4272,11 +4097,12 @@ async function carregarProdutos() {
 
         produtosSnap.forEach(doc => {
             const produto = { ...doc.data(), id: doc.id };
+            const produtoJSON = JSON.stringify(produto).replace(/'/g, "\\'");
             if (produto.isOficial) {
-                officialHtml += renderProdutoCard(produto);
+                officialHtml += renderProdutoCard(produto, produtoJSON);
                 officialProductsFound = true;
             } else {
-                communityProducts.push({ data: produto });
+                communityProducts.push({ data: produto, json: produtoJSON });
             }
         });
 
@@ -4306,7 +4132,7 @@ async function carregarProdutos() {
             communityHtml += '<p style="grid-column: 1 / -1;">Nenhum produto da comunidade ainda.</p>';
         } else {
             communityProducts.forEach(p => {
-                communityHtml += renderProdutoCard(p.data);
+                communityHtml += renderProdutoCard(p.data, p.json);
             });
         }
         
@@ -4318,12 +4144,13 @@ async function carregarProdutos() {
     }
 }
 
-// function renderProdutoCard(p) {
+
+function renderProdutoCard(p, pJson) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
     const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
     
     return `
-        <div class="produto-card" onclick='handleProdutoClick("${p.id}")'>
+        <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
             <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
             <div class="produto-info">
                 <div class="produto-nome">${p.nome}</div>
@@ -4332,7 +4159,8 @@ async function carregarProdutos() {
         </div>
     `;
 }
-// async function exibirVersaoApp() {
+
+async function exibirVersaoApp() {
     try {
         const response = await fetch('/index.html', { method: 'HEAD', cache: 'no-store' });
         const lastModified = response.headers.get('Last-Modified');
@@ -4372,7 +4200,7 @@ if (firebase.messaging.isSupported()) {
     });
 }
 // NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
-// async function abrirDetalhesProduto(produto) {
+async function abrirDetalhesProduto(produto) {
     produtoParaCompra = produto;
     document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
     document.getElementById('detalhesProdutoNome').textContent = produto.nome;
@@ -4382,76 +4210,55 @@ if (firebase.messaging.isSupported()) {
     document.getElementById('detalhesProdutoEntrega').textContent = produto.tempoEntrega;
     
     const tamanhosContainer = document.getElementById('detalhesProdutoTamanhos');
-    const tamanhosContainerWrapper = document.getElementById('detalhesProdutoTamanhosContainer');
     tamanhosContainer.innerHTML = '';
     if (produto.tamanhos && produto.tamanhos.length > 0) {
-        tamanhosContainerWrapper.classList.remove('hidden');
         produto.tamanhos.forEach(t => {
             tamanhosContainer.innerHTML += `<input type="radio" name="tamanho_selecionado" value="${t}" id="tamanho_${t}"><label for="tamanho_${t}">${t}</label>`;
         });
     } else {
-        tamanhosContainerWrapper.classList.add('hidden');
+        tamanhosContainer.innerHTML = 'Tamanho único';
     }
     
+    // Lógica de avaliação
     const avaliacaoContainer = document.getElementById('detalhesProdutoAvaliacao');
     await carregarAvaliacaoProduto(produto.id, produto.nome, avaliacaoContainer);
     
+    document.getElementById('btnComprarAgora').onclick = () => iniciarCompra(produto);
     abrirModal('modalProdutoDetalhes');
 }
 
-function iniciarCompra() {
+function iniciarCompra(produto) {
     const tamanhoSelecionado = document.querySelector('input[name="tamanho_selecionado"]:checked');
-    if ((produtoParaCompra.tamanhos && produtoParaCompra.tamanhos.length > 0) && !tamanhoSelecionado) {
+    if ((produto.tamanhos && produto.tamanhos.length > 0) && !tamanhoSelecionado) {
         return alert('Por favor, selecione um tamanho.');
     }
     
-    document.getElementById('compraNomeCompleto').value = perfil.nome || '';
+    document.getElementById('compraEndereco').value = '';
     document.getElementById('compraTelefone').value = perfil.telefone || '';
-    document.getElementById('compraEmail').value = perfil.email || '';
     document.getElementById('compraCep').value = '';
-    document.getElementById('compraEndereco').value = perfil.rua ? `${perfil.rua}, ${perfil.numero}` : '';
     
+    document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra(produto, tamanhoSelecionado ? tamanhoSelecionado.value : 'único');
     abrirModal('modalConfirmarCompra');
 }
 
-function abrirConfirmacaoFinal() {
-    const nome = document.getElementById('compraNomeCompleto').value.trim();
-    const telefone = document.getElementById('compraTelefone').value.trim();
-    const email = document.getElementById('compraEmail').value.trim();
-    const cep = document.getElementById('compraCep').value.trim();
+async function confirmarCompra(produto, tamanho) {
     const endereco = document.getElementById('compraEndereco').value.trim();
-    if (!nome || !telefone || !email || !cep || !endereco) return alert('Todos os campos são obrigatórios.');
+    const telefone = document.getElementById('compraTelefone').value.trim();
+    const cep = document.getElementById('compraCep').value.trim();
+    if (!endereco || !telefone || !cep) return alert('Endereço, telefone e CEP são obrigatórios.');
 
-    dadosCompraTemporarios = { nome, telefone, email, cep, endereco };
-
-    const precoFinal = produtoParaCompra.desconto ? produtoParaCompra.preco * (1 - produtoParaCompra.desconto / 100) : produtoParaCompra.preco;
-    document.getElementById('valorFinalCompra').textContent = `R$ ${precoFinal.toFixed(2)}`;
-    document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra();
-    abrirModal('modalConfirmacaoPagamento');
-}
-
-
-async function confirmarCompra() {
-    const tamanhoSelecionado = document.querySelector('input[name="tamanho_selecionado"]:checked');
-    const tamanho = (produtoParaCompra.tamanhos && produtoParaCompra.tamanhos.length > 0) ? tamanhoSelecionado.value : 'único';
-    const { nome, telefone, email, cep, endereco } = dadosCompraTemporarios;
+    const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+    if (perfil.saldo < precoFinal) return alert('Saldo insuficiente.');
     
-    const precoFinal = produtoParaCompra.desconto ? produtoParaCompra.preco * (1 - produtoParaCompra.desconto / 100) : produtoParaCompra.preco;
-    if (perfil.saldo < precoFinal) {
-        fecharTodosModais();
-        alert('Saldo insuficiente.');
-        return;
-    }
-    
-    mostrarCarregando('Processando Pedido...', 'Só mais um momento...');
+    if(!confirm('Confirmar o pedido? O valor será debitado do seu saldo.')) return;
     
     try {
         await db.runTransaction(async t => {
             const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
-            const vendedorRef = db.collection("usuarios").doc(produtoParaCompra.vendedorUid);
+            const vendedorRef = db.collection("usuarios").doc(produto.vendedorUid);
             const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
             const adminRef = db.collection("usuarios").doc(adminSnap.docs[0].id);
-            const produtoRef = db.collection("loja_produtos").doc(produtoParaCompra.id);
+            const produtoRef = db.collection("loja_produtos").doc(produto.id);
 
             const valorVendedor = precoFinal * (1 - TAXA);
             const valorAdmin = precoFinal * TAXA;
@@ -4462,33 +4269,32 @@ async function confirmarCompra() {
             t.update(produtoRef, { vendasRealizadas: firebase.firestore.FieldValue.increment(1) });
             
             t.set(db.collection("loja_pedidos").doc(), {
-                produtoId: produtoParaCompra.id,
-                produtoNome: produtoParaCompra.nome,
+                produtoId: produto.id,
+                produtoNome: produto.nome,
                 valor: precoFinal,
                 tamanho,
                 clienteUid: auth.currentUser.uid,
-                clienteNome: nome,
+                clienteNome: perfil.nome,
                 endereco,
                 telefone,
                 cep,
-                vendedorUid: produtoParaCompra.vendedorUid,
+                vendedorUid: produto.vendedorUid,
                 vendedorNotificado: false,
-                status: "pendente",
+                status: "pendente", // Status inicial
                 ts: firebase.firestore.FieldValue.serverTimestamp()
             });
         });
 
         alert("Pedido realizado com sucesso!");
-        notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produtoParaCompra.nome}" foi realizada.`, {click_action: '/#minhascompras'});
-        notifyUser(produtoParaCompra.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produtoParaCompra.nome}" para ${perfil.nome}.`, {click_action: '/#entregas'});
-        fecharTodosModais();
+        notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`);
+        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`);
+        fecharModalAtual();
     } catch (e) {
         alert('Erro ao processar a compra: ' + e.message);
-    } finally {
-        esconderCarregando();
     }
 }
-// async function abrirGerenciarLoja() {
+
+async function abrirGerenciarLoja() {
     abrirModal('modalGerenciarLoja');
     const container = document.getElementById('listaMeusProdutos');
     container.innerHTML = '<p>Carregando seus produtos...</p>';
@@ -4519,6 +4325,7 @@ async function abrirFormularioProduto(produtoId = null) {
     const form = document.getElementById('modalAddEditProduto');
     document.getElementById('formProdutoTitulo').textContent = produtoId ? '✏️ Editar Produto' : '📦 Adicionar Novo Produto';
     
+    // Reset form
     form.querySelector('#produtoNome').value = '';
     form.querySelector('#produtoImagemUrl').value = '';
     form.querySelector('#produtoPreco').value = '';
@@ -4576,7 +4383,7 @@ async function salvarProdutoVendedor() {
     
     alert('Produto salvo com sucesso!');
     fecharModalAtual();
-    abrirGerenciarLoja(); 
+    abrirGerenciarLoja(); // Recarrega a lista
 }
 
 async function deletarProdutoVendedor(produtoId) {
@@ -4593,9 +4400,9 @@ async function abrirEntregasVendedor() {
     container.innerHTML = '<p>Carregando entregas...</p>';
     
     if (pedidosVendedorListener) pedidosVendedorListener();
-    // pedidosVendedorListener = db.collection('loja_pedidos')
+    pedidosVendedorListener = db.collection('loja_pedidos')
       .where('vendedorUid', '==', auth.currentUser.uid)
-      .where('status', 'in', ['pendente', 'disputa']) // Mostra pendentes e disputas
+      .where('status', 'in', ['pendente', 'confirmado_pelo_cliente'])
       .onSnapshot(snap => {
         if(snap.empty) {
             container.innerHTML = '<p>Nenhuma entrega pendente.</p>';
@@ -4605,13 +4412,13 @@ async function abrirEntregasVendedor() {
         snap.forEach(doc => {
             const pedido = doc.data();
             let statusHtml = '';
-            // O botão de marcar como entregue aparece para ambos os status
             let acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Marcar como Entregue</button>`;
             
             if (pedido.status === 'pendente') {
                 statusHtml = '<p style="color: #f1c40f;">Status: Aguardando Entrega</p>';
-            } else if (pedido.status === 'disputa') {
-                statusHtml = '<p style="color: #e74c3c;">Status: Comprador Recusou Entrega</p>';
+            } else if (pedido.status === 'confirmado_pelo_cliente') {
+                statusHtml = '<p style="color: #2ecc71;">Status: Cliente confirmou recebimento!</p>';
+                acaoHtml = '<p>✅ Finalizado</p>';
             }
 
             container.innerHTML += `
@@ -4625,13 +4432,13 @@ async function abrirEntregasVendedor() {
                 </div>`;
         });
     });
-    // }
+}
 
 async function marcarComoEntregue(pedidoId, clienteUid) {
     if (!confirm("Confirmar que o produto foi entregue? O comprador será notificado para confirmar o recebimento.")) return;
     try {
         await db.collection('loja_pedidos').doc(pedidoId).update({ status: 'entregue_pendente_confirmacao' });
-        notifyUser(clienteUid, '🚚 Seu Pedido foi Entregue!', 'Por favor, confirme o recebimento do seu produto no app para finalizar a compra.', {click_action: '/#minhascompras'});
+        notifyUser(clienteUid, '🚚 Seu Pedido foi Entregue!', 'Por favor, confirme o recebimento do seu produto no app para finalizar a compra.');
         alert('Notificação enviada ao comprador.');
     } catch (e) {
         alert('Erro ao marcar como entregue: ' + e.message);
@@ -4674,19 +4481,19 @@ function abrirModalConfirmacaoComprador(pedido) {
 }
 
 async function responderConfirmacaoEntrega(pedidoId, aceito) {
-    // const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
+    const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
     try {
         const pedidoDoc = await db.collection('loja_pedidos').doc(pedidoId).get();
         const vendedorUid = pedidoDoc.data().vendedorUid;
         await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
-        const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato com ele.';
-        notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, {click_action: '/#entregas'});
+        const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
+        notifyUser(vendedorUid, '📦 Atualização de Entrega', msg);
         alert('Resposta enviada com sucesso!');
         fecharModalAtual();
     } catch (e) {
         alert('Erro ao enviar resposta: ' + e.message);
     }
-    // }
+}
 function toggleFuncoes(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -4694,93 +4501,57 @@ function toggleFuncoes(containerId) {
     }
 }
 
-// async function handleProdutoClick(produtoId) {
+function handleProdutoClick(produto) {
     if (!auth.currentUser) {
         alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
         mostrar('authView');
     } else {
-        try {
-            mostrarCarregando('Carregando Produto...', 'Buscando detalhes...');
-            const doc = await db.collection('loja_produtos').doc(produtoId).get();
-            if(doc.exists) {
-                const produtoData = { ...doc.data(), id: doc.id };
-                abrirDetalhesProduto(produtoData);
-            } else {
-                alert('Produto não encontrado.');
-            }
-        } catch(e) {
-            alert('Erro ao carregar o produto.');
-        } finally {
-            esconderCarregando();
-        }
+        abrirDetalhesProduto(produto);
     }
 }
-// // Lógica de verificação de pendências e notificações
+
+// Lógica de verificação de pendências e notificações
 function iniciarVerificacaoDePendencias(uid) {
     if (pendenciasInterval) clearInterval(pendenciasInterval);
-    verificarPendencias(uid); 
-    pendenciasInterval = setInterval(() => verificarPendencias(uid), 60000); 
+    verificarPendencias(uid); // Executa uma vez imediatamente
+    pendenciasInterval = setInterval(() => verificarPendencias(uid), 60000); // Executa a cada minuto
 }
 
-// function iniciarVerificacaoPendenciasAdmin() {
-    if(pendenciasAdminInterval) clearInterval(pendenciasAdminInterval);
-    verificarPendenciasAdmin();
-    pendenciasAdminInterval = setInterval(verificarPendenciasAdmin, 60000);
-}
-
-async function verificarPendenciasAdmin() {
-    const solicitacoesSnap = await db.collection('solicitacoes').where('status', '==', 'pendente').get();
-    const btnSolicitacoes = document.getElementById('btnSolicitacoesAdmin');
-    if(!solicitacoesSnap.empty) {
-        btnSolicitacoes?.classList.add('notificacao-pulsante');
-        const saques = solicitacoesSnap.docs.filter(d => d.data().tipo === 'saque').length;
-        if(saques > 0) {
-            notifyAdmins(`🚨 ${saques} Saque(s) Pendente(s)!`, 'Acesse o painel de solicitações para aprovar.', {click_action: '/#solicitacoes'});
-        }
-    } else {
-        btnSolicitacoes?.classList.remove('notificacao-pulsante');
-    }
-
-    const denunciasSnap = await db.collection('denuncias').where('status', '==', 'aberta').get();
-    const btnDenuncias = document.getElementById('btnDenunciasAdmin');
-    if(!denunciasSnap.empty) {
-        btnDenuncias?.classList.add('notificacao-pulsante');
-        notifyAdmins(`🚨 ${denunciasSnap.size} Nova(s) Denúncia(s)!`, 'Verifique o painel de denúncias.', {click_action: '/#denuncias'});
-    } else {
-        btnDenuncias?.classList.remove('notificacao-pulsante');
-    }
-}
-// async function verificarPendencias(uid) {
+async function verificarPendencias(uid) {
     if (!uid || !perfil) return;
 
+    // Barbeiro: Agendamentos pendentes
     if (perfil.tipo === 'barbeiro') {
         const agendamentosSnap = await db.collection('agendamentos').where('barbeiroUid', '==', uid).where('status', '==', 'pendente').get();
         const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
         if (!agendamentosSnap.empty) {
             btnAgendamentos?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⏰ Agendamento Pendente', `Você tem ${agendamentosSnap.size} novo(s) agendamento(s) para aprovar.`, {click_action: '/#agendamentos'});
+            notifyUser(uid, '⏰ Agendamento Pendente', `Você tem ${agendamentosSnap.size} novo(s) agendamento(s) para aprovar.`);
         } else {
             btnAgendamentos?.classList.remove('notificacao-pulsante');
         }
     }
 
+    // Cliente: Avaliações pendentes
     if (perfil.tipo === 'cliente') {
         const avaliacoesSnap = await db.collection('agendamentos').where('clienteUid', '==', uid).where('status', '==', 'concluido').where('avaliado', '==', false).get();
         const btnHistorico = document.getElementById('btnHistoricoCliente');
         if (!avaliacoesSnap.empty) {
             btnHistorico?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⭐ Avaliação Pendente', `Você tem ${avaliacoesSnap.size} serviço(s) para avaliar e ganhar pontos!`, {click_action: '/#historico'});
+            notifyUser(uid, '⭐ Avaliação Pendente', `Você tem ${avaliacoesSnap.size} serviço(s) para avaliar e ganhar pontos!`);
         } else {
             btnHistorico?.classList.remove('notificacao-pulsante');
         }
     }
 }
 
+// Lógica de avaliação de produtos
 async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
     container.innerHTML = '';
     
+    // Regra para produtos "Navalha de Ouro"
     if (produtoNome.toLowerCase().includes('navalha de ouro')) {
-        const hoje = new Date().toISOString().split('T')[0]; 
+        const hoje = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
         const seed = produtoId + hoje;
         let hash = 0;
         for (let i = 0; i < seed.length; i++) {
@@ -4788,7 +4559,7 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
             hash = ((hash << 5) - hash) + char;
             hash |= 0; 
         }
-        const randomValue = (Math.abs(hash) % 10) / 10; 
+        const randomValue = (Math.abs(hash) % 10) / 10; // Valor de 0.0 a 0.9
         const notaAleatoria = (4.1 + randomValue).toFixed(1);
 
         const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
@@ -4809,6 +4580,7 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
         container.innerHTML = avaliacaoHtml;
 
     } else {
+        // Regra para outros produtos
         const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
         if (snap.empty) {
             container.innerHTML = `<p class="avaliacao-estrelas">⭐ Sem avaliação</p><p class="avaliacao-comentario">Seja o primeiro a avaliar!</p>`;
@@ -4821,95 +4593,7 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
         }
     }
 }
-
-// function handleUrlHash() {
-    const hash = window.location.hash.substring(1);
-    if (!hash) return;
-    
-    // Pequeno delay para garantir que a UI principal já carregou
-    setTimeout(() => {
-        switch (hash) {
-            case 'agendamentos':
-                if (userView.currentType === 'barbeiro') abrirAgendamentosBarbeiro();
-                break;
-            case 'solicitacoes':
-                if (userView.currentType === 'admin') abrirModalSolicitacoes();
-                break;
-            case 'denuncias':
-                 if (userView.currentType === 'admin') abrirDenuncias();
-                break;
-            case 'historico':
-                 if (userView.currentType === 'cliente') abrirHistoricoCliente();
-                break;
-            case 'fidelidade':
-                 abrirModal('modalFidelidade');
-                break;
-            case 'carteira':
-                 abrirModal('modalCarteira');
-                break;
-            case 'avaliacoes':
-                 if (userView.currentType === 'barbeiro') abrirAvaliacoesBarbeiro();
-                break;
-            case 'conquistas':
-                 if (userView.currentType === 'cliente') abrirModalConquistas();
-                break;
-            case 'conquistasBarbeiro':
-                 if (userView.currentType === 'barbeiro') abrirModalConquistasBarbeiro();
-                break;
-            case 'entregas':
-                 if (perfil.lojaLiberada) abrirEntregasVendedor();
-                break;
-            case 'minhascompras':
-                 abrirMinhasCompras();
-                break;
-        }
-        // Limpa o hash para não reabrir o modal em um reload manual
-        history.pushState("", document.title, window.location.pathname + window.location.search);
-    }, 1000);
-}
-// // /**
- * IMPORTANTE: Esta função foi criada para gerar posts automáticos no blog.
- * No entanto, JavaScript no navegador não pode agendar tarefas para rodar em horários específicos
- * (como todo dia à 00:00).
- * Para que isso funcione de verdade, esta lógica precisa ser movida para um ambiente de servidor,
- * como o "Firebase Cloud Functions", e configurada para ser executada em um cron job (agendamento).
- * O código abaixo está pronto para ser adaptado para essa finalidade.
- */
-async function publicarBlogAutomatico() {
-    const palavrasChave = ["degrade", "social", "militar", "navalhado", "barba", "bigode", "cabelo e barba", "platinado", "risquinho", "moicano"];
-    const palavra = palavrasChave[Math.floor(Math.random() * palavrasChave.length)];
-    const codigo = `(${palavra}${new Date().getDate()})`; // Ex: (degrade24)
-    
-    const titulo = "🎁 Código de Resgate Diário!";
-    const conteudo = `Encontrou! Resgate o código secreto para ganhar 5 pontos de fidelidade. O código de hoje é: ${codigo}`;
-
-    const umDiaAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const postsRecentes = await db.collection("blog").where("ts", ">", umDiaAtras).where("autor", "==", "Navalha de Ouro Bot").get();
-    
-    if (postsRecentes.empty) {
-        await db.collection("blog").add({
-            titulo, conteudo, autor: "Navalha de Ouro Bot", autorUid: "bot-uid",
-            ts: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log("Blog automático publicado com sucesso!");
-    } else {
-        console.log("Blog automático já foi publicado nas últimas 24h.");
-    }
-}
-// // function mostrarCarregando(titulo = "Aguarde...", texto = "Estamos processando sua solicitação.") {
-    document.getElementById('carregandoGenericoTitulo').textContent = titulo;
-    document.getElementById('carregandoGenericoTexto').textContent = texto;
-    const modal = document.getElementById('modalCarregandoGenerico');
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
-}
-
-function esconderCarregando() {
-    const modal = document.getElementById('modalCarregandoGenerico');
-    modal.classList.remove('show');
-    setTimeout(() => modal.style.display = 'none', 300);
-}
-// </script>
+</script>
 <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
@@ -4919,7 +4603,7 @@ function esconderCarregando() {
           reg.addEventListener('updatefound', () => {
             newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.service.controller) {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                  const modal = document.getElementById('modalAtualizacao');
                  const btn = document.getElementById('btnAtualizarApp');
                  btn.onclick = () => {
