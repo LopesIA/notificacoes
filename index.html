@@ -871,9 +871,9 @@
 <div class="content-container">
   
   <div id="chatPreview"></div> 
-  -->
+  
   <div id="botaoExtra" class="hidden"></div>
-  -->
+ 
 
   <div id="authView" class="card hidden">
     <h2>🔐 Entrar ou Criar Conta</h2>
@@ -979,11 +979,11 @@
     <h2>🧠 Painel do Admin</h2>
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
       <button onclick="abrirModalEstatisticas()" style="width:45%">📊 Estatísticas</button>
-      -->
+      
       <button id="btnSolicitacoesAdmin" onclick="abrirModalSolicitacoes()" style="width:45%">📥 Solicitações</button>
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
       <button id="btnDenunciasAdmin" onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
-      -->
+      
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirGerenciarLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
@@ -1016,9 +1016,9 @@
   </button>
 </div>
 
--->
+
 <button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
--->
+
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1030,7 +1030,7 @@
   </div>
 </div>
 
--->
+
 <div id="modalDadosDeposito" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <h3>📝 Informações para Depósito</h3>
@@ -1055,7 +1055,7 @@
     <button data-modal-id="modalDeposito" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
--->
+
 
 
 <div id="modalGerandoQRCode" class="modal">
@@ -1076,9 +1076,9 @@
     <div class="modal-content" style="text-align: center;">
       <h3> Pague com PIX</h3>
       <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      -->
+      
       <img src="https://i.imgur.com/g2512hL.png" id="pix-qrcode" alt="QR Code PIX">
-      -->
+      
       <div class="pix-copia-cola-container">
           <textarea id="pixChaveAleatoria">00020126770014BR.GOV.BCB.PIX0136ec4a8f0f-ec59-44bc-afcf-dff364f971de0215NAVALHA DE OURO5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510vuyKg7Qnmx63041C39</textarea>
           <button onclick="copiarCodigoPixAprimorado()">Copiar Chave Aleatória PIX</button>
@@ -1088,7 +1088,7 @@
     </div>
 </div>
 
--->
+
 <div id="modalPixExpirado" class="modal" style="z-index: 25;">
     <div class="modal-content" style="text-align: center;">
         <h3>⏳ Tempo Expirado</h3>
@@ -1099,7 +1099,7 @@
         </div>
     </div>
 </div>
--->
+
 
 
 <div id="modalSaque" class="modal" onclick="fecharModal(event)">
@@ -1537,7 +1537,7 @@
 </div>
 
 
--->
+
 <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <img id="detalhesProdutoImg" src="" alt="Imagem do Produto">
@@ -1584,9 +1584,9 @@
         </div>
     </div>
 </div>
--->
 
--->
+
+
 <div id="modalTaxaCartao" class="modal" style="z-index: 25;">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>ℹ️ Taxa Administrativa</h3>
@@ -1597,7 +1597,7 @@
         </div>
     </div>
 </div>
--->
+
 
 
 <div id="modalGerenciarLoja" class="modal" onclick="fecharModal(event)">
@@ -1658,7 +1658,7 @@
     </div>
 </div>
 
--->
+
 <div id="modalConfirmacaoComprador" class="modal">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3 id="confirmacaoCompradorTitulo">Confirmar Recebimento</h3>
@@ -1669,7 +1669,7 @@
         </div>
     </div>
 </div>
--->
+
 
 <footer class="app-footer">
   <div id="appVersion"></div>
