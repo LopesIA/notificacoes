@@ -312,21 +312,12 @@
         left: 8px;
         font-size: 20px;
         text-shadow: 0 0 8px var(--cor-destaque-ouro);
-        animation: vip-glow 10s ease-in-out infinite;
+        animation: vip-glow 2s ease-in-out infinite;
     }
     /* NOVO: Animação para notificação de chat */
     @keyframes gold-flash {
       0%, 100% { background-color: transparent; transform: scale(1); }
       50% { background-color: rgba(212, 175, 55, 0.8); transform: scale(1.2); }
-    }
-    /* NOVO: Animação de luz pulsante dourada */
-    @keyframes gold-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
-      70% { box-shadow: 0 0 10px 15px rgba(212, 175, 55, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
-    }
-    .notificacao-pulsante {
-        animation: gold-pulse 1.5s infinite;
     }
     .new-message-glow {
         animation: gold-flash 1.5s ease-in-out infinite;
@@ -815,1061 +806,32 @@
       border-top: 1px dashed var(--cor-borda);
     }
     #pix-qrcode {
-        max-width: 200px;
+        max-width: 250px;
         margin: 15px auto;
         display: block;
         border: 5px solid white;
         border-radius: 10px;
     }
-    .pix-copia-cola-container {
-      position: relative;
-    }
-    .pix-copia-cola-container button {
-        width: 100%;
-    }
-    #pixChaveAleatoria {
-        display: none;
-    }
-    .metodos-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        margin-top: 20px;
-    }
-    #detalhesProdutoAvaliacao {
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid var(--cor-borda);
-    }
-    .avaliacao-estrelas {
-        font-size: 1.2em;
-        color: var(--cor-destaque-ouro);
-    }
-    .avaliacao-comentario {
-        font-style: italic;
-        opacity: 0.8;
-        margin-top: 5px;
-        font-size: 0.9em;
+    #pix-cod-copia {
+        word-wrap: break-word;
         background: var(--cor-botoes);
-        padding: 8px;
-        border-radius: 8px;
-    }
-
-<link rel="manifest" href="/manifest.json">
-  <meta charset="UTF-8">
-  <title>💈 Navalha de Ouro</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-<link rel="manifest" href="/manifest.json">
-  <meta charset="UTF-8">
-  
-  <link rel="icon" href="/icone.png" type="image/png">
-  <link rel="apple-touch-icon" href="/icone.png">
-  <title>💈 Navalha de Ouro</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --cor-fundo: #0c0c0c;
-      --cor-card: #181818;
-      --cor-botoes: #222222;
-      --cor-texto-principal: #e0e0e0;
-      --cor-destaque-ouro: #d4af37; /* Dourado */
-      --cor-destaque-prata: #c0c0c0; /* Prateado */
-      --cor-destaque-azul: #007BFF; /* Azul */
-      --cor-sombra: #000000;
-      --cor-borda: #333;
-    }
-    body.tema-claro {
-      --cor-fundo: #f0f0f0;
-      --cor-card: #ffffff;
-      --cor-botoes: #e0e0e0;
-      --cor-texto-principal: #333;
-      --cor-destaque-ouro: #d4af37;
-      --cor-destaque-prata: #808080;
-      --cor-destaque-azul: #0056b3;
-      --cor-sombra: #b0b0b0;
-      --cor-borda: #ccc;
-    }
-    body {
-      margin: 0;
-      background: var(--cor-fundo);
-      color: var(--cor-texto-principal);
-      font-family: 'Poppins', sans-serif;
-      min-height: 10vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: background-color 0.3s;
-    }
-    .content-container {
-      width: 100%;
-      max-width: 500px;
-      padding-top: 60px;
-      padding-bottom: 80px; /* Espaço para os botões do rodapé */
-      box-sizing: border-box;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative; /* Adicionado para posicionamento do chat preview */
-    }
-    input, select, button, textarea {
-      width: 100%;
-      margin: 8px 0;
-      padding: 14px;
-      background: var(--cor-botoes);
-      color: var(--cor-texto-principal);
-      border: 1px solid var(--cor-borda);
-      border-radius: 10px;
-      font-size: 16px;
-      transition: all 0.3s ease-in-out;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-      box-sizing: border-box; /* CORREÇÃO: Garante que padding não estoure a div */
-    }
-    button {
-      cursor: pointer;
-      font-weight: 600;
-    }
-    button:hover {
-      background: var(--cor-destaque-ouro);
-      color: var(--cor-fundo);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
-    }
-    button:disabled {
-        cursor: not-allowed;
-        background: #444;
-        opacity: 0.6;
-    }
-    .card {
-      background: var(--cor-card);
-      padding: 24px;
-      margin: 12px;
-      border-radius: 16px;
-      box-shadow: 0 6px 15px var(--cor-sombra);
-      width: 90%;
-      max-width: 480px;
-      box-sizing: border-box;
-      animation: fadeIn 0.5s ease-in-out;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-    }
-    .hidden {
-      display: none;
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    .topbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: var(--cor-card);
-      color: var(--cor-texto-principal);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 16px;
-      box-shadow: 0 2px 4px #000;
-      font-size: 18px;
-      z-index: 10;
-      border-bottom: 2px solid var(--cor-borda);
-    }
-    .logo {
-      font-weight: 600;
-      color: var(--cor-destaque-ouro);
-      font-size: 18px;
-      text-shadow: 0 0 5px var(--cor-destaque-ouro);
-      transition: color 0.3s;
-    }
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-      opacity: 0;
-      transition: opacity 0.3s ease-in-out;
-    }
-    .modal.show {
-      display: flex;
-      opacity: 1;
-    }
-    .modal-content {
-      background: var(--cor-card);
-      padding: 30px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.8);
-      transform: scale(0.9);
-      transition: transform 0.3s ease-in-out;
-      border: 1px solid var(--cor-borda);
-    }
-    /* Estilo para o modal de ranking maior */
-    #modalRankingUnificado .modal-content {
-        max-width: 600px; /* Maior para caber as duas colunas */
-    }
-    .modal.show .modal-content {
-      transform: scale(1);
-    }
-    .servico-btn {
-      background: #333;
-      margin: 6px 0;
-      border: 1px solid #555;
-      border-radius: 8px;
-      padding: 12px;
-      text-align: left;
-    }
-    .bottom-buttons-container {
-      position: fixed;
-      bottom: 12px;
-      width: 90%;
-      max-width: 480px;
-      display: flex;
-      justify-content: space-between;
-      z-index: 15;
-    }
-    .redeem-container {
-      position: fixed;
-      bottom: 25px; /* Posição ajustada */
-      width: 100%;
-      max-width: 500px;
-      text-align: center;
-      z-index: 15;
-      box-sizing: border-box;
-    }
-    .redeem-container button {
-      width: 200px;
-      font-size: 14px;
-      padding: 10px;
-      margin: 0;
-    }
-    #btnChat, #btnDenuncia {
-      font-size: 26px;
-      background: none;
-      border: none;
-      padding: 0;
-      margin: 0;
-      cursor: pointer;
-      width: auto;
-      height: auto;
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-      position: relative; /* Para o contador de notificação */
-    }
-    #btnSair {
-      font-size: 20px; /* Reduzido */
-      background: none;
-      border: none;
-      padding: 0;
-      margin: 0;
-      cursor: pointer;
-      width: auto;
-      height: auto;
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-      position: fixed;
-      bottom: 72px; /* Posição alterada para ficar acima do botão de denúncia */
-      left: 12px;
-      z-index: 15;
-    }
-    #btnChat {
-      position: fixed;
-      bottom: 12px;
-      right: 12px;
-      z-index: 15;
-    }
-    #btnTema {
-      font-size: 18px; /* Ajuste aqui */
-      background: none;
-      border: none;
-      padding: 0;
-      margin: 0;
-      cursor: pointer;
-      width: auto;
-      height: auto;
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-    }
-    #btnCarteiraTop {
-      font-size: 16px;
-      background: var(--cor-botoes);
-      color: var(--cor-texto-principal);
-      border-radius: 10px;
-      padding: 8px 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-    #botaoExtra {
-      margin: 10px;
-      text-align: center;
-      width: 90%;
-      max-width: 480px;
-      box-sizing: border-box;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-    .vantagens ul {
-      list-style-type: '✅';
-      padding-left: 20px;
-    }
-    .vantagens li {
-      background: transparent;
-      margin-bottom: 10px;
-      padding: 5px;
-      border-radius: 0;
-      border: none;
-      box-shadow: none;
-      padding-left: 10px;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes vip-glow {
-      0% {
-        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
-      }
-      50% {
-        box-shadow: 0 0 10px var(--cor-destaque-ouro), 0 0 20px var(--cor-destaque-ouro), 0 0 30px var(--cor-destaque-ouro);
-      }
-      100% {
-        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
-      }
-    }
-     @keyframes vaga-glow {
-      0% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
-      50% { box-shadow: 0 0 16px #4CAF50, 0 0 24px #4CAF50; }
-      100% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
-    }
-    @keyframes gold-flash-background {
-        0%, 100% { background-color: var(--cor-card); }
-        50% { background-color: #2c250e; }
-    }
-    .boosted-card {
-        border: 2px solid var(--cor-destaque-ouro);
-        animation: gold-flash-background 3s ease-in-out infinite, fadeIn 0.5s;
-    }
-    .boost-icon {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        font-size: 20px;
-        text-shadow: 0 0 8px var(--cor-destaque-ouro);
-        animation: vip-glow 10s ease-in-out infinite;
-    }
-    /* NOVO: Animação para notificação de chat */
-    @keyframes gold-flash {
-      0%, 100% { background-color: transparent; transform: scale(1); }
-      50% { background-color: rgba(212, 175, 55, 0.8); transform: scale(1.2); }
-    }
-    /* NOVO: Animação de luz pulsante dourada */
-    @keyframes gold-pulse-anim {
-      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
-      70% { box-shadow: 0 0 10px 15px rgba(212, 175, 55, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
-    }
-    .notificacao-pulsante {
-        animation: gold-pulse-anim 1.5s infinite;
-    }
-    /* ATUALIZAÇÃO: Pulsação dourada para admin */
-    .notificacao-pulsante-admin {
-        position: relative;
-        animation: gold-pulse-admin-anim 1.5s ease-in-out infinite;
-        border-color: var(--cor-destaque-ouro) !important;
-    }
-    @keyframes gold-pulse-admin-anim {
-      0% { box-shadow: 0 0 6px rgba(212,175,55,0.4); transform: scale(1); }
-      50% { box-shadow: 0 0 18px rgba(212,175,55,0.8); transform: scale(1.03); }
-      100% { box-shadow: 0 0 6px rgba(212,175,55,0.4); transform: scale(1); }
-    }
-    .new-message-glow {
-        animation: gold-flash 1.5s ease-in-out infinite;
-        border-radius: 50%;
-    }
-    /* NOVO: Contador de notificação */
-    .notification-badge {
-        position: absolute;
-        top: -5px;
-        right: -8px;
-        background-color: #e74c3c;
-        color: white;
-        border-radius: 50%;
-        padding: 2px 6px;
-        font-size: 10px;
-        font-weight: bold;
-        border: 2px solid var(--cor-fundo);
-    }
-    /* ATUALIZAÇÃO: Brilho do botão VIP agora é estático */
-    .vip-dourado {
-        box-shadow: 0 0 10px rgba(212,175,55,0.7), inset 0 0 20px rgba(212,175,55,0.2);
-        border: 1px solid var(--cor-destaque-ouro) !important;
-        /* removida a animação de pulsação */
-    }
-    .promocao-card {
-      background: linear-gradient(45deg, #181818, var(--cor-destaque-ouro));
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      color: #fff;
-    }
-    .chat-container {
-      height: 100%;
-      flex-grow: 1; /* Faz o container crescer */
-      overflow-y: auto;
-      border: 1px solid var(--cor-borda);
-      padding: 10px;
-      border-radius: 10px;
-      background: #0d0d0d;
-      margin-bottom: 10px;
-      display: flex;
-      flex-direction: column-reverse; 
-    }
-    .chat-message {
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      border-radius: 12px;
-      animation: fadeIn 0.3s ease-in-out;
-      transition: opacity 1.5s ease-out; /* Transição para o fade out */
-    }
-    .chat-message.fading-out {
-        opacity: 0;
-    }
-    .chat-sent {
-      text-align: right;
-      background: #333;
-      margin-left: 20%;
-    }
-    .chat-received {
-      text-align: left;
-      background: #555;
-      margin-right: 20%;
-    }
-    .scrollable-list {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .aviso-item {
-      text-align: left;
-      margin-bottom: 8px;
-      border-bottom: 1px solid var(--cor-borda);
-      padding-bottom: 8px;
-      opacity: 0.8;
-      transition: opacity 0.3s ease-in-out;
-    }
-    .horario-btn {
-        background: #222;
-        color: #fff;
-        border: 1px solid #555;
-        border-radius: 5px;
-        padding: 8px;
-        margin: 5px;
-        width: 100px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .horario-btn.selecionado {
-        background: var(--cor-destaque-ouro);
-        color: var(--cor-fundo);
-        border-color: var(--cor-destaque-ouro);
-    }
-    .horario-btn.bloqueado {
-        background: #772014;
-        color: #fff;
-        border-color: #772014;
-        text-decoration: line-through;
-    }
-    .horarios-actions {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-        gap: 10px;
-    }
-    .horarios-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 10px;
-    }
-    .horario-disponivel {
-      background: var(--cor-botoes);
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      color: var(--cor-texto-principal);
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .horario-disponivel:hover {
-      background: var(--cor-destaque-ouro);
-    }
-    .admin-chat-red {
-      color: red;
-      font-weight: bold;
-      text-shadow: 0 0 5px #000, 0 0 8px #000;
-    }
-    .barbeiro-chat {
-        color: var(--cor-texto-principal);
-        text-shadow: 0 0 8px var(--cor-destaque-azul);
-    }
-    .cliente-chat {
-        color: var(--cor-texto-principal);
-        text-shadow: 0 0 8px var(--cor-destaque-prata);
-    }
-    .show-password-container {
-        position: relative;
-        display: flex;
-        align-items: center;
-        width: 100%;
-    }
-    .show-password-container input {
-        padding-right: 40px;
-    }
-    .show-password-toggle {
-        position: absolute;
-        right: 15px;
-        cursor: pointer;
-        color: var(--cor-destaque-prata);
-    }
-    .barbeiro-card {
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        cursor: pointer;
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        border-bottom: 1px solid var(--cor-borda);
-        padding-bottom: 10px;
-    }
-    .card-header-info h4 {
-        margin: 0;
-        font-size: 1.1em;
-        color: var(--cor-destaque-ouro);
-    }
-    .card-header-info p {
-        margin: 4px 0 0;
-        font-size: 0.8em;
-        opacity: 0.8;
-    }
-    .card-reputacao {
-        font-size: 0.9em;
-        text-align: right;
-    }
-    .card-status {
         padding: 10px;
         border-radius: 8px;
-        text-align: center;
-        font-weight: 600;
-    }
-    .status-imediato {
-        background-color: #4CAF50;
-        color: white;
-        animation: vaga-glow 1.5s ease-in-out infinite;
-    }
-    .status-manual {
-        background-color: var(--cor-botoes);
-    }
-    .status-indisponivel {
-        background-color: #555;
-        opacity: 0.7;
-    }
-    .card-horarios-disponiveis {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-        margin-top: 8px;
-    }
-    .card-horarios-disponiveis span {
-        background: #333;
-        padding: 4px 8px;
-        border-radius: 5px;
-        font-size: 0.85em;
-    }
-    .card-servicos-title {
-        font-size: 0.9em;
-        font-weight: 600;
-        margin-top: 8px;
-        border-top: 1px solid var(--cor-borda);
-        padding-top: 10px;
-    }
-    .card-servicos-list {
-        font-size: 0.8em;
-        opacity: 0.9;
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-    }
-    .popup-section {
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--cor-borda);
-    }
-    .popup-section h4 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: var(--cor-destaque-ouro);
-    }
-    .selectable-item {
-        background: var(--cor-botoes);
-        border: 1px solid var(--cor-borda);
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-    }
-    .selectable-item:hover {
-        border-color: var(--cor-destaque-ouro);
-    }
-    .selectable-item.selected {
-        background: var(--cor-destaque-ouro);
-        color: var(--cor-fundo);
-        border-color: var(--cor-destaque-ouro);
-        font-weight: 600;
-    }
-    #barbeiroPerfilHorariosList {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        max-height: 150px;
-        overflow-y: auto;
-    }
-    #barbeiroPerfilHorariosList .selectable-item {
-        flex-grow: 1;
-        text-align: center;
-    }
-    #modalBarbeiroPerfil .modal-footer {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid var(--cor-borda);
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-    }
-    #chatPreview {
-        position: absolute;
-        top: -40px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(24, 24, 24, 0.8);
-        color: var(--cor-texto-principal);
-        padding: 5px 12px;
-        border-radius: 10px;
         font-size: 12px;
-        z-index: 5;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 90%;
-        opacity: 0;
-        transition: opacity 0.5s ease-in-out;
-        pointer-events: none;
-    }
-    #chatPreview.show {
-        opacity: 1;
-    }
-    .conquista-item {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        background-color: var(--cor-botoes);
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-    .conquista-item.unlocked {
-        border-left: 5px solid var(--cor-destaque-ouro);
-    }
-    .conquista-item.locked {
-        opacity: 0.5;
-        border-left: 5px solid var(--cor-borda);
-    }
-    .conquista-icon {
-        font-size: 2em;
-    }
-    .ranking-container {
-        display: flex;
-        gap: 20px;
-        width: 100%;
-    }
-    .ranking-column {
-        flex: 1;
-        min-width: 0;
-    }
-    .ranking-column h4 {
-        text-align: center;
-        margin-bottom: 10px;
-        color: var(--cor-destaque-ouro);
-    }
-    .ranking-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 5px;
-        border-bottom: 1px solid var(--cor-borda);
-        font-size: 14px;
-    }
-    .ranking-item:first-child {
-        font-weight: bold;
-        color: var(--cor-destaque-ouro);
-    }
-    .chat-medal {
-        margin-right: 4px;
-    }
-    .app-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        padding: 5px 0;
-        font-size: 10px;
-        color: var(--cor-texto-principal);
-        opacity: 0.5;
-        z-index: 5;
-        pointer-events: none;
-    }
-    /* Estilos do Chat Fullscreen */
-    #janelaChat.fullscreen {
-        padding: 0;
-        border-radius: 0;
-    }
-    #janelaChat.fullscreen .modal-content {
-        width: 100%;
-        height: 100%;
-        max-width: 100%;
-        border-radius: 0;
-        display: flex;
-        flex-direction: column;
-    }
-    #janelaChat.fullscreen #chatInput {
-        margin-bottom: 0;
-    }
-    #janelaChat #carregarMaisMsgBtn {
-        margin: 0;
-        width: 100%;
-        border-radius: 0;
-        background-color: var(--cor-botoes);
-    }
-    /* Estilos do Portfólio */
-    .portfolio-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 10px;
-      padding: 10px;
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-    .portfolio-grid img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 2px solid var(--cor-borda);
-    }
-    #modalPortfolioCliente .modal-content, #lojaView .modal-content {
-        width: 100%;
-        height: 100%;
-        max-width: 100%;
-        border-radius: 0;
-        display: flex;
-        flex-direction: column;
-    }
-    /* Estilos da Loja */
-    .loja-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        padding: 10px;
-        flex-grow: 1;
-        overflow-y: auto;
-    }
-    .produto-card {
-        background: var(--cor-botoes);
-        border-radius: 12px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
+        margin-bottom: 15px;
         border: 1px solid var(--cor-borda);
-        cursor: pointer;
-    }
-    .produto-card img {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
-    }
-    .produto-info {
-        padding: 10px;
-        text-align: center;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-    .produto-nome { font-weight: 600; font-size: 1em; }
-    .produto-preco { font-size: 1.1em; color: var(--cor-destaque-ouro); margin-top: 5px; }
-    .produto-preco-original { text-decoration: line-through; opacity: 0.7; font-size: 0.9em; }
-    .produto-card button { font-size: 14px; padding: 8px; margin-top: 10px;}
-    #lojaView .card-header { display: flex; justify-content: space-between; align-items: center; }
-    #lojaView .card-header h3 { font-size: 1.1em; white-space: nowrap; }
-    #lojaContainer h4 { font-size: 1.0em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .tamanho-options { display: flex; gap: 5px; justify-content: center; margin: 10px 0; }
-    .tamanho-options label {
-      padding: 5px 10px;
-      border: 1px solid var(--cor-borda);
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .tamanho-options input { display: none; }
-    .tamanho-options input:checked + label {
-      background: var(--cor-destaque-ouro);
-      color: var(--cor-fundo);
-      border-color: var(--cor-destaque-ouro);
-    }
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-    .checkbox-group label { display: flex; align-items: center; gap: 5px; }
-    .checkbox-group input { width: auto; margin: 0; }
-
-    .modal-venda {
-      z-index: 99;
-    }
-    .modal-venda .modal-content {
-      background: #c0392b;
-      color: white;
-      text-align: center;
-      border: 3px solid #e74c3c;
-      animation: flash-red 1.5s infinite;
-    }
-    .modal-venda h3 {
-      color: white;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-    @keyframes flash-red {
-      0%, 100% { background-color: #c0392b; }
-      50% { background-color: #e74c3c; }
-    }
-    
-    /* NOVOS ESTILOS */
-    .barbeiro-list-container {
-      width: 100%;
-      max-height: 70vh;
-      overflow-y: auto;
-      padding: 0 10px;
-      box-sizing: border-box;
-    }
-    .promo-info {
-      font-size: 0.8em;
-      color: var(--cor-destaque-ouro);
-      margin: 8px 0 0 0;
-      padding-top: 8px;
-      border-top: 1px dashed var(--cor-borda);
-    }
-    #pix-qrcode {
-        max-width: 200px;
-        margin: 15px auto;
-        display: block;
-        border: 5px solid white;
-        border-radius: 10px;
-    }
-    .pix-copia-cola-container {
-      position: relative;
-    }
-    .pix-copia-cola-container button {
-        width: 100%;
-    }
-    #pixChaveAleatoria {
-        display: none;
     }
     .metodos-grid {
         display: flex;
         flex-direction: column;
         gap: 15px;
         margin-top: 20px;
-    }
-    #detalhesProdutoAvaliacao {
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid var(--cor-borda);
-    }
-    .avaliacao-estrelas {
-        font-size: 1.2em;
-        color: var(--cor-destaque-ouro);
-    }
-    .avaliacao-comentario {
-        font-style: italic;
-        opacity: 0.8;
-        margin-top: 5px;
-        font-size: 0.9em;
-        background: var(--cor-botoes);
-        padding: 8px;
-        border-radius: 8px;
-    }
-    /* ATUALIZAÇÃO: Estilo da imagem do produto no popup */
-    #detalhesProdutoImg {
-      object-fit: contain !important; /* Garante que a imagem inteira apareça */
-      max-height: 250px;
-      width: 100%;
     }
 
   </style>
 </head>
 <body>
 
-   <div id="modalDadosDeposito" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>Preencha seus Dados</h3>
-      <p>Precisamos de algumas informações para o depósito.</p>
-      <input id="depPrimeiroNome" type="text" placeholder="Primeiro Nome">
-      <input id="depSegundoNome" type="text" placeholder="Segundo Nome">
-      <input id="depCPF" type="text" placeholder="CPF">
-      <input id="depTelefone" type="tel" placeholder="Telefone">
-      <button id="btnContinuarDadosDeposito" disabled>Continuar</button>
-      <button data-modal-id="modalDadosDeposito" onclick="fecharModal(event)">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- [NOVO] Modal para PIX expirado -->
-  <div id="modalPixExpirado" class="modal" onclick="fecharModal(event)" style="z-index: 101;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>⏳ Tempo Expirado</h3>
-      <p>O código PIX expirou. Por favor, gere um novo.</p>
-      <button onclick="fecharModalAtual(); processarPagamentoPixAprimorado();">Tentar Novamente</button>
-      <button data-modal-id="modalPixExpirado" onclick="fecharTodosOsPopups()">Fechar Tudo</button>
-    </div>
-  </div>
-
-  <!-- [NOVO] Modal para taxa do cartão de crédito -->
-  <div id="modalTaxaCartao" class="modal" onclick="fecharModal(event)" style="z-index: 101;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>💳 Taxa da Plataforma</h3>
-      <p>Transações com cartão de crédito incluem uma taxa administrativa para garantir a segurança e confiabilidade do pagamento. O valor é fixo.</p>
-      <button id="btnContinuarPagamentoCartao">Continuar</button>
-      <button data-modal-id="modalTaxaCartao" onclick="fecharModal(event)">Cancelar</button>
-    </div>
-  </div>
-  
-  <!-- [NOVO] Modal para formulário de entrega da loja -->
-  <div id="modalFormularioEntrega" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>📦 Endereço de Entrega</h3>
-        <p>Preencha os dados para o envio do seu produto.</p>
-        <input id="compraNome" type="text" placeholder="Nome Completo">
-        <input id="compraTelefone" type="tel" placeholder="Telefone (com DDD)">
-        <input id="compraEmail" type="email" placeholder="E-mail">
-        <input id="compraCep" type="text" placeholder="CEP">
-        <input id="compraRua" type="text" placeholder="Nome da Rua">
-        <input id="compraNumero" type="text" placeholder="Número da Casa / Apto">
-        <button id="btnIrParaPagamento">Ir para Pagamento</button>
-        <button data-modal-id="modalFormularioEntrega" onclick="fecharModal(event)">Cancelar</button>
-    </div>
-  </div>
-  
-  <!-- [NOVO] Modal para confirmar débito da carteira -->
-  <div id="modalConfirmarDebito" class="modal" onclick="fecharModal(event)" style="z-index: 102;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="textoConfirmarDebito">Confirmar Pagamento?</h3>
-        <p>O valor será debitado do seu saldo na carteira.</p>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-           <button id="btnConfirmarDebitoNao" style="background: #c0392b;">Não</button>
-           <button id="btnConfirmarDebitoSim" style="background: #27ae60;">Sim, Pagar</button>
-        </div>
-    </div>
-  </div>
-
-  <!-- ============================================= -->
-  <!-- MODAIS EXISTENTES (com possíveis ajustes)     -->
-  <!-- ============================================= -->
-  
-  <div id="modalGerenciarLoja" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" style="max-width: 600px;">
-      <h3>🏪 Gerenciar Minha Loja</h3>
-      <div id="listaMeusProdutos" class="scrollable-list"></div>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-        <button onclick="abrirFormularioProduto()">➕ Adicionar Produto</button>
-        <button id="btnEntregasVendedor" onclick="abrirEntregasVendedor()">🚚 Entregas</button>
-        <button data-modal-id="modalGerenciarLoja" onclick="fecharModal(event)">❌ Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3 id="formProdutoTitulo">📦 Adicionar Novo Produto</h3>
-      <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
-      <input id="produtoNome" type="text" placeholder="Nome do Produto">
-      <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
-      <p>Tamanhos disponíveis:</p>
-      <div class="checkbox-group">
-        <label><input type="checkbox" name="tamanhos" value="P"> P</label>
-        <label><input type="checkbox" name="tamanhos" value="M"> M</label>
-        <label><input type="checkbox" name="tamanhos" value="G"> G</label>
-        <label><input type="checkbox" name="tamanhos" value="GG"> GG</label>
-      </div>
-      <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional)">
-      <input id="produtoEntrega" type="text" placeholder="Tempo de entrega (Ex: 3-5 dias)">
-      <textarea id="produtoDescricao" placeholder="Descrição curta do produto" rows="3"></textarea>
-      <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
-      <button data-modal-id="modalAddEditProduto" onclick="fecharModal(event)">❌ Cancelar</button>
-    </div>
-  </div>
-
-  <div id="modalEntregasVendedor" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content">
-      <h3>🚚 Minhas Entregas</h3>
-      <div id="listaEntregas" class="scrollable-list"></div>
-      <button data-modal-id="modalEntregasVendedor" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-  </div>
-
-  <div id="modalMinhasCompras" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content">
-      <h3>🛍️ Minhas Compras</h3>
-      <div id="listaMinhasCompras" class="scrollable-list"></div>
-      <button data-modal-id="modalMinhasCompras" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-  </div>
-
-  <div id="modalVendaRealizada" class="modal modal-venda" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>🎉 VENDA REALIZADA! 🎉</h3>
-      <p style="font-size: 1.1em;">Parabéns, você vendeu um produto!</p>
-      <p>Acesse <strong>Gerenciar Loja > Entregas</strong> para ver os detalhes.</p>
-      <button data-modal-id="modalVendaRealizada" onclick="fecharModal(event)" style="background: white; color: #c0392b;">✅ OK</button>
-    </div>
-  </div>
-
-  <!-- [ATUALIZADO] Modal de confirmação do comprador não pode ser fechado acidentalmente -->
-  <div id="modalConfirmacaoComprador" class="modal">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3 id="confirmacaoCompradorTitulo">Confirmar Recebimento</h3>
-      <p id="confirmacaoCompradorTexto">O vendedor marcou o produto como entregue. Você confirma o recebimento?</p>
-      <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button id="btnRecusarEntrega" style="background: #c0392b;">❌ Negar Recebimento</button>
-        <button id="btnAceitarEntrega" style="background: #27ae60;">✅ Confirmar Entrega</button>
-      </div>
-    </div>
-  </div>
-
 <div class="topbar hidden" id="topbar">
   <div class="logo">💈 Navalha de Ouro</div>
   <div class="topbar-right">
@@ -1939,15 +901,14 @@
     <button onclick="toggleFuncoes('clienteFuncoesContainer')">⚙️ Funções do Cliente</button>
     <div id="clienteFuncoesContainer" class="hidden">
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
-          <button id="btnHistoricoCliente" onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
+          <button onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
           <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
           <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
           <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
           <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
           <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
           <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
-          <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Minha Loja</button>
-          <button id="btnMinhasCompras" onclick="abrirMinhasCompras()" style="width:45%">🛍️ Minhas Compras</button>
+          <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:92%">🏪 Gerenciar Minha Loja</button>
         </div>
     </div>
     <hr style="border-color: var(--cor-borda); margin: 20px 0;">
@@ -1961,12 +922,12 @@
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
           <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
           <button onclick="abrirAgenda()" style="width:45%">📅 Agenda</button>
-          <button id="btnAgendamentosBarbeiro" onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
+          <button onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
           <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
           <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
           <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
           <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
-          <button id="btnAvaliacoesBarbeiro" onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
+          <button onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
           <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
           <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
           <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
@@ -2000,775 +961,7 @@
     <div class="card-header">
         <h3>🛍️ Loja Navalha de Ouro</h3>
         <div style="display: flex; gap: 10px;">
-            <!-- O botão vender foi movido para o painel de funções para melhor UX -->
-        </div>
-    </div>
-    <div id="lojaContainer" class="loja-grid">
-    </div>
-</div>
-
-
-</div>
-
-<div class="redeem-container hidden" id="redeemContainer">
-  <button id="btnResgatar" onclick="abrirPortaSecreta()">✨ Resgatar Código</button>
-</div>
-
-<div class="bottom-buttons-container hidden" id="bottomButtons">
-  <button id="btnDenuncia" onclick="abrirModal('modalDenuncia')">🚨</button>
-  <button id="btnChat" onclick="abrirChatGlobal()">
-    <span>💬</span>
-    <span class="notification-badge hidden">0</span>
-  </button>
-</div>
-
-<!-- [ATUALIZADO] Botão de sair agora chama a função de logout com reload -->
-<button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
-
-<!-- ============================================= -->
-<!-- MODAIS DE FLUXO FINANCEIRO (NOVOS E REFINADOS) -->
-<!-- ============================================= -->
-
-<div id="modalCarteira" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💰 Minha Carteira</h3>
-    <p>Seu saldo atual é: <b style="color: var(--cor-destaque-ouro);">R$ <span id="saldoModal">0,00</span></b></p>
-    <button onclick="iniciarDeposito()">📥 Depositar</button>
-    <button onclick="iniciarSaque()">📤 Sacar</button>
-    <button data-modal-id="modalCarteira" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalDeposito" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💰 Depósito de Créditos</h3>
-    <p>Escolha um método de pagamento para adicionar saldo à sua carteira.</p>
-    <div class="metodos-grid">
-        <button id="btnPagarComPix" onclick="processarPagamentoPixAprimorado()">⚡ PIX (QR Code)</button>
-        <button id="btnPagarComCartao" onclick="processarPagamentoCartaoAprimorado()">💳 Cartão de Crédito</button>
-    </div>
-    <button data-modal-id="modalDeposito" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalGerandoQRCode" class="modal">
-    <div class="modal-content" style="text-align: center;">
-        <h3 style="color: var(--cor-destaque-ouro);">Gerando QR CODE</h3>
-        <p>Aguarde um instante...</p>
-    </div>
-</div>
-
-<div id="modalCarregandoGenerico" class="modal">
-    <div class="modal-content" style="text-align: center;">
-        <h3 id="carregandoGenericoTitulo" style="color: var(--cor-destaque-ouro);">Aguarde...</h3>
-        <p id="carregandoGenericoTexto">Estamos processando sua solicitação.</p>
-    </div>
-</div>
-
-<div id="modalExibirPixAprimorado" class="modal">
-    <div class="modal-content" style="text-align: center;">
-      <h3> Pague com PIX</h3>
-      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      <!-- [ATUALIZADO] Imagem do QR Code agora é local -->
-      <img src="qrcode.png.jpg" id="pix-qrcode" alt="QR Code PIX">
-      <div class="pix-copia-cola-container">
-          <textarea id="pixChaveAleatoria">00020126770014BR.GOV.BCB.PIX0136ec4a8f0f-ec59-44bc-afcf-dff364f971de0215NAVALHA DE OURO5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510vuyKg7Qnmx63041C39</textarea>
-          <button onclick="copiarCodigoPixAprimorado()">Copiar Chave Aleatória PIX</button>
-      </div>
-      <p style="font-size: 14px; color: #ff9800; margin-top: 15px;">Este código expira em: <b id="pixTimer">10:00</b></p>
-      <button onclick="confirmarEnvioComprovante()">CONFIRMAR</button>
-    </div>
-</div>
-
-<div id="modalSaque" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📤 Solicitar Saque</h3>
-    <p>O valor será transferido para sua chave PIX após aprovação do administrador.</p>
-    <input id="saqueValor" type="number" placeholder="Valor do saque">
-    <select id="saqueChavePixTipo">
-      <option value="">Tipo de Chave PIX</option>
-      <option value="cpf">CPF</option>
-      <option value="email">E-mail</option>
-      <option value="telefone">Telefone</option>
-      <option value="aleatoria">Aleatória</option>
-    </select>
-    <input id="saqueChavePix" type="text" placeholder="Sua chave PIX">
-    <button id="btnConfirmarSaque" onclick="confirmarSaque()">✅ Confirmar Saque</button>
-    <button data-modal-id="modalSaque" onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-
-<div id="modalSaqueConfirmado" class="modal">
-  <div class="modal-content" style="text-align:center;">
-    <h3>✅ Solicitação Enviada!</h3>
-    <p>Sua solicitação de saque foi enviada para análise.</p>
-    <p style="font-size:14px; opacity: 0.8;">Para agilizar, entre em contato com o administrador.</p>
-    <button onclick="contatarAdminSaque()">OK</button>
-  </div>
-</div>
-
-<!-- ============================================= -->
-<!-- MODAIS GERAIS (EXISTENTES E NOVOS)            -->
-<!-- ============================================= -->
-
-<div id="janelaChat" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <button id="carregarMaisMsgBtn" onclick="carregarMensagensAnteriores()">Ver mensagens anteriores</button>
-    <h3 id="chatTitle">💬 Chat Global</h3>
-    <div id="chatMessages" class="chat-container"></div>
-    <input id="chatInput" placeholder="Digite sua mensagem">
-    <button onclick="enviarMensagem()">➡️ Enviar</button>
-    <button data-modal-id="janelaChat" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalDenuncia" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🚨 Denunciar</h3>
-    <p>Envie sua mensagem e o administrador responderá em breve!</p>
-    <textarea id="textoDenuncia" placeholder="Descreva o problema em detalhes"></textarea>
-    <button onclick="enviarDenuncia()">➡️ Enviar</button>
-    <button data-modal-id="modalDenuncia" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalDenunciaEnviada" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✅ Denúncia Enviada!</h3>
-    <p>Agradecemos a sua denúncia. Ela será analisada pela nossa equipe.</p>
-    <p>💬 Se preferir, clique no botão abaixo para avisar o administrador diretamente no WhatsApp e agilizar o processo.</p>
-    <a id="btnWhatsappDenuncia" href="#" target="_blank">
-      <button>💬 Avisar no WhatsApp</button>
-    </a>
-    <button data-modal-id="modalDenunciaEnviada" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalBlog" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📰 Blog</h3>
-    <div id="listaBlog" class="scrollable-list"></div>
-    <button data-modal-id="modalBlog" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalVip" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div id="vipContentContainer">
-    </div>
-    <button data-modal-id="modalVip" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalFidelidade" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🏆 Programa de Fidelidade</h3>
-    <p>Seus pontos: <b id="pontosFidelidade">0</b></p>
-    <p style="font-size: 14px; color: var(--cor-destaque-prata);">Acumule pontos em cada agendamento e troque por descontos!</p>
-    <button onclick="resgatarPontos()">🎁 Resgatar 100 pontos por R$ 5,00</button>
-    <button data-modal-id="modalFidelidade" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalBarbeiroPerfil" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <div id="barbeiroPerfilHeader">
-      <h3 id="barbeiroPerfilNome"></h3>
-      <p>Endereço: <span id="barbeiroPerfilEndereco"></span></p>
-      <p>Reputação: <span id="barbeiroPerfilReputacao"></span></p>
-    </div>
-
-    <div id="barbeiroPerfilServicos" class="popup-section">
-      <h4>1. Escolha um Serviço</h4>
-      <div id="barbeiroPerfilServicosList" class="scrollable-list" style="max-height: 150px;"></div>
-    </div>
-
-    <div id="barbeiroPerfilHorarios" class="popup-section">
-      <h4>2. Escolha uma Opção</h4>
-      <div id="barbeiroPerfilHorariosList"></div>
-    </div>
-
-    <div class="modal-footer">
-      <button id="btnAcessarPortfolio" class="hidden" style="width: auto; background-color: var(--cor-botoes);">🖼️ Ver Portfólio</button>
-      <button id="btnAbrirRota" class="hidden" style="width: auto; background-color: var(--cor-botoes);">🗺️ Rota</button>
-      <button id="btnConfirmarAgendamento" disabled>🗓️ Agendar</button>
-    </div>
-    <button data-modal-id="modalBarbeiroPerfil" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalVagaImediataAprovada" class="modal" style="z-index: 99;" onclick="fecharModal(event)">
-  <div class="modal-content" style="background: #e74c3c; color: white;" onclick="event.stopPropagation()">
-    <h3 style="color:white;text-shadow: 2px 2px 4px #000;">⚠️ VAGA IMEDIATA APROVADA!</h3>
-    <p style="font-size: 1.2em; text-align: center;"><b>Você tem 10 minutos para chegar à barbearia.</b></p>
-    <p style="text-align: center;">Não se atrase para não perder a vaga e o seu dinheiro!</p>
-    <div style="display:flex; gap: 10px; margin-top: 20px;">
-      <button data-modal-id="modalVagaImediataAprovada" onclick="fecharModal(event)" style="background:white; color:#e74c3c; flex: 1;">✅ Entendi</button>
-      <button id="btnCancelarVagaAprovada" style="background: #333; color: white; flex: 1;">❌ Cancelar Agendamento</button>
-    </div>
-  </div>
-</div>
-
-<div id="modalBarbeariasCliente" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💈 Barbearias disponíveis</h3>
-    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por barbeiro ou cidade...">
-    <div id='listaBarbeiros' class="scrollable-list"></div>
-    <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalHistoricoCliente" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📜 Meu Histórico</h3>
-    <div id="painelHistorico" class="scrollable-list"></div>
-    <button data-modal-id="modalHistoricoCliente" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalConquistas" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🏅 Minhas Conquistas</h3>
-    <div id="listaConquistas" class="scrollable-list"></div>
-    <button data-modal-id="modalConquistas" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalRankingUnificado" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🏆 Ranking Geral 🏆</h3>
-    <p style="font-size: 12px; opacity: 0.7; text-align:center;">Top 100 com mais serviços concluídos.</p>
-    <div class="ranking-container">
-      <div class="ranking-column">
-        <h4>💈 Barbeiros</h4>
-        <div id="listaRankingBarbeirosUnificado" class="scrollable-list"></div>
-      </div>
-      <div class="ranking-column">
-        <h4>🙋 Clientes</h4>
-        <div id="listaRankingClientesUnificado" class="scrollable-list"></div>
-      </div>
-    </div>
-    <button data-modal-id="modalRankingUnificado" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
-  </div>
-</div>
-
-
-<div id="modalCriarPromocao" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🎁 Criar Promoção</h3>
-    <input id="promocaoNome" placeholder="Nome da Promoção">
-    <input id="promocaoDescricao" placeholder="Descrição curta">
-    <input type="number" id="promocaoDesconto" placeholder="Desconto em % (ex: 15)">
-    <button onclick="criarPromocao()">💾 Salvar Promoção</button>
-    <button data-modal-id="modalCriarPromocao" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalAlterarNomeBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✏️ Alterar Nome</h3>
-    <input id="novoNomeBarbeiro" type="text" placeholder="Novo nome do barbeiro/barbearia">
-    <button onclick="alterarNomeBarbeiro(event)">💾 Salvar</button>
-    <button data-modal-id="modalAlterarNomeBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalAlterarEnderecoBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📍 Alterar Endereço</h3>
-    <input id="novoEnderecoRua" type="text" placeholder="Nova Rua">
-    <input id="novoEnderecoNumero" type="text" placeholder="Novo Número">
-    <button onclick="obterLocalizacaoCadastro('barbeiro')">📍 Usar minha localização atual</button>
-    <button onclick="alterarEnderecoBarbeiro(event)">💾 Salvar</button>
-    <button data-modal-id="modalAlterarEnderecoBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalAvaliacoes" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>⭐ Minhas Avaliações</h3>
-        <div id="listaAvaliacoesModal" class="scrollable-list"></div>
-        <button data-modal-id="modalAvaliacoes" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-</div>
-
-<div id="modalServicosBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✂️ Meus Serviços</h3>
-    <div id="listaServicosBarbeiro" class="scrollable-list"></div>
-    <button onclick="adicionarServico()">➕ Adicionar novo serviço</button>
-    <button data-modal-id="modalServicosBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalAgendaBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📅 Minha Agenda</h3>
-    <p>Use os botões abaixo para gerenciar sua disponibilidade e horários.</p>
-    <button id="btnDisponibilidade" onclick="toggleDisponibilidade()"></button>
-    <button id="btnVagaImediata" onclick="toggleVagaImediata()"></button>
-    <button id="btnAgendaManual" onclick="toggleAgendaManual()"></button>
-    <div id="agendaManualPainel" class="hidden card">
-        <h4>Horários Disponíveis Hoje</h4>
-        <p>Selecione os horários para trabalhar ou clique duas vezes para bloquear.</p>
-        <div id="horariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div>
-        <div class="horarios-actions">
-            <button onclick="salvarAgendaManual()">💾 Salvar</button>
-            <button data-modal-id="modalAgendaBarbeiro" onclick="fecharModal(event)">🚪 Fechar</button>
-        </div>
-    </div>
-    <button data-modal-id="modalAgendaBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalAgendamentosBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>⏰ Meus Agendamentos</h3>
-    <div id="agendamentosPainel" class="scrollable-list"></div>
-    <button data-modal-id="modalAgendamentosBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalClientesBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🧑‍🤝‍🧑 Meus Clientes</h3>
-    <p>Lista de clientes que já agendaram com você.</p>
-    <div id="listaClientesBarbeiro" class="scrollable-list"></div>
-    <button data-modal-id="modalClientesBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalDashboardBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🚀 Meu Desempenho</h3>
-    <div id="dashboardConteudo">
-      <p>Carregando dados...</p>
-    </div>
-    <button data-modal-id="modalDashboardBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalHistoricoBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📜 Histórico de Serviços</h3>
-    <div id="painelHistoricoBarbeiro" class="scrollable-list"></div>
-    <button data-modal-id="modalHistoricoBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalConquistasBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🏅 Minhas Conquistas de Barbeiro</h3>
-    <div id="listaConquistasBarbeiro" class="scrollable-list"></div>
-    <button data-modal-id="modalConquistasBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalBlogAdmin" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✍️ Novo Post</h3>
-    <input id="blogTitulo" placeholder="Título">
-    <textarea id="blogConteudo" placeholder="Conteúdo do post"></textarea>
-    <button onclick="publicarBlog()">✍️ Publicar</button>
-    <button data-modal-id="modalBlogAdmin" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalEstatisticas" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📊 Estatísticas</h3>
-    <div id="estatisticasPainel" class="scrollable-list"></div>
-    <button data-modal-id="modalEstatisticas" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalSolicitacoes" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📥 Todas as Solicitações</h3>
-    <div id="listaSolicitacoes" class="scrollable-list"></div>
-    <button data-modal-id="modalSolicitacoes" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalUsuarios" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>👥 Todos os Usuários</h3>
-    <div id="usuariosPainel" class="scrollable-list"></div>
-    <button data-modal-id="modalUsuarios" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalDenunciasAdmin" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🚨 Denúncias</h3>
-    <div id="listaDenuncias" class="scrollable-list"></div>
-    <button data-modal-id="modalDenunciasAdmin" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalNotificacaoMarketing" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📣 Notificação para Todos</h3>
-    <p>Esta mensagem será enviada como uma notificação push para todos os usuários do app.</p>
-    <input id="marketingTitulo" placeholder="Título da Notificação">
-    <textarea id="marketingCorpo" placeholder="Corpo da mensagem"></textarea>
-    <button onclick="enviarNotificacaoMarketing()">🚀 Enviar para todos</button>
-    <button data-modal-id="modalNotificacaoMarketing" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalPortfolioBarbeiro" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🖼️ Gerenciar Portfólio</h3>
-    <p style="font-size: 12px; opacity: 0.8;">Cole os links das suas imagens. Use serviços como <a href="https://postimages.org/" target="_blank">Postimages</a> para hospedar suas fotos gratuitamente. Máximo de 10 imagens.</p>
-    <div id="portfolioInputsContainer" class="scrollable-list" style="max-height: 250px;"></div>
-    <button onclick="salvarPortfolio()">💾 Salvar Portfólio</button>
-    <button data-modal-id="modalPortfolioBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalPortfolioCliente" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3 id="portfolioClienteNome">🖼️ Portfólio</h3>
-    <div id="portfolioClienteGrid" class="portfolio-grid"></div>
-    <button data-modal-id="modalPortfolioCliente" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalLiberarLoja" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>🛍️ Acesso à Loja de Vendedores</h3>
-        <p>Você ainda não tem permissão pra cadastrar produtos na loja. Peça autorização pro administrador no WhatsApp.</p>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button data-modal-id="modalLiberarLoja" onclick="fecharModal(event)" style="background-color: #555;">↩️ Cancelar</button>
-            <button onclick="solicitarLiberacaoLoja()" style="flex-grow: 1;">
-                💬 Pedir no WhatsApp
-            </button>
-        </div>
-    </div>
-</div>
-
-<div id="modalTurbinar" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>🚀 Turbinar seu Perfil</h3>
-        <p>Destaque seu perfil no topo da lista de barbearias por <strong>24 horas</strong> e alcance mais clientes!</p>
-        <p style="font-size: 22px; color: var(--cor-destaque-ouro); font-weight: bold; text-align: center;">Apenas R$ 9,99</p>
-        <button onclick="confirmarTurbinar()">💥 Confirmar e Turbinar</button>
-        <button data-modal-id="modalTurbinar" onclick="fecharModal(event)">❌ Cancelar</button>
-    </div>
-</div>
-
-<div id="modalPermissaoNotificacao" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>🔔 Fique por Dentro!</h3>
-        <p>Ative as notificações para receber alertas importantes sobre seus agendamentos, promoções e novidades em tempo real.</p>
-        <button onclick="pedirPermissaoEFechar()">👍 Ativar Notificações</button>
-        <button data-modal-id="modalPermissaoNotificacao" onclick="fecharModal(event)">❌ Agora não</button>
-    </div>
-</div>
-
-<div id="modalInstalarApp" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>📱 Leve o App com Você!</h3>
-        <p>Instale nosso aplicativo na sua tela inicial para um acesso mais rápido e uma melhor experiência.</p>
-        <button id="btnInstalarPWA">📲 Instalar Agora</button>
-        <button data-modal-id="modalInstalarApp" onclick="fecharModal(event)">🤔 Depois</button>
-    </div>
-</div>
-
-<div id="modalAtualizacao" class="modal" style="z-index: 100;" onclick="fecharModal(event)">
-    <div class="modal-content" style="border: 2px solid var(--cor-destaque-ouro);" onclick="event.stopPropagation()">
-        <h3>🚀 Nova Versão Disponível!</h3>
-        <p>Uma nova versão do aplicativo está pronta. Clique no botão abaixo para atualizar e ter acesso às últimas novidades e melhorias.</p>
-        <div style="display:flex; gap: 10px; margin-top: 20px;">
-           <button data-modal-id="modalAtualizacao" onclick="fecharModal(event)" style="background: #555;">🤔 Depois</button>
-           <button id="btnAtualizarApp" style="flex-grow: 1;">🔄 Atualize Agora</button>
-        </div>
-    </div>
-</div>
-
-<div id="modalPromocoesBarbeiro" class="modal">
-  <div class="modal-content">
-    <h2>🎁 Promoções Ativas</h2>
-    <div id="listaPromocoes">
-      </div>
-    <div class="modal-botoes">
-      <button onclick="abrirModalAddPromocao()">➕ Adicionar Promoção</button>
-      <button data-modal-id="modalPromocoesBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-  </div>
-</div>
-
-<div id="modalAddPromocao" class="modal">
-  <div class="modal-content">
-    <h2>➕ Adicionar Nova Promoção</h2>
-    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
-    <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
-    <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
-    <button onclick="salvarNovaPromocao()">💾 Salvar Promoção</button>
-    <button data-modal-id="modalAddPromocao" onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-	
-<div id="modalLoja" class="modal">
-  <div class="modal-content">
-    <h3>🛒 Produtos da Loja</h3>
-    <div id="listaProdutos" class="loja-grid"></div>
-    <button data-modal-id="modalLoja" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<!-- [ATUALIZADO] Modal de detalhes do produto para novo fluxo -->
-<div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <img id="detalhesProdutoImg" src="" alt="Imagem do Produto" style="width: 100%; border-radius: 10px; margin-bottom: 15px;">
-        <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque-ouro);"></h3>
-        <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
-        <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
-        <p><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
-        <p><strong>Descrição:</strong> <span id="detalhesProdutoDescricao"></span></p>
-        <p><strong>Entrega estimada:</strong> <span id="detalhesProdutoEntrega"></span></p>
-        
-        <div id="detalhesProdutoAvaliacao"></div>
-
-        <button id="btnComprarAgora">🛒 Continuar</button>
-        <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-</div>
-
-<!-- [REMOVIDO E SUBSTITUÍDO] O modal 'modalConfirmarCompra' foi substituído pelo novo fluxo -->
-
-
-  <!-- Modais existentes da loja, agendamentos, etc... -->
-  <div id="modalGerenciarLoja" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" style="max-width: 600px;">
-      <h3>🏪 Gerenciar Minha Loja</h3>
-      <div id="listaMeusProdutos" class="scrollable-list"></div>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-        <button onclick="abrirFormularioProduto()">➕ Adicionar Produto</button>
-        <button id="btnEntregasVendedor" onclick="abrirEntregasVendedor()">🚚 Entregas</button>
-        <button data-modal-id="modalGerenciarLoja" onclick="fecharModal(event)">❌ Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de adicionar/editar produto -->
-  <div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3 id="formProdutoTitulo">📦 Adicionar Novo Produto</h3>
-      <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
-      <input id="produtoNome" type="text" placeholder="Nome do Produto">
-      <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
-      <p>Tamanhos disponíveis:</p>
-      <div class="checkbox-group">
-        <label><input type="checkbox" name="tamanhos" value="P"> P</label>
-        <label><input type="checkbox" name="tamanhos" value="M"> M</label>
-        <label><input type="checkbox" name="tamanhos" value="G"> G</label>
-        <label><input type="checkbox" name="tamanhos" value="GG"> GG</label>
-      </div>
-      <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional)">
-      <input id="produtoEntrega" type="text" placeholder="Tempo de entrega (Ex: 3-5 dias)">
-      <textarea id="produtoDescricao" placeholder="Descrição curta do produto" rows="3"></textarea>
-      <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
-      <button data-modal-id="modalAddEditProduto" onclick="fecharModal(event)">❌ Cancelar</button>
-    </div>
-  </div>
-
-  <!-- Modal de entregas -->
-  <div id="modalEntregasVendedor" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content">
-      <h3>🚚 Minhas Entregas</h3>
-      <div id="listaEntregas" class="scrollable-list"></div>
-      <button data-modal-id="modalEntregasVendedor" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-  </div>
-
-  <!-- Modal de compras -->
-  <div id="modalMinhasCompras" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content">
-      <h3>🛍️ Minhas Compras</h3>
-      <div id="listaMinhasCompras" class="scrollable-list"></div>
-      <button data-modal-id="modalMinhasCompras" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-  </div>
-
-  <!-- Modal de venda realizada -->
-  <div id="modalVendaRealizada" class="modal modal-venda" onclick="fecharModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>🎉 VENDA REALIZADA! 🎉</h3>
-      <p style="font-size: 1.1em;">Parabéns, você vendeu um produto!</p>
-      <p>Acesse <strong>Gerenciar Loja > Entregas</strong> para ver os detalhes.</p>
-      <button data-modal-id="modalVendaRealizada" onclick="fecharModal(event)" style="background: white; color: #c0392b;">✅ OK</button>
-    </div>
-  </div>
-
-  <!-- Modal de confirmação do comprador -->
-  <div id="modalConfirmacaoComprador" class="modal">
-    <div class="modal-content">
-      <h3 id="confirmacaoCompradorTitulo">Confirmar Recebimento</h3>
-      <p id="confirmacaoCompradorTexto">O vendedor marcou o produto como entregue. Você confirma o recebimento?</p>
-      <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <button id="btnRecusarEntrega" style="background: #c0392b;">❌ Recusar</button>
-        <button id="btnAceitarEntrega" style="background: #27ae60;">✅ Aceitar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Novos modais para depósito e PIX expirado -->
-  <div id="modalDadosDeposito" class="modal" onclick="fecharModal(event)" style="display:none;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>🧾 Dados para Depósito</h3>
-      <input id="depPrimeiroNome" type="text" placeholder="Primeiro nome">
-      <input id="depSegundoNome" type="text" placeholder="Segundo nome">
-      <input id="depCPF" type="text" placeholder="CPF">
-      <input id="depTelefone" type="tel" placeholder="Telefone">
-      <button id="btnContinuarDadosDeposito" disabled>➡️ Continuar</button>
-      <button data-modal-id="modalDadosDeposito" onclick="fecharModal(event)">❌ Cancelar</button>
-    </div>
-  </div>
-
-  <div id="modalPixExpirado" class="modal" onclick="fecharModal(event)" style="display:none; z-index: 101;">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <h3>⏳ Tempo expirado</h3>
-      <p>Seu QR Code PIX expirou após 10 minutos.</p>
-      <div style="display:flex; gap:10px;">
-        <button onclick="fecharModalAtual(); processarPagamentoPixAprimorado()">🔁 Tentar novamente</button>
-        <button data-modal-id="modalPixExpirado" onclick="fecharModal(event)">❌ Fechar</button>
-      </div>
-    </div>
-  </div>
-
-<div class="topbar hidden" id="topbar">
-  <div class="logo">💈 Navalha de Ouro</div>
-  <div class="topbar-right">
-    <button id="btnTema" onclick="alternarTema()">🌙</button>
-    <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 R$ <span id="saldoHeader">0,00</span></button>
-  </div>
-</div>
-
-<div class="content-container">
-  
-  <div id="chatPreview"></div> <div id="botaoExtra" class="hidden"></div>
-
-  <div id="authView" class="card hidden">
-    <h2>🔐 Entrar ou Criar Conta</h2>
-    <input id="email" type="email" placeholder="📧 Email">
-    <input id="senha" type="password" placeholder="🔑 Senha">
-    <div id="cadastro-fields" class="hidden">
-      <div class="show-password-container">
-        <input id="senha-cadastro" type="password" placeholder="🔑 Senha (visível)">
-      </div>
-      <div class="show-password-container">
-        <input id="senha-confirm" type="password" placeholder="🔑 Confirmar Senha (visível)">
-      </div>
-      <select id="tipo">
-        <option value="cliente">🙋 Cliente</option>
-        <option value="barbeiro">💈 Barbeiro</option>
-      </select>
-      <input id="telefone" type="tel" placeholder="📞 Telefone com DDD (ex: 27999999999)">
-      <input id="rua" type="text" placeholder="Endereço (Rua)" class="hidden">
-      <input id="numero" type="text" placeholder="Endereço (Número)" class="hidden">
-      <select id="estado" onchange="carregarCidades()">
-        <option value="">🌎 Selecione seu estado</option>
-      </select>
-      <select id="cidade">
-        <option value="">🏙️ Selecione sua cidade</option>
-      </select>
-      <input id="indicador" type="text" placeholder="📨 Email de quem te indicou? (opcional)">
-      <button onclick="obterLocalizacaoCadastro()" id="btnLocalizacaoCadastro">📍 Usar minha localização atual</button>
-    </div>
-    <button onclick="entrar()">➡️ Entrar</button>
-    <button id="btnCriarConta" onclick="prepararCriarConta()">🆕 Criar conta</button>
-    <button id="btnVoltar" class="hidden" onclick="voltarParaLogin()">⬅️ Voltar</button>
-  </div>
-  
-  <div id="guestView" class="card">
-    <h2>🙋 Painel de Visitante</h2>
-    <p style="text-align: center; font-size: 14px; opacity: 0.8;">Bem-vindo! Para interagir, crie uma conta ou faça login.</p>
-    <button onclick="toggleFuncoes('guestFuncoesContainer')">⚙️ Funções do Visitante</button>
-    <div id="guestFuncoesContainer" class="hidden">
-        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
-          <button>📜 Histórico</button>
-          <button>💎 VIP</button>
-          <button>💰 Carteira</button>
-          <button>🏆 Fidelidade</button>
-          <button>📰 Blog</button>
-          <button>🏅 Conquistas</button>
-          <button>📊 Ranking</button>
-          <button>🛍️ Loja</button>
-        </div>
-    </div>
-    <hr style="border-color: var(--cor-borda); margin: 20px 0;">
-    <div id="listaBarbeirosPrincipalGuest" class="barbeiro-list-container"></div>
-  </div>
-
-  <div id="clienteView" class="hidden card">
-    <h2>🙋 Painel do Cliente</h2>
-    <button onclick="toggleFuncoes('clienteFuncoesContainer')">⚙️ Funções do Cliente</button>
-    <div id="clienteFuncoesContainer" class="hidden">
-        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
-          <button id="btnHistoricoCliente" onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
-          <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
-          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-          <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
-          <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
-          <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
-          <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
-          <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Minha Loja</button>
-          <button id="btnMinhasCompras" onclick="abrirMinhasCompras()" style="width:45%">🛍️ Minhas Compras</button>
-        </div>
-    </div>
-    <hr style="border-color: var(--cor-borda); margin: 20px 0;">
-    <div id="listaBarbeirosPrincipalCliente" class="barbeiro-list-container"></div>
-  </div>
-
-  <div id="barbeiroView" class="hidden card">
-    <h2>💈 Painel do Barbeiro</h2>
-    <button onclick="toggleFuncoes('barbeiroFuncoesContainer')">⚙️ Funções do Barbeiro</button>
-    <div id="barbeiroFuncoesContainer" class="hidden">
-        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
-          <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
-          <button onclick="abrirAgenda()" style="width:45%">📅 Agenda</button>
-          <button id="btnAgendamentosBarbeiro" onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
-          <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
-          <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
-          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-          <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
-          <button id="btnAvaliacoesBarbeiro" onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
-          <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
-          <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
-          <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
-          <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
-          <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
-          <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
-          <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
-          <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
-          <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-ouro), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
-        </div>
-    </div>
-     <hr style="border-color: var(--cor-borda); margin: 20px 0;">
-    <div id="listaBarbeirosPrincipalBarbeiro" class="barbeiro-list-container"></div>
-  </div>
-
-  <div id="adminView" class="hidden card">
-    <h2>🧠 Painel do Admin</h2>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
-      <button onclick="abrirModalEstatisticas()" style="width:45%">📊 Estatísticas</button>
-      <button onclick="abrirModalSolicitacoes()" style="width:45%">📥 Solicitações</button>
-      <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
-      <button onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
-      <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirGerenciarLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
-      <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
-      <button onclick="abrirModal('modalNotificacaoMarketing')" style="width:92%">📣 Enviar Notificação Geral</button>
-    </div>
-  </div>
-
-  <div id="lojaView" class="hidden card">
-    <div class="card-header">
-        <h3>🛍️ Loja Navalha de Ouro</h3>
-        <div style="display: flex; gap: 10px;">
-            <!-- O botão vender foi movido para o painel de funções para melhor UX -->
+            <button onclick="abrirModalParaVender()" style="width: auto; font-size: 14px; padding: 8px 12px;">🛍️ Vender</button>
         </div>
     </div>
     <div id="lojaContainer" class="loja-grid">
@@ -2792,10 +985,6 @@
 
 <button id="btnSair" class="hidden" onclick="auth.signOut()">🚪 Sair</button>
 
-<!-- ============================================= -->
-<!-- MODAIS DE FLUXO FINANCEIRO (NOVOS E REFINADOS) -->
-<!-- ============================================= -->
-
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
@@ -2804,46 +993,6 @@
     <button onclick="iniciarSaque()">📤 Sacar</button>
     <button data-modal-id="modalCarteira" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
-</div>
-
-<div id="modalDeposito" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💰 Depósito de Créditos</h3>
-    <p>Escolha um método de pagamento para adicionar saldo à sua carteira.</p>
-    <div class="metodos-grid">
-        <button id="btnPagarComPix" onclick="processarPagamentoPixAprimorado()">⚡ PIX (QR Code)</button>
-        <button id="btnPagarComCartao" onclick="processarPagamentoCartaoAprimorado()">💳 Cartão de Crédito</button>
-    </div>
-    <button data-modal-id="modalDeposito" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-<div id="modalGerandoQRCode" class="modal">
-    <div class="modal-content" style="text-align: center;">
-        <h3 style="color: var(--cor-destaque-ouro);">Gerando QR CODE</h3>
-        <p>Aguarde um instante...</p>
-    </div>
-</div>
-
-<div id="modalCarregandoGenerico" class="modal">
-    <div class="modal-content" style="text-align: center;">
-        <h3 id="carregandoGenericoTitulo" style="color: var(--cor-destaque-ouro);">Aguarde...</h3>
-        <p id="carregandoGenericoTexto">Estamos processando sua solicitação.</p>
-    </div>
-</div>
-
-<div id="modalExibirPixAprimorado" class="modal">
-    <div class="modal-content" style="text-align: center;">
-      <h3> Pague com PIX</h3>
-      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      <img src="https://i.imgur.com/g2512hL.png" id="pix-qrcode" alt="QR Code PIX">
-      <div class="pix-copia-cola-container">
-          <textarea id="pixChaveAleatoria">00020126770014BR.GOV.BCB.PIX0136ec4a8f0f-ec59-44bc-afcf-dff364f971de0215NAVALHA DE OURO5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510vuyKg7Qnmx63041C39</textarea>
-          <button onclick="copiarCodigoPixAprimorado()">Copiar Chave Aleatória PIX</button>
-      </div>
-      <p style="font-size: 14px; color: #ff9800; margin-top: 15px;">Este código expira em: <b id="pixTimer">10:00</b></p>
-      <button onclick="confirmarEnvioComprovante()">CONFIRMAR</button>
-    </div>
 </div>
 
 <div id="modalSaque" class="modal" onclick="fecharModal(event)">
@@ -2864,18 +1013,85 @@
   </div>
 </div>
 
-<div id="modalSaqueConfirmado" class="modal">
-  <div class="modal-content" style="text-align:center;">
-    <h3>✅ Solicitação Enviada!</h3>
-    <p>Sua solicitação de saque foi enviada para análise.</p>
-    <p style="font-size:14px; opacity: 0.8;">Para agilizar, entre em contato com o administrador.</p>
-    <button onclick="contatarAdminSaque()">OK</button>
+<div id="modalDeposito" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💰 Depósito de Créditos</h3>
+    <p style="font-size: 12px; color: #aaa; margin-top: -10px; margin-bottom: 15px;">
+      Para continuar, informe seus dados para o pagamento.
+    </p>
+    <input id="depositoValor" type="number" step="0.01" placeholder="R$ Valor do Depósito" required>
+    <input id="depositoNome" type="text" placeholder="Nome Completo" required>
+    <input id="depositoEmail" type="email" placeholder="E-mail" required>
+    <input id="depositoTelefone" type="tel" placeholder="Telefone (com DDD)" required>
+    <input id="depositoCpf" type="text" placeholder="CPF (somente números)" required>
+    <button onclick="abrirModalMetodosPagamento()">Continuar</button>
+    <button data-modal-id="modalDeposito" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
-<!-- ============================================= -->
-<!-- MODAIS GERAIS (EXISTENTES E NOVOS)            -->
-<!-- ============================================= -->
+<div id="modalMetodosPagamento" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>💳 Método de Pagamento</h3>
+      <p>Como você gostaria de pagar?</p>
+      <div class="metodos-grid">
+        <button id="btnPagarComPix" onclick="processarPagamentoPix()">⚡ Pagar com Pix</button>
+        <button id="btnAbrirFormCartao" onclick="abrirModalCartao()">💳 Pagar com Cartão</button>
+      </div>
+      <button onclick="fecharModal(event); abrirModal('modalDeposito');">⬅️ Voltar</button>
+    </div>
+</div>
+
+<div id="modalCarregandoPix" class="modal">
+    <div class="modal-content">
+        <h3>Processando PIX...</h3>
+        <p>Aguarde enquanto geramos o QR Code.</p>
+        <div class="loader"></div>
+    </div>
+</div>
+
+<div id="modalCarregando" class="modal">
+    <div class="modal-content">
+        <h3>Processando Pagamento...</h3>
+        <p>Aguarde enquanto validamos seu cartão.</p>
+        <div class="loader"></div>
+    </div>
+</div>
+
+<div id="modalExibirPix" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" style="text-align: center;" onclick="event.stopPropagation()">
+      <h3> Pague com PIX</h3>
+      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
+      <div id="pixQrCodeContainer">
+          </div>
+      <p>Ou use o PIX Copia e Cola:</p>
+      <div id="pix-cod-copia">
+          </div>
+      <button onclick="copiarCodigoPix()">📋 Copiar Código</button>
+      <p style="font-size: 12px; opacity: 0.8; margin-top: 15px;">O saldo será atualizado automaticamente após a confirmação do pagamento.</p>
+      <button onclick="fecharModal(event)">✅ Fechar</button>
+    </div>
+</div>
+
+<div id="modalCartaoCredito" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💳 Dados do Cartão</h3>
+    <p>Valor do depósito: <b id="valorCartaoDisplay">R$ 0,00</b></p>
+    <input id="cardHolderName" type="text" placeholder="Nome no Cartão">
+    <input id="cardNumber" type="text" placeholder="Número do Cartão">
+    <input id="cardExpiry" type="text" placeholder="Validade (MM/AA)">
+    <input id="cardCvv" type="text" placeholder="CVV">
+    <button id="btnPagarComCartao" onclick="processarPagamentoCartao()"> Pagar com Cartão</button>
+    <button onclick="fecharModal(event); abrirModal('modalMetodosPagamento');">⬅️ Voltar</button>
+  </div>
+</div>
+
+<div id="modalSaqueEnviado" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>✅ Saque Solicitado</h3>
+    <p>Sua solicitação de saque foi enviada e está aguardando aprovação do administrador.</p>
+    <button onclick="fecharModal(event)">✅ Entendi</button>
+  </div>
+</div>
 
 <div id="janelaChat" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -3208,6 +1424,7 @@
         <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button data-modal-id="modalLiberarLoja" onclick="fecharModal(event)" style="background-color: #555;">↩️ Cancelar</button>
             <button onclick="solicitarLiberacaoLoja()" style="flex-grow: 1;">
+                <img src="https://logopng.com.br/logos/whatsapp-33.png" alt="WhatsApp" style="width:20px; height:20px; vertical-align: middle; margin-right: 8px;">
                 💬 Pedir no WhatsApp
             </button>
         </div>
@@ -3287,16 +1504,13 @@
 
 <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <img id="detalhesProdutoImg" src="" style="width: 100%; height: 200px; object-fit: contain; border-radius: 10px; margin-bottom: 15px;">
+        <img id="detalhesProdutoImg" src="" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 15px;">
         <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque-ouro);"></h3>
-        <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
+        <p><strong>Tamanho:</strong></p>
         <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
         <p><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
         <p><strong>Descrição:</strong> <span id="detalhesProdutoDescricao"></span></p>
         <p><strong>Entrega estimada:</strong> <span id="detalhesProdutoEntrega"></span></p>
-        
-        <div id="detalhesProdutoAvaliacao"></div>
-
         <button id="btnComprarAgora">🛒 Comprar Agora</button>
         <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
     </div>
@@ -3308,7 +1522,7 @@
         <p>Por favor, confirme os detalhes para a entrega.</p>
         <input id="compraEndereco" type="text" placeholder="🏠 Endereço Completo para Entrega">
         <input id="compraTelefone" type="tel" placeholder="📞 Telefone para Contato">
-        <input id="compraCep" type="text" placeholder="✉️ CEP (Obrigatório)">
+        <input id="compraMapsLink" type="url" placeholder="🗺️ Link do Google Maps (Opcional)">
         <button id="btnConfirmarCompraFinal">✅ Confirmar Pedido</button>
         <button data-modal-id="modalConfirmarCompra" onclick="fecharModal(event)">❌ Cancelar</button>
     </div>
@@ -3318,9 +1532,9 @@
     <div class="modal-content" style="max-width: 600px;">
         <h3>🏪 Gerenciar Minha Loja</h3>
         <div id="listaMeusProdutos" class="scrollable-list"></div>
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
           <button onclick="abrirFormularioProduto()">➕ Adicionar Produto</button>
-          <button id="btnEntregasVendedor" onclick="abrirEntregasVendedor()">🚚 Entregas</button>
+          <button onclick="abrirClientesVendedor()">🧑‍🤝‍🧑 Meus Clientes</button>
           <button data-modal-id="modalGerenciarLoja" onclick="fecharModal(event)">❌ Fechar</button>
         </div>
     </div>
@@ -3347,19 +1561,11 @@
     </div>
 </div>
 
-<div id="modalEntregasVendedor" class="modal" onclick="fecharModal(event)">
+<div id="modalGerenciarLojaClientes" class="modal" onclick="fecharModal(event)">
     <div class="modal-content">
-        <h3>🚚 Minhas Entregas</h3>
-        <div id="listaEntregas" class="scrollable-list"></div>
-        <button data-modal-id="modalEntregasVendedor" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
-</div>
-
-<div id="modalMinhasCompras" class="modal" onclick="fecharModal(event)">
-    <div class="modal-content">
-        <h3>🛍️ Minhas Compras</h3>
-        <div id="listaMinhasCompras" class="scrollable-list"></div>
-        <button data-modal-id="modalMinhasCompras" onclick="fecharModal(event)">❌ Fechar</button>
+        <h3>🧑‍🤝‍🧑 Meus Clientes da Loja</h3>
+        <div id="listaClientesLoja" class="scrollable-list"></div>
+        <button data-modal-id="modalGerenciarLojaClientes" onclick="fecharModal(event)">❌ Fechar</button>
     </div>
 </div>
 
@@ -3367,30 +1573,22 @@
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>🎉 VENDA REALIZADA! 🎉</h3>
         <p style="font-size: 1.1em;">Parabéns, você vendeu um produto!</p>
-        <p>Acesse <strong>Gerenciar Loja > Entregas</strong> para ver os detalhes.</p>
+        <p>Acesse <strong>Gerenciar Loja > Meus Clientes</strong> para ver os detalhes da entrega.</p>
         <button data-modal-id="modalVendaRealizada" onclick="fecharModal(event)" style="background: white; color: #c0392b;">✅ OK</button>
-    </div>
-</div>
-
-<div id="modalConfirmacaoComprador" class="modal">
-    <div class="modal-content">
-        <h3 id="confirmacaoCompradorTitulo">Confirmar Recebimento</h3>
-        <p id="confirmacaoCompradorTexto">O vendedor marcou o produto como entregue. Você confirma o recebimento?</p>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-           <button id="btnRecusarEntrega" style="background: #c0392b;">❌ Recusar</button>
-           <button id="btnAceitarEntrega" style="background: #27ae60;">✅ Aceitar</button>
-        </div>
     </div>
 </div>
 
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
+
+
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
 
+<script type="text/javascript" src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
 <script>
 // Firebase e variáveis globais
 const firebaseConfig = {
@@ -3434,10 +1632,6 @@ let cadastroCoords = null;
 let vendaListener = null;
 let produtoEmEdicaoId = null; 
 let produtoParaCompra = null;
-let pixTimerInterval = null; 
-let pendenciasInterval = null; 
-let pedidosVendedorListener = null;
-let comprasClienteListener = null; 
 
 let userView = {
     originalType: null,
@@ -3473,45 +1667,55 @@ let modalAberto = null; // Rastreia o modal que está atualmente visível
  * @param {string} modalId O ID do elemento do modal a ser aberto.
  */
 function abrirModal(modalId) {
+    // Se um modal já estiver aberto, fecha-o primeiro.
     if (modalAberto) {
-        fecharModalAtual();
+        modalAberto.classList.remove('show');
+        const modalAnterior = modalAberto;
+        setTimeout(() => {
+            modalAnterior.style.display = 'none';
+        }, 300); // Deve ser igual à duração da transição CSS
     }
+
     const novoModal = document.getElementById(modalId);
     if (novoModal) {
-        modalAberto = novoModal;
-        novoModal.style.display = 'flex';
+        modalAberto = novoModal; // Define o novo modal como o ativo
+        novoModal.style.display = 'flex'; // Torna o contêiner do modal visível
+        
+        // Adiciona a classe 'show' após um pequeno delay.
+        // Isso força o navegador a aplicar o 'display: flex' antes de iniciar a animação,
+        // garantindo que a transição de opacidade e transformação funcione corretamente.
         setTimeout(() => {
             novoModal.classList.add('show');
         }, 10);
     }
 }
+
 /**
- * Fecha o modal ativo.
- * @param {MouseEvent} event O objeto de evento do clique (opcional).
+ * Fecha o modal ativo. Esta função é acionada por um evento de clique,
+ * seja no fundo do modal ou em um botão de fechar.
+ * @param {MouseEvent} event O objeto de evento do clique.
  */
 function fecharModal(event) {
-    if (event && !event.target.classList.contains('modal') && !event.target.getAttribute('data-modal-id')) {
-        return; 
-    }
-    if (modalAberto) {
-        modalAberto.classList.remove('show');
-        const modalParaFechar = modalAberto;
-        setTimeout(() => {
-            modalParaFechar.style.display = 'none';
-            if(modalAberto === modalParaFechar) {
-               modalAberto = null;
-            }
-        }, 300);
+    // O fechamento só deve ocorrer se o clique for:
+    // 1. Diretamente no elemento de fundo (que tem a classe 'modal').
+    // 2. Em um elemento com o atributo 'data-modal-id' (o botão "Fechar").
+    // Clicar dentro do 'modal-content' não fecha o modal, pois o HTML tem `event.stopPropagation()`.
+    const target = event.target;
+    if (target.classList.contains('modal') || target.getAttribute('data-modal-id')) {
+        if (modalAberto) {
+            modalAberto.classList.remove('show'); // Inicia a animação de fechamento
+            
+            // Após a animação, esconde o modal e limpa a variável de rastreamento.
+            setTimeout(() => {
+                if (modalAberto) { // Verificação extra de segurança
+                    modalAberto.style.display = 'none';
+                    modalAberto = null;
+                }
+            }, 300); // Sincronizado com a transição CSS
+        }
     }
 }
-function fecharModalAtual() {
-    if(modalAberto) {
-        const event = { target: modalAberto };
-        fecharModal(event);
-    }
-}
-
-// --- [FIM DA LÓGICA DE MODAIS] ---
+// --- [FIM DA LÓGICA DE MODAIS CORRIGIDA] ---
 
 
 // FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
@@ -3582,8 +1786,7 @@ function salvarNovaPromocao() {
 }
 
 async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
-  // ATENÇÃO: A URL do backend foi movida para uma constante no início do script para fácil manutenção.
-  const backendUrl = "https://navalhabackend.onrender.com"; 
+  const backendUrl = "https://navalhabackend.onrender.com";
   const notificationEndpoint = "/enviar-notificacao";
   const fullUrl = backendUrl + notificationEndpoint;
 
@@ -3593,7 +1796,6 @@ async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   }
   
   try {
-    // Não precisamos mais do 'mode: no-cors' pois o backend está configurado com CORS.
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3655,15 +1857,52 @@ function configurarBotoesGuest() {
     buttons.forEach(btn => {
         btn.onclick = () => {
             const textoBotao = btn.textContent.trim();
-            // Visitantes são sempre redirecionados para a tela de cadastro/login
-            alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
-            mostrar('authView');
+            if (textoBotao === '🛍️ Loja') {
+                mostrar('lojaView');
+                carregarProdutos();
+            } else {
+                alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
+                mostrar('authView');
+            }
         };
     });
 }
 
 function mostrarPainelAtual() {
     mostrar(`${userView.currentType}View`);
+}
+
+
+function abrirModalLoja() {
+  abrirModal('modalLoja');
+  const listaProdutos = document.getElementById("listaProdutos");
+  
+  if (!listaProdutos) {
+    console.error("Erro: Elemento com ID 'listaProdutos' não encontrado no HTML.");
+    return;
+  }
+
+  listaProdutos.innerHTML = "<p>⏳ Carregando produtos...</p>";
+
+  // Substitua a lógica abaixo pela sua, para carregar os produtos
+  db.collection("loja_produtos").onSnapshot(snapshot => {
+    listaProdutos.innerHTML = "";
+    if (snapshot.empty) {
+      listaProdutos.innerHTML = "<p>Nenhum produto cadastrado na loja.</p>";
+      return;
+    }
+    snapshot.forEach(doc => {
+      const produto = doc.data();
+      listaProdutos.innerHTML += `<div class="produto-card">
+        <img src="${produto.imagemUrl}" alt="${produto.nome}">
+        <div class="produto-info">
+          <p class="produto-nome">${produto.nome}</p>
+          <p class="produto-preco">R$ ${produto.preco.toFixed(2)}</p>
+          <button onclick="comprarProduto('${doc.id}')">Comprar</button>
+        </div>
+      </div>`;
+    });
+  });
 }
 
 function solicitarPermissaoNotificacao() {
@@ -3786,7 +2025,6 @@ function setupViewSwitcher() {
         container.appendChild(btnLoja);
     } else if (userView.originalType === 'barbeiro') {
         createButton("💈 Barbeiro", "barbeiro");
-        createButton("🙋 Cliente", "cliente");
         container.appendChild(btnLoja);
     } else if (userView.originalType === 'cliente') {
         createButton("🙋‍♂️ Cliente", "cliente");
@@ -3794,401 +2032,6 @@ function setupViewSwitcher() {
     }
 }
 
-let fcmSetupDone = false;
-let isSending = false;
-let perfil = null;
-let agendamentoListener = null;
-let currentModal = null;
-let chatListener = null;
-let barbeirosListener = null;
-let tempSelectedHorarios = {};
-const CHAT_GLOBAL_ID = "chatGlobal";
-let botInterval = null;
-let newWorker;
-let localizacaoCliente = null;
-let cadastroCoords = null;
-let vendaListener = null;
-let produtoEmEdicaoId = null; 
-let produtoParaCompra = null;
-let pixTimerInterval = null; 
-let pendenciasInterval = null; 
-let pedidosVendedorListener = null;
-let comprasClienteListener = null; 
-
-let userView = {
-    originalType: null,
-    currentType: null
-};
-
-let agendamentoState = {
-    barbeiroUid: null,
-    barbeiroNome: null,
-    servico: null,
-    horario: null, 
-    barbeiroLat: null,
-    barbeiroLon: null,
-};
-
-let adminBalanceListener = null;
-let adminUserBalances = {};
-let globalChatListener = null;
-let lastGlobalMessageTimestamp = null;
-let newMessagesCount = 0;
-let oldestMessageSnapshot = null; // Variável para paginação do chat
-
-let deferredInstallPrompt = null;
-let chatPreviewTimeout = null; 
-
-
-// --- [LÓGICA DE MODAIS CORRIGIDA] ---
-let modalAberto = null; // Rastreia o modal que está atualmente visível
-
-/**
- * Abre um modal específico pelo seu ID. Se outro modal já estiver aberto,
- * ele será fechado primeiro para evitar sobreposição.
- * @param {string} modalId O ID do elemento do modal a ser aberto.
- */
-function abrirModal(modalId) {
-    if (modalAberto) {
-        fecharModalAtual();
-    }
-    const novoModal = document.getElementById(modalId);
-    if (novoModal) {
-        modalAberto = novoModal;
-        novoModal.style.display = 'flex';
-        setTimeout(() => {
-            novoModal.classList.add('show');
-        }, 10);
-    }
-}
-/**
- * Fecha o modal ativo.
- * @param {MouseEvent} event O objeto de evento do clique (opcional).
- */
-function fecharModal(event) {
-    if (event && !event.target.classList.contains('modal') && !event.target.getAttribute('data-modal-id')) {
-        return; 
-    }
-    if (modalAberto) {
-        modalAberto.classList.remove('show');
-        const modalParaFechar = modalAberto;
-        setTimeout(() => {
-            modalParaFechar.style.display = 'none';
-            if(modalAberto === modalParaFechar) {
-               modalAberto = null;
-            }
-        }, 300);
-    }
-}
-function fecharModalAtual() {
-    if(modalAberto) {
-        const event = { target: modalAberto };
-        fecharModal(event);
-    }
-}
-
-// [NOVO] Fecha todos os popups abertos, usado no fluxo de pagamento
-function fecharTodosOsPopups() {
-    const modals = document.querySelectorAll('.modal.show');
-    modals.forEach(m => {
-        m.classList.remove('show');
-        setTimeout(() => {
-            m.style.display = 'none';
-        }, 300);
-    });
-    modalAberto = null;
-}
-
-// --- [FIM DA LÓGICA DE MODAIS] ---
-
-
-// FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
-function abrirPromocoes() {
-  abrirModal('modalPromocoesBarbeiro');
-  const lista = document.getElementById("listaPromocoes");
-  if (!lista) {
-    console.error("Erro: Elemento com ID 'listaPromocoes' não encontrado no HTML.");
-    return;
-  }
-  lista.innerHTML = "<p>⏳ Carregando...</p>";
-  db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
-    perfil = doc.data();
-    lista.innerHTML = "";
-    if (!perfil.promocoes || perfil.promocoes.length === 0) {
-      lista.innerHTML = "<p>Nenhuma promoção ativa.</p>";
-      return;
-    }
-    perfil.promocoes.forEach((p, index) => {
-      lista.innerHTML += `<div class="promocao-card">
-        <b>${p.nome}</b>
-        <p>${p.descricao} (${p.desconto}%)</p>
-        <button onclick="removerPromocao(${index})" style="background:none;border:none;color:#fff;float:right;">❌</button>
-      </div>`;
-    });
-  });
-}
-
-// FUNÇÃO PARA ABRIR O MODAL DE ADICIONAR PROMOÇÃO
-function abrirModalAddPromocao() {
-  abrirModal('modalAddPromocao');
-}
-
-// FUNÇÃO PARA SALVAR A PROMOÇÃO NO FIREBASE
-function salvarNovaPromocao() {
-  const nome = document.getElementById('addPromocaoNome').value;
-  const descricao = document.getElementById('addPromocaoDescricao').value;
-  const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
-  
-  if (!nome || !descricao || isNaN(desconto)) {
-    alert("Por favor, preencha todos os campos corretamente.");
-    return;
-  }
-  
-  const novaPromocao = {
-    nome: nome,
-    descricao: descricao,
-    desconto: desconto,
-  };
-
-  const userId = auth.currentUser.uid;
-  const userRef = db.collection("usuarios").doc(userId);
-
-  userRef.update({
-    promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
-  })
-  .then(() => {
-    alert("Promoção adicionada com sucesso!");
-    fecharModalAtual();
-    document.getElementById('addPromocaoNome').value = '';
-    document.getElementById('addPromocaoDescricao').value = '';
-    document.getElementById('addPromocaoDesconto').value = '';
-  })
-  .catch(error => {
-    console.error("Erro ao adicionar promoção:", error);
-    alert("Erro ao adicionar promoção. Tente novamente.");
-  });
-}
-
-async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
-  // ATENÇÃO: A URL do backend foi movida para uma constante no início do script para fácil manutenção.
-  const backendUrl = "https://navalhabackend.onrender.com"; 
-  const notificationEndpoint = "/enviar-notificacao";
-  const fullUrl = backendUrl + notificationEndpoint;
-
-  if (!uid) {
-    console.error("Tentativa de enviar notificação sem um UID de usuário.");
-    return;
-  }
-  
-  try {
-    // Não precisamos mais do 'mode: no-cors' pois o backend está configurado com CORS.
-    const response = await fetch(fullUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid, title, body, data }),
-    });
-
-    const responseData = await response.json();
-    if (response.ok) {
-      console.log('Notificação enviada com sucesso via backend:', responseData);
-    } else {
-      console.error('Falha ao enviar a notificação via backend:', responseData.message);
-    }
-  } catch (error) {
-    console.error('Erro de rede ou na chamada da API de notificação:', error);
-  }
-}
-
-
-async function notifyUser(uid, title, body, data = {}) {
-    if (!uid) return;
-    console.log(`Disparando notificação para UID: ${uid} - Título: ${title}`);
-    await enviarNotificacaoParaBackend(uid, title, body, data);
-}
-
-async function notifyAdmins(title, body, data = {}) {
-    try {
-        const adminQuery = await db.collection("usuarios").where("tipo", "==", "admin").get();
-        if (!adminQuery.empty) {
-            adminQuery.forEach(adminDoc => {
-                notifyUser(adminDoc.id, title, body, data);
-            });
-        }
-    } catch(e) {
-        console.error("Erro ao notificar admins:", e);
-    }
-}
-
-
-// Funções de UI
-function mostrar(id) {
-  ["authView", "guestView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => {
-      const el = document.getElementById(v);
-      if(el) el.classList.add("hidden");
-  });
-  const elToShow = document.getElementById(id);
-  if (elToShow) {
-    elToShow.classList.remove("hidden");
-    // Forçar reflow para a animação de transição funcionar
-    void elToShow.offsetWidth;
-    elToShow.style.opacity = 1;
-    elToShow.style.transform = 'scale(1)';
-  }
-  
-  const isAuth = (id === 'authView');
-  document.getElementById("topbar").classList.toggle("hidden", isAuth);
-  document.getElementById("bottomButtons").classList.toggle("hidden", isAuth);
-  document.getElementById("redeemContainer").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
-  
-  document.getElementById("btnTema").classList.toggle("hidden", isAuth);
-  document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
-  document.getElementById("botaoExtra").classList.toggle("hidden", isAuth || id === 'guestView');
-  document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
-}
-
-
-function configurarBotoesGuest() {
-    const guestView = document.getElementById('guestView');
-    const buttons = guestView.querySelectorAll('#guestFuncoesContainer button');
-    buttons.forEach(btn => {
-        btn.onclick = () => {
-            const textoBotao = btn.textContent.trim();
-            // Visitantes são sempre redirecionados para a tela de cadastro/login
-            alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
-            mostrar('authView');
-        };
-    });
-}
-
-function mostrarPainelAtual() {
-    mostrar(`${userView.currentType}View`);
-}
-
-function solicitarPermissaoNotificacao() {
-    if ('Notification' in window && Notification.permission === 'default') {
-        abrirModal('modalPermissaoNotificacao');
-    }
-}
-
-function pedirPermissaoEFechar() {
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            const user = auth.currentUser;
-            if (user) {
-                setupFCM(user.uid);
-            }
-        }
-    });
-    fecharModalAtual();
-}
-
-async function garantirTokenAtualizadoNoPerfil(uid) {
-    try {
-        const currentToken = await messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' });
-        if (currentToken) {
-            const userRef = db.collection('usuarios').doc(uid);
-            const userDoc = await userRef.get();
-            if (userDoc.exists) {
-                const tokens = userDoc.data().fcmTokens || [];
-                if (!tokens.includes(currentToken)) {
-                    await userRef.update({
-                        fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
-                    });
-                }
-            }
-        }
-    } catch(err) {
-        console.error('Erro ao garantir token atualizado:', err);
-    }
-}
-
-
-function setupFCM(uid) {
-    if (fcmSetupDone || !('serviceWorker' in navigator) || !firebase.messaging.isSupported()) {
-        return;
-    }
-
-    navigator.serviceWorker.ready.then(async (registration) => {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            fcmSetupDone = true;
-
-            try {
-                // Obtém o token do dispositivo. Essa função já gerencia a renovação.
-                const currentToken = await firebase.messaging().getToken({
-                    vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE'
-                });
-
-                if (currentToken) {
-                    // Salva o token no perfil do usuário
-                    const user = firebase.auth().currentUser;
-                    if (user) {
-                        await firebase.firestore().collection('usuarios').doc(user.uid).update({
-                            fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
-                        });
-                        console.log('Token FCM salvo com sucesso:', currentToken);
-                    }
-                } else {
-                    console.log('Nenhum token de notificação disponível. O usuário pode ter bloqueado as notificações.');
-                }
-            } catch (err) {
-                console.error('Erro ao obter ou atualizar o token de notificação.', err);
-            }
-        } else {
-            console.warn('Permissão de notificação negada. O usuário não receberá notificações.');
-        }
-    }).catch(err => {
-        console.error('Service Worker não está pronto.', err);
-    });
-}
-
-function alternarTema() {
-  const body = document.body;
-  const isLight = body.classList.toggle('tema-claro');
-  document.getElementById('btnTema').textContent = isLight ? '☀️' : '🌙';
-}
-
-// [ATUALIZADO] Lógica de troca de painel simplificada para não-admins
-function setupViewSwitcher() {
-    const container = document.getElementById("botaoExtra");
-    container.innerHTML = "";
-    if (!userView.originalType) return;
-
-    // Se for admin, mantém o comportamento original com todos os botões
-    if (userView.originalType === 'admin') {
-        const createButton = (text, view) => {
-            const btn = document.createElement("button");
-            btn.textContent = text;
-            btn.onclick = () => switchView(view);
-            const lojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
-            if (userView.currentType === view && !lojaVisivel) {
-                 btn.disabled = true;
-                 btn.style.borderColor = "var(--cor-destaque-ouro)";
-            }
-            container.appendChild(btn);
-        };
-        createButton("🧠 Admin", "admin");
-        createButton("💈 Barbeiro", "barbeiro");
-        createButton("🙋 Cliente", "cliente");
-    }
-
-    // Para todos os usuários (incluindo admin), adiciona o botão de alternar para a loja
-    const lojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
-    const btnLoja = document.createElement("button");
-    btnLoja.textContent = lojaVisivel ? "🏠 Painel Principal" : "🛍️ Loja";
-    btnLoja.onclick = () => {
-        if (lojaVisivel) {
-            mostrarPainelAtual();
-        } else {
-            mostrar('lojaView');
-            carregarProdutos();
-        }
-        setupViewSwitcher(); // Re-render o botão
-    };
-    container.appendChild(btnLoja);
-}
-
-
 function switchView(view) {
     userView.currentType = view;
     renderCurrentView();
@@ -4359,8 +2202,6 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 auth.onAuthStateChanged(async user => {
   solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
-  handleDeepLink(); // [NOVO] Checa por deep links no carregamento
-  if (pendenciasInterval) clearInterval(pendenciasInterval);
 
   if (!user) {
     userView = { originalType: null, currentType: null };
@@ -4371,324 +2212,6 @@ auth.onAuthStateChanged(async user => {
     document.getElementById("redeemContainer").classList.add("hidden");
     if(globalChatListener) globalChatListener(); 
     if(vendaListener) vendaListener();
-    if (comprasClienteListener) comprasClienteListener();
-    return;
-  }
-  const ref = db.collection("usuarios").doc(user.uid);
-  ref.onSnapshot(s => {
-    if (!s.exists) return;
-    perfil = s.data(); 
-    const saldo = (s.data().saldo || 0).toFixed(2);
-    document.getElementById("saldoHeader").textContent = saldo;
-    document.getElementById("saldoModal").textContent = saldo;
-    
-    // [ATUALIZADO] Lógica do botão VIP
-    const btnVip = document.getElementById('btnVip');
-    if (btnVip) {
-        btnVip.classList.remove('notificacao-pulsante', 'vip-dourado');
-        if (s.data().vip) {
-          btnVip.textContent = '👑 Sou VIP';
-          btnVip.classList.add('vip-dourado');
-        } else {
-          btnVip.textContent = '💎 VIP';
-        }
-    }
-  });
-
-  const snap = await ref.get();
-  if (!snap.exists) { mostrar("authView"); return; }
-  perfil = snap.data(); 
-
-  const config = await db.collection("config").doc("sistema").get();
-  if (config.exists && config.data().ativo === false && perfil.tipo !== "admin") {
-    alert("🚧 Sistema em manutenção");
-    auth.signOut();
-    return;
-  }
-  
-  if(!userView.originalType) {
-    userView.originalType = perfil.tipo;
-    userView.currentType = perfil.tipo;
-  }
-  renderCurrentView();
-  
-  setupFCM(user.uid);
-  exibirVersaoApp();
-  iniciarNotificacoesPendentesPorMinuto(user.uid); // [ATUALIZADO] Inicia a verificação de pendências
-  
-  // Posta o blog inicial para o admin, se ainda não tiver sido postado
-  if(perfil.tipo === 'admin' && !sessionStorage.getItem('initialBlogPosted')) {
-    publicarBlogDeRecompensaInicial();
-    sessionStorage.setItem('initialBlogPosted', 'true');
-  }
-
-
-  db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
-    .onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-            if (change.type === "added") {
-                const aviso = change.doc.data();
-                if (aviso.tipo === 'vaga-aprovada' && aviso.agendamentoId) {
-                    abrirModalVagaAprovada(aviso.agendamentoId);
-                } else {
-                    alert(`🔔 Novo Aviso: ${aviso.mensagem}`);
-                }
-                change.doc.ref.update({ lido: true });
-            }
-        });
-    });
-
-    if (globalChatListener) globalChatListener(); 
-    globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-        .orderBy("ts", "desc").limit(1)
-        .onSnapshot(snapshot => {
-            if (snapshot.empty) return;
-            const msg = snapshot.docs[0].data();
-            const janelaChat = document.getElementById('janelaChat');
-            
-            if (msg.ts?.seconds > (lastGlobalMessageTimestamp?.seconds || 0) && msg.remetenteUid !== user.uid) {
-                if (!janelaChat.classList.contains('show')) {
-                    const btnChat = document.getElementById('btnChat').querySelector('span:first-child');
-                    btnChat.classList.add('new-message-glow');
-                    setTimeout(() => btnChat.classList.remove('new-message-glow'), 2000);
-
-                    newMessagesCount++;
-                    const badge = document.querySelector('.notification-badge');
-                    badge.textContent = newMessagesCount;
-                    badge.classList.remove('hidden');
-
-                    const preview = document.getElementById('chatPreview');
-                    preview.innerHTML = `<b>${msg.remetenteNome}:</b> ${msg.texto}`;
-                    preview.classList.add('show');
-                    if (chatPreviewTimeout) clearTimeout(chatPreviewTimeout);
-                    chatPreviewTimeout = setTimeout(() => { preview.classList.remove('show'); }, 3000);
-                }
-            }
-            lastGlobalMessageTimestamp = msg.ts;
-        });
-    
-    // Listener de vendas para vendedores
-    if (vendaListener) vendaListener();
-    if(perfil.lojaLiberada || perfil.tipo === 'admin') {
-      vendaListener = db.collection("loja_pedidos")
-        .where("vendedorUid", "==", user.uid)
-        .where("vendedorNotificado", "==", false)
-        .onSnapshot(snapshot => {
-          snapshot.docChanges().forEach(change => {
-            if (change.type === "added") {
-              abrirModal('modalVendaRealizada');
-              change.doc.ref.update({ vendedorNotificado: true });
-            }
-          });
-        });
-    }
-
-    // Listener de confirmação para compradores
-    if (comprasClienteListener) comprasClienteListener();
-    comprasClienteListener = db.collection('loja_pedidos')
-      .where('clienteUid', '==', user.uid)
-      .where('status', '==', 'entregue_pendente_confirmacao')
-      .onSnapshot(snapshot => {
-        if (!snapshot.empty) {
-            const pedido = snapshot.docs[0].data();
-            pedido.id = snapshot.docs[0].id;
-            abrirModalConfirmacaoComprador(pedido);
-        }
-      });
-});
-
-// [ATUALIZADO] Função de logout
-function fazerLogout() {
-    auth.signOut().then(() => {
-        window.location.reload();
-    }).catch(error => {
-        console.error("Erro no logout:", error);
-        window.location.reload(); // Recarrega mesmo em caso de erro
-    });
-}
-
-function switchView(view) {
-    userView.currentType = view;
-    renderCurrentView();
-}
-
-function renderCurrentView() {
-    setupViewSwitcher();
-    if (adminBalanceListener) {
-        adminBalanceListener();
-        adminBalanceListener = null;
-    }
-    
-    document.getElementById('btnGerenciarLojaCliente').classList.add('hidden');
-    document.getElementById('btnGerenciarLojaBarbeiro').classList.add('hidden');
-
-    if(perfil && (perfil.lojaLiberada || perfil.tipo === 'admin')) {
-      if(userView.currentType === 'cliente') document.getElementById('btnGerenciarLojaCliente').classList.remove('hidden');
-      if(userView.currentType === 'barbeiro') document.getElementById('btnGerenciarLojaBarbeiro').classList.remove('hidden');
-    }
-
-    switch (userView.currentType) {
-        case 'admin':
-            mostrar("adminView");
-            carregarAdmin();
-            break;
-        case 'barbeiro':
-            mostrar("barbeiroView");
-            carregarBarbeirosPrincipal('listaBarbeirosPrincipalBarbeiro', false);
-            break;
-        case 'cliente':
-            mostrar("clienteView");
-            carregarBarbeirosPrincipal('listaBarbeirosPrincipalCliente', false);
-            break;
-        case 'loja':
-            mostrar("lojaView");
-            carregarProdutos();
-            break;
-        default:
-            mostrar("authView");
-    }
-}
-
-
-const cidadesPorEstado = {
-  "ES": ["Aracruz", "Vitória", "Serra", "Linhares", "Colatina", "Cachoeiro de Itapemirim", "Guarapari", "Vila Velha", "São Mateus", "Barra de São Francisco"], "SP": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba"], "RJ": ["Rio de Janeiro", "Niterói", "Petrópolis", "Volta Redonda", "Campos dos Goytacazes"], "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Montes Claros"], "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Ilhéus", "Barreiras"], "PR": ["Curitiba", "Londrina", "Maringá", "Cascavel", "Ponta Grossa"], "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Santa Maria", "Novo Hamburgo"], "SC": ["Florianópolis", "Joinville", "Blumenau", "Chapecó", "Criciúma"], "PE": ["Recife", "Olinda", "Caruaru", "Petrolina", "Garanhuns"], "CE": ["Fortaleza", "Juazeiro do Norte", "Sobral", "Crato", "Iguatu"], "DF": ["Brasília"]
-};
-
-function carregarEstados() {
-  const estadoSelect = document.getElementById("estado");
-  estadoSelect.innerHTML = '<option value="">🌎 Selecione seu estado</option>';
-  Object.keys(cidadesPorEstado).forEach(sigla => {
-    estadoSelect.innerHTML += `<option value="${sigla}">${sigla}</option>`;
-  });
-}
-
-function carregarCidades() {
-  const estado = document.getElementById("estado").value;
-  const cidadeSelect = document.getElementById("cidade");
-  cidadeSelect.innerHTML = '<option value="">🏙️ Selecione sua cidade</option>';
-  const cidades = cidadesPorEstado[estado] || [];
-  cidades.forEach(c => {
-    cidadeSelect.innerHTML += `<option value="${c}">${c}</option>`;
-  });
-}
-
-carregarEstados();
-
-function entrar() {
-  const email = document.getElementById("email").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-  if (!email || !senha) return alert("Preencha os campos corretamente.");
-  auth.signInWithEmailAndPassword(email, senha)
-    .then(() => console.log("Login OK"))
-    .catch(e => alert("Erro ao entrar: " + e.message));
-}
-
-function prepararCriarConta() {
-    const email = document.getElementById("email").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-    if (!email || !senha) return alert("Por favor, preencha o email e a senha para começar o cadastro.");
-    document.getElementById("email").classList.add("hidden");
-    document.getElementById("senha").classList.add("hidden");
-    document.querySelector("#authView button:first-of-type").style.display = "none";
-    document.getElementById("cadastro-fields").classList.remove("hidden");
-    document.getElementById("senha-cadastro").value = senha;
-    document.getElementById("btnCriarConta").onclick = criarConta;
-    document.getElementById("btnCriarConta").textContent = "🆕 Criar Conta";
-    document.getElementById("btnVoltar").classList.remove("hidden");
-    document.getElementById("senha-cadastro").type = "text";
-    document.getElementById("senha-confirm").type = "text";
-    obterLocalizacaoCadastro(); 
-}
-
-function voltarParaLogin() {
-    document.getElementById("cadastro-fields").classList.add("hidden");
-    document.getElementById("btnVoltar").classList.add("hidden");
-    document.getElementById("email").classList.remove("hidden");
-    document.getElementById("senha").classList.remove("hidden");
-    document.querySelector("#authView button:first-of-type").style.display = "block";
-    document.getElementById("btnCriarConta").onclick = prepararCriarConta;
-    document.getElementById("btnCriarConta").textContent = "🆕 Criar conta";
-    document.getElementById("senha-cadastro").value = "";
-    document.getElementById("senha-confirm").value = "";
-    document.getElementById("senha-cadastro").type = "password";
-    document.getElementById("senha-confirm").type = "password";
-    cadastroCoords = null;
-}
-
-function criarConta() {
-  const email = document.getElementById("email").value.trim();
-  const senha = document.getElementById("senha-cadastro").value;
-  const senhaConfirm = document.getElementById("senha-confirm").value;
-  const tipo = document.getElementById("tipo").value;
-  const telefone = document.getElementById("telefone").value.trim();
-  const estado = document.getElementById("estado").value;
-  const cidade = document.getElementById("cidade").value;
-  const nome = prompt("📝 Escolha seu nome:");
-  const indicadorEmail = document.getElementById("indicador").value.trim();
-  let rua, numero;
-
-  if (tipo === 'barbeiro') {
-    rua = document.getElementById("rua").value.trim();
-    numero = document.getElementById("numero").value.trim();
-  }
-  if (senha !== senhaConfirm) return alert("As senhas não coincidem.");
-  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos).");
-  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) return alert("Preencha todos os campos obrigatórios");
-  if (!cadastroCoords) return alert("Por favor, permita o acesso à localização para continuar o cadastro.");
-
-
-  const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
-  const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
-  const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
-  
-  auth.createUserWithEmailAndPassword(email, senha)
-    .then(async cred => {
-      const data = {
-        email, nome, tipo: tipoFinal, telefone, estado: estadoFinal, cidade: cidadeFinal,
-        saldo: 0, reputacao: 100, cortesSemana: 0,
-        disponivel: "nao", listaServicos: [], promocoes: [], portfolio: [],
-        chatAtivo: true, vip: false, lojaLiberada: false,
-        rua: rua || null, numero: numero || null, 
-        latitude: cadastroCoords.latitude, longitude: cadastroCoords.longitude,
-        usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
-        codigosResgatados: [],
-        indicadoPorEmail: indicadorEmail || null,
-        bonusIndicacaoPendente: !!indicadorEmail,
-        fcmTokens: [],
-        cortesRealizados: 0, 
-        conquistas: [], 
-        clientesAtendidos: 0, 
-        somaAvaliacoes: 0, numAvaliacoes: 0,
-        ultimoBoostComprado: null
-      };
-      await db.collection("usuarios").doc(cred.user.uid).set(data);
-      notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
-    })
-    .catch(e => alert("Erro ao criar conta: " + e.message));
-}
-
-document.getElementById('tipo').addEventListener('change', (e) => {
-  const isBarbeiro = e.target.value === 'barbeiro';
-  document.getElementById('rua').classList.toggle('hidden', !isBarbeiro);
-  document.getElementById('numero').classList.toggle('hidden', !isBarbeiro);
-  cadastroCoords = null; 
-});
-
-auth.onAuthStateChanged(async user => {
-  solicitarPermissaoNotificacao();
-  obterLocalizacaoAtual();
-  if (pendenciasInterval) clearInterval(pendenciasInterval);
-
-  if (!user) {
-    userView = { originalType: null, currentType: null };
-    mostrar("guestView");
-    configurarBotoesGuest();
-    carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
-    document.getElementById("btnSair").classList.add("hidden");
-    document.getElementById("redeemContainer").classList.add("hidden");
-    if(globalChatListener) globalChatListener(); 
-    if(vendaListener) vendaListener();
-    if (comprasClienteListener) comprasClienteListener();
     return;
   }
   const ref = db.collection("usuarios").doc(user.uid);
@@ -4719,15 +2242,12 @@ auth.onAuthStateChanged(async user => {
     return;
   }
   
-  if(!userView.originalType) {
-    userView.originalType = perfil.tipo;
-    userView.currentType = perfil.tipo;
-  }
+  userView.originalType = perfil.tipo;
+  userView.currentType = perfil.tipo;
   renderCurrentView();
   
   setupFCM(user.uid);
   exibirVersaoApp();
-  iniciarVerificacaoDePendencias(user.uid);
 
   setTimeout(() => { document.getElementById("btnSair").classList.remove("hidden"); }, 15000);
 
@@ -4790,19 +2310,6 @@ auth.onAuthStateChanged(async user => {
           });
         });
     }
-
-    // Listener de confirmação para compradores
-    if (comprasClienteListener) comprasClienteListener();
-    comprasClienteListener = db.collection('loja_pedidos')
-      .where('clienteUid', '==', user.uid)
-      .where('status', '==', 'entregue_pendente_confirmacao')
-      .onSnapshot(snapshot => {
-        if (!snapshot.empty) {
-            const pedido = snapshot.docs[0].data();
-            pedido.id = snapshot.docs[0].id;
-            abrirModalConfirmacaoComprador(pedido);
-        }
-      });
 });
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -4889,10 +2396,13 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     
     if (barbeirosListener) barbeirosListener();
     let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
+    if(!isGuest && perfil && perfil.cidade) {
+        query = query.where("cidade", "==", perfil.cidade);
+    }
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-            lista.innerHTML = `<p>😔 Nenhum barbeiro encontrado no momento.</p>`;
+            lista.innerHTML = `<p>😔 Nenhum barbeiro encontrado ${isGuest ? 'no momento' : `em ${perfil.cidade}`}.</p>`;
             return;
         }
 
@@ -4948,10 +2458,10 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             }
             
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
-            const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
+            const boostIcon = '';
 
             lista.innerHTML += `
-              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
+              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}')">
                   ${boostIcon}
                   <div class="card-header">
                       <div class="card-header-info">
@@ -4990,8 +2500,8 @@ function verificarEstadoBotaoAgendar() {
     document.getElementById('btnConfirmarAgendamento').disabled = !(agendamentoState.servico && agendamentoState.horario);
 }
 
-async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
-    if (isGuest || !auth.currentUser) {
+async function abrirBarbeiroPerfil(barbeiroUid) {
+    if (!auth.currentUser) {
         alert("Para agendar um horário, por favor, faça login ou crie uma conta.");
         return mostrar('authView');
     }
@@ -5407,7 +2917,7 @@ async function createMessageDiv(msg) {
 }
 
 
-const botMessages = [ "Dica: Avalie seu barbeiro após o serviço para ganhar 10 pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos nos depósitos!", "Barbeiros: mantenham sua agenda e serviços atualizados para atrair mais clientes e facilitar os agendamentos.", "Fique de olho no nosso Blog! Administradores podem postar códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!" ];
+const botMessages = [ "Dica: Avalie seu barbeiro após o serviço para ganhar 10 pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos via Pix de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos nos depósitos!", "Barbeiros: mantenham sua agenda e serviços atualizados para atrair mais clientes e facilitar os agendamentos.", "Fique de olho no nosso Blog! Administradores podem postar códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!" ];
 let lastBotMessageIndex = -1;
 
 function sendBotMessage() {
@@ -5507,7 +3017,7 @@ function alterarNomeBarbeiro(event) {
   db.collection("usuarios").doc(auth.currentUser.uid).update({ nome: novoNome })
     .then(() => {
       alert("Nome alterado com sucesso!");
-      fecharModalAtual();
+      fecharModal(event);
     }).catch(e => alert("Erro ao alterar nome: " + e.message));
 }
 
@@ -5525,7 +3035,7 @@ function alterarEnderecoBarbeiro(event) {
     }).then(() => {
         alert("Endereço alterado com sucesso!");
         cadastroCoords = null;
-        fecharModalAtual();
+        fecharModal(event);
     }).catch(e => alert("Erro ao alterar endereço: " + e.message));
 }
 
@@ -5854,7 +3364,7 @@ function abrirAvaliacoesBarbeiro() {
 }
 
 // ======================================================================
-// --- NOVAS FUNÇÕES DE PAGAMENTO (APRIMORADO) ---
+// --- NOVAS FUNÇÕES DE PAGAMENTO ---
 // ======================================================================
 
 function iniciarDeposito() {
@@ -5865,74 +3375,245 @@ function iniciarSaque() {
   abrirModal('modalSaque');
 }
 
-function processarPagamentoPixAprimorado() {
-    abrirModal('modalGerandoQRCode');
-    setTimeout(() => {
-        fecharModalAtual();
-        abrirModal('modalExibirPixAprimorado');
-        iniciarTimerPix(600); // 10 minutos
-    }, 3000); // Simula o carregamento de 3 segundos
+function abrirModalMetodosPagamento() {
+    const valor = parseFloat(document.getElementById('depositoValor').value);
+    const cpf = document.getElementById('depositoCpf').value.trim();
+
+    if (isNaN(valor) || valor <= 0) {
+        return alert("Por favor, insira um valor de depósito válido.");
+    }
+    if (!cpf || cpf.replace(/\D/g, '').length !== 11) {
+        return alert("Por favor, insira um CPF válido.");
+    }
+    abrirModal('modalMetodosPagamento');
 }
 
-function processarPagamentoCartaoAprimorado() {
-    document.getElementById('carregandoGenericoTitulo').textContent = 'Aguarde...';
-    document.getElementById('carregandoGenericoTexto').textContent = 'Você está sendo redirecionado para um ambiente de pagamento seguro.';
-    abrirModal('modalCarregandoGenerico');
-    setTimeout(() => {
-        window.location.href = 'https://pay.kiwify.com.br/T3M9m1C';
-    }, 3000); // Simula o processamento de 3 segundos
+function abrirModalCartao() {
+    const valor = parseFloat(document.getElementById('depositoValor').value);
+    document.getElementById('valorCartaoDisplay').textContent = `R$ ${valor.toFixed(2)}`;
+    abrirModal('modalCartaoCredito');
 }
 
-function iniciarTimerPix(duracao) {
-    if (pixTimerInterval) clearInterval(pixTimerInterval);
-    let timer = duracao;
-    const display = document.getElementById('pixTimer');
-    pixTimerInterval = setInterval(() => {
-        const minutos = parseInt(timer / 60, 10);
-        const segundos = parseInt(timer % 60, 10);
-        display.textContent = `${minutos < 10 ? "0" + minutos : minutos}:${segundos < 10 ? "0" + segundos : segundos}`;
-        if (--timer < 0) {
-            clearInterval(pixTimerInterval);
-            display.textContent = "EXPIRADO";
-            alert("O tempo para pagamento via PIX expirou. Por favor, gere um novo código.");
-            fecharModalAtual();
+async function processarPagamentoPix() {
+    const valor = document.getElementById('depositoValor').value;
+    const cpf = document.getElementById('depositoCpf').value;
+    const nome = document.getElementById('depositoNome').value;
+    const email = document.getElementById('depositoEmail').value;
+    const telefone = document.getElementById('depositoTelefone').value;
+
+    if (!valor || !cpf || !nome || !email || !telefone) {
+        alert("Por favor, preencha todos os campos obrigatórios para o depósito.");
+        return;
+    }
+
+    const valorNumerico = parseFloat(valor);
+    if (isNaN(valorNumerico) || valorNumerico <= 0) {
+        alert("Por favor, insira um valor de depósito válido.");
+        return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("Você precisa estar logado para fazer um depósito.");
+        return;
+    }
+    
+    // Mostra o modal de carregamento
+    abrirModal('modalCarregandoPix');
+
+    // Remove caracteres não-numéricos do CPF e telefone
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    const telefoneLimpo = telefone.replace(/\D/g, '');
+
+    const dadosCliente = {
+        nome: nome,
+        email: email,
+        cpf: cpfLimpo, // Enviando o CPF limpo
+        telefone: telefoneLimpo // Enviando o telefone limpo
+    };
+    
+    try {
+        const response = await fetch('https://navalhabackend.onrender.com/criar-cobranca-pix', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                valor: valorNumerico,
+                uid: user.uid,
+                dadosCliente: dadosCliente
+            })
+        });
+
+        // Verificação para saber se a requisição foi bem-sucedida ou não
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Erro desconhecido ao processar pagamento.");
         }
-    }, 1000);
+
+        const data = await response.json();
+
+        // Fecha o modal de carregamento e abre o modal do QR Code
+        fecharModal('modalCarregandoPix');
+        abrirModal('modalPix');
+
+        document.getElementById('qrCodeImage').src = data.qrCodeImageUrl;
+        document.getElementById('qrCodeText').value = data.qrCodeText;
+
+    } catch (error) {
+        fecharModalAtual();
+        console.error("Erro ao criar cobrança PIX:", error);
+        alert(`Ocorreu um erro ao gerar a cobrança PIX. Detalhes: ${error.message}`);
+    }
 }
 
-function copiarCodigoPixAprimorado() {
-    const texto = document.getElementById('pixChaveAleatoria').value;
+async function processarPagamentoCartao() {
+    // 1. Coleta os dados do cliente e do depósito
+    const valor = document.getElementById('depositoValor').value;
+    const cpf = document.getElementById('depositoCpf').value;
+    const nome = document.getElementById('depositoNome').value;
+    const email = document.getElementById('depositoEmail').value;
+    const telefone = document.getElementById('depositoTelefone').value;
+
+    if (!valor || !cpf || !nome || !email || !telefone) {
+        alert("Por favor, preencha todos os campos obrigatórios para o depósito.");
+        return;
+    }
+
+    // 2. Coleta os dados do cartão de crédito (AGORA COM AS IDs CORRETAS)
+    const cardHolderName = document.getElementById('cardHolderName').value;
+    const cardNumber = document.getElementById('cardNumber').value;
+    const cardExpiry = document.getElementById('cardExpiry').value;
+    const cardCvv = document.getElementById('cardCvv').value;
+
+    // Validação básica dos dados do cartão
+    if (!cardHolderName || !cardNumber || !cardExpiry || !cardCvv) {
+        alert("Por favor, preencha todos os dados do cartão de crédito.");
+        return;
+    }
+
+    const valorNumerico = parseFloat(valor);
+    if (isNaN(valorNumerico) || valorNumerico <= 0) {
+        alert("Por favor, insira um valor de depósito válido.");
+        return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("Você precisa estar logado para fazer um depósito.");
+        return;
+    }
+
+    // Mostra o modal de carregamento
+    abrirModal('modalCarregando');
+
+    // Remove caracteres não-numéricos do CPF e telefone
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    const telefoneLimpo = telefone.replace(/\D/g, '');
+
+    // 3. CRIPTOGRAFA os dados do cartão com a chave pública do PagBank
+    const encryptedCard = PagSeguro.encryptCard({
+        publicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYt7Xv2Y8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8s8h4q4x8z3V8hQ==',
+        cardNumber: cardNumber,
+        cvv: cardCvv,
+        expirationMonth: cardExpiry.split('/')[0],
+        expirationYear: '20' + cardExpiry.split('/')[1] // Adiciona '20' para o ano
+    });
+
+    // 4. Cria o objeto de dados para enviar para o backend
+    const data = {
+        valor: valorNumerico,
+        uid: user.uid,
+        dadosCliente: {
+            nome: cardHolderName,
+            email: email,
+            cpf: cpfLimpo,
+            telefone: telefoneLimpo
+        },
+        encryptedCard: encryptedCard
+    };
+
+    // 5. Envia os dados para o seu backend
+    try {
+        const response = await fetch('https://navalhabackend.onrender.com/criar-e-pagar-com-cartao', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Erro desconhecido ao processar pagamento.");
+        }
+
+        const responseData = await response.json();
+
+        fecharModal('modalCarregando');
+        if (responseData.status === 'PAID' || responseData.status === 'AUTHORIZED') {
+            alert('Pagamento com cartão de crédito aprovado!');
+        } else {
+            alert('O pagamento não foi aprovado. Status: ' + responseData.status);
+        }
+        
+        fecharModal('modalCartaoCredito');
+        fecharModal(null); // Fecha o último modal aberto
+
+    } catch (error) {
+        fecharModal('modalCarregando');
+        console.error("Erro ao processar pagamento com cartão:", error);
+        alert(`Ocorreu um erro ao processar seu pagamento. Verifique seus dados e tente novamente. Detalhes: ${error.message}`);
+    }
+}
+
+function copiarCodigoPix() {
+    const texto = document.getElementById('pix-cod-copia').textContent;
     const btn = event.target;
     navigator.clipboard.writeText(texto).then(() => {
         btn.textContent = '✅ Copiado!';
-        setTimeout(() => { btn.textContent = 'Copiar Chave Aleatória PIX'; }, 2000);
+        setTimeout(() => { btn.textContent = '📋 Copiar Código'; }, 2000);
     }).catch(err => {
         alert("Não foi possível copiar o código. Por favor, selecione e copie manualmente.");
     });
 }
 
-function confirmarEnvioComprovante() {
-    const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app Navalha de Ouro.");
-    window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
-}
-
-function confirmarSaque() {
+async function confirmarSaque() {
     const valor = parseFloat(document.getElementById('saqueValor').value);
     const chaveTipo = document.getElementById('saqueChavePixTipo').value;
     const chave = document.getElementById('saqueChavePix').value.trim();
+    const btn = document.getElementById('btnConfirmarSaque');
 
     if (isNaN(valor) || valor <= 0) return alert("Valor de saque inválido.");
     if (!chaveTipo) return alert("Selecione o tipo da chave PIX.");
     if (!chave) return alert("Insira sua chave PIX.");
     if (perfil.saldo < valor) return alert("Saldo insuficiente.");
 
-    abrirModal('modalSaqueConfirmado');
-}
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
 
-function contatarAdminSaque() {
-    const mensagem = encodeURIComponent(`Olá! Acabei de solicitar um saque no valor de R$${document.getElementById('saqueValor').value} e gostaria de confirmar o recebimento.`);
-    window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
-    fecharModalAtual();
+    try {
+        const response = await fetch("https://navalhabackend.onrender.com/solicitar-saque", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                barbeiroUid: auth.currentUser.uid,
+                valorSaque: valor,
+                dadosPix: { tipoChave: chaveTipo, chave: chave }
+            }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        abrirModal('modalSaqueEnviado');
+
+    } catch (error) {
+        alert("Erro ao solicitar saque: " + error.message);
+    } finally {
+        btn.textContent = '✅ Confirmar Saque';
+        btn.disabled = false;
+    }
 }
 
 // ======================================================================
@@ -6599,8 +4280,12 @@ async function carregarProdutos() {
             }
         });
 
-        if (!officialProductsFound) {
-            officialHtml += '<p style="grid-column: 1 / -1; font-size: 14px; opacity: 0.7;">Nenhum produto oficial no momento.</p>';
+        if (officialProductsFound) {
+            officialHtml += `
+              <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: var(--cor-botoes); border-radius: 10px; margin-top: 10px;">
+                ✨ Compre um produto oficial e ganhe <strong>200 pontos</strong> de fidelidade + um ícone exclusivo <strong>👕✨</strong> no chat!
+              </div>
+            `;
         }
 
         const getUserScore = (uid) => {
@@ -6638,38 +4323,43 @@ async function carregarProdutos() {
 }
 
 
-function renderProdutoCard(p) {
-  const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
-  const precoHtml = p.desconto
-    ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}`
-    : `R$ ${p.preco.toFixed(2)}`;
-
-  const produtoStr = encodeURIComponent(JSON.stringify(p));
-
-  return `
-    <div class="produto-card" onclick='handleProdutoClick("${produtoStr}")'>
-      <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
-      <div class="produto-info">
-        <div class="produto-nome">${p.nome}</div>
-        <div class="produto-preco">${precoHtml}</div>
-      </div>
-    </div>
-  `;
+function renderProdutoCard(p, pJson) {
+    const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
+    const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
+    
+    return `
+        <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
+            <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
+            <div class="produto-info">
+                <div class="produto-nome">${p.nome}</div>
+                <div class="produto-preco">${precoHtml}</div>
+            </div>
+        </div>
+    `;
 }
 
-function handleProdutoClick(produtoStr) {
-  try {
-    const produto = JSON.parse(decodeURIComponent(produtoStr));
-    if (!auth.currentUser) {
-      alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
-      mostrar('authView');
-    } else {
-      abrirDetalhesProduto(produto);
+async function comprarProdutoOficial(nomeProduto) {
+    if (confirm(`Confirmar a compra do produto oficial "${nomeProduto}"? Você ganhará 200 pontos de fidelidade e um ícone exclusivo no chat! 👕✨`)) {
+        try {
+            const userRef = db.collection("usuarios").doc(auth.currentUser.uid);
+            await userRef.update({
+                pontosFidelidade: firebase.firestore.FieldValue.increment(200),
+                possuiItemExclusivo: true
+            });
+            alert("✅ Compra confirmada! Seus benefícios foram adicionados à sua conta.");
+            notifyUser(auth.currentUser.uid, "🏆 Recompensa Exclusiva!", "Você ganhou 200 pontos + ícone 👕✨ por comprar um item oficial!");
+        } catch (error) {
+            console.error("Erro ao processar compra de item oficial:", error);
+            alert("Ocorreu um erro ao processar sua compra. Tente novamente.");
+        }
     }
-  } catch (e) {
-    console.error("Erro ao abrir produto:", e);
-    alert("Não foi possível abrir os detalhes do produto.");
-  }
+}
+
+
+function contatarVendedor(telefone, nomeProduto) {
+    if(!telefone) return alert('Este vendedor não cadastrou um telefone.');
+    const msg = encodeURIComponent(`Olá! Vi seu produto "${nomeProduto}" na loja do app Navalha de Ouro e tenho interesse.`);
+    window.open(`https://wa.me/55${telefone}?text=${msg}`, '_blank');
 }
 
 async function exibirVersaoApp() {
@@ -6689,16 +4379,20 @@ async function exibirVersaoApp() {
 
 function recarregarSaldoDoUsuario() {
     alert("💰 Seu saldo foi atualizado! A interface irá refletir a mudança em instantes.");
+    // O listener onSnapshot já cuidará de atualizar o valor na tela.
+    // Esta função serve apenas para notificar o usuário da mudança.
 }
 
 if (firebase.messaging.isSupported()) {
     messaging.onMessage((payload) => {
         console.log('Mensagem de primeiro plano recebida:', payload);
 
+        // Se a mensagem for sobre saldo (enviada pelo admin ou webhook), avisa o usuário
         if (payload.data && payload.data.tipo === 'atualizar_saldo') {
             recarregarSaldoDoUsuario();
         }
 
+        // Exibe uma notificação no navegador para o usuário
         if (payload.notification) {
             const notificationTitle = payload.notification.title;
             const notificationOptions = {
@@ -6712,7 +4406,7 @@ if (firebase.messaging.isSupported()) {
     });
 }
 // NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
-async function abrirDetalhesProduto(produto) {
+function abrirDetalhesProduto(produto) {
     produtoParaCompra = produto;
     document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
     document.getElementById('detalhesProdutoNome').textContent = produto.nome;
@@ -6731,10 +4425,6 @@ async function abrirDetalhesProduto(produto) {
         tamanhosContainer.innerHTML = 'Tamanho único';
     }
     
-    // Lógica de avaliação
-    const avaliacaoContainer = document.getElementById('detalhesProdutoAvaliacao');
-    await carregarAvaliacaoProduto(produto.id, produto.nome, avaliacaoContainer);
-    
     document.getElementById('btnComprarAgora').onclick = () => iniciarCompra(produto);
     abrirModal('modalProdutoDetalhes');
 }
@@ -6747,7 +4437,7 @@ function iniciarCompra(produto) {
     
     document.getElementById('compraEndereco').value = '';
     document.getElementById('compraTelefone').value = perfil.telefone || '';
-    document.getElementById('compraCep').value = '';
+    document.getElementById('compraMapsLink').value = '';
     
     document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra(produto, tamanhoSelecionado ? tamanhoSelecionado.value : 'único');
     abrirModal('modalConfirmarCompra');
@@ -6756,8 +4446,8 @@ function iniciarCompra(produto) {
 async function confirmarCompra(produto, tamanho) {
     const endereco = document.getElementById('compraEndereco').value.trim();
     const telefone = document.getElementById('compraTelefone').value.trim();
-    const cep = document.getElementById('compraCep').value.trim();
-    if (!endereco || !telefone || !cep) return alert('Endereço, telefone e CEP são obrigatórios.');
+    const mapsLink = document.getElementById('compraMapsLink').value.trim();
+    if (!endereco || !telefone) return alert('Endereço e telefone são obrigatórios.');
 
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
     if (perfil.saldo < precoFinal) return alert('Saldo insuficiente.');
@@ -6789,10 +4479,10 @@ async function confirmarCompra(produto, tamanho) {
                 clienteNome: perfil.nome,
                 endereco,
                 telefone,
-                cep,
+                mapsLink,
                 vendedorUid: produto.vendedorUid,
                 vendedorNotificado: false,
-                status: "pendente", // Status inicial
+                status: "pendente",
                 ts: firebase.firestore.FieldValue.serverTimestamp()
             });
         });
@@ -6882,6 +4572,7 @@ async function salvarProdutoVendedor() {
         nome, imagemUrl, preco, desconto, tempoEntrega, descricao, tamanhos,
         vendedorUid: auth.currentUser.uid,
         vendedorNome: perfil.nome,
+        vendedorTelefone: perfil.telefone,
         isOficial: perfil.tipo === 'admin',
         ts: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -6906,105 +4597,28 @@ async function deletarProdutoVendedor(produtoId) {
     }
 }
 
-async function abrirEntregasVendedor() {
-    abrirModal('modalEntregasVendedor');
-    const container = document.getElementById('listaEntregas');
-    container.innerHTML = '<p>Carregando entregas...</p>';
+async function abrirClientesVendedor() {
+    abrirModal('modalGerenciarLojaClientes');
+    const container = document.getElementById('listaClientesLoja');
+    container.innerHTML = '<p>Carregando clientes...</p>';
     
-    if (pedidosVendedorListener) pedidosVendedorListener();
-    pedidosVendedorListener = db.collection('loja_pedidos')
-      .where('vendedorUid', '==', auth.currentUser.uid)
-      .where('status', 'in', ['pendente', 'confirmado_pelo_cliente'])
-      .onSnapshot(snap => {
-        if(snap.empty) {
-            container.innerHTML = '<p>Nenhuma entrega pendente.</p>';
-            return;
-        }
-        container.innerHTML = '';
-        snap.forEach(doc => {
-            const pedido = doc.data();
-            let statusHtml = '';
-            let acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Marcar como Entregue</button>`;
-            
-            if (pedido.status === 'pendente') {
-                statusHtml = '<p style="color: #f1c40f;">Status: Aguardando Entrega</p>';
-            } else if (pedido.status === 'confirmado_pelo_cliente') {
-                statusHtml = '<p style="color: #2ecc71;">Status: Cliente confirmou recebimento!</p>';
-                acaoHtml = '<p>✅ Finalizado</p>';
-            }
-
-            container.innerHTML += `
-                <div class="card">
-                    <b>Comprador: ${pedido.clienteNome}</b>
-                    <p>Produto: ${pedido.produtoNome} (T: ${pedido.tamanho})</p>
-                    <p>Endereço: ${pedido.endereco} - CEP: ${pedido.cep}</p>
-                    <p>WhatsApp: <a href="https://wa.me/55${pedido.telefone}" target="_blank">${pedido.telefone}</a></p>
-                    ${statusHtml}
-                    ${acaoHtml}
-                </div>`;
-        });
-    });
-}
-
-async function marcarComoEntregue(pedidoId, clienteUid) {
-    if (!confirm("Confirmar que o produto foi entregue? O comprador será notificado para confirmar o recebimento.")) return;
-    try {
-        await db.collection('loja_pedidos').doc(pedidoId).update({ status: 'entregue_pendente_confirmacao' });
-        notifyUser(clienteUid, '🚚 Seu Pedido foi Entregue!', 'Por favor, confirme o recebimento do seu produto no app para finalizar a compra.');
-        alert('Notificação enviada ao comprador.');
-    } catch (e) {
-        alert('Erro ao marcar como entregue: ' + e.message);
-    }
-}
-
-async function abrirMinhasCompras() {
-    abrirModal('modalMinhasCompras');
-    const container = document.getElementById('listaMinhasCompras');
-    container.innerHTML = '<p>Carregando suas compras...</p>';
-
-    const snap = await db.collection('loja_pedidos').where('clienteUid', '==', auth.currentUser.uid).orderBy('ts', 'desc').get();
-    if (snap.empty) {
-        container.innerHTML = '<p>Você ainda não fez nenhuma compra.</p>';
+    const snap = await db.collection('loja_pedidos').where('vendedorUid', '==', auth.currentUser.uid).orderBy('ts', 'desc').get();
+    if(snap.empty) {
+        container.innerHTML = '<p>Nenhum cliente encontado.</p>';
         return;
     }
+    
     container.innerHTML = '';
     snap.forEach(doc => {
-        const compra = doc.data();
-        let statusTexto = 'Status desconhecido';
-        switch(compra.status) {
-            case 'pendente': statusTexto = 'Aguardando entrega'; break;
-            case 'entregue_pendente_confirmacao': statusTexto = 'Confirme o recebimento!'; break;
-            case 'confirmado_pelo_cliente': statusTexto = 'Entrega confirmada'; break;
-            case 'disputa': statusTexto = 'Entrega recusada'; break;
-        }
+        const pedido = doc.data();
         container.innerHTML += `
             <div class="card">
-                <b>${compra.produtoNome}</b>
-                <p>Status: ${statusTexto}</p>
-            </div>
-        `;
+                <b>${pedido.clienteNome}</b>
+                <p>Produto: ${pedido.produtoNome} (T: ${pedido.tamanho})</p>
+                <p>Endereço: ${pedido.endereco}</p>
+                <p>Telefone: ${pedido.telefone}</p>
+            </div>`;
     });
-}
-
-function abrirModalConfirmacaoComprador(pedido) {
-    document.getElementById('btnAceitarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, true);
-    document.getElementById('btnRecusarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, false);
-    abrirModal('modalConfirmacaoComprador');
-}
-
-async function responderConfirmacaoEntrega(pedidoId, aceito) {
-    const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
-    try {
-        const pedidoDoc = await db.collection('loja_pedidos').doc(pedidoId).get();
-        const vendedorUid = pedidoDoc.data().vendedorUid;
-        await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
-        const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
-        notifyUser(vendedorUid, '📦 Atualização de Entrega', msg);
-        alert('Resposta enviada com sucesso!');
-        fecharModalAtual();
-    } catch (e) {
-        alert('Erro ao enviar resposta: ' + e.message);
-    }
 }
 function toggleFuncoes(containerId) {
     const container = document.getElementById(containerId);
@@ -7013,102 +4627,19 @@ function toggleFuncoes(containerId) {
     }
 }
 
-function handleProdutoClick(produtoStr) {
-  try {
-    const produto = JSON.parse(decodeURIComponent(produtoStr));
+function fecharModalAtual() {
+    if(modalAberto) {
+        const event = { target: modalAberto };
+        fecharModal(event);
+    }
+}
+
+function handleProdutoClick(produto) {
     if (!auth.currentUser) {
-      alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
-      mostrar('authView');
+        alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
+        mostrar('authView');
     } else {
-      abrirDetalhesProduto(produto);
-    }
-  } catch (e) {
-    console.error("Erro ao abrir produto:", e);
-    alert("Não foi possível abrir os detalhes do produto.");
-  }
-}
-
-// Lógica de verificação de pendências e notificações
-function iniciarVerificacaoDePendencias(uid) {
-    if (pendenciasInterval) clearInterval(pendenciasInterval);
-    verificarPendencias(uid); // Executa uma vez imediatamente
-    pendenciasInterval = setInterval(() => verificarPendencias(uid), 60000); // Executa a cada minuto
-}
-
-async function verificarPendencias(uid) {
-    if (!uid || !perfil) return;
-
-    // Barbeiro: Agendamentos pendentes
-    if (perfil.tipo === 'barbeiro') {
-        const agendamentosSnap = await db.collection('agendamentos').where('barbeiroUid', '==', uid).where('status', '==', 'pendente').get();
-        const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
-        if (!agendamentosSnap.empty) {
-            btnAgendamentos?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⏰ Agendamento Pendente', `Você tem ${agendamentosSnap.size} novo(s) agendamento(s) para aprovar.`);
-        } else {
-            btnAgendamentos?.classList.remove('notificacao-pulsante');
-        }
-    }
-
-    // Cliente: Avaliações pendentes
-    if (perfil.tipo === 'cliente') {
-        const avaliacoesSnap = await db.collection('agendamentos').where('clienteUid', '==', uid).where('status', '==', 'concluido').where('avaliado', '==', false).get();
-        const btnHistorico = document.getElementById('btnHistoricoCliente');
-        if (!avaliacoesSnap.empty) {
-            btnHistorico?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⭐ Avaliação Pendente', `Você tem ${avaliacoesSnap.size} serviço(s) para avaliar e ganhar pontos!`);
-        } else {
-            btnHistorico?.classList.remove('notificacao-pulsante');
-        }
-    }
-}
-
-// Lógica de avaliação de produtos
-async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
-    container.innerHTML = '';
-    
-    // Regra para produtos "Navalha de Ouro"
-    if (produtoNome.toLowerCase().includes('navalha de ouro')) {
-        const hoje = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
-        const seed = produtoId + hoje;
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-            const char = seed.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash |= 0; 
-        }
-        const randomValue = (Math.abs(hash) % 10) / 10; // Valor de 0.0 a 0.9
-        const notaAleatoria = (4.1 + randomValue).toFixed(1);
-
-        const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
-        
-        let avaliacaoHtml = `<p class="avaliacao-estrelas">⭐ ${notaAleatoria}</p>`;
-        
-        if (!snap.empty) {
-            const ultimaAvaliacao = snap.docs[0].data();
-            const doisDiasAtras = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
-            if (ultimaAvaliacao.ts.toDate() > doisDiasAtras) {
-                avaliacaoHtml += `<p class="avaliacao-comentario">"${ultimaAvaliacao.comentario}"</p>`;
-            } else {
-                 avaliacaoHtml += `<p class="avaliacao-comentario">Veja as avaliações dos clientes.</p>`;
-            }
-        } else {
-             avaliacaoHtml += `<p class="avaliacao-comentario">Seja o primeiro a avaliar!</p>`;
-        }
-        container.innerHTML = avaliacaoHtml;
-
-    } else {
-        // Regra para outros produtos
-        const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
-        if (snap.empty) {
-            container.innerHTML = `<p class="avaliacao-estrelas">⭐ Sem avaliação</p><p class="avaliacao-comentario">Seja o primeiro a avaliar!</p>`;
-        } else {
-            const avaliacao = snap.docs[0].data();
-            container.innerHTML = `
-                <p class="avaliacao-estrelas">⭐ ${avaliacao.nota.toFixed(1)}</p>
-                <p class="avaliacao-comentario">"${avaliacao.comentario}"</p>
-            `;
-        }
+        abrirDetalhesProduto(produto);
     }
 }
 </script>
@@ -7143,479 +4674,6 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
         });
       });
     }
-/* ============================================
-   PART 2 — IMPLEMENTAÇÕES 1–7 (APENAS ADIÇÕES)
-   Cole este bloco no FINAL do seu <script> atual
-   ============================================ */
-
-// [1] VIP: brilho dourado sem pulsar quando VIP; pulsar removido
-const GOLD_PULSE_CLASS = 'notificacao-pulsante-gold';
-(function injectGoldPulseCSS(){
-  const style = document.createElement('style');
-  style.textContent = `
-    .notificacao-pulsante-gold {
-      position: relative;
-      animation: gold-pulse 1.5s ease-in-out infinite;
-      box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
-      border-color: var(--cor-destaque-ouro) !important;
-    }
-    @keyframes gold-pulse {
-      0% { box-shadow: 0 0 6px rgba(255,215,0,0.3); transform: scale(1); }
-      50% { box-shadow: 0 0 16px rgba(255,215,0,0.7); transform: scale(1.02); }
-      100% { box-shadow: 0 0 6px rgba(255,215,0,0.3); transform: scale(1); }
-    }
-    .vip-brilho-dourado {
-      box-shadow: inset 0 0 0 999px rgba(255, 215, 0, 0.12), 0 0 10px rgba(255,215,0,0.5);
-      border-color: var(--cor-destaque-ouro) !important;
-    }
-  `;
-  document.head.appendChild(style);
-})();
-
-function atualizarEstadoBotaoVip() {
-  const btnVip = document.getElementById('btnVip');
-  if (!btnVip || !perfil) return;
-  btnVip.classList.remove('notificacao-pulsante', GOLD_PULSE_CLASS, 'vip-glow');
-  if (perfil.vip) {
-    btnVip.textContent = '👑 Sou VIP';
-    btnVip.classList.add('vip-brilho-dourado');
-  } else {
-    btnVip.textContent = '💎 VIP';
-    btnVip.classList.remove('vip-brilho-dourado');
-  }
-}
-(function hookVipButtonState(){
-  const applyVipStateInterval = setInterval(() => {
-    if (perfil) {
-      atualizarEstadoBotaoVip();
-      clearInterval(applyVipStateInterval);
-    }
-  }, 500);
-})();
-
-// [2] Admin: botões Solicitações/Denúncias com pulsação dourada e notificações por minuto
-function atualizarPendenciasAdminBotoes() {
-  const btnSolicitacoes = document.querySelector('#adminView button[onclick="abrirModalSolicitacoes()"]');
-  const btnDenuncias = document.querySelector('#adminView button[onclick="abrirDenuncias()"]');
-  if (!btnSolicitacoes || !btnDenuncias) return;
-
-  db.collection("solicitacoes").where("status", "==", "pendente")
-    .get().then(snap => {
-      btnSolicitacoes.classList.toggle(GOLD_PULSE_CLASS, !snap.empty);
-    });
-
-  db.collection("denuncias").where("status", "==", "aberta")
-    .get().then(snap => {
-      btnDenuncias.classList.toggle(GOLD_PULSE_CLASS, !snap.empty);
-    });
-}
-
-function iniciarNotificacoesPendentesPorMinuto() {
-  if (window.__navalhaPendenciasTimer) return;
-  window.__navalhaPendenciasTimer = setInterval(async () => {
-    if (!perfil || !auth.currentUser) return;
-    try {
-      if (perfil.tipo === 'admin') {
-        atualizarPendenciasAdminBotoes();
-        const pendSolicit = await db.collection("solicitacoes").where("status", "==", "pendente").get();
-        const pendDenun = await db.collection("denuncias").where("status", "==", "aberta").get();
-        const totalPend = pendSolicit.size + pendDenun.size;
-        if (totalPend > 0) {
-          notifyUser(auth.currentUser.uid, "⏰ Pendências no Sistema", `Existem ${totalPend} itens pendentes para ação.`, { deepLink: 'admin_pendencias' });
-        }
-      }
-      if (perfil.tipo === 'barbeiro') {
-        const pendAg = await db.collection('agendamentos').where('barbeiroUid', '==', auth.currentUser.uid).where('status', '==', 'pendente').get();
-        if (!pendAg.empty) {
-          notifyUser(auth.currentUser.uid, '⏰ Agendamento Pendente', `Você tem ${pendAg.size} agendamento(s) para aprovar.`, { deepLink: 'barbeiro_agendamentos' });
-        }
-      }
-      if (perfil.tipo === 'cliente') {
-        const pendAv = await db.collection('agendamentos')
-          .where('clienteUid', '==', auth.currentUser.uid)
-          .where('status', '==', 'concluido')
-          .where('avaliado', '==', false).get();
-        if (!pendAv.empty) {
-          notifyUser(auth.currentUser.uid, '⭐ Avaliação Pendente', `Você tem ${pendAv.size} serviço(s) para avaliar!`, { deepLink: 'cliente_historico' });
-        }
-      }
-    } catch (e) { console.warn('Falha ao checar pendências por minuto:', e); }
-  }, 60000);
-}
-(function autoStartPendenciasAdmin(){
-  const startInterval = setInterval(() => {
-    if (auth && auth.currentUser) {
-      iniciarNotificacoesPendentesPorMinuto();
-      clearInterval(startInterval);
-    }
-  }, 800);
-})();
-
-// [3] Carteira depósito: formulário de dados + overlay expirado PIX + fechar popups ao confirmar + notificação admin ao copiar chave
-// Modal de dados já foi injetado na Parte 1; aqui está o fluxo
-(function patchDepositoFluxo(){
-  const originalIniciarDeposito = iniciarDeposito;
-  iniciarDeposito = function() {
-    abrirModal('modalDadosDeposito');
-    const inputs = ['depPrimeiroNome','depSegundoNome','depCPF','depTelefone'].map(id => document.getElementById(id));
-    const btnCont = document.getElementById('btnContinuarDadosDeposito');
-    const validate = () => {
-      const filled = inputs.every(i => i && i.value.trim().length > 0);
-      btnCont.disabled = !filled;
-    };
-    inputs.forEach(i => i.addEventListener('input', validate));
-    validate();
-    btnCont.onclick = () => {
-      fecharModalAtual();
-      abrirModal('modalDeposito');
-    };
-  };
-
-  // Fechar todos os popups
-  window.fecharTodosOsPopups = function() {
-    const modals = document.querySelectorAll('.modal.show');
-    modals.forEach(m => {
-      m.classList.remove('show');
-      setTimeout(() => { m.style.display = 'none'; }, 300);
-    });
-  };
-
-  // Timer PIX com overlay
-  const originalIniciarTimerPix = iniciarTimerPix;
-  iniciarTimerPix = function(duracao){
-    let timer = duracao;
-    const display = document.getElementById('pixTimer');
-    if (window.pixTimerInterval) clearInterval(window.pixTimerInterval);
-    window.pixTimerInterval = setInterval(() => {
-      const minutos = parseInt(timer / 60, 10);
-      const segundos = parseInt(timer % 60, 10);
-      display.textContent = `${minutos < 10 ? "0" + minutos : minutos}:${segundos < 10 ? "0" + segundos : segundos}`;
-      if (--timer < 0) {
-        clearInterval(window.pixTimerInterval);
-        display.textContent = "EXPIRADO";
-        abrirModal('modalPixExpirado');
-      }
-    }, 1000);
-  };
-
-  // Confirmar comprovante fecha tudo e abre WhatsApp (mantém original)
-  const originalConfirmarEnvioComprovante = confirmarEnvioComprovante;
-  confirmarEnvioComprovante = function(){
-    fecharTodosOsPopups();
-    originalConfirmarEnvioComprovante();
-  };
-
-  // Copiar chave PIX dispara notificação verde para admin
-  const originalCopiarCodigoPixAprimorado = copiarCodigoPixAprimorado;
-  copiarCodigoPixAprimorado = function() {
-    originalCopiarCodigoPixAprimorado();
-    notifyAdmins("🟩 Possível Depósito via PIX", "Um usuário copiou a chave PIX. Fique atento!", { tipo: 'deposito_pix_copiado' });
-  };
-})();
-
-// [3b] Logout recarrega página
-(function attachLogoutReload(){
-  const btnSair = document.getElementById('btnSair');
-  if (btnSair) {
-    btnSair.onclick = async () => {
-      try { await auth.signOut(); } finally { location.reload(); }
-    };
-  }
-})();
-
-// [4] Alternador de painel simplificado (não-admin): único botão Loja/Painel
-(function patchViewSwitcher(){
-  const originalSetup = setupViewSwitcher;
-  setupViewSwitcher = function(){
-    const container = document.getElementById("botaoExtra");
-    if (!container) return originalSetup();
-    container.innerHTML = "";
-    if (!userView.originalType) return;
-
-    if (userView.originalType === 'admin') {
-      return originalSetup(); // Admin mantém como está
-    }
-    const lojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
-    const btn = document.createElement("button");
-    btn.textContent = lojaVisivel ? "🏠 Painel principal" : "🛍️ Loja";
-    btn.onclick = () => {
-      if (lojaVisivel) {
-        mostrarPainelAtual();
-      } else {
-        mostrar('lojaView'); carregarProdutos();
-      }
-      setupViewSwitcher();
-    };
-    btn.style.borderColor = "var(--cor-destaque-ouro)";
-    container.appendChild(btn);
-  };
-})();
-
-// [5] Confirmação de entrega: modal sem fechar, vendedor só conclui quando cliente aceitar
-(function patchConfirmacaoEntrega(){
-  const originalAbrirModalConfirmacaoComprador = abrirModalConfirmacaoComprador;
-  abrirModalConfirmacaoComprador = function(pedido) {
-    const modal = document.getElementById('modalConfirmacaoComprador');
-    // Bloqueia fechar clicando fora
-    modal.onclick = (e) => { e.stopPropagation(); }; // ignore close by backdrop
-    const btnAceitar = document.getElementById('btnAceitarEntrega');
-    const btnRecusar = document.getElementById('btnRecusarEntrega');
-    btnAceitar.onclick = () => responderConfirmacaoEntrega(pedido.id, true);
-    btnRecusar.onclick = () => responderConfirmacaoEntrega(pedido.id, false);
-    abrirModal('modalConfirmacaoComprador');
-  };
-
-  const originalResponderConfirmacaoEntrega = responderConfirmacaoEntrega;
-  responderConfirmacaoEntrega = async function(pedidoId, aceito) {
-    const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
-    try {
-      const pedidoDoc = await db.collection('loja_pedidos').doc(pedidoId).get();
-      const vendedorUid = pedidoDoc.data().vendedorUid;
-      await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
-      const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
-      notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { deepLink: 'vendedor_entregas' });
-      alert('Resposta enviada com sucesso!');
-      fecharModalAtual();
-    } catch (e) {
-      alert('Erro ao enviar resposta: ' + e.message);
-    }
-  };
-})();
-
-// [6] Cartão de crédito: popup taxa administrativa + notificação verde para admin ao continuar
-(function patchCartaoCreditoFluxo(){
-  // Injetar modal de taxa administrativa
-  const modalTaxaHTML = `
-    <div id="modalTaxaCartao" class="modal" onclick="fecharModal(event)" style="display:none;">
-      <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>💳 Taxa Administrativa</h3>
-        <p>Transações por cartão possuem taxa fixa cobrada pela plataforma segura de pagamentos.</p>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-          <button id="btnContinuarTaxaCartao">✅ Continuar</button>
-          <button data-modal-id="modalTaxaCartao" onclick="fecharModal(event)">❌ Cancelar</button>
-        </div>
-      </div>
-    </div>`;
-  const div = document.createElement('div'); div.innerHTML = modalTaxaHTML; document.body.appendChild(div);
-
-  const originalProcessarPagamentoCartaoAprimorado = processarPagamentoCartaoAprimorado;
-  processarPagamentoCartaoAprimorado = function() {
-    abrirModal('modalTaxaCartao');
-    const btnContinuar = document.getElementById('btnContinuarTaxaCartao');
-    btnContinuar.onclick = () => {
-      // Notificação bem chamativa ao admin
-      notifyAdmins("🟩 Pagamento por Cartão Iniciado", "Um usuário iniciou pagamento por cartão. Verifique.", { tipo: 'pagamento_cartao' });
-      // Segue fluxo original
-      document.getElementById('carregandoGenericoTitulo').textContent = 'Aguarde...';
-      document.getElementById('carregandoGenericoTexto').textContent = 'Você está sendo redirecionado para um ambiente de pagamento seguro.';
-      abrirModal('modalCarregandoGenerico');
-      setTimeout(() => { window.location.href = 'https://pay.kiwify.com.br/T3M9m1C'; }, 3000);
-      fecharModalAtual(); // fecha taxa
-    };
-  };
-})();
-
-// [7] Notificações clicáveis com deep link para telas específicas
-(function enableNotificationDeepLinks(){
-  // já recebemos payload em messaging.onMessage; vamos abrir telas baseado em data.deepLink
-  if (firebase.messaging.isSupported()) {
-    messaging.onMessage((payload) => {
-      const data = payload.data || {};
-      if (data.deepLink) {
-        setTimeout(() => {
-          switch(data.deepLink) {
-            case 'barbeiro_agendamentos': abrirAgendamentosBarbeiro(); break;
-            case 'cliente_historico': abrirHistoricoCliente(); break;
-            case 'admin_pendencias': abrirModalSolicitacoes(); abrirDenuncias(); break;
-            case 'vendedor_entregas': abrirEntregasVendedor(); break;
-            case 'saque_solicitacoes': abrirModalSolicitacoes(); break;
-            default: break;
-          }
-        }, 300);
-      }
-    });
-  }
-})();
-
-/* ============================================
-   PART 3 — IMPLEMENTAÇÕES 8–12
-   ============================================ */
-
-// [8] Publicação automática de blogs com códigos de resgate às 00:00
-function publicarBlogAutomatico() {
-  const agora = new Date();
-  if (agora.getHours() === 0 && agora.getMinutes() === 0) {
-    // Gera palavra aleatória relacionada a cortes/barbearia
-    const palavras = ["(fade)", "(degradê)", "(moicano)", "(barba)", "(tesoura)", "(máquina)", "(undercut)", "(pompadour)", "(navalha)", "(barbearia)"];
-    const palavra = palavras[Math.floor(Math.random() * palavras.length)];
-    db.collection("blog").add({
-      titulo: "💈 Código Relâmpago!",
-      conteudo: `Use este código hoje: ${palavra}`,
-      autor: "Sistema Navalha de Ouro",
-      autorUid: "system",
-      ts: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
-}
-// Checagem a cada minuto
-setInterval(publicarBlogAutomatico, 60000);
-
-// [9] Correção da notificação em massa (tratamento de JSON)
-async function enviarNotificacaoMarketing() {
-  const title = document.getElementById('marketingTitulo').value.trim();
-  const body = document.getElementById('marketingCorpo').value.trim();
-  if (!title || !body || !confirm(`Confirma o envio da notificação em massa?`)) return;
-  try {
-    const response = await fetch("https://navalhabackend.onrender.com/enviar-notificacao-massa", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, body, adminUid: auth.currentUser.uid }),
-    });
-    const text = await response.text();
-    let data;
-    try { data = JSON.parse(text); } catch { throw new Error("Resposta inválida do servidor: " + text); }
-    if (!response.ok) throw new Error(data.message || "Erro desconhecido");
-    alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
-    fecharModalAtual();
-  } catch (error) {
-    alert('Falha ao enviar: ' + error.message);
-  }
-}
-
-// [10] Correção do popup de produto com formulário completo e confirmação de débito
-async function abrirDetalhesProduto(produto) {
-  produtoParaCompra = produto;
-  document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
-  document.getElementById('detalhesProdutoNome').textContent = produto.nome;
-  const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
-  document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
-  document.getElementById('detalhesProdutoDescricao').textContent = produto.descricao;
-  document.getElementById('detalhesProdutoEntrega').textContent = produto.tempoEntrega;
-
-  const tamanhosContainer = document.getElementById('detalhesProdutoTamanhos');
-  tamanhosContainer.innerHTML = '';
-  if (produto.tamanhos && produto.tamanhos.length > 0) {
-    produto.tamanhos.forEach(t => {
-      tamanhosContainer.innerHTML += `<input type="radio" name="tamanho_selecionado" value="${t}" id="tamanho_${t}"><label for="tamanho_${t}">${t}</label>`;
-    });
-  } else {
-    tamanhosContainer.innerHTML = 'Tamanho único';
-  }
-
-  // Avaliação
-  const avaliacaoContainer = document.getElementById('detalhesProdutoAvaliacao');
-  await carregarAvaliacaoProduto(produto.id, produto.nome, avaliacaoContainer);
-
-  // Botão continuar leva ao formulário
-  document.getElementById('btnComprarAgora').onclick = () => {
-    abrirModal('modalConfirmarCompra');
-    document.getElementById('compraEndereco').value = '';
-    document.getElementById('compraTelefone').value = perfil.telefone || '';
-    document.getElementById('compraCep').value = '';
-    document.getElementById('compraEmail').value = perfil.email || '';
-    document.getElementById('compraRua').value = '';
-    document.getElementById('compraNumero').value = '';
-    document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra(produto, "único");
-  };
-
-  <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <img id="detalhesProdutoImg" src="" alt="Produto">
-    <h3 id="detalhesProdutoNome"></h3>
-    <p id="detalhesProdutoPreco"></p>
-    <p id="detalhesProdutoDescricao"></p>
-    <p id="detalhesProdutoEntrega"></p>
-    <div id="detalhesProdutoTamanhos"></div>
-    <div id="detalhesProdutoAvaliacao"></div>
-    <button id="btnComprarAgora">🛒 Comprar Agora</button>
-    <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
-
-async function confirmarCompra(produto, tamanho) {
-  const endereco = document.getElementById('compraEndereco').value.trim();
-  const telefone = document.getElementById('compraTelefone').value.trim();
-  const cep = document.getElementById('compraCep').value.trim();
-  const email = document.getElementById('compraEmail').value.trim();
-  const rua = document.getElementById('compraRua').value.trim();
-  const numero = document.getElementById('compraNumero').value.trim();
-  if (!endereco || !telefone || !cep || !email || !rua || !numero) return alert('Preencha todos os campos obrigatórios.');
-
-  const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
-  if (perfil.saldo < precoFinal) return alert('Saldo insuficiente.');
-
-  abrirModal('modalConfirmacaoDebito');
-  document.getElementById('btnConfirmarDebitoSim').onclick = async () => {
-    try {
-      await db.runTransaction(async t => {
-        const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        const vendedorRef = db.collection("usuarios").doc(produto.vendedorUid);
-        const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
-        const adminRef = db.collection("usuarios").doc(adminSnap.docs[0].id);
-        const produtoRef = db.collection("loja_produtos").doc(produto.id);
-
-        const valorVendedor = precoFinal * (1 - TAXA);
-        const valorAdmin = precoFinal * TAXA;
-
-        t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-precoFinal) });
-        t.update(vendedorRef, { saldo: firebase.firestore.FieldValue.increment(valorVendedor) });
-        t.update(adminRef, { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
-        t.update(produtoRef, { vendasRealizadas: firebase.firestore.FieldValue.increment(1) });
-
-        t.set(db.collection("loja_pedidos").doc(), {
-          produtoId: produto.id,
-          produtoNome: produto.nome,
-          valor: precoFinal,
-          tamanho,
-          clienteUid: auth.currentUser.uid,
-          clienteNome: perfil.nome,
-          endereco, telefone, cep, email, rua, numero,
-          vendedorUid: produto.vendedorUid,
-          vendedorNotificado: false,
-          status: "pendente",
-          ts: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      });
-      alert("Pedido realizado com sucesso!");
-      notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`);
-      notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`);
-      fecharModalAtual();
-    } catch (e) {
-      alert('Erro ao processar a compra: ' + e.message);
-    }
-  };
-  document.getElementById('btnConfirmarDebitoNao').onclick = () => fecharModalAtual();
-}
-
-// [11] Ajuste da imagem no modal de produto para não cortar
-(function ajustarImagemProdutoModal(){
-  const style = document.createElement('style');
-  style.textContent = `
-    #detalhesProdutoImg {
-      object-fit: contain !important;
-      max-height: 250px;
-      width: 100%;
-    }
-  `;
-  document.head.appendChild(style);
-})();
-
-// [12] Mensagens de feedback intuitivas
-function mostrarMensagemProcesso(texto) {
-  const modal = document.createElement('div');
-  modal.className = 'modal show';
-  modal.innerHTML = `<div class="modal-content"><p>${texto}</p></div>`;
-  document.body.appendChild(modal);
-  setTimeout(() => {
-    modal.classList.remove('show');
-    setTimeout(() => modal.remove(), 300);
-  }, 2000);
-}
-
-// Exemplo de uso em pontos críticos
-function iniciarProcessoCompra() { mostrarMensagemProcesso("⏳ Estamos preparando seu pedido..."); }
-function finalizarProcessoCompra() { mostrarMensagemProcesso("✅ Pedido concluído!"); }
-
 </script>
 </body>
 </html>
