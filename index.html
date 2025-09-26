@@ -99,12 +99,25 @@
       width: 90%;
       max-width: 480px;
       box-sizing: border-box;
-      animation: fadeIn 0.5s ease-in-out;
       position: relative;
       overflow: hidden;
+      /* Transição mais fluida */
+      transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    }
+    .card.exiting {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    .card.entering {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .hidden {
-      display: none;
+      display: none !important;
     }
     .topbar {
       position: fixed;
@@ -163,6 +176,21 @@
       transform: scale(0.9);
       transition: transform 0.3s ease-in-out;
       border: 1px solid var(--cor-borda);
+      position: relative; /* Para popups sobrepostos */
+    }
+    .modal-overlay-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(12, 12, 12, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        z-index: 25; /* Fica acima do conteúdo do modal pai */
     }
     /* Estilo para o modal de ranking maior */
     #modalRankingUnificado .modal-content {
@@ -278,22 +306,7 @@
       box-shadow: none;
       padding-left: 10px;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes vip-glow {
-      0% {
-        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
-      }
-      50% {
-        box-shadow: 0 0 10px var(--cor-destaque-ouro), 0 0 20px var(--cor-destaque-ouro), 0 0 30px var(--cor-destaque-ouro);
-      }
-      100% {
-        box-shadow: 0 0 5px var(--cor-destaque-ouro), 0 0 10px var(--cor-destaque-ouro), 0 0 15px var(--cor-destaque-ouro);
-      }
-    }
-     @keyframes vaga-glow {
+    @keyframes vaga-glow {
       0% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
       50% { box-shadow: 0 0 16px #4CAF50, 0 0 24px #4CAF50; }
       100% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
@@ -312,14 +325,11 @@
         left: 8px;
         font-size: 20px;
         text-shadow: 0 0 8px var(--cor-destaque-ouro);
-        animation: vip-glow 2s ease-in-out infinite;
     }
-    /* NOVO: Animação para notificação de chat */
     @keyframes gold-flash {
       0%, 100% { background-color: transparent; transform: scale(1); }
       50% { background-color: rgba(212, 175, 55, 0.8); transform: scale(1.2); }
     }
-    /* NOVO: Animação de luz pulsante dourada */
     @keyframes gold-pulse {
       0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
       70% { box-shadow: 0 0 10px 15px rgba(212, 175, 55, 0); }
@@ -332,7 +342,6 @@
         animation: gold-flash 1.5s ease-in-out infinite;
         border-radius: 50%;
     }
-    /* NOVO: Contador de notificação */
     .notification-badge {
         position: absolute;
         top: -5px;
@@ -346,8 +355,8 @@
         border: 2px solid var(--cor-fundo);
     }
     .vip-glow {
-      animation: vip-glow 2s ease-in-out infinite;
-      border: 2px solid var(--cor-destaque-ouro);
+      box-shadow: 0 0 8px var(--cor-destaque-ouro), 0 0 12px var(--cor-destaque-ouro);
+      border: 1px solid var(--cor-destaque-ouro);
     }
     .promocao-card {
       background: linear-gradient(45deg, #181818, var(--cor-destaque-ouro));
@@ -854,6 +863,15 @@
         padding: 8px;
         border-radius: 8px;
     }
+    /* Estilo para imagem de produto no popup */
+    #detalhesProdutoImg {
+        width: 100%;
+        height: 250px;
+        object-fit: contain; /* Garante que a imagem apareça inteira */
+        border-radius: 10px;
+        margin-bottom: 15px;
+        background-color: var(--cor-botoes);
+    }
   </style>
 </head>
 <body>
@@ -915,7 +933,7 @@
           <button>📰 Blog</button>
           <button>🏅 Conquistas</button>
           <button>📊 Ranking</button>
-          <button>🛍️ Loja</button>
+          <button onclick="mostrar('lojaView'); carregarProdutos();">🛍️ Loja</button>
         </div>
     </div>
     <hr style="border-color: var(--cor-borda); margin: 20px 0;">
@@ -974,9 +992,9 @@
     <h2>🧠 Painel do Admin</h2>
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
       <button onclick="abrirModalEstatisticas()" style="width:45%">📊 Estatísticas</button>
-      <button onclick="abrirModalSolicitacoes()" style="width:45%">📥 Solicitações</button>
+      <button id="btnAdminSolicitacoes" onclick="abrirModalSolicitacoes()" style="width:45%">📥 Solicitações</button>
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
-      <button onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
+      <button id="btnAdminDenuncias" onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirGerenciarLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
@@ -987,9 +1005,6 @@
   <div id="lojaView" class="hidden card">
     <div class="card-header">
         <h3>🛍️ Loja Navalha de Ouro</h3>
-        <div style="display: flex; gap: 10px;">
-            <!-- O botão vender foi movido para o painel de funções para melhor UX -->
-        </div>
     </div>
     <div id="lojaContainer" class="loja-grid">
     </div>
@@ -1010,11 +1025,7 @@
   </button>
 </div>
 
-<button id="btnSair" class="hidden" onclick="auth.signOut()">🚪 Sair</button>
-
-<!-- ============================================= -->
-<!-- MODAIS DE FLUXO FINANCEIRO (NOVOS E REFINADOS) -->
-<!-- ============================================= -->
+<button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1026,17 +1037,43 @@
   </div>
 </div>
 
+<div id="modalDepositoFormulario" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>📝 Informações para Depósito</h3>
+    <p>Preencha seus dados para continuar.</p>
+    <input id="depositoPrimeiroNome" type="text" placeholder="Primeiro Nome">
+    <input id="depositoSegundoNome" type="text" placeholder="Segundo Nome">
+    <input id="depositoCpf" type="text" placeholder="CPF">
+    <input id="depositoTelefone" type="tel" placeholder="Telefone com DDD">
+    <button id="btnContinuarDeposito" onclick="validarEContinuarDeposito()" disabled>Continuar</button>
+    <button data-modal-id="modalDepositoFormulario" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+
 <div id="modalDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Depósito de Créditos</h3>
     <p>Escolha um método de pagamento para adicionar saldo à sua carteira.</p>
     <div class="metodos-grid">
         <button id="btnPagarComPix" onclick="processarPagamentoPixAprimorado()">⚡ PIX (QR Code)</button>
-        <button id="btnPagarComCartao" onclick="processarPagamentoCartaoAprimorado()">💳 Cartão de Crédito</button>
+        <button id="btnPagarComCartao" onclick="abrirModalTaxaCartao()">💳 Cartão de Crédito</button>
     </div>
-    <button data-modal-id="modalDeposito" onclick="fecharModal(event)">❌ Fechar</button>
+    <button data-modal-id="modalDeposito" onclick="fecharModal(event)">❌ Voltar</button>
   </div>
 </div>
+
+<div id="modalTaxaCartao" class="modal">
+    <div class="modal-content" style="text-align: center;">
+        <h3>⚠️ Taxa de Plataforma</h3>
+        <p style="font-size: 14px;">Para garantir a transparência e a segurança da sua transação com cartão de crédito, informamos que há uma taxa administrativa fixa cobrada pela plataforma de pagamentos.</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+           <button onclick="fecharModalAtual()" style="background-color: #555;">Cancelar</button>
+           <button onclick="processarPagamentoCartaoAprimorado()">Continuar</button>
+        </div>
+    </div>
+</div>
+
 
 <div id="modalGerandoQRCode" class="modal">
     <div class="modal-content" style="text-align: center;">
@@ -1056,13 +1093,24 @@
     <div class="modal-content" style="text-align: center;">
       <h3> Pague com PIX</h3>
       <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      <img src="https://i.imgur.com/g2512hL.png" id="pix-qrcode" alt="QR Code PIX">
+      <img src="https://i.postimg.cc/fTZyFN6G/qrcode.jpg" id="pix-qrcode" alt="QR Code PIX">
       <div class="pix-copia-cola-container">
           <textarea id="pixChaveAleatoria">00020126770014BR.GOV.BCB.PIX0136ec4a8f0f-ec59-44bc-afcf-dff364f971de0215NAVALHA DE OURO5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510vuyKg7Qnmx63041C39</textarea>
           <button onclick="copiarCodigoPixAprimorado()">Copiar Chave Aleatória PIX</button>
       </div>
       <p style="font-size: 14px; color: #ff9800; margin-top: 15px;">Este código expira em: <b id="pixTimer">10:00</b></p>
       <button onclick="confirmarEnvioComprovante()">CONFIRMAR</button>
+    </div>
+</div>
+
+<div id="modalPixExpirado" class="modal" style="z-index: 22;">
+    <div class="modal-content" style="text-align: center;">
+        <h3 style="color: #e74c3c;">Tempo Expirado!</h3>
+        <p>O tempo para pagamento deste PIX acabou.</p>
+        <div style="display:flex; gap: 10px; margin-top: 20px;">
+            <button onclick="fecharTodosOsModais()" style="background: #555;">Fechar</button>
+            <button onclick="tentarGerarPixNovamente()">Tentar Novamente</button>
+        </div>
     </div>
 </div>
 
@@ -1092,10 +1140,6 @@
     <button onclick="contatarAdminSaque()">OK</button>
   </div>
 </div>
-
-<!-- ============================================= -->
-<!-- MODAIS GERAIS (EXISTENTES E NOVOS)            -->
-<!-- ============================================= -->
 
 <div id="janelaChat" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1182,7 +1226,6 @@
     <button data-modal-id="modalBarbeiroPerfil" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
-
 <div id="modalVagaImediataAprovada" class="modal" style="z-index: 99;" onclick="fecharModal(event)">
   <div class="modal-content" style="background: #e74c3c; color: white;" onclick="event.stopPropagation()">
     <h3 style="color:white;text-shadow: 2px 2px 4px #000;">⚠️ VAGA IMEDIATA APROVADA!</h3>
@@ -1504,35 +1547,47 @@
   </div>
 </div>
 
-
 <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <img id="detalhesProdutoImg" src="" style="width: 100%; height: 200px; object-fit: contain; border-radius: 10px; margin-bottom: 15px;">
+        <img id="detalhesProdutoImg" src="" alt="Imagem do Produto">
         <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque-ouro);"></h3>
+        
         <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
         <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
+        
         <p><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
-        <p><strong>Descrição:</strong> <span id="detalhesProdutoDescricao"></span></p>
-        <p><strong>Entrega estimada:</strong> <span id="detalhesProdutoEntrega"></span></p>
+        <p><strong>Descrição:</strong></p>
+        <p id="detalhesProdutoDescricao" style="font-size: 14px; opacity: 0.9;"></p>
         
         <div id="detalhesProdutoAvaliacao"></div>
 
-        <button id="btnComprarAgora">🛒 Comprar Agora</button>
+        <button id="btnComprarAgora">Continuar</button>
         <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
     </div>
 </div>
 
-<div id="modalConfirmarCompra" class="modal" onclick="fecharModal(event)">
+<div id="modalFormularioCompraLoja" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3>📦 Confirmação de Compra</h3>
-        <p>Por favor, confirme os detalhes para a entrega.</p>
-        <input id="compraEndereco" type="text" placeholder="🏠 Endereço Completo para Entrega">
-        <input id="compraTelefone" type="tel" placeholder="📞 Telefone para Contato">
-        <input id="compraCep" type="text" placeholder="✉️ CEP (Obrigatório)">
-        <button id="btnConfirmarCompraFinal">✅ Confirmar Pedido</button>
-        <button data-modal-id="modalConfirmarCompra" onclick="fecharModal(event)">❌ Cancelar</button>
+        <div class="modal-overlay-content hidden" id="overlayPagamento">
+            <h3>Confirmar Pagamento</h3>
+            <p>Debitar <b>R$ <span id="valorDebito">0,00</span></b> do seu saldo da carteira?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; width: 80%;">
+                <button id="btnNaoDebitar" style="background-color: #555;">Não</button>
+                <button id="btnSimDebitar">Sim</button>
+            </div>
+        </div>
+        <h3>📝 Detalhes para Entrega</h3>
+        <input id="compraNomeCompleto" type="text" placeholder="Nome Completo">
+        <input id="compraTelefone" type="tel" placeholder="Telefone para Contato">
+        <input id="compraEmail" type="email" placeholder="Email para confirmação">
+        <input id="compraCep" type="text" placeholder="CEP">
+        <input id="compraRua" type="text" placeholder="Nome da Rua">
+        <input id="compraNumeroCasa" type="text" placeholder="Número da Casa">
+        <button id="btnPagarCompraLoja">Pagar</button>
+        <button data-modal-id="modalFormularioCompraLoja" onclick="fecharModal(event)">❌ Cancelar</button>
     </div>
 </div>
+
 
 <div id="modalGerenciarLoja" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" style="max-width: 600px;">
@@ -1597,8 +1652,8 @@
         <h3 id="confirmacaoCompradorTitulo">Confirmar Recebimento</h3>
         <p id="confirmacaoCompradorTexto">O vendedor marcou o produto como entregue. Você confirma o recebimento?</p>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-           <button id="btnRecusarEntrega" style="background: #c0392b;">❌ Recusar</button>
-           <button id="btnAceitarEntrega" style="background: #27ae60;">✅ Aceitar</button>
+           <button id="btnRecusarEntrega" style="background: #c0392b;">❌ Negar</button>
+           <button id="btnAceitarEntrega" style="background: #27ae60;">✅ Confirmar</button>
         </div>
     </div>
 </div>
@@ -1684,52 +1739,43 @@ let deferredInstallPrompt = null;
 let chatPreviewTimeout = null; 
 
 
-// --- [LÓGICA DE MODAIS CORRIGIDA] ---
-let modalAberto = null; // Rastreia o modal que está atualmente visível
+// --- [LÓGICA DE MODAIS APRIMORADA] ---
+let modalStack = [];
 
-/**
- * Abre um modal específico pelo seu ID. Se outro modal já estiver aberto,
- * ele será fechado primeiro para evitar sobreposição.
- * @param {string} modalId O ID do elemento do modal a ser aberto.
- */
 function abrirModal(modalId) {
-    if (modalAberto) {
-        fecharModalAtual();
-    }
     const novoModal = document.getElementById(modalId);
-    if (novoModal) {
-        modalAberto = novoModal;
+    if (novoModal && !novoModal.classList.contains('show')) {
         novoModal.style.display = 'flex';
         setTimeout(() => {
             novoModal.classList.add('show');
+            modalStack.push(novoModal);
         }, 10);
     }
 }
-/**
- * Fecha o modal ativo.
- * @param {MouseEvent} event O objeto de evento do clique (opcional).
- */
+
 function fecharModal(event) {
-    if (event && !event.target.classList.contains('modal') && !event.target.getAttribute('data-modal-id')) {
-        return; 
+    // Permite fechar clicando no fundo (classe .modal) ou em um botão com data-modal-id
+    if (event && event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id')) {
+        fecharModalAtual();
     }
-    if (modalAberto) {
-        modalAberto.classList.remove('show');
-        const modalParaFechar = modalAberto;
+}
+
+function fecharModalAtual() {
+    if (modalStack.length > 0) {
+        const modalParaFechar = modalStack.pop();
+        modalParaFechar.classList.remove('show');
         setTimeout(() => {
             modalParaFechar.style.display = 'none';
-            if(modalAberto === modalParaFechar) {
-               modalAberto = null;
-            }
         }, 300);
     }
 }
-function fecharModalAtual() {
-    if(modalAberto) {
-        const event = { target: modalAberto };
-        fecharModal(event);
+
+function fecharTodosOsModais() {
+    while (modalStack.length > 0) {
+        fecharModalAtual();
     }
 }
+
 
 // --- [FIM DA LÓGICA DE MODAIS] ---
 
@@ -1854,18 +1900,40 @@ async function notifyAdmins(title, body, data = {}) {
 
 // Funções de UI
 function mostrar(id) {
-  ["authView", "guestView", "clienteView", "barbeiroView", "adminView", "lojaView"].forEach(v => document.getElementById(v)?.classList.add("hidden"));
-  document.getElementById(id)?.classList.remove("hidden");
-  
-  const isAuth = (id === 'authView');
-  document.getElementById("topbar").classList.toggle("hidden", isAuth);
-  document.getElementById("bottomButtons").classList.toggle("hidden", isAuth);
-  document.getElementById("redeemContainer").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
-  
-  document.getElementById("btnTema").classList.toggle("hidden", isAuth);
-  document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
-  document.getElementById("botaoExtra").classList.toggle("hidden", id === 'authView' || id === 'guestView');
-  document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
+    const views = ["authView", "guestView", "clienteView", "barbeiroView", "adminView", "lojaView"];
+    const viewAtual = views.find(v => !document.getElementById(v).classList.contains('hidden'));
+    const viewNova = document.getElementById(id);
+    const viewAtualEl = viewAtual ? document.getElementById(viewAtual) : null;
+    
+    if (viewAtualEl && viewAtualEl !== viewNova) {
+        viewAtualEl.classList.add('exiting');
+        setTimeout(() => {
+            viewAtualEl.classList.add("hidden");
+            viewAtualEl.classList.remove('exiting');
+            
+            views.forEach(v => { if (v !== id) document.getElementById(v)?.classList.add("hidden"); });
+            
+            viewNova?.classList.remove("hidden");
+            viewNova?.classList.add("entering");
+            
+            setTimeout(() => {
+                viewNova?.classList.remove("entering");
+            }, 10);
+        }, 400);
+    } else {
+        views.forEach(v => document.getElementById(v)?.classList.add("hidden"));
+        viewNova?.classList.remove("hidden");
+    }
+
+    const isAuth = (id === 'authView');
+    document.getElementById("topbar").classList.toggle("hidden", isAuth);
+    document.getElementById("bottomButtons").classList.toggle("hidden", isAuth);
+    document.getElementById("redeemContainer").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
+    
+    document.getElementById("btnTema").classList.toggle("hidden", isAuth);
+    document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
+    document.getElementById("botaoExtra").classList.toggle("hidden", id === 'authView' || id === 'guestView');
+    document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
 }
 
 
@@ -1873,9 +1941,9 @@ function configurarBotoesGuest() {
     const guestView = document.getElementById('guestView');
     const buttons = guestView.querySelectorAll('#guestFuncoesContainer button');
     buttons.forEach(btn => {
+        const originalOnclick = btn.onclick;
+        if(btn.textContent.trim() === 'Loja') return; // Mantém a funcionalidade do botão Loja
         btn.onclick = () => {
-            const textoBotao = btn.textContent.trim();
-            // Visitantes são sempre redirecionados para a tela de cadastro/login
             alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
             mostrar('authView');
         };
@@ -1973,46 +2041,42 @@ function alternarTema() {
 function setupViewSwitcher() {
     const container = document.getElementById("botaoExtra");
     container.innerHTML = "";
-    if (!userView.originalType) return;
-
-    const createButton = (text, view) => {
-        const btn = document.createElement("button");
-        btn.textContent = text;
-        btn.onclick = () => switchView(view);
-        const lojaVisivel = !document.getElementById('lojaView').classList.contains('hidden');
-        if (userView.currentType === view && !lojaVisivel) {
-             btn.disabled = true;
-             btn.style.borderColor = "var(--cor-destaque-ouro)";
-        }
-        container.appendChild(btn);
-    };
+    if (!userView.originalType || !userView.currentType) return;
     
-    const btnLoja = document.createElement("button");
-    btnLoja.textContent = "🛍️ Loja";
-    btnLoja.onclick = () => { 
-        mostrar('lojaView'); 
-        carregarProdutos();
-        setupViewSwitcher();
-    };
-    if(!document.getElementById('lojaView').classList.contains('hidden')){
-        btnLoja.disabled = true;
-        btnLoja.style.borderColor = "var(--cor-destaque-ouro)";
-    }
-    
+    // Admins veem tudo
     if (userView.originalType === 'admin') {
+        const createButton = (text, view) => {
+            const btn = document.createElement("button");
+            btn.textContent = text;
+            btn.onclick = () => switchView(view);
+            if (userView.currentType === view) {
+                btn.disabled = true;
+                btn.style.borderColor = "var(--cor-destaque-ouro)";
+            }
+            container.appendChild(btn);
+        };
         createButton("🧠 Admin", "admin");
         createButton("💈 Barbeiro", "barbeiro");
         createButton("🙋 Cliente", "cliente");
-        container.appendChild(btnLoja);
-    } else if (userView.originalType === 'barbeiro') {
-        createButton("💈 Barbeiro", "barbeiro");
-        createButton("🙋 Cliente", "cliente");
-        container.appendChild(btnLoja);
-    } else if (userView.originalType === 'cliente') {
-        createButton("🙋‍♂️ Cliente", "cliente");
+        createButton("🛍️ Loja", "loja");
+        return;
+    }
+    
+    // Usuários normais têm a visão simplificada
+    const lojaVisivel = userView.currentType === 'loja';
+    if (lojaVisivel) {
+        const btnPainel = document.createElement("button");
+        btnPainel.textContent = "↩️ Painel Principal";
+        btnPainel.onclick = () => switchView(userView.originalType); // Volta para o painel de origem
+        container.appendChild(btnPainel);
+    } else {
+        const btnLoja = document.createElement("button");
+        btnLoja.textContent = "🛍️ Loja";
+        btnLoja.onclick = () => switchView('loja');
         container.appendChild(btnLoja);
     }
 }
+
 
 function switchView(view) {
     userView.currentType = view;
@@ -2184,6 +2248,7 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 auth.onAuthStateChanged(async user => {
   solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
+  handleDeepLink();
   if (pendenciasInterval) clearInterval(pendenciasInterval);
 
   if (!user) {
@@ -2357,7 +2422,7 @@ async function abrirPortaSecreta() {
             codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo)
         });
         alert("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
-        notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!");
+        notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!", { link: '#fidelidade' });
     } else {
         alert("Código inválido ou expirado.");
     }
@@ -2585,6 +2650,8 @@ function confirmarAgendamento() {
     if (servico.duracao) detalhes += `Duração Estimada: ${servico.duracao} minutos\n`;
     detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${perfil.vip ? ' (Desconto VIP de 10% aplicado)' : ''}`;
     if (!confirm(detalhes)) return;
+    
+    mostrarMensagemCarregando("Enviando seu pedido...");
 
     const agendamentoData = {
         clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
@@ -2599,10 +2666,14 @@ function confirmarAgendamento() {
         const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
         criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`);
         criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do barbeiro.");
-        notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`);
+        notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
+        fecharModalCarregando();
         alert("Pedido enviado com sucesso!");
         fecharModalAtual();
-    }).catch(e => alert("Erro ao enviar pedido: " + e.message));
+    }).catch(e => {
+        fecharModalCarregando();
+        alert("Erro ao enviar pedido: " + e.message)
+    });
 }
 
 function abrirModalVagaAprovada(agendamentoId) {
@@ -2690,7 +2761,7 @@ function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
   }).then(() => {
     alert(`Avaliação enviada com sucesso! Você ganhou ${PONTOS_POR_CORTE} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
-    notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`);
+    notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
     notifyUser(auth.currentUser.uid, "🏆 Pontos Recebidos!", `Você ganhou ${PONTOS_POR_CORTE} pontos por avaliar o serviço.`);
   }).catch(e => alert("Erro ao avaliar: " + e));
 }
@@ -2710,7 +2781,7 @@ function resgatarPontos() {
     });
   }).then(() => {
     alert(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
-    notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)}.`);
+    notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)}.`, { link: '#carteira' });
   }).catch(e => alert("Erro ao resgatar pontos: " + e.message));
 }
 
@@ -2735,7 +2806,7 @@ function abrirModalVip() {
         `;
     } else {
         container.innerHTML = `
-            <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
+            <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-ouro);">💎 Torne-se um Membro VIP!</h3>
                 <p>Eleve sua experiência e apoie o desenvolvimento contínuo do nosso aplicativo com uma adesão única.</p>
                 <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)}</p>
@@ -2964,7 +3035,7 @@ function enviarDenuncia() {
     const mensagem = encodeURIComponent(`🚨 Nova denúncia no app. ID: ${denunciaRef.id}\n\nDe: ${perfil.nome}\n\nDescrição: ${texto}`);
     document.getElementById("btnWhatsappDenuncia").href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
     document.getElementById("textoDenuncia").value = "";
-    notifyAdmins("🚨 Nova Denúncia!", `Uma nova denúncia foi enviada por ${perfil.nome}.`);
+    notifyAdmins("🚨 Nova Denúncia!", `Uma nova denúncia foi enviada por ${perfil.nome}.`, { link: '#denuncias' });
   }).catch(e => alert("Erro ao enviar denúncia: " + e.message));
 }
 
@@ -3251,7 +3322,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 
     alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
-    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`);
+    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
     const clienteDoc = await clienteRef.get();
     const clienteData = clienteDoc.data();
     if (clienteData.bonusIndicacaoPendente) {
@@ -3365,7 +3436,20 @@ function abrirAvaliacoesBarbeiro() {
 // ======================================================================
 
 function iniciarDeposito() {
-  abrirModal('modalDeposito');
+    abrirModal('modalDepositoFormulario');
+    const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
+    const btn = document.getElementById('btnContinuarDeposito');
+    inputs.forEach(id => {
+        document.getElementById(id).oninput = () => {
+            const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
+            btn.disabled = !allFilled;
+        };
+    });
+}
+
+function validarEContinuarDeposito() {
+    // Aqui você pode adicionar validações mais complexas de CPF, telefone etc.
+    abrirModal('modalDeposito');
 }
 
 function iniciarSaque() {
@@ -3373,21 +3457,25 @@ function iniciarSaque() {
 }
 
 function processarPagamentoPixAprimorado() {
-    abrirModal('modalGerandoQRCode');
+    mostrarMensagemCarregando('Só um minuto...', 'Estamos preparando seu pagamento PIX.');
     setTimeout(() => {
-        fecharModalAtual();
+        fecharModalCarregando();
         abrirModal('modalExibirPixAprimorado');
         iniciarTimerPix(600); // 10 minutos
-    }, 3000); // Simula o carregamento de 3 segundos
+    }, 2000); 
+}
+
+function abrirModalTaxaCartao() {
+    abrirModal('modalTaxaCartao');
 }
 
 function processarPagamentoCartaoAprimorado() {
-    document.getElementById('carregandoGenericoTitulo').textContent = 'Aguarde...';
-    document.getElementById('carregandoGenericoTexto').textContent = 'Você está sendo redirecionado para um ambiente de pagamento seguro.';
-    abrirModal('modalCarregandoGenerico');
+    notifyAdmins("🟢 Tentativa de Cartão!", `${perfil.nome} está tentando pagar com cartão de crédito.`);
+    mostrarMensagemCarregando('Redirecionando...', 'Você está indo para uma plataforma segura de pagamento.');
     setTimeout(() => {
-        window.location.href = 'https://pay.kiwify.com.br/T3M9m1C';
-    }, 3000); // Simula o processamento de 3 segundos
+        window.open('https://pay.kiwify.com.br/T3M9m1C', '_blank');
+        fecharTodosOsModais();
+    }, 2500);
 }
 
 function iniciarTimerPix(duracao) {
@@ -3401,17 +3489,24 @@ function iniciarTimerPix(duracao) {
         if (--timer < 0) {
             clearInterval(pixTimerInterval);
             display.textContent = "EXPIRADO";
-            alert("O tempo para pagamento via PIX expirou. Por favor, gere um novo código.");
-            fecharModalAtual();
+            abrirModal('modalPixExpirado');
         }
     }, 1000);
 }
 
-function copiarCodigoPixAprimorado() {
+function tentarGerarPixNovamente() {
+    fecharTodosOsModais();
+    setTimeout(() => {
+        processarPagamentoPixAprimorado();
+    }, 300);
+}
+
+function copiarCodigoPixAprimorado(event) {
     const texto = document.getElementById('pixChaveAleatoria').value;
     const btn = event.target;
     navigator.clipboard.writeText(texto).then(() => {
         btn.textContent = '✅ Copiado!';
+        notifyAdmins("🟢 Chave PIX Copiada!", `O usuário ${perfil.nome} copiou a chave PIX. Provável depósito a caminho.`);
         setTimeout(() => { btn.textContent = 'Copiar Chave Aleatória PIX'; }, 2000);
     }).catch(err => {
         alert("Não foi possível copiar o código. Por favor, selecione e copie manualmente.");
@@ -3421,6 +3516,7 @@ function copiarCodigoPixAprimorado() {
 function confirmarEnvioComprovante() {
     const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app Navalha de Ouro.");
     window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
+    fecharTodosOsModais();
 }
 
 function confirmarSaque() {
@@ -3433,13 +3529,26 @@ function confirmarSaque() {
     if (!chave) return alert("Insira sua chave PIX.");
     if (perfil.saldo < valor) return alert("Saldo insuficiente.");
 
-    abrirModal('modalSaqueConfirmado');
+    db.collection("solicitacoes").add({
+        tipo: "saque",
+        usuarioUid: auth.currentUser.uid,
+        usuarioNome: perfil.nome,
+        valor,
+        chavePixTipo: chaveTipo,
+        chavePix: chave,
+        status: "pendente",
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        abrirModal('modalSaqueConfirmado');
+        notifyAdmins("📤 Novo Pedido de Saque!", `${perfil.nome} solicitou um saque de R$${valor.toFixed(2)}.`, { link: '#solicitacoes' });
+    }).catch(e => alert("Erro ao criar solicitação: " + e.message));
 }
 
 function contatarAdminSaque() {
-    const mensagem = encodeURIComponent(`Olá! Acabei de solicitar um saque no valor de R$${document.getElementById('saqueValor').value} e gostaria de confirmar o recebimento.`);
+    const valor = document.getElementById('saqueValor').value;
+    const mensagem = encodeURIComponent(`Olá! Acabei de solicitar um saque no valor de R$${valor} e gostaria de confirmar o recebimento.`);
     window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
-    fecharModalAtual();
+    fecharTodosOsModais();
 }
 
 // ======================================================================
@@ -3497,6 +3606,18 @@ function carregarAdmin() {
                 }
             });
         });
+    });
+
+    // Listener para solicitações pendentes
+    db.collection("solicitacoes").where("status", "==", "pendente").onSnapshot(snap => {
+        const btn = document.getElementById('btnAdminSolicitacoes');
+        if (btn) btn.classList.toggle('notificacao-pulsante', !snap.empty);
+    });
+
+    // Listener para denúncias abertas
+    db.collection("denuncias").where("status", "==", "aberta").onSnapshot(snap => {
+        const btn = document.getElementById('btnAdminDenuncias');
+        if (btn) btn.classList.toggle('notificacao-pulsante', !snap.empty);
     });
 }
 
@@ -3609,7 +3730,7 @@ function aprovarSaque(id, uid, valor) {
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
   }).then(() => {
     alert("Saque aprovado!");
-    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { tipo: 'atualizar_saldo' });
+    notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { link: '#carteira' });
   }).catch(e => alert("Erro: " + e.message));
 }
 
@@ -3679,7 +3800,7 @@ async function verDetalhesUsuario(uid) {
       const valor = parseFloat(prompt("Valor para adicionar (use '-' para remover):"));
       if (!isNaN(valor)) {
         await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
-        notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { tipo: 'atualizar_saldo' });
+        notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
         alert("Saldo alterado!");
       } else alert("Valor inválido.");
       break;
@@ -3705,15 +3826,18 @@ async function enviarNotificacaoMarketing() {
     const body = document.getElementById('marketingCorpo').value.trim();
     if (!title || !body || !confirm(`Confirma o envio da notificação em massa?`)) return;
     try {
+        mostrarMensagemCarregando("Aguarde...", "Enviando notificações para todos.");
         const response = await fetch("https://navalhabackend.onrender.com/enviar-notificacao-massa", {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, body, adminUid: auth.currentUser.uid }),
         });
         const data = await response.json();
+        fecharModalCarregando();
         if (!response.ok) throw new Error(data.message);
         alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
         fecharModalAtual();
     } catch (error) {
+        fecharModalCarregando();
         alert('Falha ao enviar: ' + error.message);
     }
 }
@@ -3756,7 +3880,7 @@ async function verificarConquistas(uid) {
         if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
             await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
             const conquista = conquistasDefinidas[conquistaId];
-            notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"!`);
+            notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"!`, { link: '#conquistas' });
         }
     }
 }
@@ -3776,7 +3900,7 @@ async function verificarConquistasBarbeiro(uid) {
         if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
             await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
             const conquista = conquistasBarbeiroDefinidas[conquistaId];
-            notifyUser(uid, "🏅 Nova Conquista de Barbeiro!", `Você desbloqueou: "${conquista.nome}"!`);
+            notifyUser(uid, "🏅 Nova Conquista de Barbeiro!", `Você desbloqueou: "${conquista.nome}"!`, { link: '#conquistas' });
         }
     }
 }
@@ -4065,6 +4189,7 @@ function solicitarLiberacaoLoja() {
         ts: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
         alert("Sua solicitação foi enviada ao administrador. Você será redirecionado para o WhatsApp para confirmar.");
+        notifyAdmins("🛍️ Liberação de Loja", `${perfil.nome} quer permissão para vender.`, { link: '#solicitacoes' });
     }).catch(e => alert("Erro ao criar solicitação: " + e.message));
 }
 
@@ -4207,7 +4332,6 @@ async function abrirDetalhesProduto(produto) {
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
     document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
     document.getElementById('detalhesProdutoDescricao').textContent = produto.descricao;
-    document.getElementById('detalhesProdutoEntrega').textContent = produto.tempoEntrega;
     
     const tamanhosContainer = document.getElementById('detalhesProdutoTamanhos');
     tamanhosContainer.innerHTML = '';
@@ -4232,25 +4356,38 @@ function iniciarCompra(produto) {
     if ((produto.tamanhos && produto.tamanhos.length > 0) && !tamanhoSelecionado) {
         return alert('Por favor, selecione um tamanho.');
     }
+    produtoParaCompra.tamanhoSelecionado = tamanhoSelecionado ? tamanhoSelecionado.value : 'único';
     
-    document.getElementById('compraEndereco').value = '';
-    document.getElementById('compraTelefone').value = perfil.telefone || '';
-    document.getElementById('compraCep').value = '';
-    
-    document.getElementById('btnConfirmarCompraFinal').onclick = () => confirmarCompra(produto, tamanhoSelecionado ? tamanhoSelecionado.value : 'único');
-    abrirModal('modalConfirmarCompra');
+    abrirModal('modalFormularioCompraLoja');
+    document.getElementById('btnPagarCompraLoja').onclick = () => {
+        const nome = document.getElementById('compraNomeCompleto').value;
+        const telefone = document.getElementById('compraTelefone').value;
+        const email = document.getElementById('compraEmail').value;
+        const cep = document.getElementById('compraCep').value;
+        const rua = document.getElementById('compraRua').value;
+        const numero = document.getElementById('compraNumeroCasa').value;
+        if (!nome || !telefone || !email || !cep || !rua || !numero) {
+            return alert('Todos os campos são obrigatórios.');
+        }
+        
+        const precoFinal = produtoParaCompra.desconto ? produtoParaCompra.preco * (1 - produtoParaCompra.desconto / 100) : produtoParaCompra.preco;
+        document.getElementById('valorDebito').textContent = precoFinal.toFixed(2);
+        
+        const overlay = document.getElementById('overlayPagamento');
+        overlay.classList.remove('hidden');
+        document.getElementById('btnNaoDebitar').onclick = () => overlay.classList.add('hidden');
+        document.getElementById('btnSimDebitar').onclick = () => confirmarCompraLoja({ nome, telefone, email, cep, rua, numero });
+    };
 }
 
-async function confirmarCompra(produto, tamanho) {
-    const endereco = document.getElementById('compraEndereco').value.trim();
-    const telefone = document.getElementById('compraTelefone').value.trim();
-    const cep = document.getElementById('compraCep').value.trim();
-    if (!endereco || !telefone || !cep) return alert('Endereço, telefone e CEP são obrigatórios.');
-
+async function confirmarCompraLoja(dadosEntrega) {
+    mostrarMensagemCarregando("Processando seu pedido...");
+    const produto = produtoParaCompra;
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
-    if (perfil.saldo < precoFinal) return alert('Saldo insuficiente.');
-    
-    if(!confirm('Confirmar o pedido? O valor será debitado do seu saldo.')) return;
+    if (perfil.saldo < precoFinal) {
+        fecharModalCarregando();
+        return alert('Saldo insuficiente.');
+    }
     
     try {
         await db.runTransaction(async t => {
@@ -4272,27 +4409,31 @@ async function confirmarCompra(produto, tamanho) {
                 produtoId: produto.id,
                 produtoNome: produto.nome,
                 valor: precoFinal,
-                tamanho,
+                tamanho: produto.tamanhoSelecionado,
                 clienteUid: auth.currentUser.uid,
                 clienteNome: perfil.nome,
-                endereco,
-                telefone,
-                cep,
+                endereco: `${dadosEntrega.rua}, ${dadosEntrega.numero}`,
+                telefone: dadosEntrega.telefone,
+                email: dadosEntrega.email,
+                cep: dadosEntrega.cep,
                 vendedorUid: produto.vendedorUid,
                 vendedorNotificado: false,
-                status: "pendente", // Status inicial
+                status: "pendente",
                 ts: firebase.firestore.FieldValue.serverTimestamp()
             });
         });
 
+        fecharModalCarregando();
         alert("Pedido realizado com sucesso!");
-        notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`);
-        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`);
-        fecharModalAtual();
+        notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`, { link: '#minhascompras' });
+        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`, { link: '#entregas' });
+        fecharTodosOsModais();
     } catch (e) {
+        fecharModalCarregando();
         alert('Erro ao processar a compra: ' + e.message);
     }
 }
+
 
 async function abrirGerenciarLoja() {
     abrirModal('modalGerenciarLoja');
@@ -4402,7 +4543,7 @@ async function abrirEntregasVendedor() {
     if (pedidosVendedorListener) pedidosVendedorListener();
     pedidosVendedorListener = db.collection('loja_pedidos')
       .where('vendedorUid', '==', auth.currentUser.uid)
-      .where('status', 'in', ['pendente', 'confirmado_pelo_cliente'])
+      .where('status', 'in', ['pendente', 'disputa']) // Adicionado 'disputa'
       .onSnapshot(snap => {
         if(snap.empty) {
             container.innerHTML = '<p>Nenhuma entrega pendente.</p>';
@@ -4416,9 +4557,8 @@ async function abrirEntregasVendedor() {
             
             if (pedido.status === 'pendente') {
                 statusHtml = '<p style="color: #f1c40f;">Status: Aguardando Entrega</p>';
-            } else if (pedido.status === 'confirmado_pelo_cliente') {
-                statusHtml = '<p style="color: #2ecc71;">Status: Cliente confirmou recebimento!</p>';
-                acaoHtml = '<p>✅ Finalizado</p>';
+            } else if (pedido.status === 'disputa') {
+                statusHtml = '<p style="color: #e74c3c;">Status: Cliente Negou Recebimento. Tente Novamente.</p>';
             }
 
             container.innerHTML += `
@@ -4475,6 +4615,9 @@ async function abrirMinhasCompras() {
 }
 
 function abrirModalConfirmacaoComprador(pedido) {
+    const modal = document.getElementById('modalConfirmacaoComprador');
+    if(modal.classList.contains('show')) return; // Já está aberto
+
     document.getElementById('btnAceitarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, true);
     document.getElementById('btnRecusarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, false);
     abrirModal('modalConfirmacaoComprador');
@@ -4487,7 +4630,7 @@ async function responderConfirmacaoEntrega(pedidoId, aceito) {
         const vendedorUid = pedidoDoc.data().vendedorUid;
         await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
         const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
-        notifyUser(vendedorUid, '📦 Atualização de Entrega', msg);
+        notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { link: '#entregas' });
         alert('Resposta enviada com sucesso!');
         fecharModalAtual();
     } catch (e) {
@@ -4526,7 +4669,7 @@ async function verificarPendencias(uid) {
         const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
         if (!agendamentosSnap.empty) {
             btnAgendamentos?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⏰ Agendamento Pendente', `Você tem ${agendamentosSnap.size} novo(s) agendamento(s) para aprovar.`);
+            notifyUser(uid, '⏰ Agendamento Pendente', `Você tem ${agendamentosSnap.size} novo(s) agendamento(s) para aprovar.`, { link: '#agendamentos' });
         } else {
             btnAgendamentos?.classList.remove('notificacao-pulsante');
         }
@@ -4538,10 +4681,16 @@ async function verificarPendencias(uid) {
         const btnHistorico = document.getElementById('btnHistoricoCliente');
         if (!avaliacoesSnap.empty) {
             btnHistorico?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⭐ Avaliação Pendente', `Você tem ${avaliacoesSnap.size} serviço(s) para avaliar e ganhar pontos!`);
+            notifyUser(uid, '⭐ Avaliação Pendente', `Você tem ${avaliacoesSnap.size} serviço(s) para avaliar e ganhar pontos!`, { link: '#historico' });
         } else {
             btnHistorico?.classList.remove('notificacao-pulsante');
         }
+    }
+
+    // Usuário: Saque pendente
+    const saqueSnap = await db.collection("solicitacoes").where("usuarioUid", "==", uid).where("status", "==", "pendente").where("tipo", "==", "saque").get();
+    if (!saqueSnap.empty) {
+        notifyUser(uid, "⏳ Saque em Análise", "Sua solicitação de saque ainda está pendente de aprovação.", { link: '#carteira' });
     }
 }
 
@@ -4593,6 +4742,66 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
         }
     }
 }
+
+// Função de logout
+function fazerLogout() {
+    auth.signOut().then(() => {
+        location.reload();
+    });
+}
+
+// Funções de Mensagens Intuitivas
+function mostrarMensagemCarregando(titulo = "Aguarde...", texto = "Estamos processando sua solicitação.") {
+    document.getElementById('carregandoGenericoTitulo').textContent = titulo;
+    document.getElementById('carregandoGenericoTexto').textContent = texto;
+    abrirModal('modalCarregandoGenerico');
+}
+function fecharModalCarregando() {
+    fecharModalAtual();
+}
+
+// Função para tratar links diretos (Deep Linking)
+function handleDeepLink() {
+    const hash = window.location.hash.substring(1);
+    if (!hash || !auth.currentUser) return;
+
+    switch (hash) {
+        case 'agendamentos':
+            if (perfil.tipo === 'barbeiro') abrirAgendamentosBarbeiro();
+            break;
+        case 'solicitacoes':
+            if (perfil.tipo === 'admin') abrirModalSolicitacoes();
+            break;
+        case 'denuncias':
+            if (perfil.tipo === 'admin') abrirDenuncias();
+            break;
+        case 'carteira':
+            abrirModal('modalCarteira');
+            break;
+        case 'historico':
+            if (perfil.tipo === 'cliente') abrirHistoricoCliente();
+            break;
+        case 'fidelidade':
+            abrirModal('modalFidelidade');
+            break;
+        case 'conquistas':
+            if (perfil.tipo === 'cliente') abrirModalConquistas();
+            if (perfil.tipo === 'barbeiro') abrirModalConquistasBarbeiro();
+            break;
+        case 'avaliacoes':
+            if (perfil.tipo === 'barbeiro') abrirAvaliacoesBarbeiro();
+            break;
+        case 'minhascompras':
+            abrirMinhasCompras();
+            break;
+        case 'entregas':
+            abrirEntregasVendedor();
+            break;
+    }
+    // Limpa o hash para evitar reabrir o modal em um simples refresh
+    history.pushState("", document.title, window.location.pathname + window.location.search);
+}
+
 </script>
 <script>
     if ('serviceWorker' in navigator) {
