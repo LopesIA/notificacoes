@@ -3643,63 +3643,6 @@ function carregarListaBlog() {
   });
 }
 
-async function abrirPortaSecreta() {
-  const codigo = prompt("💎 Insira o código de resgate:");
-  if (!codigo) return;
-
-  if (codigo === "Ja997640401") {
-// ... existing code ...
-    blogPosts.forEach(doc => {
-        if (doc.data().conteudo?.includes(codigo)) {
-            codigoValido = true;
-        }
-    });
-    if (codigoValido) {
-        const pontosGanhos = perfil.vip ? 10 : 5; // Dobro de pontos para VIPs
-        await db.collection("usuarios").doc(auth.currentUser.uid).update({
-            pontosFidelidade: firebase.firestore.FieldValue.increment(pontosGanhos),
-            codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo)
-        });
-        alert(`🎉 Código válido! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
-        notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", `Você ganhou ${pontosGanhos} pontos por resgatar um código do blog!`, { link: '#fidelidade' });
-    } else {
-        alert("Código inválido ou expirado.");
-    }
-  } else {
-// ... existing code ...
-async function verDetalhesUsuario(uid) {
-  const doc = await db.collection("usuarios").doc(uid).get();
-  const u = doc.data();
-// ... existing code ...
-      } else alert("Tipo inválido.");
-      break;
-    case "2":
-      const valor = parseFloat(prompt("Valor para adicionar (use '-' para remover):"));
-      if (!isNaN(valor)) {
-        let updateData = { saldo: firebase.firestore.FieldValue.increment(valor) };
-        let pontosGanhos = 0;
-        let mensagemAlerta = "Saldo alterado!";
-        let mensagemNotificacao = `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`;
-
-        // Adiciona pontos de fidelidade apenas se o saldo for adicionado (valor > 0)
-        if (valor > 0) {
-            pontosGanhos = u.vip ? PONTOS_POR_DEPOSITO_VIP : PONTOS_POR_DEPOSITO_NORMAL;
-            updateData.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
-            mensagemAlerta = `Saldo alterado! O usuário ganhou ${pontosGanhos} pontos de fidelidade.`;
-            mensagemNotificacao = `Um admin adicionou R$ ${valor.toFixed(2)} ao seu saldo e você ganhou ${pontosGanhos} pontos!`;
-        }
-        
-        await db.collection("usuarios").doc(uid).update(updateData);
-        notifyUser(uid, "💸 Nova Transação!", mensagemNotificacao, { link: '#carteira' });
-        alert(mensagemAlerta);
-
-      } else alert("Valor inválido.");
-      break;
-    case "3":
-      await db.collection("usuarios").doc(uid).update({ vip: !u.vip });
-}
-
-
 function carregarAdmin() {
     if (adminBalanceListener) adminBalanceListener(); 
     db.collection("usuarios").get().then(snapshot => {
