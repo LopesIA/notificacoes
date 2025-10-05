@@ -1045,7 +1045,8 @@
     <input id="depositoSegundoNome" type="text" placeholder="Segundo Nome">
     <input id="depositoCpf" type="text" placeholder="CPF">
     <input id="depositoTelefone" type="tel" placeholder="Telefone com DDD">
-    <button id="btnContinuarDeposito" onclick="validarEContinuarDeposito()" disabled>Continuar</button>
+    <input id="depositoValor" type="number" placeholder="💰 Valor a depositar (Ex: 50.00)">
+    <button id="btnContinuarDeposito" onclick="criarSolicitacaoDeposito()" onclick="validarEContinuarDeposito()" disabled>Continuar</button>
     <button data-modal-id="modalDepositoFormulario" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -3498,8 +3499,43 @@ function iniciarDeposito() {
     });
 }
 
-function validarEContinuarDeposito() {
-    // Aqui você pode adicionar validações mais complexas de CPF, telefone etc.
+async function criarSolicitacaoDeposito() {
+    const primeiroNome = document.getElementById('depositoPrimeiroNome').value.trim();
+    const segundoNome = document.getElementById('depositoSegundoNome').value.trim();
+    const cpf = document.getElementById('depositoCpf').value.trim();
+    const telefone = document.getElementById('depositoTelefone').value.trim();
+    const valor = parseFloat(document.getElementById('depositoValor').value);
+
+    if (!primeiroNome || !segundoNome || !cpf || !telefone || isNaN(valor) || valor <= 0) {
+        return alert("Por favor, preencha todos os campos corretamente, incluindo um valor válido.");
+    }
+
+    const nomeCompleto = `${primeiroNome} ${segundoNome}`;
+
+    try {
+        await db.collection("solicitacoes").add({
+            tipo: "deposito",
+            usuarioUid: auth.currentUser.uid,
+            usuarioNome: perfil.nome,
+            dadosDeposito: {
+                nomeCompleto,
+                cpf,
+                telefone
+            },
+            valor: valor,
+            status: "pendente",
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        fecharTodosOsModais();
+        alert("✅ Solicitação de depósito enviada! O administrador irá analisar e adicionar o saldo à sua conta em breve.");
+        notifyAdmins("📥 Novo Pedido de Depósito!", `${perfil.nome} solicitou um depósito de R$${valor.toFixed(2)}.`, { link: '#solicitacoes' });
+
+    } catch (error) {
+        console.error("Erro ao criar solicitação de depósito:", error);
+        alert("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
+    }
+}
     abrirModal('modalDeposito');
 }
 
@@ -3763,14 +3799,20 @@ async function verDetalhesSolicitacao(id) {
   const s = doc.data();
   if (!s || s.status !== 'pendente') return alert(`Esta solicitação já foi ${s.status}.`);
 
-  let detalhes = `Detalhes:\nTipo: ${s.tipo}\nUsuário: ${s.usuarioNome}\n`;
-  if(s.valor) detalhes += `Valor: R$ ${s.valor.toFixed(2)}\n`;
-  if(s.tipo === 'saque') detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\n`;
-  detalhes += `\nAprovar? (Para saques, esta ação é irreversível e deve ser feita APÓS a transferência manual via PIX)`;
+  let detalhes = `Detalhes:\nTipo: ${s.tipo.toUpperCase()}\nUsuário: ${s.usuarioNome}\nValor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}\n`;
+
+  if(s.tipo === 'saque') {
+    detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
+  } else if (s.tipo === 'deposito') {
+    detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
+  } else {
+    detalhes += `\nAprovar?`;
+  }
 
   const confirmar = confirm(detalhes);
   if (confirmar) {
     if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
+    else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor); // <-- NOVA CHAMADA
     else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
   } else if (confirm("Deseja recusar a solicitação?")) {
     recusarSolicitacao(id, s.usuarioUid, s.tipo);
@@ -3788,6 +3830,17 @@ function aprovarSaque(id, uid, valor) {
     alert("Saque aprovado!");
     notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { link: '#carteira' });
   }).catch(e => alert("Erro: " + e.message));
+}
+
+function aprovarDeposito(id, uid, valor) {
+  db.runTransaction(async t => {
+    const userRef = db.collection("usuarios").doc(uid);
+    t.update(userRef, { saldo: firebase.firestore.FieldValue.increment(valor) });
+    t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
+  }).then(() => {
+    alert("Depósito aprovado e saldo adicionado!");
+    notifyUser(uid, "💰 Depósito Aprovado!", `Sua solicitação de depósito de R$ ${valor.toFixed(2)} foi aprovada e o saldo já está na sua carteira.`, { link: '#carteira' });
+  }).catch(e => alert("Erro ao aprovar depósito: " + e.message));
 }
 
 function recusarSolicitacao(id, uid, tipo) {
