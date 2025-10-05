@@ -948,7 +948,7 @@
           <button id="btnHistoricoCliente" onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
           <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
           <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-          <button onclick="abrirModal('modalFidelidade')" style="width:45%">🏆 Fidelidade</button>
+          <button onclick="abrirModalFidelidade()" style="width:45%">🏆 Fidelidade</button>
           <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
           <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
           <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
@@ -4163,6 +4163,20 @@ function salvarPortfolio() {
         alert('Portfólio salvo com sucesso!');
         fecharModalAtual();
     }).catch(e => alert('Erro ao salvar portfólio: ' + e.message));
+}
+
+function abrirModalFidelidade() {
+  // Pega o elemento HTML onde os pontos são exibidos
+  const pontosDisplay = document.getElementById("pontosFidelidade");
+
+  // Atualiza o texto do elemento com os pontos do perfil do usuário
+  // O '|| 0' garante que, se o usuário não tiver pontos, o número 0 será exibido.
+  if (perfil && pontosDisplay) {
+    pontosDisplay.textContent = perfil.pontosFidelidade || 0;
+  }
+
+  // Abre o modal
+  abrirModal('modalFidelidade');
 }
 
 async function abrirPortfolioCliente(barbeiroUid, barbeiroNome) {
