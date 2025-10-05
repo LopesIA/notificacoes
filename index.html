@@ -3833,12 +3833,52 @@ function aprovarSaque(id, uid, valor) {
 function aprovarDeposito(id, uid, valor) {
   db.runTransaction(async t => {
     const userRef = db.collection("usuarios").doc(uid);
-    t.update(userRef, { saldo: firebase.firestore.FieldValue.increment(valor) });
+    const userDoc = await t.get(userRef); // Pega os dados do usuário para checar se é VIP
+
+    if (!userDoc.exists) {
+        throw new Error("Usuário não encontrado!");
+    }
+    const userData = userDoc.data();
+
+    // --- Início da nova Lógica de Pontos de Fidelidade ---
+    const pontosPorVinteReais = userData.vip ? 4 : 2; // Se for VIP, ganha 4 pontos, senão, 2
+    const pontosGanhos = Math.floor(valor / 20) * pontosPorVinteReais;
+    // --- Fim da nova Lógica ---
+
+    // Prepara os dados para atualização
+    const updates = {
+        saldo: firebase.firestore.FieldValue.increment(valor)
+    };
+
+    // Adiciona os pontos apenas se o valor for maior que zero
+    if (pontosGanhos > 0) {
+        updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
+    }
+
+    t.update(userRef, updates); // Atualiza saldo e pontos na mesma operação
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
-  }).then(() => {
-    alert("Depósito aprovado e saldo adicionado!");
-    notifyUser(uid, "💰 Depósito Aprovado!", `Sua solicitação de depósito de R$ ${valor.toFixed(2)} foi aprovada e o saldo já está na sua carteira.`, { link: '#carteira' });
-  }).catch(e => alert("Erro ao aprovar depósito: " + e.message));
+
+    // Retorna os pontos ganhos para usar na notificação
+    return pontosGanhos;
+
+  }).then((pontosGanhos) => {
+    alert("Depósito aprovado e saldo adicionado!"); // Alerta para o admin
+
+    // Monta a mensagem para o usuário
+    let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`;
+    if (pontosGanhos > 0) {
+        notificationBody += ` Você ganhou ${pontosGanhos} pontos de fidelidade!`;
+        // Alerta extra para o admin, confirmando os pontos
+        alert(`O usuário ${uid} ganhou ${pontosGanhos} pontos.`);
+    }
+
+    // Envia a notificação para o usuário
+    notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
+
+  }).catch(e => {
+    alert("Erro ao aprovar depósito: " + e.message);
+    console.error("Erro na transação de depósito:", e);
+  });
 }
 
 function recusarSolicitacao(id, uid, tipo) {
