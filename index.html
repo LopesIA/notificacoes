@@ -3535,6 +3535,7 @@ async function criarSolicitacaoDeposito() {
         console.error("Erro ao criar solicitação de depósito:", error);
         alert("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
     }
+    abrirModal('modalDeposito');
 }
 
 function iniciarSaque() {
