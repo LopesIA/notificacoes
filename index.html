@@ -3527,8 +3527,7 @@ async function criarSolicitacaoDeposito() {
             ts: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        fecharTodosOsModais();
-        alert("✅ Solicitação de depósito enviada! O administrador irá analisar e adicionar o saldo à sua conta em breve.");
+        fecharTodosOsModais();      
         notifyAdmins("📥 Novo Pedido de Depósito!", `${perfil.nome} solicitou um depósito de R$${valor.toFixed(2)}.`, { link: '#solicitacoes' });
 
     } catch (error) {
