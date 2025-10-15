@@ -3,7 +3,7 @@
 <head>
   <link rel="manifest" href="/manifest.json">
   <meta charset="UTF-8">
-  <title>💈 Navalha de Ouro</title>
+  <title>VersãoPro</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
@@ -12,7 +12,7 @@
   
   <link rel="icon" href="/icone.png" type="image/png">
   <link rel="apple-touch-icon" href="/icone.png">
-  <title>💈 Navalha de Ouro</title>
+  <title>VersãoPro</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
@@ -23,10 +23,12 @@
       --cor-botoes: #222222;
       --cor-texto-principal: #e0e0e0;
       --cor-destaque-ouro: #d4af37; /* Dourado */
+      --cor-destaque-rosa: #e57373; /* Rosa Suave */
       --cor-destaque-prata: #c0c0c0; /* Prateado */
       --cor-destaque-azul: #007BFF; /* Azul */
       --cor-sombra: #000000;
       --cor-borda: #333;
+      --cor-destaque: var(--cor-destaque-ouro); /* Cor padrão */
     }
     body.tema-claro {
       --cor-fundo: #f0f0f0;
@@ -34,6 +36,7 @@
       --cor-botoes: #e0e0e0;
       --cor-texto-principal: #333;
       --cor-destaque-ouro: #d4af37;
+      --cor-destaque-rosa: #e57373;
       --cor-destaque-prata: #808080;
       --cor-destaque-azul: #0056b3;
       --cor-sombra: #b0b0b0;
@@ -80,7 +83,7 @@
       font-weight: 600;
     }
     button:hover {
-      background: var(--cor-destaque-ouro);
+      background: var(--cor-destaque);
       color: var(--cor-fundo);
       transform: translateY(-2px);
       box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
@@ -138,15 +141,22 @@
     }
     .logo {
       font-weight: 600;
-      color: var(--cor-destaque-ouro);
+      color: var(--cor-destaque);
       font-size: 18px;
-      text-shadow: 0 0 5px var(--cor-destaque-ouro);
+      text-shadow: 0 0 5px var(--cor-destaque);
       transition: color 0.3s;
     }
     .topbar-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 15px; /* Aumentado o espaço */
+    }
+    #btnConfig {
+      font-size: 20px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
     }
     .modal {
       position: fixed;
@@ -316,7 +326,7 @@
         50% { background-color: #2c250e; }
     }
     .boosted-card {
-        border: 2px solid var(--cor-destaque-ouro);
+        border: 2px solid var(--cor-destaque);
         animation: gold-flash-background 3s ease-in-out infinite, fadeIn 0.5s;
     }
     .boost-icon {
@@ -324,7 +334,7 @@
         top: 8px;
         left: 8px;
         font-size: 20px;
-        text-shadow: 0 0 8px var(--cor-destaque-ouro);
+        text-shadow: 0 0 8px var(--cor-destaque);
     }
     @keyframes gold-flash {
       0%, 100% { background-color: transparent; transform: scale(1); }
@@ -355,11 +365,11 @@
         border: 2px solid var(--cor-fundo);
     }
     .vip-glow {
-      box-shadow: 0 0 8px var(--cor-destaque-ouro), 0 0 12px var(--cor-destaque-ouro);
-      border: 1px solid var(--cor-destaque-ouro);
+      box-shadow: 0 0 8px var(--cor-destaque), 0 0 12px var(--cor-destaque);
+      border: 1px solid var(--cor-destaque);
     }
     .promocao-card {
-      background: linear-gradient(45deg, #181818, var(--cor-destaque-ouro));
+      background: linear-gradient(45deg, #181818, var(--cor-destaque));
       padding: 15px;
       border-radius: 10px;
       margin-bottom: 10px;
@@ -421,9 +431,9 @@
         transition: all 0.2s;
     }
     .horario-btn.selecionado {
-        background: var(--cor-destaque-ouro);
+        background: var(--cor-destaque);
         color: var(--cor-fundo);
-        border-color: var(--cor-destaque-ouro);
+        border-color: var(--cor-destaque);
     }
     .horario-btn.bloqueado {
         background: #772014;
@@ -453,7 +463,7 @@
       transition: background-color 0.2s;
     }
     .horario-disponivel:hover {
-      background: var(--cor-destaque-ouro);
+      background: var(--cor-destaque);
     }
     .admin-chat-red {
       color: red;
@@ -500,7 +510,7 @@
     .card-header-info h4 {
         margin: 0;
         font-size: 1.1em;
-        color: var(--cor-destaque-ouro);
+        color: var(--cor-destaque);
     }
     .card-header-info p {
         margin: 4px 0 0;
@@ -564,7 +574,7 @@
     .popup-section h4 {
         margin-top: 0;
         margin-bottom: 10px;
-        color: var(--cor-destaque-ouro);
+        color: var(--cor-destaque);
     }
     .selectable-item {
         background: var(--cor-botoes);
@@ -576,12 +586,12 @@
         transition: all 0.2s ease-in-out;
     }
     .selectable-item:hover {
-        border-color: var(--cor-destaque-ouro);
+        border-color: var(--cor-destaque);
     }
     .selectable-item.selected {
-        background: var(--cor-destaque-ouro);
+        background: var(--cor-destaque);
         color: var(--cor-fundo);
-        border-color: var(--cor-destaque-ouro);
+        border-color: var(--cor-destaque);
         font-weight: 600;
     }
     #barbeiroPerfilHorariosList {
@@ -635,7 +645,7 @@
         margin-bottom: 10px;
     }
     .conquista-item.unlocked {
-        border-left: 5px solid var(--cor-destaque-ouro);
+        border-left: 5px solid var(--cor-destaque);
     }
     .conquista-item.locked {
         opacity: 0.5;
@@ -656,7 +666,7 @@
     .ranking-column h4 {
         text-align: center;
         margin-bottom: 10px;
-        color: var(--cor-destaque-ouro);
+        color: var(--cor-destaque);
     }
     .ranking-item {
         display: flex;
@@ -668,7 +678,7 @@
     }
     .ranking-item:first-child {
         font-weight: bold;
-        color: var(--cor-destaque-ouro);
+        color: var(--cor-destaque);
     }
     .chat-medal {
         margin-right: 4px;
@@ -764,7 +774,7 @@
         justify-content: space-between;
     }
     .produto-nome { font-weight: 600; font-size: 1em; }
-    .produto-preco { font-size: 1.1em; color: var(--cor-destaque-ouro); margin-top: 5px; }
+    .produto-preco { font-size: 1.1em; color: var(--cor-destaque); margin-top: 5px; }
     .produto-preco-original { text-decoration: line-through; opacity: 0.7; font-size: 0.9em; }
     .produto-card button { font-size: 14px; padding: 8px; margin-top: 10px;}
     #lojaView .card-header { display: flex; justify-content: space-between; align-items: center; }
@@ -781,9 +791,9 @@
     }
     .tamanho-options input { display: none; }
     .tamanho-options input:checked + label {
-      background: var(--cor-destaque-ouro);
+      background: var(--cor-destaque);
       color: var(--cor-fundo);
-      border-color: var(--cor-destaque-ouro);
+      border-color: var(--cor-destaque);
     }
     .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .checkbox-group label { display: flex; align-items: center; gap: 5px; }
@@ -818,7 +828,7 @@
     }
     .promo-info {
       font-size: 0.8em;
-      color: var(--cor-destaque-ouro);
+      color: var(--cor-destaque);
       margin: 8px 0 0 0;
       padding-top: 8px;
       border-top: 1px dashed var(--cor-borda);
@@ -852,7 +862,7 @@
     }
     .avaliacao-estrelas {
         font-size: 1.2em;
-        color: var(--cor-destaque-ouro);
+        color: var(--cor-destaque);
     }
     .avaliacao-comentario {
         font-style: italic;
@@ -872,14 +882,132 @@
         margin-bottom: 15px;
         background-color: var(--cor-botoes);
     }
+
+    /* ESTILOS ADICIONAIS VersãoPro */
+    #popupAguarde {
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        z-index: 101;
+    }
+    #popupAguarde .modal-content {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+        text-align: center;
+        font-size: 1.2em;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid var(--cor-destaque);
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px auto;
+    }
+    .modal-fullscreen {
+        align-items: flex-end; /* Alinha o modal na parte inferior */
+        background: none;
+    }
+    .modal-fullscreen .modal-content {
+        width: 100%;
+        height: 90vh;
+        max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        animation: slide-up 0.5s ease-out;
+    }
+    @keyframes slide-up {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    #onboardingContent {
+        text-align: center;
+    }
+    #onboardingContent img {
+        max-width: 80%;
+        height: auto;
+        margin-bottom: 20px;
+    }
+    .interest-options button {
+        background: var(--cor-botoes);
+        border: 2px solid transparent;
+    }
+    .interest-options button.selected {
+        border-color: var(--cor-destaque);
+        background: var(--cor-destaque-ouro);
+        color: var(--cor-fundo);
+    }
+    .onboarding-background-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.15;
+      z-index: -1;
+      border-radius: 20px 20px 0 0;
+    }
+    .onboarding-content-wrapper {
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+      color: white;
+      text-shadow: 1px 1px 3px black;
+    }
+    @keyframes blink-animation {
+      0%, 100% { background-color: var(--cor-botoes); }
+      50% { background-color: var(--cor-destaque); }
+    }
+    .blinking-button.closed {
+      animation: blink-animation 2s infinite;
+    }
+    .chat-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--cor-borda);
+        margin-bottom: 10px;
+    }
+    .chat-tab {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+    }
+    .chat-tab.active {
+        border-bottom-color: var(--cor-destaque);
+    }
+    .config-section button.selected {
+        background-color: var(--cor-destaque);
+        color: var(--cor-fundo);
+    }
   </style>
 </head>
 <body>
 
+<div id="popupAguarde" class="modal" onclick="fecharAguarde(event)">
+  <div class="modal-content">
+    <div class="spinner"></div>
+    <span id="popupAguardeTexto">Aguarde...</span>
+  </div>
+</div>
+
+<div id="modalOnboarding" class="modal modal-fullscreen">
+  <div class="modal-content">
+    <div id="onboardingContent">
+      </div>
+  </div>
+</div>
+
 <div class="topbar hidden" id="topbar">
-  <div class="logo">💈 Navalha de Ouro</div>
+  <div class="logo">VersãoPro</div>
   <div class="topbar-right">
     <button id="btnTema" onclick="alternarTema()">🌙</button>
+    <button id="btnConfig" onclick="abrirModal('modalConfiguracoes')">⚙️</button>
     <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 R$ <span id="saldoHeader">0,00</span></button>
   </div>
 </div>
@@ -893,6 +1021,7 @@
     <input id="email" type="email" placeholder="📧 Email">
     <input id="senha" type="password" placeholder="🔑 Senha">
     <div id="cadastro-fields" class="hidden">
+      <input id="nomeExibido" type="text" placeholder="😀 Nome Exibido (obrigatório)">
       <div class="show-password-container">
         <input id="senha-cadastro" type="password" placeholder="🔑 Senha (visível)">
       </div>
@@ -902,6 +1031,8 @@
       <select id="tipo">
         <option value="cliente">🙋 Cliente</option>
         <option value="barbeiro">💈 Barbeiro</option>
+        <option value="manicure_pedicure">💅 Manicure/Pedicure</option>
+        <option value="designer_cilios">👁️ Designer de Cílios</option>
       </select>
       <input id="telefone" type="tel" placeholder="📞 Telefone com DDD (ex: 27999999999)">
       <input id="rua" type="text" placeholder="Endereço (Rua)" class="hidden">
@@ -942,7 +1073,7 @@
 
   <div id="clienteView" class="hidden card">
     <h2>🙋 Painel do Cliente</h2>
-    <button onclick="toggleFuncoes('clienteFuncoesContainer')">⚙️ Funções do Cliente</button>
+    <button onclick="toggleFuncoes('clienteFuncoesContainer')" class="blinking-button closed">⚙️ Funções do Cliente</button>
     <div id="clienteFuncoesContainer" class="hidden">
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
           <button id="btnHistoricoCliente" onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
@@ -961,8 +1092,8 @@
   </div>
 
   <div id="barbeiroView" class="hidden card">
-    <h2>💈 Painel do Barbeiro</h2>
-    <button onclick="toggleFuncoes('barbeiroFuncoesContainer')">⚙️ Funções do Barbeiro</button>
+    <h2>💈 Painel do Profissional</h2>
+    <button onclick="toggleFuncoes('barbeiroFuncoesContainer')" class="blinking-button closed">⚙️ Funções do Profissional</button>
     <div id="barbeiroFuncoesContainer" class="hidden">
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
           <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
@@ -974,14 +1105,14 @@
           <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
           <button id="btnAvaliacoesBarbeiro" onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
           <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
-          <button onclick="abrirModal('modalAlterarNomeBarbeiro')" style="width:45%">✏️ Alterar Nome</button>
+          <button onclick="abrirModal('modalLogomarca')" style="width:45%">🎨 Logomarca</button>
           <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
           <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
           <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
           <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
           <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
           <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
-          <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-ouro), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
+          <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
         </div>
     </div>
      <hr style="border-color: var(--cor-borda); margin: 20px 0;">
@@ -996,7 +1127,7 @@
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
       <button id="btnAdminDenuncias" onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-      <button onclick="abrirGerenciarLoja()" style="width:45%">🛍️ Gerenciar Loja</button>
+      <button onclick="abrirGerenciarLojaAdmin()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
       <button onclick="abrirModal('modalNotificacaoMarketing')" style="width:92%">📣 Enviar Notificação Geral</button>
     </div>
@@ -1004,7 +1135,7 @@
 
   <div id="lojaView" class="hidden card">
     <div class="card-header">
-        <h3>🛍️ Loja Navalha de Ouro</h3>
+        <h3>🛍️ Loja VersãoPro</h3>
     </div>
     <div id="lojaContainer" class="loja-grid">
     </div>
@@ -1027,10 +1158,46 @@
 
 <button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
 
+<div id="modalConfiguracoes" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>⚙️ Configurações</h3>
+    
+    <div class="popup-section config-section">
+      <h4>📍 Minha Localização</h4>
+      <select id="configEstado" onchange="carregarCidades('config')"></select>
+      <select id="configCidade"></select>
+      <button onclick="salvarLocalizacaoConfig()">Salvar Localização</button>
+    </div>
+
+    <div class="popup-section config-section">
+      <h4>❤️ Meu Interesse Principal</h4>
+      <div id="configInteresseContainer" style="display:flex; gap:10px;">
+          <button data-interesse="barbeiro">Barbearias</button>
+          <button data-interesse="manicure_pedicure">Unhas</button>
+          <button data-interesse="designer_cilios">Cílios</button>
+      </div>
+    </div>
+
+    <div class="popup-section">
+      <h4>⚖️ Legal</h4>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button onclick="abrirModal('modalTermosUso')">Termos de Uso</button>
+        <button onclick="abrirModal('modalTermosPrivacidade')">Termos de Privacidade</button>
+        <button onclick="abrirModal('modalTermosCookies')">Termos de Cookies</button>
+      </div>
+    </div>
+    <button data-modal-id="modalConfiguracoes" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalTermosUso" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Uso</h3><p class="scrollable-list">Bem-vindo ao VersãoPro! Ao usar nosso aplicativo, você concorda em seguir nossas regras de conduta, respeitar outros usuários e profissionais, e usar a plataforma para os fins a que se destina. Violações podem resultar na suspensão da conta.</p><button data-modal-id="modalTermosUso" onclick="fecharModal(event)">Fechar</button></div></div>
+<div id="modalTermosPrivacidade" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Privacidade</h3><p class="scrollable-list">Sua privacidade é importante. Coletamos dados como nome, e-mail e localização para fornecer e melhorar nossos serviços. Não compartilhamos seus dados pessoais com terceiros sem seu consentimento, exceto quando exigido por lei.</p><button data-modal-id="modalTermosPrivacidade" onclick="fecharModal(event)">Fechar</button></div></div>
+<div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o VersãoPro, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies" onclick="fecharModal(event)">Fechar</button></div></div>
+
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
-    <p>Seu saldo atual é: <b style="color: var(--cor-destaque-ouro);">R$ <span id="saldoModal">0,00</span></b></p>
+    <p>Seu saldo atual é: <b style="color: var(--cor-destaque);">R$ <span id="saldoModal">0,00</span></b></p>
     <button onclick="iniciarDeposito()">📥 Depositar</button>
     <button onclick="iniciarSaque()">📤 Sacar</button>
     <button data-modal-id="modalCarteira" onclick="fecharModal(event)">❌ Fechar</button>
@@ -1078,14 +1245,14 @@
 
 <div id="modalGerandoQRCode" class="modal">
     <div class="modal-content" style="text-align: center;">
-        <h3 style="color: var(--cor-destaque-ouro);">Gerando QR CODE</h3>
+        <h3 style="color: var(--cor-destaque);">Gerando QR CODE</h3>
         <p>Aguarde um instante...</p>
     </div>
 </div>
 
 <div id="modalCarregandoGenerico" class="modal">
     <div class="modal-content" style="text-align: center;">
-        <h3 id="carregandoGenericoTitulo" style="color: var(--cor-destaque-ouro);">Aguarde...</h3>
+        <h3 id="carregandoGenericoTitulo" style="color: var(--cor-destaque);">Aguarde...</h3>
         <p id="carregandoGenericoTexto">Estamos processando sua solicitação.</p>
     </div>
 </div>
@@ -1142,8 +1309,12 @@
   </div>
 </div>
 
-<div id="janelaChat" class="modal" onclick="fecharModal(event)">
+<div id="janelaChat" class="modal fullscreen" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="chat-tabs">
+        <div class="chat-tab active" id="tabChatGlobal" onclick="alternarChat('global')">🌎 Global</div>
+        <div class="chat-tab" id="tabChatLocal" onclick="alternarChat('local')">📍 Local</div>
+    </div>
     <button id="carregarMaisMsgBtn" onclick="carregarMensagensAnteriores()">Ver mensagens anteriores</button>
     <h3 id="chatTitle">💬 Chat Global</h3>
     <div id="chatMessages" class="chat-container"></div>
@@ -1207,6 +1378,7 @@
       <h3 id="barbeiroPerfilNome"></h3>
       <p>Endereço: <span id="barbeiroPerfilEndereco"></span></p>
       <p>Reputação: <span id="barbeiroPerfilReputacao"></span></p>
+      <img id="profissionalLogo" src="" alt="Logomarca" style="max-width: 100px; border-radius: 50%; display: none; margin: 10px auto;">
     </div>
 
     <div id="barbeiroPerfilServicos" class="popup-section">
@@ -1230,7 +1402,7 @@
 <div id="modalVagaImediataAprovada" class="modal" style="z-index: 99;" onclick="fecharModal(event)">
   <div class="modal-content" style="background: #e74c3c; color: white;" onclick="event.stopPropagation()">
     <h3 style="color:white;text-shadow: 2px 2px 4px #000;">⚠️ VAGA IMEDIATA APROVADA!</h3>
-    <p style="font-size: 1.2em; text-align: center;"><b>Você tem 10 minutos para chegar à barbearia.</b></p>
+    <p style="font-size: 1.2em; text-align: center;"><b>Você tem 10 minutos para chegar ao local.</b></p>
     <p style="text-align: center;">Não se atrase para não perder a vaga e o seu dinheiro!</p>
     <div style="display:flex; gap: 10px; margin-top: 20px;">
       <button data-modal-id="modalVagaImediataAprovada" onclick="fecharModal(event)" style="background:white; color:#e74c3c; flex: 1;">✅ Entendi</button>
@@ -1241,8 +1413,8 @@
 
 <div id="modalBarbeariasCliente" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💈 Barbearias disponíveis</h3>
-    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por barbeiro ou cidade...">
+    <h3>💈 Profissionais disponíveis</h3>
+    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por profissional ou cidade...">
     <div id='listaBarbeiros' class="scrollable-list"></div>
     <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
@@ -1268,16 +1440,7 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🏆 Ranking Geral 🏆</h3>
     <p style="font-size: 12px; opacity: 0.7; text-align:center;">Top 100 com mais serviços concluídos.</p>
-    <div class="ranking-container">
-      <div class="ranking-column">
-        <h4>💈 Barbeiros</h4>
-        <div id="listaRankingBarbeirosUnificado" class="scrollable-list"></div>
-      </div>
-      <div class="ranking-column">
-        <h4>🙋 Clientes</h4>
-        <div id="listaRankingClientesUnificado" class="scrollable-list"></div>
-      </div>
-    </div>
+    <div id="listaRankingUnificado" class="scrollable-list"></div>
     <button data-modal-id="modalRankingUnificado" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
   </div>
 </div>
@@ -1294,12 +1457,13 @@
   </div>
 </div>
 
-<div id="modalAlterarNomeBarbeiro" class="modal" onclick="fecharModal(event)">
+<div id="modalLogomarca" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>✏️ Alterar Nome</h3>
-    <input id="novoNomeBarbeiro" type="text" placeholder="Novo nome do barbeiro/barbearia">
-    <button onclick="alterarNomeBarbeiro(event)">💾 Salvar</button>
-    <button data-modal-id="modalAlterarNomeBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
+    <h3>🎨 Adicionar Logomarca</h3>
+    <p style="font-size: 12px; opacity: 0.8;">Use o site <a href="https://postimages.org/" target="_blank">Postimages.org</a> para hospedar sua imagem gratuitamente e cole o "Link Direto" abaixo.</p>
+    <input id="logomarcaUrl" type="url" placeholder="🔗 Cole o Link Direto aqui">
+    <button onclick="salvarLogomarca()">💾 Salvar Logomarca</button>
+    <button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -1351,6 +1515,10 @@
   </div>
 </div>
 
+<div id="modalOnboardingProfissionalServicos" class="modal"><div class="modal-content"><h3>1. Cadastre seus Serviços</h3><p>Adicione pelo menos um serviço para continuar.</p><div id="onboardingServicosList" class="scrollable-list"></div><input id="onboardingServicoNome" placeholder="Nome do Serviço"><input id="onboardingServicoValor" type="number" placeholder="Valor (R$)"><input id="onboardingServicoTempo" type="number" placeholder="Tempo (minutos)"><button onclick="adicionarServicoOnboarding()">Adicionar Serviço</button><button id="btnOnboardingNextServicos" disabled onclick="avancarOnboarding(2)">Próximo ➡️</button></div></div>
+<div id="modalOnboardingProfissionalAgenda" class="modal"><div class="modal-content"><h3>2. Configure sua Agenda</h3><p>Como você irá atender seus clientes?</p><button id="onboardingBtnVagaImediata">⚡ Ativar Vaga Imediata</button><button id="onboardingBtnAgendaManual">📅 Usar Agenda Manual</button><div id="onboardingAgendaManualPainel" class="hidden card"><h4>Horários Disponíveis Hoje</h4><div id="onboardingHorariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div></div><button onclick="avancarOnboarding(3)">✅ Concluir</button></div></div>
+
+
 <div id="modalAgendamentosBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⏰ Meus Agendamentos</h3>
@@ -1388,7 +1556,7 @@
 
 <div id="modalConquistasBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🏅 Minhas Conquistas de Barbeiro</h3>
+    <h3>🏅 Minhas Conquistas de Profissional</h3>
     <div id="listaConquistasBarbeiro" class="scrollable-list"></div>
     <button data-modal-id="modalConquistasBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
@@ -1427,6 +1595,10 @@
     <button data-modal-id="modalUsuarios" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
+
+<div id="modalAdminGerenciarUsuario" class="modal"><div class="modal-content"><h3>Gerenciar Usuário</h3><div id="adminGerenciarConteudo"></div><button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)">Fechar</button></div></div>
+
+<div id="modalGerenciarLojaAdmin" class="modal"><div class="modal-content"><h3>Gerenciar Loja</h3><div class="popup-section"><h4>Deletar Produto</h4><div id="adminDeletarProdutoList" class="scrollable-list"></div></div><div class="popup-section"><h4>Ativar/Desativar Loja de Vendedor</h4><div id="adminToggleLojaList" class="scrollable-list"></div></div><button data-modal-id="modalGerenciarLojaAdmin" onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalDenunciasAdmin" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1481,8 +1653,8 @@
 <div id="modalTurbinar" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3>🚀 Turbinar seu Perfil</h3>
-        <p>Destaque seu perfil no topo da lista de barbearias por <strong>24 horas</strong> e alcance mais clientes!</p>
-        <p style="font-size: 22px; color: var(--cor-destaque-ouro); font-weight: bold; text-align: center;">Apenas R$ 9,99</p>
+        <p>Destaque seu perfil no topo da lista de profissionais por <strong>24 horas</strong> e alcance mais clientes!</p>
+        <p style="font-size: 22px; color: var(--cor-destaque); font-weight: bold; text-align: center;">Apenas R$ 9,99</p>
         <button onclick="confirmarTurbinar()">💥 Confirmar e Turbinar</button>
         <button data-modal-id="modalTurbinar" onclick="fecharModal(event)">❌ Cancelar</button>
     </div>
@@ -1507,7 +1679,7 @@
 </div>
 
 <div id="modalAtualizacao" class="modal" style="z-index: 100;" onclick="fecharModal(event)">
-    <div class="modal-content" style="border: 2px solid var(--cor-destaque-ouro);" onclick="event.stopPropagation()">
+    <div class="modal-content" style="border: 2px solid var(--cor-destaque);" onclick="event.stopPropagation()">
         <h3>🚀 Nova Versão Disponível!</h3>
         <p>Uma nova versão do aplicativo está pronta. Clique no botão abaixo para atualizar e ter acesso às últimas novidades e melhorias.</p>
         <div style="display:flex; gap: 10px; margin-top: 20px;">
@@ -1551,7 +1723,7 @@
 <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <img id="detalhesProdutoImg" src="" alt="Imagem do Produto">
-        <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque-ouro);"></h3>
+        <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque);"></h3>
         
         <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
         <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
@@ -1665,7 +1837,7 @@
 .rating-stars span:hover,
 .rating-stars span.hovered,
 .rating-stars span.selected {
-    color: var(--cor-destaque-ouro);
+    color: var(--cor-destaque);
 }
 </style>
 
@@ -1733,6 +1905,8 @@ let currentModal = null;
 let chatListener = null;
 let barbeirosListener = null;
 let tempSelectedHorarios = {};
+let onboardingState = {};
+let tempOnboardingServicos = [];
 const CHAT_GLOBAL_ID = "chatGlobal";
 let botInterval = null;
 let newWorker;
@@ -1769,14 +1943,40 @@ let oldestMessageSnapshot = null; // Variável para paginação do chat
 
 let deferredInstallPrompt = null;
 let chatPreviewTimeout = null; 
+let aguardeClickCount = 0;
 
+// --- [LÓGICA DE POPUP DE AGUARDE E MODAIS] ---
+function exibirAguarde(texto = "Aguarde...") {
+    document.getElementById('popupAguardeTexto').textContent = texto;
+    const popup = document.getElementById('popupAguarde');
+    popup.style.display = 'flex';
+    setTimeout(() => popup.classList.add('show'), 10);
+    aguardeClickCount = 0; // Reseta a contagem de cliques
+}
 
-// --- [LÓGICA DE MODAIS APRIMORADA] ---
+function fecharAguarde(event) {
+    // Permite fechar com 2 cliques fora
+    if (event && event.target.id === 'popupAguarde') {
+        aguardeClickCount++;
+        if (aguardeClickCount >= 2) {
+            fecharModalAtual(true); // Força o fechamento do popupAguarde
+            aguardeClickCount = 0;
+        }
+    }
+}
+
 let modalStack = [];
 
 function abrirModal(modalId) {
     const novoModal = document.getElementById(modalId);
     if (novoModal && !novoModal.classList.contains('show')) {
+        // Se for um modal de onboarding, não adiciona ao stack principal para não ser fechado por outros modais
+        if (modalId.startsWith('modalOnboarding')) {
+            novoModal.style.display = 'flex';
+            setTimeout(() => novoModal.classList.add('show'), 10);
+            return;
+        }
+        
         novoModal.style.display = 'flex';
         setTimeout(() => {
             novoModal.classList.add('show');
@@ -1792,7 +1992,14 @@ function fecharModal(event) {
     }
 }
 
-function fecharModalAtual() {
+function fecharModalAtual(forcePopupAguarde = false) {
+    if (forcePopupAguarde) {
+        const popup = document.getElementById('popupAguarde');
+        popup.classList.remove('show');
+        setTimeout(() => popup.style.display = 'none', 300);
+        return;
+    }
+    
     if (modalStack.length > 0) {
         const modalParaFechar = modalStack.pop();
         modalParaFechar.classList.remove('show');
@@ -1806,129 +2013,15 @@ function fecharTodosOsModais() {
     while (modalStack.length > 0) {
         fecharModalAtual();
     }
-}
-
-
-// --- [FIM DA LÓGICA DE MODAIS] ---
-
-
-// FUNÇÃO PARA ABRIR O MODAL DE PROMOÇÕES E CARREGAR OS DADOS
-function abrirPromocoes() {
-  abrirModal('modalPromocoesBarbeiro');
-  const lista = document.getElementById("listaPromocoes");
-  if (!lista) {
-    console.error("Erro: Elemento com ID 'listaPromocoes' não encontrado no HTML.");
-    return;
-  }
-  lista.innerHTML = "<p>⏳ Carregando...</p>";
-  db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
-    perfil = doc.data();
-    lista.innerHTML = "";
-    if (!perfil.promocoes || perfil.promocoes.length === 0) {
-      lista.innerHTML = "<p>Nenhuma promoção ativa.</p>";
-      return;
-    }
-    perfil.promocoes.forEach((p, index) => {
-      lista.innerHTML += `<div class="promocao-card">
-        <b>${p.nome}</b>
-        <p>${p.descricao} (${p.desconto}%)</p>
-        <button onclick="removerPromocao(${index})" style="background:none;border:none;color:#fff;float:right;">❌</button>
-      </div>`;
-    });
-  });
-}
-
-// FUNÇÃO PARA ABRIR O MODAL DE ADICIONAR PROMOÇÃO
-function abrirModalAddPromocao() {
-  abrirModal('modalAddPromocao');
-}
-
-// FUNÇÃO PARA SALVAR A PROMOÇÃO NO FIREBASE
-function salvarNovaPromocao() {
-  const nome = document.getElementById('addPromocaoNome').value;
-  const descricao = document.getElementById('addPromocaoDescricao').value;
-  const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
-  
-  if (!nome || !descricao || isNaN(desconto)) {
-    alert("Por favor, preencha todos os campos corretamente.");
-    return;
-  }
-  
-  const novaPromocao = {
-    nome: nome,
-    descricao: descricao,
-    desconto: desconto,
-  };
-
-  const userId = auth.currentUser.uid;
-  const userRef = db.collection("usuarios").doc(userId);
-
-  userRef.update({
-    promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
-  })
-  .then(() => {
-    alert("Promoção adicionada com sucesso!");
-    fecharModalAtual();
-    document.getElementById('addPromocaoNome').value = '';
-    document.getElementById('addPromocaoDescricao').value = '';
-    document.getElementById('addPromocaoDesconto').value = '';
-  })
-  .catch(error => {
-    console.error("Erro ao adicionar promoção:", error);
-    alert("Erro ao adicionar promoção. Tente novamente.");
-  });
-}
-
-async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
-  // ATENÇÃO: A URL do backend foi movida para uma constante no início do script para fácil manutenção.
-  const backendUrl = "https://navalhabackend.onrender.com"; 
-  const notificationEndpoint = "/enviar-notificacao";
-  const fullUrl = backendUrl + notificationEndpoint;
-
-  if (!uid) {
-    console.error("Tentativa de enviar notificação sem um UID de usuário.");
-    return;
-  }
-  
-  try {
-    // Não precisamos mais do 'mode: no-cors' pois o backend está configurado com CORS.
-    const response = await fetch(fullUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid, title, body, data }),
-    });
-
-    const responseData = await response.json();
-    if (response.ok) {
-      console.log('Notificação enviada com sucesso via backend:', responseData);
-    } else {
-      console.error('Falha ao enviar a notificação via backend:', responseData.message);
-    }
-  } catch (error) {
-    console.error('Erro de rede ou na chamada da API de notificação:', error);
-  }
-}
-
-
-async function notifyUser(uid, title, body, data = {}) {
-    if (!uid) return;
-    console.log(`Disparando notificação para UID: ${uid} - Título: ${title}`);
-    await enviarNotificacaoParaBackend(uid, title, body, data);
-}
-
-async function notifyAdmins(title, body, data = {}) {
-    try {
-        const adminQuery = await db.collection("usuarios").where("tipo", "==", "admin").get();
-        if (!adminQuery.empty) {
-            adminQuery.forEach(adminDoc => {
-                notifyUser(adminDoc.id, title, body, data);
-            });
-        }
-    } catch(e) {
-        console.error("Erro ao notificar admins:", e);
+    // Garante que o de aguarde feche também
+    const popup = document.getElementById('popupAguarde');
+    if(popup.classList.contains('show')){
+       fecharModalAtual(true);
     }
 }
 
+<script>
+// --- INÍCIO DA PARTE 2: CONTINUAÇÃO DO JAVASCRIPT DO index.html ---
 
 // Funções de UI
 function mostrar(id) {
@@ -1963,6 +2056,7 @@ function mostrar(id) {
     document.getElementById("redeemContainer").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
     
     document.getElementById("btnTema").classList.toggle("hidden", isAuth);
+    document.getElementById("btnConfig").classList.toggle("hidden", isAuth);
     document.getElementById("btnCarteiraTop").classList.toggle("hidden", id !== 'clienteView' && id !== 'barbeiroView' && id !== 'adminView');
     document.getElementById("botaoExtra").classList.toggle("hidden", id === 'authView' || id === 'guestView');
     document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
@@ -2083,12 +2177,12 @@ function setupViewSwitcher() {
             btn.onclick = () => switchView(view);
             if (userView.currentType === view) {
                 btn.disabled = true;
-                btn.style.borderColor = "var(--cor-destaque-ouro)";
+                btn.style.borderColor = "var(--cor-destaque)";
             }
             container.appendChild(btn);
         };
         createButton("🧠 Admin", "admin");
-        createButton("💈 Barbeiro", "barbeiro");
+        createButton("💈 Profissional", "barbeiro");
         createButton("🙋 Cliente", "cliente");
         createButton("🛍️ Loja", "loja");
         return;
@@ -2136,7 +2230,9 @@ function renderCurrentView() {
             carregarAdmin();
             break;
         case 'barbeiro':
-            mostrar("barbeiroView");
+        case 'manicure_pedicure':
+        case 'designer_cilios':
+            mostrar("barbeiroView"); // Usa a mesma view para todos os profissionais
             carregarBarbeirosPrincipal('listaBarbeirosPrincipalBarbeiro', false);
             break;
         case 'cliente':
@@ -2154,47 +2250,61 @@ function renderCurrentView() {
 
 
 const cidadesPorEstado = {
-  "ES": ["Aracruz", "Vitória", "Serra", "Linhares", "Colatina", "Cachoeiro de Itapemirim", "Guarapari", "Vila Velha", "São Mateus", "Barra de São Francisco"], "SP": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba"], "RJ": ["Rio de Janeiro", "Niterói", "Petrópolis", "Volta Redonda", "Campos dos Goytacazes"], "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Montes Claros"], "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Ilhéus", "Barreiras"], "PR": ["Curitiba", "Londrina", "Maringá", "Cascavel", "Ponta Grossa"], "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Santa Maria", "Novo Hamburgo"], "SC": ["Florianópolis", "Joinville", "Blumenau", "Chapecó", "Criciúma"], "PE": ["Recife", "Olinda", "Caruaru", "Petrolina", "Garanhuns"], "CE": ["Fortaleza", "Juazeiro do Norte", "Sobral", "Crato", "Iguatu"], "DF": ["Brasília"]
+  "ES": ["Aracruz", "Vitória", "Serra", "Linhares", "Colatina", "Cachoeiro de Itapemirim", "Guarapari", "Vila Velha", "São Mateus", "Barra de São Francisco"], "SP": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba"], "RJ": ["Rio de Janeiro", "Niterói", "Petrópolis", "Volta Redonda", "Campos dos Goytacazes"], "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Montes Claros"], "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Ilhéus", "Barreiras"], "PR": ["Curitiba", "Londrina", "Maringá", "Cascavel", "Ponta Grossa"], "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Santa Maria", "Novo Hamburgo"], "SC": ["Florópolis", "Joinville", "Blumenau", "Chapecó", "Criciúma"], "PE": ["Recife", "Olinda", "Caruaru", "Petrolina", "Garanhuns"], "CE": ["Fortaleza", "Juazeiro do Norte", "Sobral", "Crato", "Iguatu"], "DF": ["Brasília"]
 };
 
-function carregarEstados() {
-  const estadoSelect = document.getElementById("estado");
+function carregarEstados(prefix = '') {
+  const estadoSelect = document.getElementById(`${prefix}estado`);
+  if(!estadoSelect) return;
+  const valorAtual = estadoSelect.value;
   estadoSelect.innerHTML = '<option value="">🌎 Selecione seu estado</option>';
   Object.keys(cidadesPorEstado).forEach(sigla => {
-    estadoSelect.innerHTML += `<option value="${sigla}">${sigla}</option>`;
+    estadoSelect.innerHTML += `<option value="${sigla}" ${sigla === valorAtual ? 'selected' : ''}>${sigla}</option>`;
   });
 }
 
-function carregarCidades() {
-  const estado = document.getElementById("estado").value;
-  const cidadeSelect = document.getElementById("cidade");
+function carregarCidades(prefix = '') {
+  const estado = document.getElementById(`${prefix}estado`).value;
+  const cidadeSelect = document.getElementById(`${prefix}cidade`);
+  if(!cidadeSelect) return;
+  const valorAtual = cidadeSelect.value;
   cidadeSelect.innerHTML = '<option value="">🏙️ Selecione sua cidade</option>';
   const cidades = cidadesPorEstado[estado] || [];
   cidades.forEach(c => {
-    cidadeSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    cidadeSelect.innerHTML += `<option value="${c}" ${c === valorAtual ? 'selected' : ''}>${c}</option>`;
   });
 }
 
 carregarEstados();
 
 function entrar() {
+  exibirAguarde("Entrando...");
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value.trim();
-  if (!email || !senha) return alert("Preencha os campos corretamente.");
+  if (!email || !senha) {
+    fecharTodosOsModais();
+    return alert("Preencha os campos corretamente.");
+  }
   auth.signInWithEmailAndPassword(email, senha)
-    .then(() => console.log("Login OK"))
-    .catch(e => alert("Erro ao entrar: " + e.message));
+    .then(() => {
+        console.log("Login OK");
+        fecharTodosOsModais();
+    })
+    .catch(e => {
+        fecharTodosOsModais();
+        alert("Erro ao entrar: " + e.message);
+    });
 }
 
 function prepararCriarConta() {
-    const email = document.getElementById("email").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-    if (!email || !senha) return alert("Por favor, preencha o email e a senha para começar o cadastro.");
     document.getElementById("email").classList.add("hidden");
     document.getElementById("senha").classList.add("hidden");
     document.querySelector("#authView button:first-of-type").style.display = "none";
     document.getElementById("cadastro-fields").classList.remove("hidden");
-    document.getElementById("senha-cadastro").value = senha;
+    
+    // Mantém a senha se já digitada, senão, deixa em branco
+    document.getElementById("senha-cadastro").value = document.getElementById("senha").value;
+
     document.getElementById("btnCriarConta").onclick = criarConta;
     document.getElementById("btnCriarConta").textContent = "🆕 Criar Conta";
     document.getElementById("btnVoltar").classList.remove("hidden");
@@ -2219,6 +2329,7 @@ function voltarParaLogin() {
 }
 
 function criarConta() {
+  exibirAguarde("Criando sua conta...");
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha-cadastro").value;
   const senhaConfirm = document.getElementById("senha-confirm").value;
@@ -2226,18 +2337,18 @@ function criarConta() {
   const telefone = document.getElementById("telefone").value.trim();
   const estado = document.getElementById("estado").value;
   const cidade = document.getElementById("cidade").value;
-  const nome = prompt("📝 Escolha seu nome:");
+  const nome = document.getElementById("nomeExibido").value.trim();
   const indicadorEmail = document.getElementById("indicador").value.trim();
   let rua, numero;
 
-  if (tipo === 'barbeiro') {
+  if (tipo !== 'cliente') {
     rua = document.getElementById("rua").value.trim();
     numero = document.getElementById("numero").value.trim();
   }
-  if (senha !== senhaConfirm) return alert("As senhas não coincidem.");
-  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos).");
-  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) return alert("Preencha todos os campos obrigatórios");
-  if (!cadastroCoords) return alert("Por favor, permita o acesso à localização para continuar o cadastro.");
+  if (senha !== senhaConfirm) { fecharTodosOsModais(); return alert("As senhas não coincidem."); }
+  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
+  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return alert("Preencha todos os campos obrigatórios"); }
+  if (tipo !== 'cliente' && !cadastroCoords) { fecharTodosOsModais(); return alert("Por favor, permita o acesso à localização para continuar o cadastro de profissional."); }
 
 
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
@@ -2252,7 +2363,8 @@ function criarConta() {
         disponivel: "nao", listaServicos: [], promocoes: [], portfolio: [],
         chatAtivo: true, vip: false, lojaLiberada: false,
         rua: rua || null, numero: numero || null, 
-        latitude: cadastroCoords.latitude, longitude: cadastroCoords.longitude,
+        latitude: cadastroCoords ? cadastroCoords.latitude : null, 
+        longitude: cadastroCoords ? cadastroCoords.longitude : null,
         usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
         codigosResgatados: [],
         indicadoPorEmail: indicadorEmail || null,
@@ -2262,32 +2374,39 @@ function criarConta() {
         conquistas: [], 
         clientesAtendidos: 0, 
         somaAvaliacoes: 0, numAvaliacoes: 0,
-        ultimoBoostComprado: null
+        ultimoBoostComprado: null,
+        interesse_principal: onboardingState.interesse_principal || 'barbeiro',
+        onboarding_profissional_concluido: tipo === 'cliente' // Clientes já concluíram
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
+      fecharTodosOsModais();
     })
-    .catch(e => alert("Erro ao criar conta: " + e.message));
+    .catch(e => {
+        fecharTodosOsModais();
+        alert("Erro ao criar conta: " + e.message);
+    });
 }
 
 document.getElementById('tipo').addEventListener('change', (e) => {
-  const isBarbeiro = e.target.value === 'barbeiro';
-  document.getElementById('rua').classList.toggle('hidden', !isBarbeiro);
-  document.getElementById('numero').classList.toggle('hidden', !isBarbeiro);
+  const isProfissional = e.target.value !== 'cliente';
+  document.getElementById('rua').classList.toggle('hidden', !isProfissional);
+  document.getElementById('numero').classList.toggle('hidden', !isProfissional);
   cadastroCoords = null; 
 });
 
 auth.onAuthStateChanged(async user => {
-  solicitarPermissaoNotificacao();
-  obterLocalizacaoAtual();
-  handleDeepLink();
   if (pendenciasInterval) clearInterval(pendenciasInterval);
 
   if (!user) {
-    userView = { originalType: null, currentType: null };
-    mostrar("guestView");
-    configurarBotoesGuest();
-    carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
+    if (!localStorage.getItem('onboarding_concluido')) {
+        iniciarOnboarding();
+    } else {
+        userView = { originalType: null, currentType: null };
+        mostrar("guestView");
+        configurarBotoesGuest();
+        carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
+    }
     document.getElementById("btnSair").classList.add("hidden");
     document.getElementById("redeemContainer").classList.add("hidden");
     if(globalChatListener) globalChatListener(); 
@@ -2295,6 +2414,11 @@ auth.onAuthStateChanged(async user => {
     if (comprasClienteListener) comprasClienteListener();
     return;
   }
+  
+  solicitarPermissaoNotificacao();
+  obterLocalizacaoAtual();
+  handleDeepLink();
+
   const ref = db.collection("usuarios").doc(user.uid);
   ref.onSnapshot(s => {
     if (!s.exists) return;
@@ -2303,13 +2427,14 @@ auth.onAuthStateChanged(async user => {
     document.getElementById("saldoHeader").textContent = saldo;
     document.getElementById("saldoModal").textContent = saldo;
     const btnVip = document.getElementById('btnVip');
-    if (s.data().vip) {
+    if (isVipAtivo(perfil)) {
       btnVip.textContent = '👑 Sou VIP';
       btnVip.classList.add('vip-glow');
     } else {
       btnVip.textContent = '💎 VIP';
       btnVip.classList.remove('vip-glow');
     }
+    aplicarTemaPorProfissao(perfil.interesse_principal);
   });
 
   const snap = await ref.get();
@@ -2329,6 +2454,10 @@ auth.onAuthStateChanged(async user => {
   }
   renderCurrentView();
   
+  if (perfil.tipo !== 'cliente' && !perfil.onboarding_profissional_concluido) {
+    iniciarOnboardingProfissional();
+  }
+
   setupFCM(user.uid);
   exibirVersaoApp();
   iniciarVerificacaoDePendencias(user.uid);
@@ -2441,6 +2570,12 @@ async function abrirPortaSecreta() {
     if (perfil.codigosResgatados && perfil.codigosResgatados.includes(codigo)) {
         return alert("Você já resgatou este código.");
     }
+    
+    const quinzeHorasAtras = new Date(Date.now() - 15 * 60 * 60 * 1000);
+    if (perfil.ultimo_resgate_ts && perfil.ultimo_resgate_ts.toDate() > quinzeHorasAtras) {
+        return alert("Você só pode resgatar um código a cada 15 horas.");
+    }
+
     const blogPosts = await db.collection("blog").get();
     let codigoValido = false;
     blogPosts.forEach(doc => {
@@ -2451,7 +2586,8 @@ async function abrirPortaSecreta() {
     if (codigoValido) {
         await db.collection("usuarios").doc(auth.currentUser.uid).update({
             pontosFidelidade: firebase.firestore.FieldValue.increment(5),
-            codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo)
+            codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo),
+            ultimo_resgate_ts: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
         notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!", { link: '#fidelidade' });
@@ -2485,18 +2621,18 @@ function filtrarBarbeiros() {
 
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
-    lista.innerHTML = "<p>⏳ Carregando barbeiros...</p>";
+    lista.innerHTML = "<p>⏳ Carregando profissionais...</p>";
 
     if (!localizacaoCliente) {
        await obterLocalizacaoAtual().catch(() => {});
     }
     
     if (barbeirosListener) barbeirosListener();
-    let query = db.collection("usuarios").where("tipo", "==", "barbeiro");
+    let query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-            lista.innerHTML = `<p>😔 Nenhum barbeiro encontrado no momento.</p>`;
+            lista.innerHTML = `<p>😔 Nenhum profissional encontrado para esta categoria.</p>`;
             return;
         }
 
@@ -2537,6 +2673,8 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
               });
               promocoesHtml += '</div>';
             }
+            
+            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px;">` : '';
 
             if (!isDisponivel) {
                  statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível no momento</div>`;
@@ -2558,6 +2696,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon}
                   <div class="card-header">
+                      ${logoHtml}
                       <div class="card-header-info">
                           <h4>💈 ${b.nome}</h4>
                           ${distanciaTexto}
@@ -2602,7 +2741,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
     try {
         resetAgendamentoState();
         const barbeiroDoc = await db.collection("usuarios").doc(barbeiroUid).get();
-        if (!barbeiroDoc.exists) throw new Error("Barbeiro não encontrado.");
+        if (!barbeiroDoc.exists) throw new Error("Profissional não encontrado.");
         const b = barbeiroDoc.data();
         agendamentoState.barbeiroUid = barbeiroUid;
         agendamentoState.barbeiroNome = b.nome;
@@ -2612,6 +2751,14 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         document.getElementById("barbeiroPerfilNome").textContent = `💈 ${b.nome}`;
         document.getElementById("barbeiroPerfilEndereco").textContent = (b.rua && b.numero) ? `${b.rua}, ${b.numero} - ${b.cidade}` : b.cidade;
         document.getElementById("barbeiroPerfilReputacao").textContent = `${'⭐'.repeat(Math.round((b.reputacao || 100) / 20))} (${b.reputacao || 100})`;
+        
+        const logoImg = document.getElementById('profissionalLogo');
+        if (b.logo_url) {
+            logoImg.src = b.logo_url;
+            logoImg.style.display = 'block';
+        } else {
+            logoImg.style.display = 'none';
+        }
 
         const servicosList = document.getElementById("barbeiroPerfilServicosList");
         servicosList.innerHTML = "";
@@ -2664,27 +2811,30 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         verificarEstadoBotaoAgendar();
         abrirModal('modalBarbeiroPerfil');
     } catch (error) {
-        alert("Ocorreu um erro ao carregar as informações do barbeiro.");
+        alert("Ocorreu um erro ao carregar as informações do profissional.");
     }
 }
 
 function confirmarAgendamento() {
+    exibirAguarde("Agendando...");
     const { barbeiroUid, barbeiroNome, servico, horario } = agendamentoState;
-    if (!servico || !horario) return;
-    const preco = perfil.vip ? servico.valor * 0.9 : servico.valor;
+    if (!servico || !horario) return fecharTodosOsModais();
+    const preco = isVipAtivo(perfil) ? servico.valor * 0.9 : servico.valor;
     if (perfil.saldo < preco) {
+        fecharTodosOsModais();
         alert("💸 Saldo insuficiente. Por favor, deposite mais dinheiro em sua carteira.");
         abrirModal('modalCarteira');
         return;
     }
     const horarioTexto = horario === 'imediato' ? 'uma Vaga Imediata' : `o horário das ${horario}`;
-    let detalhes = `Confirma o agendamento?\n\nBarbeiro: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
+    let detalhes = `Confirma o agendamento?\n\nProfissional: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
     if (servico.duracao) detalhes += `Duração Estimada: ${servico.duracao} minutos\n`;
-    detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${perfil.vip ? ' (Desconto VIP de 10% aplicado)' : ''}`;
-    if (!confirm(detalhes)) return;
+    detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${isVipAtivo(perfil) ? ' (Desconto VIP de 10% aplicado)' : ''}`;
+    if (!confirm(detalhes)) {
+        fecharTodosOsModais();
+        return;
+    }
     
-    mostrarMensagemCarregando("Enviando seu pedido...");
-
     const agendamentoData = {
         clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
         barbeiroUid, barbeiroNome, servico: servico.nome, valor: preco,
@@ -2697,13 +2847,13 @@ function confirmarAgendamento() {
     db.collection("agendamentos").add(agendamentoData).then(() => {
         const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
         criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`);
-        criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do barbeiro.");
+        criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do profissional.");
         notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
-        fecharModalCarregando();
+        fecharTodosOsModais();
         alert("Pedido enviado com sucesso!");
         fecharModalAtual();
     }).catch(e => {
-        fecharModalCarregando();
+        fecharTodosOsModais();
         alert("Erro ao enviar pedido: " + e.message)
     });
 }
@@ -2718,6 +2868,7 @@ function abrirModalVagaAprovada(agendamentoId) {
 
 async function cancelarAgendamentoAposAprovacao(agendamentoId) {
     if (!confirm("Tem certeza que deseja cancelar? O valor será reembolsado.")) return;
+    exibirAguarde("Cancelando...");
     try {
         const agendamentoDoc = await db.collection("agendamentos").doc(agendamentoId).get();
         if (!agendamentoDoc.exists) throw new Error("Agendamento não encontrado.");
@@ -2736,9 +2887,11 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
         });
         criarAviso(barbeiroUid, `❌ O cliente ${perfil.nome} cancelou a vaga imediata. O valor foi estornado.`);
         notifyUser(barbeiroUid, "❌ Agendamento Cancelado", `${perfil.nome} cancelou a vaga imediata.`);
+        fecharTodosOsModais();
         alert("Agendamento cancelado e valor reembolsado com sucesso.");
         fecharModalAtual();
     } catch (e) {
+        fecharTodosOsModais();
         alert("Erro ao cancelar agendamento: " + e.message);
     }
 }
@@ -2757,7 +2910,7 @@ function abrirHistoricoCliente() {
         const a = doc.data();
         let statusTexto = a.status === "concluido" ? "✂️ Concluído" : "❌ Cancelado";
         let botoes = a.status === "concluido" ? (a.avaliado === false ? `<button onclick="abrirModalAvaliacao('${doc.id}', '${a.barbeiroUid}')">⭐ Avaliar</button>` : `<p>✅ Avaliado</p>`) : "";
-        painelHistorico.innerHTML += `<div class="card">✂️ ${a.servico} - R$ ${a.valor.toFixed(2)}<br>Barbeiro: ${a.barbeiroNome}<br>Status: <b>${statusTexto}</b><br>${botoes}</div>`;
+        painelHistorico.innerHTML += `<div class="card">✂️ ${a.servico} - R$ ${a.valor.toFixed(2)}<br>Profissional: ${a.barbeiroNome}<br>Status: <b>${statusTexto}</b><br>${botoes}</div>`;
       });
     });
 }
@@ -2777,6 +2930,9 @@ function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
     const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
     const agendamentoDoc = await t.get(agendamentoRef);
     if (agendamentoDoc.data().avaliado) throw "Este serviço já foi avaliado.";
+    const valor = agendamentoDoc.data().valor;
+
+    const pontosGanhos = Math.floor(valor / 10) * (isVipAtivo(perfil) ? 2 : 1);
     
     t.update(agendamentoRef, { avaliado: true });
     t.update(barbeiroRef, { 
@@ -2789,12 +2945,15 @@ function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
       comentario: comentario || "Sem comentário",
       ts: firebase.firestore.FieldValue.serverTimestamp()
     });
-    t.update(clienteRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(PONTOS_POR_CORTE) });
-  }).then(() => {
-    alert(`Avaliação enviada com sucesso! Você ganhou ${PONTOS_POR_CORTE} pontos de fidelidade.`);
+    if (pontosGanhos > 0) {
+        t.update(clienteRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(pontosGanhos) });
+    }
+    return pontosGanhos;
+  }).then((pontosGanhos) => {
+    alert(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
-    notifyUser(auth.currentUser.uid, "🏆 Pontos Recebidos!", `Você ganhou ${PONTOS_POR_CORTE} pontos por avaliar o serviço.`);
+    notifyUser(auth.currentUser.uid, "🏆 Pontos Recebidos!", `Você ganhou ${pontosGanhos} pontos por avaliar o serviço.`);
   }).catch(e => alert("Erro ao avaliar: " + e));
 }
 
@@ -2803,6 +2962,7 @@ function resgatarPontos() {
     return alert(`Você precisa de ${PONTOS_PARA_RESGATE} pontos para resgatar.`);
   }
   if (!confirm(`Deseja resgatar ${PONTOS_PARA_RESGATE} pontos por R$ ${VALOR_RESGATE.toFixed(2)}?`)) return;
+  exibirAguarde("Resgatando...");
   db.runTransaction(async t => {
     const ref = db.collection("usuarios").doc(auth.currentUser.uid);
     const doc = await t.get(ref);
@@ -2812,46 +2972,47 @@ function resgatarPontos() {
         saldo: firebase.firestore.FieldValue.increment(VALOR_RESGATE)
     });
   }).then(() => {
+    fecharTodosOsModais();
     alert(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
     notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)}.`, { link: '#carteira' });
-  }).catch(e => alert("Erro ao resgatar pontos: " + e.message));
+  }).catch(e => {
+    fecharTodosOsModais();
+    alert("Erro ao resgatar pontos: " + e.message);
+  });
 }
 
 function abrirModalVip() {
     const container = document.getElementById('vipContentContainer');
-    if (perfil.vip) {
+    if (isVipAtivo(perfil)) {
+        const dataExpiracao = perfil.vipExpirationDate.toDate().toLocaleDateString('pt-BR');
         container.innerHTML = `
             <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
-                <h3 style="color: var(--cor-destaque-ouro);">👑 Você é um Membro VIP!</h3>
-                <p>Obrigado por fazer parte do nosso clube exclusivo. Sua assinatura é fundamental para o crescimento do nosso aplicativo.</p>
+                <h3 style="color: var(--cor-destaque);">👑 Você é um Membro VIP!</h3>
+                <p>Sua assinatura é válida até: <strong>${dataExpiracao}</strong>.</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Seus Benefícios Atuais:</h4>
                     <ul>
                         <li>Desconto de 10% em todos os serviços.</li>
-                        <li>Atendimento prioritário na agenda dos barbeiros.</li>
-                        <li>O dobro de pontos de fidelidade em depósitos.</li>
+                        <li>O dobro de pontos de fidelidade.</li>
                         <li>Símbolo de prestígio 👑 no chat global.</li>
                     </ul>
                 </div>
-                <p style="font-size: 12px; opacity: 0.7; margin-top: 20px;">Sua assinatura não tem data de expiração. Aproveite!</p>
             </div>
         `;
     } else {
         container.innerHTML = `
             <div style="padding: 20px; border-radius: 15px; text-align: center;">
-                <h3 style="color: var(--cor-destaque-ouro);">💎 Torne-se um Membro VIP!</h3>
-                <p>Eleve sua experiência e apoie o desenvolvimento contínuo do nosso aplicativo com uma adesão única.</p>
+                <h3 style="color: var(--cor-destaque);">💎 Torne-se um Membro VIP!</h3>
+                <p>Eleve sua experiência por 6 meses e apoie o desenvolvimento do app.</p>
                 <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)}</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Vantagens Exclusivas para Clientes VIP:</h4>
                     <ul>
-                        <li><strong>10% de Desconto</strong> em todos os serviços, sempre.</li>
-                        <li><strong>Atendimento Prioritário</strong> na agenda.</li>
-                        <li><strong>Dobro de Pontos</strong> de fidelidade ao fazer depósitos.</li>
+                        <li><strong>10% de Desconto</strong> em todos os serviços.</li>
+                        <li><strong>Dobro de Pontos</strong> de fidelidade.</li>
                          <li><strong>Status de Prestígio</strong> com um ícone 👑 no chat.</li>
                     </ul>
                 </div>
-                <p style="font-size: 12px; color: var(--cor-destaque-prata); margin-top: 20px;">Sua contribuição é um investimento direto em novas funcionalidades e melhorias para toda a comunidade.</p>
                 <button onclick="assinarVip()" style="margin-top: 15px;">💎 Assinar Agora</button>
             </div>
         `;
@@ -2865,94 +3026,101 @@ function assinarVip() {
         alert("Saldo insuficiente para assinar o VIP.");
         return abrirModal('modalCarteira');
     }
-    if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)}?`)) return;
+    if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)?`)) return;
+    exibirAguarde("Ativando VIP...");
     db.runTransaction(async t => {
         const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
         const financeiroRef = db.collection("config").doc("financeiro");
         const clienteDoc = await t.get(clienteRef);
-        if (clienteDoc.data().vip) throw "Você já é um membro VIP.";
+        if (isVipAtivo(clienteDoc.data())) throw "Você já é um membro VIP ativo.";
+        
+        const expiracao = new Date();
+        expiracao.setDate(expiracao.getDate() + 180); // Adiciona 180 dias
+
         t.update(clienteRef, {
             saldo: firebase.firestore.FieldValue.increment(-PRECO_VIP),
-            vip: true
+            vip: true,
+            vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
         });
         t.set(financeiroRef, { arrecadadoVip: firebase.firestore.FieldValue.increment(PRECO_VIP) }, { merge: true });
     }).then(() => {
+        fecharTodosOsModais();
         alert("Parabéns! Você agora é um membro VIP!");
-        notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite 10% de desconto e benefícios exclusivos!");
+        notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 6 meses!");
         fecharModalAtual();
-    }).catch(e => alert("Erro ao assinar VIP: " + e.message));
+    }).catch(e => {
+        fecharTodosOsModais();
+        alert("Erro ao assinar VIP: " + e.message);
+    });
+}
+
+function isVipAtivo(perfilUsuario) {
+    if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
+        return false;
+    }
+    return perfilUsuario.vipExpirationDate.toDate() > new Date();
 }
 
 // FUNÇÃO DO CHAT ATUALIZADA
+let chatAtual = 'global';
 function abrirChatGlobal() {
     const badge = document.querySelector('.notification-badge');
     newMessagesCount = 0;
     badge.textContent = '0';
     badge.classList.add('hidden');
     
-    const modal = document.getElementById('janelaChat');
-    modal.classList.add('fullscreen');
     abrirModal('janelaChat');
+    alternarChat('global'); // Começa sempre no global
+}
+
+function alternarChat(tipo) {
+    chatAtual = tipo;
+    document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
+    document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
+    document.getElementById("chatTitle").textContent = tipo === 'global' ? '💬 Chat Global' : `📍 Chat Local (${perfil.cidade})`;
 
     const chatContainer = document.getElementById("chatMessages");
     chatContainer.innerHTML = "";
-    document.getElementById("chatTitle").innerHTML = perfil && perfil.vip ? `<span class="admin-chat">💎 Cliente VIP</span>` : `💬 Chat Global`;
     if (chatListener) chatListener();
 
-    // Carrega as 6 mensagens iniciais
-    let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-      .orderBy("ts", "desc").limit(6);
+    let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+    if (tipo === 'local') {
+        query = query.where("cidade", "==", perfil.cidade);
+    }
+    query = query.orderBy("ts", "desc").limit(15);
 
     chatListener = query.onSnapshot(async snapshot => {
         if(snapshot.empty) {
-            chatContainer.innerHTML = "<p>Nenhuma mensagem ainda.</p>";
+            chatContainer.innerHTML = `<p>Nenhuma mensagem neste chat ainda.</p>`;
             return;
         }
-
-        // Guarda a referência da mensagem mais antiga para a paginação
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
-
-        const messagesToRender = [];
-        snapshot.docChanges().forEach(change => {
-            if (change.type === "added") {
-                const msgData = change.doc.data();
-                msgData.id = change.doc.id;
-                messagesToRender.push(msgData);
-            }
-        });
-        
-        messagesToRender.sort((a, b) => a.ts.seconds - b.ts.seconds);
-        
-        // Limpa o chat apenas na primeira carga
-        if (!chatContainer.hasChildNodes()) {
-           chatContainer.innerHTML = "";
-        }
-        
-        for(const msg of messagesToRender) {
+        chatContainer.innerHTML = ""; // Limpa para re-renderizar
+        for(const doc of snapshot.docs.reverse()) { // Renderiza na ordem correta
+             const msg = doc.data();
              const messageDiv = await createMessageDiv(msg);
-             // Adiciona novas mensagens em tempo real no final (topo visual)
-             if (chatContainer.querySelector(`#msg-${msg.id}`)) continue;
              chatContainer.prepend(messageDiv);
         }
     });
     
     document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } });
-    // MUDANÇA 5: BOT A CADA HORA
-    if (!botInterval) botInterval = setInterval(sendBotMessage, 3600000); // 3.600.000 ms = 1 hora
+    if (!botInterval) botInterval = setInterval(sendBotMessage, 3600000); // 1 hora
 }
+
 
 // NOVA FUNÇÃO PARA CARREGAR MENSAGENS ANTERIORES
 async function carregarMensagensAnteriores() {
-    if (!oldestMessageSnapshot) return; // Não há mais mensagens para carregar
+    if (!oldestMessageSnapshot) return; 
 
     const btn = document.getElementById('carregarMaisMsgBtn');
     btn.textContent = 'Carregando...';
     btn.disabled = true;
 
-    const query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-        .orderBy("ts", "desc")
-        .startAfter(oldestMessageSnapshot)
-        .limit(50);
+    let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+    if (chatAtual === 'local') {
+        query = query.where("cidade", "==", perfil.cidade);
+    }
+    query = query.orderBy("ts", "desc").startAfter(oldestMessageSnapshot).limit(50);
 
     const snapshot = await query.get();
 
@@ -2961,15 +3129,13 @@ async function carregarMensagensAnteriores() {
         return;
     }
 
-    // Atualiza a referência para a próxima paginação
     oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
     
     const chatContainer = document.getElementById("chatMessages");
-    for (const doc of snapshot.docs.reverse()) { // Inverte para manter a ordem cronológica
+    for (const doc of snapshot.docs) { 
         const msg = doc.data();
-        msg.id = doc.id;
         const messageDiv = await createMessageDiv(msg);
-        chatContainer.appendChild(messageDiv); // Adiciona no final (fundo visual)
+        chatContainer.appendChild(messageDiv); 
     }
 
     btn.textContent = 'Ver mensagens anteriores';
@@ -2984,7 +3150,7 @@ async function createMessageDiv(msg) {
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
-        remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Navalha Bot'}</span>`;
+        remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 VersãoPro Bot'}</span>`;
     } else {
         const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
         if(remetenteDoc.exists) {
@@ -2998,10 +3164,10 @@ async function createMessageDiv(msg) {
                 classeCSS = `admin-chat-red`; 
                 iconeBase = `🧠`;
                 messageDiv.style.textShadow = '0 0 5px #000';
-            } else if (remetenteData.tipo === "barbeiro") {
-                classeCSS = `barbeiro-chat`; iconeBase = `💈`;
-                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'barbeiro');
-            } else if (remetenteData.vip) {
+            } else if (remetenteData.tipo !== "cliente") {
+                classeCSS = `barbeiro-chat`; iconeBase = `💼`;
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'profissional');
+            } else if (isVipAtivo(remetenteData)) {
                 classeCSS = `cliente-chat`; iconeBase = `👑`;
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
             } else {
@@ -3013,12 +3179,12 @@ async function createMessageDiv(msg) {
     }
     
     messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
-    messageDiv.id = `msg-${msg.id}`;
+    messageDiv.id = `msg-${msg.id || new Date().getTime()}`;
     return messageDiv;
 }
 
 
-const botMessages = [ "Dica: Avalie seu barbeiro após o serviço para ganhar 10 pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos nos depósitos!", "Barbeiros: mantenham sua agenda e serviços atualizados para atrair mais clientes e facilitar os agendamentos.", "Fique de olho no nosso Blog! Administradores podem postar códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!", "Explore a nossa Loja! Produtos exclusivos e da comunidade estão disponíveis para você.", "Complete agendamentos e desbloqueie conquistas para mostrar seu status no chat!" ];
+const botMessages = [ "Dica: Avalie seu profissional para ganhar pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos!", "Fique de olho no nosso Blog! Postamos códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!", "Explore a nossa Loja! Produtos exclusivos e da comunidade estão disponíveis para você.", "Complete agendamentos e desbloqueie conquistas para mostrar seu status no chat!" ];
 let lastBotMessageIndex = -1;
 
 function sendBotMessage() {
@@ -3026,8 +3192,9 @@ function sendBotMessage() {
     do { randomIndex = Math.floor(Math.random() * botMessages.length); } while (randomIndex === lastBotMessageIndex);
     lastBotMessageIndex = randomIndex;
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
-        remetenteUid: "bot-uid", remetenteNome: "Navalha de Ouro Bot", tipo: "bot",
-        texto: botMessages[randomIndex], ts: firebase.firestore.FieldValue.serverTimestamp()
+        remetenteUid: "bot-uid", remetenteNome: "VersãoPro Bot", tipo: "bot",
+        texto: botMessages[randomIndex], ts: firebase.firestore.FieldValue.serverTimestamp(),
+        cidade: "global" // Mensagem do bot é global
     });
 }
 
@@ -3044,18 +3211,17 @@ function enviarMensagem() {
     isSending = true;
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
         remetenteUid: auth.currentUser.uid, remetenteNome: perfil.nome, tipo: perfil.tipo, texto,
-        ts: firebase.firestore.FieldValue.serverTimestamp()
+        ts: firebase.firestore.FieldValue.serverTimestamp(),
+        cidade: perfil.cidade // Adiciona a cidade à mensagem
     }).then(() => {
         document.getElementById("chatInput").value = "";
-        // MUDANÇA 4: LÓGICA DA IA DE SUPORTE
         if (texto.toLowerCase().includes('suporte')) {
-            setTimeout(enviarRespostaAI, 1500); // Simula "pensamento" da IA
+            setTimeout(enviarRespostaAI, 1500); 
         }
         setTimeout(() => { isSending = false; }, 1000);
     }).catch(error => { isSending = false; });
 }
 
-// MUDANÇA 4: FUNÇÃO DE RESPOSTA DA IA
 function enviarRespostaAI() {
     const resposta = `Olá! Sou a assistente virtual. Como posso ajudar? <br><br>
         • Para <b>dúvidas sobre o app</b> (agendamentos, carteira, VIP, etc.), tente ser específico na sua pergunta. <br>
@@ -3066,7 +3232,8 @@ function enviarRespostaAI() {
         remetenteNome: "Suporte AI",
         tipo: "ai_suporte",
         texto: resposta,
-        ts: firebase.firestore.FieldValue.serverTimestamp()
+        ts: firebase.firestore.FieldValue.serverTimestamp(),
+        cidade: chatAtual === 'local' ? perfil.cidade : 'global'
     });
 }
 
@@ -3131,14 +3298,14 @@ function removerServico(index) {
   }).then(() => alert("Serviço removido!")).catch(e => alert("Erro: " + e.message));
 }
 
-function alterarNomeBarbeiro(event) {
-  const novoNome = document.getElementById("novoNomeBarbeiro").value.trim();
-  if (!novoNome) return alert("Por favor, insira um nome válido.");
-  db.collection("usuarios").doc(auth.currentUser.uid).update({ nome: novoNome })
-    .then(() => {
-      alert("Nome alterado com sucesso!");
-      fecharModalAtual();
-    }).catch(e => alert("Erro ao alterar nome: " + e.message));
+function salvarLogomarca() {
+    const url = document.getElementById("logomarcaUrl").value.trim();
+    if (!url) return alert("Por favor, insira um link.");
+    db.collection("usuarios").doc(auth.currentUser.uid).update({ logo_url: url })
+      .then(() => {
+        alert("Logomarca salva com sucesso!");
+        fecharModalAtual();
+      }).catch(e => alert("Erro ao salvar: " + e.message));
 }
 
 function alterarEnderecoBarbeiro(event) {
@@ -3263,6 +3430,7 @@ function toggleDisponibilidade() {
 
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
+    exibirAguarde("Aprovando...");
     const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
     db.runTransaction(async t => {
         const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
@@ -3281,14 +3449,19 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
+        fecharTodosOsModais();
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
-        notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para a barbearia!`);
+        notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         alert("Agendamento aprovado!");
-    }).catch(e => alert("Erro ao aprovar: " + e));
+    }).catch(e => {
+        fecharTodosOsModais();
+        alert("Erro ao aprovar: " + e);
+    });
 }
 
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
   if (!confirm("Aprovar este agendamento?")) return;
+  exibirAguarde("Aprovando...");
   const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
   db.runTransaction(async t => {
       const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
@@ -3311,10 +3484,14 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
   }).then(() => {
-      criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo barbeiro ${perfil.nome}!`);
+      fecharTodosOsModais();
+      criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
       alert("Agendamento aprovado!");
-  }).catch(e => alert("Erro ao aprovar: " + e));
+  }).catch(e => {
+      fecharTodosOsModais();
+      alert("Erro ao aprovar: " + e);
+  });
 }
 
 function recusarAgendamento(agendamentoId, clienteUid) {
@@ -3326,14 +3503,15 @@ function recusarAgendamento(agendamentoId, clienteUid) {
       if (status !== 'pendente' && status !== 'imediato') throw "Solicitação já processada.";
       t.update(agendamentoRef, { status: "cancelado" });
   }).then(() => {
-      criarAviso(clienteUid, `❌ O barbeiro ${perfil.nome} recusou seu agendamento.`);
-      notifyUser(clienteUid, "❌ Agendamento Recusado", `O barbeiro ${perfil.nome} não pôde aceitar seu pedido.`);
+      criarAviso(clienteUid, `❌ O profissional ${perfil.nome} recusou seu agendamento.`);
+      notifyUser(clienteUid, "❌ Agendamento Recusado", `O profissional ${perfil.nome} não pôde aceitar seu pedido.`);
       alert("Agendamento recusado.");
   }).catch(e => alert("Erro ao recusar: " + e));
 }
 
 async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) {
   if (!confirm("Cancelar este agendamento? O dinheiro será reembolsado e sua reputação será afetada.")) return;
+  exibirAguarde("Cancelando...");
   const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
   db.runTransaction(async t => {
       const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
@@ -3351,13 +3529,18 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
       if (!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(-valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
   }).then(() => {
-      criarAviso(clienteUid, `❌ O barbeiro ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
+      fecharTodosOsModais();
+      criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
       alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
-  }).catch(e => alert("Erro ao cancelar: " + e));
+  }).catch(e => {
+      fecharTodosOsModais();
+      alert("Erro ao cancelar: " + e);
+  });
 }
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
+  exibirAguarde("Concluindo...");
   try {
     const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
@@ -3372,6 +3555,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
+    fecharTodosOsModais();
     alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
@@ -3388,6 +3572,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         }
     }
   } catch(e) {
+    fecharTodosOsModais();
     alert("Erro ao concluir serviço: " + e);
   }
 }
@@ -3411,7 +3596,7 @@ function abrirClientesBarbeiro() {
       lista.innerHTML = Object.keys(clientesMap).length === 0 ? "<p>Você ainda não tem clientes.</p>" : "";
       Object.values(clientesMap).sort((a, b) => b.totalCortes - a.totalCortes).forEach(c => {
         const whatsappLink = c.telefone ? `<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" onclick="event.stopPropagation()"><button style="font-size:12px; padding: 5px 8px; margin-top:5px;">💬 WhatsApp</button></a>` : '<p style="font-size:11px; opacity:0.6;">Sem telefone</p>';
-        lista.innerHTML += `<div class="card"><b>${c.nome}</b><p>Cortes realizados: ${c.totalCortes}</p>${whatsappLink}</div>`;
+        lista.innerHTML += `<div class="card"><b>${c.nome}</b><p>Serviços concluídos: ${c.totalCortes}</p>${whatsappLink}</div>`;
       });
     });
 }
@@ -3542,9 +3727,9 @@ function iniciarSaque() {
 }
 
 function processarPagamentoPixAprimorado() {
-    mostrarMensagemCarregando('Só um minuto...', 'Estamos preparando seu pagamento PIX.');
+    exibirAguarde('Só um minuto...', 'Estamos preparando seu pagamento PIX.');
     setTimeout(() => {
-        fecharModalCarregando();
+        fecharTodosOsModais();
         abrirModal('modalExibirPixAprimorado');
         iniciarTimerPix(600); // 10 minutos
     }, 2000); 
@@ -3556,7 +3741,7 @@ function abrirModalTaxaCartao() {
 
 function processarPagamentoCartaoAprimorado() {
     notifyAdmins("🟢 Tentativa de Cartão!", `${perfil.nome} está tentando pagar com cartão de crédito.`);
-    mostrarMensagemCarregando('Redirecionando...', 'Você está indo para uma plataforma segura de pagamento.');
+    exibirAguarde('Redirecionando...', 'Você está indo para uma plataforma segura de pagamento.');
     setTimeout(() => {
         window.open('https://pay.kiwify.com.br/T3M9m1C', '_blank');
         fecharTodosOsModais();
@@ -3586,7 +3771,6 @@ function tentarGerarPixNovamente() {
     }, 300);
 }
 
-// MUDANÇA 1: FUNÇÃO PARA COPIAR PIX
 function copiarCodigoPixAprimorado(event) {
     const textoParaCopiar = document.getElementById('pixChaveAleatoria').value;
     navigator.clipboard.writeText(textoParaCopiar).then(() => {
@@ -3603,7 +3787,7 @@ function copiarCodigoPixAprimorado(event) {
 }
 
 function confirmarEnvioComprovante() {
-    const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app Navalha de Ouro.");
+    const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app VersãoPro.");
     window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
     fecharTodosOsModais();
 }
@@ -3656,7 +3840,6 @@ async function publicarBlog() {
   fecharModalAtual();
 }
 
-// MUDANÇA 3: DURAÇÃO DO BLOG ALTERADA PARA 30 HORAS
 function carregarListaBlog() {
   const lista = document.getElementById("listaBlog");
   lista.innerHTML = "<p>⏳ Carregando...</p>";
@@ -3720,11 +3903,12 @@ async function abrirModalEstatisticas() {
         const usuariosSnap = await db.collection("usuarios").get();
         let totalUsuarios = usuariosSnap.size;
         let clientes = 0, barbeiros = 0, vip = 0, totalSaldo = 0, somaReputacao = 0, barbeirosComReputacao = 0;
+        let manicure = 0, cilios = 0;
         usuariosSnap.forEach(doc => {
             const u = doc.data();
             if (u.tipo === "cliente") clientes++;
-            if (u.tipo === "barbeiro") {
-                barbeiros++;
+            if (u.tipo === "barbeiro" || u.tipo === 'manicure_pedicure' || u.tipo === 'designer_cilios') {
+                barbeiros++; // 'barbeiros' agora representa todos os profissionais
                 if(u.reputacao) {
                     somaReputacao += u.reputacao;
                     barbeirosComReputacao++;
@@ -3753,7 +3937,7 @@ async function abrirModalEstatisticas() {
         painel.innerHTML = `
             <div class="popup-section"><h4>👥 Usuários</h4>
                 <p>Total: <b>${totalUsuarios}</b></p>
-                <p>Clientes: <b>${clientes}</b> | Barbeiros: <b>${barbeiros}</b></p>
+                <p>Clientes: <b>${clientes}</b> | Profissionais: <b>${barbeiros}</b></p>
                 <p>Membros VIP: <b>${vip}</b></p>
             </div>
             <div class="popup-section"><h4>🗓️ Agendamentos</h4>
@@ -3762,7 +3946,7 @@ async function abrirModalEstatisticas() {
                 <p>Cancelados: <b style="color: #e74c3c;">${cancelados}</b></p>
             </div>
              <div class="popup-section"><h4>⚙️ Sistema</h4>
-                <p>Reputação Média dos Barbeiros: <b>${mediaReputacao} / 100</b></p>
+                <p>Reputação Média dos Profissionais: <b>${mediaReputacao} / 100</b></p>
                 <p>Solicitações Pendentes: <b>${solicitacoesPendentes}</b></p>
             </div>
             <div class="popup-section"><h4>💰 Financeiro</h4>
@@ -3810,7 +3994,7 @@ async function verDetalhesSolicitacao(id) {
   const confirmar = confirm(detalhes);
   if (confirmar) {
     if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
-    else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor); // <-- NOVA CHAMADA
+    else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
     else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
   } else if (confirm("Deseja recusar a solicitação?")) {
     recusarSolicitacao(id, s.usuarioUid, s.tipo);
@@ -3833,51 +4017,31 @@ function aprovarSaque(id, uid, valor) {
 function aprovarDeposito(id, uid, valor) {
   db.runTransaction(async t => {
     const userRef = db.collection("usuarios").doc(uid);
-    const userDoc = await t.get(userRef); // Pega os dados do usuário para checar se é VIP
-
-    if (!userDoc.exists) {
-        throw new Error("Usuário não encontrado!");
-    }
+    const userDoc = await t.get(userRef);
+    if (!userDoc.exists) throw new Error("Usuário não encontrado!");
+    
     const userData = userDoc.data();
-
-    // --- Início da nova Lógica de Pontos de Fidelidade ---
-    const pontosPorVinteReais = userData.vip ? 4 : 2; // Se for VIP, ganha 4 pontos, senão, 2
-    const pontosGanhos = Math.floor(valor / 20) * pontosPorVinteReais;
-    // --- Fim da nova Lógica ---
-
-    // Prepara os dados para atualização
-    const updates = {
-        saldo: firebase.firestore.FieldValue.increment(valor)
-    };
-
-    // Adiciona os pontos apenas se o valor for maior que zero
+    const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
+    const pontosGanhos = Math.floor(valor / 10) * pontosPorDezReais;
+    
+    const updates = { saldo: firebase.firestore.FieldValue.increment(valor) };
     if (pontosGanhos > 0) {
         updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
     }
 
-    t.update(userRef, updates); // Atualiza saldo e pontos na mesma operação
+    t.update(userRef, updates);
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
-
-    // Retorna os pontos ganhos para usar na notificação
     return pontosGanhos;
 
   }).then((pontosGanhos) => {
-    alert("Depósito aprovado e saldo adicionado!"); // Alerta para o admin
-
-    // Monta a mensagem para o usuário
+    alert("Depósito aprovado e saldo adicionado!");
     let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`;
     if (pontosGanhos > 0) {
         notificationBody += ` Você ganhou ${pontosGanhos} pontos de fidelidade!`;
-        // Alerta extra para o admin, confirmando os pontos
-        alert(`O usuário ${uid} ganhou ${pontosGanhos} pontos.`);
     }
-
-    // Envia a notificação para o usuário
     notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
-
   }).catch(e => {
     alert("Erro ao aprovar depósito: " + e.message);
-    console.error("Erro na transação de depósito:", e);
   });
 }
 
@@ -3897,7 +4061,7 @@ function abrirModalUsuarios() {
     lista.innerHTML = snap.empty ? "<p>Nenhum usuário cadastrado.</p>" : "";
     snap.forEach(doc => {
       const u = doc.data();
-      lista.innerHTML += `<div class="card"><b>${u.nome}</b> (${u.tipo})<p>Email: ${u.email}</p><p>Telefone: ${u.telefone}</p><button onclick="verDetalhesUsuario('${doc.id}')">⚙️ Gerenciar</button></div>`;
+      lista.innerHTML += `<div class="card"><b>${u.nome}</b> (${u.tipo})<p>Email: ${u.email}</p><p>Telefone: ${u.telefone}</p><button onclick="abrirModalGerenciarUsuario('${doc.id}')">⚙️ Gerenciar</button></div>`;
     });
   });
 }
@@ -3929,88 +4093,124 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => alert("Denúncia fechada!"));
 }
 
-async function verDetalhesUsuario(uid) {
+async function abrirModalGerenciarUsuario(uid) {
   const doc = await db.collection("usuarios").doc(uid).get();
   const u = doc.data();
   if (!u) return;
-  const menu = `Gerenciando: ${u.nome}\nSaldo: R$ ${(u.saldo || 0).toFixed(2)}\n\n1. Mudar tipo (atual: ${u.tipo})\n2. Modificar Saldo\n3. Mudar VIP (atual: ${u.vip ? 'Sim' : 'Não'})\n4. Chamar no WhatsApp\n5. DELETAR\n\nEscolha uma opção:`;
-  const acao = prompt(menu);
-  switch(acao) {
-    case "1":
-      const novoTipo = prompt("Novo tipo (cliente, barbeiro, admin):");
-      if (["cliente", "barbeiro", "admin"].includes(novoTipo)) {
-        await db.collection("usuarios").doc(uid).update({ tipo: novoTipo });
-        alert("Tipo alterado!");
-      } else alert("Tipo inválido.");
-      break;
-    case "2":
-      const valor = parseFloat(prompt("Valor para adicionar (use '-' para remover):"));
-      if (!isNaN(valor)) {
-        await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
-        notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
-        alert("Saldo alterado!");
-      } else alert("Valor inválido.");
-      break;
-    case "3":
-      await db.collection("usuarios").doc(uid).update({ vip: !u.vip });
-      alert("Status VIP alterado!");
-      break;
-    case "4":
-      if(u.telefone) window.open(`https://wa.me/55${u.telefone}`, '_blank');
-      else alert("Usuário sem telefone.");
-      break;
-    case "5":
-      if (prompt(`TEM CERTEZA? Para deletar ${u.nome}, digite "DELETAR":`) === "DELETAR") {
-        await db.collection("usuarios").doc(uid).delete();
-        alert("Usuário deletado!");
-      } else alert("Exclusão cancelada.");
-      break;
-  }
+
+  const container = document.getElementById('adminGerenciarConteudo');
+  container.innerHTML = `
+      <h4>${u.nome} (${u.email})</h4>
+      <div class="popup-section">
+          <p><strong>Tipo Atual:</strong> ${u.tipo}</p>
+          <select id="adminNovoTipo">
+              <option value="cliente" ${u.tipo === 'cliente' ? 'selected' : ''}>Cliente</option>
+              <option value="barbeiro" ${u.tipo === 'barbeiro' ? 'selected' : ''}>Barbeiro</option>
+              <option value="manicure_pedicure" ${u.tipo === 'manicure_pedicure' ? 'selected' : ''}>Manicure/Pedicure</option>
+              <option value="designer_cilios" ${u.tipo === 'designer_cilios' ? 'selected' : ''}>Designer de Cílios</option>
+              <option value="admin" ${u.tipo === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+          <button onclick="adminMudarTipo('${uid}')">Alterar Tipo</button>
+      </div>
+      <div class="popup-section">
+          <p><strong>Saldo:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
+          <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
+          <button onclick="adminModificarSaldo('${uid}')">Modificar Saldo</button>
+      </div>
+      <div class="popup-section">
+          <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim' : 'Não'}</p>
+          <button onclick="adminToggleVip('${uid}')">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
+      </div>
+      <div class="popup-section">
+          <p><strong>Loja Liberada:</strong> ${u.lojaLiberada ? 'Sim' : 'Não'}</p>
+          <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Desativar Loja' : 'Ativar Loja'}</button>
+      </div>
+       <div class="popup-section">
+           <a href="https://wa.me/55${u.telefone}" target="_blank"><button style="width:100%">Chamar no WhatsApp</button></a>
+      </div>
+      <div class="popup-section">
+          <button style="background-color: #c0392b;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
+      </div>
+  `;
+  abrirModal('modalAdminGerenciarUsuario');
 }
+
+// Funções de Ação do Modal Admin
+async function adminMudarTipo(uid) {
+  const novoTipo = document.getElementById('adminNovoTipo').value;
+  await db.collection("usuarios").doc(uid).update({ tipo: novoTipo });
+  alert("Tipo alterado!");
+  fecharModalAtual();
+}
+async function adminModificarSaldo(uid) {
+  const valor = parseFloat(document.getElementById('adminModificarSaldo').value);
+  if (!isNaN(valor)) {
+    await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
+    notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
+    alert("Saldo alterado!");
+    fecharModalAtual();
+  } else alert("Valor inválido.");
+}
+async function adminToggleVip(uid) {
+  const userDoc = await db.collection("usuarios").doc(uid).get();
+  const userData = userDoc.data();
+  if (isVipAtivo(userData)) {
+      await db.collection("usuarios").doc(uid).update({ vip: false });
+      alert("VIP Removido!");
+  } else {
+      const expiracao = new Date();
+      expiracao.setDate(expiracao.getDate() + 180);
+      await db.collection("usuarios").doc(uid).update({ vip: true, vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao) });
+      alert("VIP concedido por 6 meses!");
+  }
+  fecharModalAtual();
+}
+async function adminDeletarUsuario(uid, nome) {
+  if (prompt(`TEM CERTEZA? Para deletar ${nome}, digite "DELETAR":`) === "DELETAR") {
+    await db.collection("usuarios").doc(uid).delete();
+    alert("Usuário deletado!");
+    fecharModalAtual();
+  } else alert("Exclusão cancelada.");
+}
+
 
 async function enviarNotificacaoMarketing() {
     const title = document.getElementById('marketingTitulo').value.trim();
     const body = document.getElementById('marketingCorpo').value.trim();
     if (!title || !body || !confirm(`Confirma o envio da notificação em massa?`)) return;
     try {
-        mostrarMensagemCarregando("Aguarde...", "Enviando notificações para todos.");
+        exibirAguarde("Aguarde...", "Enviando notificações para todos.");
         const response = await fetch("https://navalhabackend.onrender.com/enviar-notificacao-massa", {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, body, adminUid: auth.currentUser.uid }),
         });
         const data = await response.json();
-        fecharModalCarregando();
+        fecharTodosOsModais();
         if (!response.ok) throw new Error(data.message);
         alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
         fecharModalAtual();
     } catch (error) {
-        fecharModalCarregando();
+        fecharTodosOsModais();
         alert('Falha ao enviar: ' + error.message);
     }
 }
 
 const conquistasDefinidas = {
-    'cortes_1': { nome: 'Primeiro Agendamento', icone: '👶', descricao: 'Concluiu seu primeiro agendamento.', level: 1 },
-    'cortes_5': { nome: 'Cliente Iniciante', icone: '👍', descricao: 'Concluiu 5 agendamentos.', level: 2 },
-    'cortes_10': { nome: 'Cliente Regular', icone: '⭐', descricao: 'Concluiu 10 agendamentos.', level: 3 },
-    'cortes_20': { nome: 'Cliente Fiel', icone: '🤝', descricao: 'Concluiu 20 agendamentos.', level: 4 },
-    'cortes_50': { nome: 'Parceiro da Barbearia', icone: '💪', descricao: 'Concluiu 50 agendamentos.', level: 5 },
-    'cortes_100': { nome: 'Membro de Honra', icone: '👑', descricao: 'Concluiu 100 agendamentos.', level: 6 },
-    'cortes_1000': { nome: 'Lenda da Navalha', icone: '🏆', descricao: 'Concluiu 1000 agendamentos.', level: 7 }
+    'cliente': {
+        'cortes_1': { nome: 'Primeiro Agendamento', icone: '👶', descricao: 'Concluiu seu primeiro agendamento.', level: 1 },
+        'cortes_5': { nome: 'Cliente Iniciante', icone: '👍', descricao: 'Concluiu 5 agendamentos.', level: 2 },
+        'cortes_10': { nome: 'Cliente Regular', icone: '⭐', descricao: 'Concluiu 10 agendamentos.', level: 3 },
+        'cortes_50': { nome: 'Parceiro da Beleza', icone: '💪', descricao: 'Concluiu 50 agendamentos.', level: 5 },
+        'cortes_100': { nome: 'Membro de Honra', icone: '👑', descricao: 'Concluiu 100 agendamentos.', level: 6 }
+    },
+    'profissional': {
+        'cortes_1': { nome: 'Primeiro Cliente', icone: '🎉', descricao: 'Concluiu seu primeiro serviço.', level: 1 },
+        'cortes_10': { nome: 'Profissional em Ascensão', icone: '🔥', descricao: 'Concluiu 10 serviços.', level: 3 },
+        'cortes_50': { nome: 'Profissional Experiente', icone: '😎', descricao: 'Concluiu 50 serviços.', level: 5 },
+        'cortes_100': { nome: 'Mestre da Área', icone: '💎', descricao: 'Concluiu 100 serviços.', level: 6 },
+        'cortes_1000': { nome: 'Lenda do Ramo', icone: '🏆', descricao: 'Concluiu 1000 serviços.', level: 7 }
+    }
 };
-const conquistasOrdem = ['cortes_1000', 'cortes_100', 'cortes_50', 'cortes_20', 'cortes_10', 'cortes_5', 'cortes_1'];
-
-const conquistasBarbeiroDefinidas = {
-    'cortes_1': { nome: 'Primeiro Corte', icone: '🎉', descricao: 'Concluiu seu primeiro corte.', level: 1 },
-    'cortes_5': { nome: 'Mãos à Obra', icone: '🛠️', descricao: 'Concluiu 5 cortes.', level: 2 },
-    'cortes_10': { nome: 'Barbeiro em Ascensão', icone: '🔥', descricao: 'Concluiu 10 cortes.', level: 3 },
-    'cortes_20': { nome: 'Profissional da Tesoura', icone: '✂️', descricao: 'Concluiu 20 cortes.', level: 4 },
-    'cortes_50': { nome: 'Barbeiro Experiente', icone: '😎', descricao: 'Concluiu 50 cortes.', level: 5 },
-    'cortes_100': { nome: 'Mestre da Navalha', icone: '💎', descricao: 'Concluiu 100 cortes.', level: 6 },
-    'cortes_1000': { nome: 'Lenda da Barbearia', icone: '🏆', descricao: 'Concluiu 1000 cortes.', level: 7 }
-};
-const conquistasBarbeiroOrdem = ['cortes_1000', 'cortes_100', 'cortes_50', 'cortes_20', 'cortes_10', 'cortes_5', 'cortes_1'];
-
 
 async function verificarConquistas(uid) {
     const userRef = db.collection('usuarios').doc(uid);
@@ -4019,14 +4219,14 @@ async function verificarConquistas(uid) {
     const userData = userDoc.data();
     const conquistasAtuais = userData.conquistas || [];
     const cortes = userData.cortesRealizados || 0;
-
-    const niveis = { 1: 'cortes_1', 5: 'cortes_5', 10: 'cortes_10', 20: 'cortes_20', 50: 'cortes_50', 100: 'cortes_100', 1000: 'cortes_1000' };
+    const definicoes = conquistasDefinidas.cliente;
+    const niveis = { 1: 'cortes_1', 5: 'cortes_5', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100' };
 
     for (const nivel in niveis) {
         const conquistaId = niveis[nivel];
         if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
             await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
-            const conquista = conquistasDefinidas[conquistaId];
+            const conquista = definicoes[conquistaId];
             notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"!`, { link: '#conquistas' });
         }
     }
@@ -4039,15 +4239,15 @@ async function verificarConquistasBarbeiro(uid) {
     const userData = userDoc.data();
     const conquistasAtuais = userData.conquistas || [];
     const cortes = userData.clientesAtendidos || 0;
-
-    const niveis = { 1: 'cortes_1', 5: 'cortes_5', 10: 'cortes_10', 20: 'cortes_20', 50: 'cortes_50', 100: 'cortes_100', 1000: 'cortes_1000' };
+    const definicoes = conquistasDefinidas.profissional;
+    const niveis = { 1: 'cortes_1', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100', 1000: 'cortes_1000' };
     
     for (const nivel in niveis) {
         const conquistaId = niveis[nivel];
         if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
             await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
-            const conquista = conquistasBarbeiroDefinidas[conquistaId];
-            notifyUser(uid, "🏅 Nova Conquista de Barbeiro!", `Você desbloqueou: "${conquista.nome}"!`, { link: '#conquistas' });
+            const conquista = definicoes[conquistaId];
+            notifyUser(uid, "🏅 Nova Conquista de Profissional!", `Você desbloqueou: "${conquista.nome}"!`, { link: '#conquistas' });
         }
     }
 }
@@ -4057,8 +4257,9 @@ function abrirModalConquistas() {
     const container = document.getElementById('listaConquistas');
     container.innerHTML = "";
     const conquistasDoUsuario = perfil.conquistas || [];
-    for (const id in conquistasDefinidas) {
-        const c = conquistasDefinidas[id];
+    const definicoes = conquistasDefinidas.cliente;
+    for (const id in definicoes) {
+        const c = definicoes[id];
         const unlocked = conquistasDoUsuario.includes(id);
         container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
     }
@@ -4069,8 +4270,9 @@ function abrirModalConquistasBarbeiro() {
     const container = document.getElementById('listaConquistasBarbeiro');
     container.innerHTML = "";
     const conquistasDoUsuario = perfil.conquistas || [];
-    for (const id in conquistasBarbeiroDefinidas) {
-        const c = conquistasBarbeiroDefinidas[id];
+    const definicoes = conquistasDefinidas.profissional;
+    for (const id in definicoes) {
+        const c = definicoes[id];
         const unlocked = conquistasDoUsuario.includes(id);
         container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
     }
@@ -4078,47 +4280,46 @@ function abrirModalConquistasBarbeiro() {
 
 async function abrirModalRankingUnificado() {
     abrirModal('modalRankingUnificado');
-    const containerClientes = document.getElementById('listaRankingClientesUnificado');
-    const containerBarbeiros = document.getElementById('listaRankingBarbeirosUnificado');
-    containerClientes.innerHTML = '<p>Carregando...</p>';
-    containerBarbeiros.innerHTML = '<p>Carregando...</p>';
-
+    const container = document.getElementById('listaRankingUnificado');
+    container.innerHTML = '<p>Carregando...</p>';
+    
     try {
-        const docClientes = await db.collection('config').doc('rankingClientes').get();
-        if (docClientes.exists && docClientes.data().ranking) {
-            containerClientes.innerHTML = "";
-            docClientes.data().ranking.forEach((item, i) => {
-                containerClientes.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${item.nome}</span><span>${item.contagem}</span></div>`;
-            });
-        } else {
-            containerClientes.innerHTML = '<p>Nenhum ranking disponível.</p>';
-        }
-    } catch (e) { containerClientes.innerHTML = '<p>Erro ao carregar ranking.</p>'; }
+        const [clientesSnap, profissionaisSnap] = await Promise.all([
+            db.collection('usuarios').where('tipo', '==', 'cliente').orderBy('cortesRealizados', 'desc').limit(50).get(),
+            db.collection('usuarios').where('tipo', 'in', ['barbeiro', 'manicure_pedicure', 'designer_cilios']).orderBy('clientesAtendidos', 'desc').limit(50).get()
+        ]);
+        
+        let ranking = [];
+        clientesSnap.forEach(doc => ranking.push({ nome: doc.data().nome, contagem: doc.data().cortesRealizados || 0, tipo: 'cliente' }));
+        profissionaisSnap.forEach(doc => ranking.push({ nome: doc.data().nome, contagem: doc.data().clientesAtendidos || 0, tipo: 'profissional' }));
 
-    try {
-        const docBarbeiros = await db.collection('config').doc('rankingBarbeiros').get();
-        if (docBarbeiros.exists && docBarbeiros.data().ranking) {
-            containerBarbeiros.innerHTML = "";
-            docBarbeiros.data().ranking.forEach((item, i) => {
-                containerBarbeiros.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${item.nome}</span><span>${item.contagem}</span></div>`;
-            });
-        } else {
-            containerBarbeiros.innerHTML = '<p>Nenhum ranking disponível.</p>';
-        }
-    } catch(e) { containerBarbeiros.innerHTML = '<p>Erro ao carregar ranking.</p>'; }
+        ranking.sort((a, b) => b.contagem - a.contagem);
+        
+        container.innerHTML = "";
+        ranking.slice(0, 100).forEach((item, i) => {
+            const icone = item.tipo === 'cliente' ? '🙋' : '💼';
+            container.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${icone} ${item.nome}</span><span>${item.contagem}</span></div>`;
+        });
+
+    } catch (e) { 
+        container.innerHTML = '<p>Erro ao carregar ranking.</p>'; 
+        console.error(e);
+    }
 }
 
 
 function obterIconeMaiorConquista(conquistas, tipo) {
     if (!conquistas || conquistas.length === 0) return '';
-    const ordem = tipo === 'cliente' ? conquistasOrdem : conquistasBarbeiroOrdem;
-    const definicoes = tipo === 'cliente' ? conquistasDefinidas : conquistasBarbeiroDefinidas;
-    for (const id of ordem) {
-        if (conquistas.includes(id)) {
-            return `<span class="chat-medal">${definicoes[id].icone}</span>`;
+    const definicoes = tipo === 'cliente' ? conquistasDefinidas.cliente : conquistasDefinidas.profissional;
+    let maiorLevel = -1;
+    let melhorIcone = '';
+    for (const id of conquistas) {
+        if (definicoes[id] && definicoes[id].level > maiorLevel) {
+            maiorLevel = definicoes[id].level;
+            melhorIcone = definicoes[id].icone;
         }
     }
-    return '';
+    return maiorLevel > -1 ? `<span class="chat-medal">${melhorIcone}</span>` : '';
 }
 
 async function abrirModalDashboardBarbeiro() {
@@ -4164,7 +4365,7 @@ async function abrirModalDashboardBarbeiro() {
             <div class="popup-section"><h4>Visão Geral</h4>
                 <p>⭐ Avaliação Média: <b>${mediaAvaliacoes} / 10</b> (${perfil.numAvaliacoes} avaliações)</p>
                 <p>🧑‍🤝‍🧑 Clientes Únicos: <b>${clientes.size}</b></p>
-                <p>📈 Cortes Concluídos: <b>${concluidosTotal}</b></p>
+                <p>📈 Serviços Concluídos: <b>${concluidosTotal}</b></p>
                 <p>❌ Taxa de Cancelamento: <b>${taxaCancelamento}%</b></p>
             </div>
             <div class="popup-section"><h4>💰 Financeiro</h4>
@@ -4178,7 +4379,7 @@ async function abrirModalDashboardBarbeiro() {
         `;
     } catch (e) { 
         container.innerHTML = '<p>Erro ao carregar dados.</p>'; 
-        console.error("Erro no dashboard do barbeiro:", e);
+        console.error("Erro no dashboard do profissional:", e);
     }
 }
 
@@ -4206,16 +4407,10 @@ function salvarPortfolio() {
 }
 
 function abrirModalFidelidade() {
-  // Pega o elemento HTML onde os pontos são exibidos
   const pontosDisplay = document.getElementById("pontosFidelidade");
-
-  // Atualiza o texto do elemento com os pontos do perfil do usuário
-  // O '|| 0' garante que, se o usuário não tiver pontos, o número 0 será exibido.
   if (perfil && pontosDisplay) {
     pontosDisplay.textContent = perfil.pontosFidelidade || 0;
   }
-
-  // Abre o modal
   abrirModal('modalFidelidade');
 }
 
@@ -4233,7 +4428,7 @@ async function abrirPortfolioCliente(barbeiroUid, barbeiroNome) {
             grid.innerHTML += `<img src="${url}" alt="Foto do portfólio" onerror="this.src='https://via.placeholder.com/150?text=Erro'">`;
         });
     } else {
-        grid.innerHTML = '<p>Este barbeiro ainda não adicionou imagens ao portfólio.</p>';
+        grid.innerHTML = '<p>Este profissional ainda não adicionou imagens ao portfólio.</p>';
     }
     
     abrirModal('modalPortfolioCliente');
@@ -4377,7 +4572,7 @@ async function carregarProdutos() {
 
         const produtosSnap = await db.collection('loja_produtos').orderBy('ts', 'desc').get();
         
-        let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Oficiais Navalha de Ouro ⭐</h4>';
+        let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Oficiais VersãoPro ⭐</h4>';
         let communityProducts = [];
         let officialProductsFound = false;
 
@@ -4399,12 +4594,11 @@ async function carregarProdutos() {
         const getUserScore = (uid) => {
             const user = usersData[uid];
             if (!user) return 0;
-            if (user.vip) return 4;
+            if (isVipAtivo(user)) return 4;
             const isBoosted = user.boostExpiracao && user.boostExpiracao.toDate() > new Date();
             if (isBoosted) return 3;
-            if (user.tipo === 'barbeiro') return 2;
-            if (user.tipo === 'cliente') return 1;
-            return 0;
+            if (user.tipo !== 'cliente') return 2;
+            return 1;
         };
 
         communityProducts.sort((a, b) => {
@@ -4437,7 +4631,7 @@ function renderProdutoCard(p, pJson) {
     
     return `
         <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
-            <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=Navalha'">
+            <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=VersaoPro'">
             <div class="produto-info">
                 <div class="produto-nome">${p.nome}</div>
                 <div class="produto-preco">${precoHtml}</div>
@@ -4541,13 +4735,12 @@ function iniciarCompra(produto) {
     };
 }
 
-// MUDANÇA 2: ADICIONADO CPF AOS DADOS DO PEDIDO
 async function confirmarCompraLoja(dadosEntrega) {
-    mostrarMensagemCarregando("Processando seu pedido...");
+    exibirAguarde("Processando seu pedido...");
     const produto = produtoParaCompra;
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
     if (perfil.saldo < precoFinal) {
-        fecharModalCarregando();
+        fecharTodosOsModais();
         return alert('Saldo insuficiente.');
     }
     
@@ -4582,18 +4775,18 @@ async function confirmarCompraLoja(dadosEntrega) {
                 vendedorUid: produto.vendedorUid,
                 vendedorNotificado: false,
                 status: "pendente",
-                avaliado: false, // MUDANÇA 7: Campo de avaliação
+                avaliado: false,
                 ts: firebase.firestore.FieldValue.serverTimestamp()
             });
         });
 
-        fecharModalCarregando();
+        fecharTodosOsModais();
         alert("Pedido realizado com sucesso!");
         notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`, { link: '#minhascompras' });
         notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`, { link: '#entregas' });
         fecharTodosOsModais();
     } catch (e) {
-        fecharModalCarregando();
+        fecharTodosOsModais();
         alert('Erro ao processar a compra: ' + e.message);
     }
 }
@@ -4707,7 +4900,7 @@ async function abrirEntregasVendedor() {
     if (pedidosVendedorListener) pedidosVendedorListener();
     pedidosVendedorListener = db.collection('loja_pedidos')
       .where('vendedorUid', '==', auth.currentUser.uid)
-      .where('status', 'in', ['pendente', 'disputa']) // Adicionado 'disputa'
+      .where('status', 'in', ['pendente', 'disputa'])
       .onSnapshot(snap => {
         if(snap.empty) {
             container.innerHTML = '<p>Nenhuma entrega pendente.</p>';
@@ -4749,7 +4942,6 @@ async function marcarComoEntregue(pedidoId, clienteUid) {
     }
 }
 
-// MUDANÇA 7: LÓGICA DE MINHAS COMPRAS E AVALIAÇÃO
 async function abrirMinhasCompras() {
     abrirModal('modalMinhasCompras');
     const container = document.getElementById('listaMinhasCompras');
@@ -4773,11 +4965,10 @@ async function abrirMinhasCompras() {
             case 'disputa': statusTexto = 'Entrega recusada'; break;
         }
         
-        // Verifica se pode avaliar
         if (compra.status === 'confirmado_pelo_cliente' && !compra.avaliado) {
             acaoBotao = `<button onclick="abrirModalAvaliacaoProduto('${doc.id}', '${compra.produtoId}', '${compra.produtoNome}')">⭐ Avaliar Produto</button>`;
         } else if (compra.status === 'confirmado_pelo_cliente' && compra.avaliado) {
-            acaoBotao = `<p style="font-size: 14px; color: var(--cor-destaque-ouro);">✅ Produto avaliado!</p>`;
+            acaoBotao = `<p style="font-size: 14px; color: var(--cor-destaque);">✅ Produto avaliado!</p>`;
         }
 
         container.innerHTML += `
@@ -4792,7 +4983,7 @@ async function abrirMinhasCompras() {
 
 function abrirModalConfirmacaoComprador(pedido) {
     const modal = document.getElementById('modalConfirmacaoComprador');
-    if(modal.classList.contains('show')) return; // Já está aberto
+    if(modal.classList.contains('show')) return; 
 
     document.getElementById('btnAceitarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, true);
     document.getElementById('btnRecusarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, false);
@@ -4809,15 +5000,17 @@ async function responderConfirmacaoEntrega(pedidoId, aceito) {
         notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { link: '#entregas' });
         alert('Resposta enviada com sucesso!');
         fecharModalAtual();
-        abrirMinhasCompras(); // Recarrega a lista para mostrar o novo status
+        abrirMinhasCompras();
     } catch (e) {
         alert('Erro ao enviar resposta: ' + e.message);
     }
 }
 function toggleFuncoes(containerId) {
     const container = document.getElementById(containerId);
+    const button = container.previousElementSibling;
     if (container) {
         container.classList.toggle('hidden');
+        button.classList.toggle('closed', container.classList.contains('hidden'));
     }
 }
 
@@ -4830,18 +5023,16 @@ function handleProdutoClick(produto) {
     }
 }
 
-// Lógica de verificação de pendências e notificações
 function iniciarVerificacaoDePendencias(uid) {
     if (pendenciasInterval) clearInterval(pendenciasInterval);
-    verificarPendencias(uid); // Executa uma vez imediatamente
-    pendenciasInterval = setInterval(() => verificarPendencias(uid), 60000); // Executa a cada minuto
+    verificarPendencias(uid);
+    pendenciasInterval = setInterval(() => verificarPendencias(uid), 60000);
 }
 
 async function verificarPendencias(uid) {
     if (!uid || !perfil) return;
 
-    // Barbeiro: Agendamentos pendentes
-    if (perfil.tipo === 'barbeiro') {
+    if (perfil.tipo !== 'cliente') {
         const agendamentosSnap = await db.collection('agendamentos').where('barbeiroUid', '==', uid).where('status', '==', 'pendente').get();
         const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
         if (!agendamentosSnap.empty) {
@@ -4852,7 +5043,6 @@ async function verificarPendencias(uid) {
         }
     }
 
-    // Cliente: Avaliações pendentes
     if (perfil.tipo === 'cliente') {
         const avaliacoesSnap = await db.collection('agendamentos').where('clienteUid', '==', uid).where('status', '==', 'concluido').where('avaliado', '==', false).get();
         const btnHistorico = document.getElementById('btnHistoricoCliente');
@@ -4864,20 +5054,17 @@ async function verificarPendencias(uid) {
         }
     }
 
-    // Usuário: Saque pendente
     const saqueSnap = await db.collection("solicitacoes").where("usuarioUid", "==", uid).where("status", "==", "pendente").where("tipo", "==", "saque").get();
     if (!saqueSnap.empty) {
         notifyUser(uid, "⏳ Saque em Análise", "Sua solicitação de saque ainda está pendente de aprovação.", { link: '#carteira' });
     }
 }
 
-// Lógica de avaliação de produtos
 async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
     container.innerHTML = '';
     
-    // Regra para produtos "Navalha de Ouro"
-    if (produtoNome.toLowerCase().includes('navalha de ouro')) {
-        const hoje = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    if (produtoNome.toLowerCase().includes('versãopro')) {
+        const hoje = new Date().toISOString().split('T')[0]; 
         const seed = produtoId + hoje;
         let hash = 0;
         for (let i = 0; i < seed.length; i++) {
@@ -4885,7 +5072,7 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
             hash = ((hash << 5) - hash) + char;
             hash |= 0; 
         }
-        const randomValue = (Math.abs(hash) % 10) / 10; // Valor de 0.0 a 0.9
+        const randomValue = (Math.abs(hash) % 10) / 10;
         const notaAleatoria = (4.1 + randomValue).toFixed(1);
 
         const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
@@ -4906,7 +5093,6 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
         container.innerHTML = avaliacaoHtml;
 
     } else {
-        // Regra para outros produtos
         const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
         if (snap.empty) {
             container.innerHTML = `<p class="avaliacao-estrelas">⭐ Sem avaliação</p><p class="avaliacao-comentario">Seja o primeiro a avaliar!</p>`;
@@ -4920,7 +5106,6 @@ async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
     }
 }
 
-// MUDANÇA 7: Funções de avaliação de produto
 let notaSelecionada = 0;
 function abrirModalAvaliacaoProduto(pedidoId, produtoId, produtoNome) {
     notaSelecionada = 0;
@@ -4980,38 +5165,26 @@ async function salvarAvaliacaoProduto(pedidoId, produtoId, nota, comentario) {
         
         alert('Obrigado pela sua avaliação!');
         fecharModalAtual();
-        abrirMinhasCompras(); // Recarrega para atualizar o status
+        abrirMinhasCompras();
     } catch (e) {
         alert('Erro ao salvar avaliação: ' + e.message);
     }
 }
 
-
-// Função de logout
 function fazerLogout() {
     auth.signOut().then(() => {
+        localStorage.removeItem('onboarding_concluido');
         location.reload();
     });
 }
 
-// Funções de Mensagens Intuitivas
-function mostrarMensagemCarregando(titulo = "Aguarde...", texto = "Estamos processando sua solicitação.") {
-    document.getElementById('carregandoGenericoTitulo').textContent = titulo;
-    document.getElementById('carregandoGenericoTexto').textContent = texto;
-    abrirModal('modalCarregandoGenerico');
-}
-function fecharModalCarregando() {
-    fecharModalAtual();
-}
-
-// Função para tratar links diretos (Deep Linking)
 function handleDeepLink() {
     const hash = window.location.hash.substring(1);
     if (!hash || !auth.currentUser) return;
 
     switch (hash) {
         case 'agendamentos':
-            if (perfil.tipo === 'barbeiro') abrirAgendamentosBarbeiro();
+            if (perfil.tipo !== 'cliente') abrirAgendamentosBarbeiro();
             break;
         case 'solicitacoes':
             if (perfil.tipo === 'admin') abrirModalSolicitacoes();
@@ -5030,10 +5203,10 @@ function handleDeepLink() {
             break;
         case 'conquistas':
             if (perfil.tipo === 'cliente') abrirModalConquistas();
-            if (perfil.tipo === 'barbeiro') abrirModalConquistasBarbeiro();
+            else abrirModalConquistasBarbeiro();
             break;
         case 'avaliacoes':
-            if (perfil.tipo === 'barbeiro') abrirAvaliacoesBarbeiro();
+            if (perfil.tipo !== 'cliente') abrirAvaliacoesBarbeiro();
             break;
         case 'minhascompras':
             abrirMinhasCompras();
@@ -5042,10 +5215,235 @@ function handleDeepLink() {
             abrirEntregasVendedor();
             break;
     }
-    // Limpa o hash para evitar reabrir o modal em um simples refresh
     history.pushState("", document.title, window.location.pathname + window.location.search);
 }
 
+// --- NOVAS FUNÇÕES VersãoPro ---
+
+function iniciarOnboarding() {
+    const modal = document.getElementById('modalOnboarding');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+    renderOnboardingTela1();
+}
+
+function renderOnboardingTela1() {
+    document.getElementById('onboardingContent').innerHTML = `
+        <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" alt="Boas-vindas">
+        <h2>Bem-vindo(a) ao VersãoPro!</h2>
+        <p>O seu novo ecossistema de beleza e bem-estar.</p>
+        <button onclick="renderOnboardingTela2()">Próximo</button>
+    `;
+}
+
+function renderOnboardingTela2() {
+    document.getElementById('onboardingContent').innerHTML = `
+      <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" class="onboarding-background-img" alt="">
+      <div class="onboarding-content-wrapper">
+        <h2 style="color:var(--cor-destaque-ouro);">Qual o seu maior interesse?</h2>
+        <p>Isso nos ajuda a personalizar sua experiência.</p>
+        <div class="interest-options" style="display:flex; flex-direction:column; gap:10px;">
+            <button onclick="selecionarInteresse('barbeiro')">Barbearias</button>
+            <button onclick="selecionarInteresse('manicure_pedicure')">Manicure e Pedicure</button>
+            <button onclick="selecionarInteresse('designer_cilios')">Designer de Cílios</button>
+        </div>
+        <button onclick="renderOnboardingTela3()" style="margin-top:20px;" id="btnOnboardingNext2" disabled>Próximo</button>
+      </div>
+    `;
+}
+
+function selecionarInteresse(interesse) {
+    onboardingState.interesse_principal = interesse;
+    const buttons = document.querySelectorAll('.interest-options button');
+    buttons.forEach(btn => {
+        btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(interesse.split('_')[0]));
+    });
+    document.getElementById('btnOnboardingNext2').disabled = false;
+}
+
+function renderOnboardingTela3() {
+    document.getElementById('onboardingContent').innerHTML = `
+      <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" class="onboarding-background-img" alt="">
+      <div class="onboarding-content-wrapper">
+        <h2 style="color:var(--cor-destaque-ouro);">Como você usará o app?</h2>
+        <p>Escolha seu perfil principal.</p>
+        <div class="interest-options" style="display:flex; flex-direction:column; gap:10px;">
+            <button onclick="selecionarPerfilBasico('cliente')">Sou Cliente</button>
+            <button onclick="selecionarPerfilBasico('profissional')">Sou Profissional</button>
+        </div>
+        <button onclick="finalizarOnboarding()" style="margin-top:20px;" id="btnOnboardingNext3" disabled>Começar!</button>
+      </div>
+    `;
+}
+
+function selecionarPerfilBasico(tipo) {
+    onboardingState.perfil_basico = tipo;
+    const buttons = document.querySelectorAll('.interest-options button');
+    buttons.forEach(btn => {
+        btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(tipo));
+    });
+    document.getElementById('btnOnboardingNext3').disabled = false;
+}
+
+function finalizarOnboarding() {
+    localStorage.setItem('onboarding_concluido', 'true');
+    const modal = document.getElementById('modalOnboarding');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 500);
+    mostrar('authView');
+}
+
+function aplicarTemaPorProfissao(interesse) {
+    let cor = 'var(--cor-destaque-ouro)';
+    if (interesse === 'manicure_pedicure' || interesse === 'designer_cilios') {
+        cor = 'var(--cor-destaque-rosa)';
+    }
+    document.documentElement.style.setProperty('--cor-destaque', cor);
+}
+
+function iniciarOnboardingProfissional() {
+    tempOnboardingServicos = [];
+    abrirModal('modalOnboardingProfissionalServicos');
+}
+
+function adicionarServicoOnboarding() {
+    const nome = document.getElementById('onboardingServicoNome').value.trim();
+    const valor = parseFloat(document.getElementById('onboardingServicoValor').value);
+    const tempo = parseInt(document.getElementById('onboardingServicoTempo').value);
+    if (!nome || isNaN(valor) || isNaN(tempo)) return alert("Preencha todos os campos do serviço.");
+
+    tempOnboardingServicos.push({ nome, valor, duracao: tempo });
+    
+    const list = document.getElementById('onboardingServicosList');
+    list.innerHTML += `<p>✅ ${nome} - R$${valor.toFixed(2)}</p>`;
+    document.getElementById('onboardingServicoNome').value = '';
+    document.getElementById('onboardingServicoValor').value = '';
+    document.getElementById('onboardingServicoTempo').value = '';
+    document.getElementById('btnOnboardingNextServicos').disabled = false;
+}
+
+function avancarOnboarding(etapa) {
+    if (etapa === 2) {
+        fecharModalAtual();
+        abrirModal('modalOnboardingProfissionalAgenda');
+        // Lógica da agenda do onboarding
+        const horariosContainer = document.getElementById("onboardingHorariosContainer");
+        for (let i = 7; i <= 18; i++) {
+            const horario = `${i}:00`;
+            horariosContainer.innerHTML += `<button class="horario-btn" onclick="this.classList.toggle('selecionado')">${horario}</button>`;
+        }
+        document.getElementById('onboardingBtnVagaImediata').onclick = () => {
+            onboardingState.vagaImediata = true;
+            onboardingState.usaAgendaManual = false;
+            alert('Vaga imediata selecionada!');
+        }
+        document.getElementById('onboardingBtnAgendaManual').onclick = () => {
+            onboardingState.vagaImediata = false;
+            onboardingState.usaAgendaManual = true;
+            document.getElementById('onboardingAgendaManualPainel').classList.remove('hidden');
+        }
+    } else if (etapa === 3) {
+        exibirAguarde("Finalizando configuração...");
+        const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
+        const updates = {
+            listaServicos: tempOnboardingServicos,
+            onboarding_profissional_concluido: true
+        };
+        if (onboardingState.usaAgendaManual) {
+            updates.usaAgendaManual = true;
+            updates.vagaImediata = false;
+            const agenda = {};
+            document.querySelectorAll('#onboardingHorariosContainer .selecionado').forEach(btn => {
+                agenda[btn.textContent] = true;
+            });
+            updates.agenda = agenda;
+        } else {
+            updates.vagaImediata = onboardingState.vagaImediata || false;
+            updates.usaAgendaManual = false;
+        }
+        userRef.update(updates).then(() => {
+            fecharTodosOsModais();
+            alert("Configuração concluída!");
+        }).catch(e => {
+            fecharTodosOsModais();
+            alert("Erro ao salvar: " + e.message);
+        });
+    }
+}
+async function adminToggleLoja(uid, deveAtivar) {
+    await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
+    alert(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
+    abrirModalGerenciarUsuario(uid); // Reabre o modal para refletir a mudança
+}
+
+async function adminDeletarProduto(produtoId, nome) {
+    if(confirm(`Tem certeza que deseja deletar o produto "${nome}"?`)) {
+        await db.collection('loja_produtos').doc(produtoId).delete();
+        alert("Produto deletado!");
+        fecharModalAtual();
+    }
+}
+
+async function abrirGerenciarLojaAdmin() {
+    abrirModal('modalGerenciarLojaAdmin');
+    const produtosList = document.getElementById('adminDeletarProdutoList');
+    const usuariosList = document.getElementById('adminToggleLojaList');
+    produtosList.innerHTML = "<p>Carregando...</p>";
+    usuariosList.innerHTML = "<p>Carregando...</p>";
+
+    const produtosSnap = await db.collection('loja_produtos').get();
+    produtosList.innerHTML = "";
+    produtosSnap.forEach(doc => {
+        const p = doc.data();
+        produtosList.innerHTML += `<div class="card"><b>${p.nome}</b> por ${p.vendedorNome} <button style="background: #c0392b; float:right;" onclick="adminDeletarProduto('${doc.id}', '${p.nome}')">X</button></div>`;
+    });
+
+    const usersSnap = await db.collection('usuarios').where('lojaLiberada', 'in', [true, false]).get();
+    usuariosList.innerHTML = "";
+    usersSnap.forEach(doc => {
+        const u = doc.data();
+        if (u.tipo === 'admin') return;
+        usuariosList.innerHTML += `<div class="card"><b>${u.nome}</b> <button style="float:right;" onclick="adminToggleLoja('${doc.id}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Desativar' : 'Ativar'}</button></div>`;
+    });
+}
+
+function setupConfiguracoes() {
+    carregarEstados('config');
+    setTimeout(() => { // Garante que os estados carregaram
+        document.getElementById('configEstado').value = perfil.estado;
+        carregarCidades('config');
+        setTimeout(() => {
+            document.getElementById('configCidade').value = perfil.cidade;
+        }, 100);
+    }, 100);
+
+    const interesseContainer = document.getElementById('configInteresseContainer');
+    const buttons = interesseContainer.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.interesse === perfil.interesse_principal);
+        btn.onclick = async () => {
+            const novoInteresse = btn.dataset.interesse;
+            await db.collection('usuarios').doc(auth.currentUser.uid).update({ interesse_principal: novoInteresse });
+            buttons.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            alert("Interesse atualizado!");
+            location.reload(); // Recarrega para aplicar as mudanças de filtro
+        }
+    });
+}
+async function salvarLocalizacaoConfig() {
+    const estado = document.getElementById('configEstado').value;
+    const cidade = document.getElementById('configCidade').value;
+    if (!estado || !cidade) return alert("Selecione estado e cidade.");
+    await db.collection('usuarios').doc(auth.currentUser.uid).update({ estado, cidade });
+    alert("Localização salva!");
+    fecharModalAtual();
+}
+
+document.getElementById('btnConfig').onclick = () => {
+    setupConfiguracoes();
+    abrirModal('modalConfiguracoes');
+}
 </script>
 <script>
     if ('serviceWorker' in navigator) {
