@@ -43,6 +43,16 @@
       --cor-borda: #ccc;
     }
     body {
+      background-image: url('C:\Users\arlan\Desktop\NavalhadeOuro3.1.9/icone.png'); /* <-- ATUALIZE AQUI */
+      background-size: cover; /* Garante que a imagem cubra todo o elemento */
+      background-position: center; /* Centraliza a imagem */
+      background-repeat: no-repeat; /* Evita repetição */
+      background-attachment: fixed; /* Opcional: mantém a imagem fixa ao rolar */
+
+      /* Adiciona um overlay escuro para o texto ficar mais legível */
+      background-blend-mode: multiply;
+      background-color: rgba(0, 0, 0, 0.6); /* Cor de fundo escura (ajuste a opacidade 0.6 se necessário) */
+      
       margin: 0;
       background: var(--cor-fundo);
       color: var(--cor-texto-principal);
