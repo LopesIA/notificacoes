@@ -1,11 +1,11 @@
 {
-  "name": "Navalha de Ouro",
-  "short_name": "Navalha de Ouro",
+  "name": "VersãoPro",
+  "short_name": "VersãoPro",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0c0c0c",
   "theme_color": "#d4af37",
-  "description": "Seu aplicativo de barbearia",
+  "description": "Seu aplicativo de agendamentos",
   "icons": [
     {
       "src": "/icone.png",
