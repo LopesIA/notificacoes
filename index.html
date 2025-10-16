@@ -18,6 +18,18 @@
 
   <style>
     :root {
+/* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
+@keyframes brilhoDouradoPulsante {
+    0% {
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 25px rgba(212, 175, 55, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
+    }
+}
 /* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
 .onboard-screen[style*="background-image"] {
     background-repeat: no-repeat;
@@ -37,6 +49,20 @@
       --cor-borda: #333;
       --cor-destaque: var(--cor-destaque-ouro); /* Cor padrão */
     }
+/* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
+@keyframes brilhoDourado {
+    0% {
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+    }
+    50% {
+        /* Corrigido para usar a variável certa e com mais intensidade */
+        box-shadow: 0 0 20px var(--cor-destaque-ouro), 0 0 30px var(--cor-destaque-ouro); 
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+    }
+}
+
     body.tema-claro {
       --cor-fundo: #f0f0f0;
       --cor-card: #ffffff;
@@ -958,7 +984,8 @@
     border-color: var(--cor-destaque);
     background: var(--cor-destaque-ouro);
     color: var(--cor-fundo);
-    box-shadow: 0 0 15px var(--cor-destaque-ouro); /* Adicionado para o efeito de brilho */
+    /* A linha abaixo aplica a animação que criamos! */
+    animation: brilhoDouradoPulsante 2s infinite ease-in-out; 
 }
     .onboarding-background-img {
       position: absolute;
@@ -1980,6 +2007,27 @@ function exibirAguarde(texto = "Aguarde...") {
     popup.style.display = 'flex';
     setTimeout(() => popup.classList.add('show'), 10);
     aguardeClickCount = 0; // Reseta a contagem de cliques
+}
+
+/* === Onboarding Tela 2 - Funções de Seleção === */
+function toggleOnboardOption(element) {
+    const parent = element.closest('.onboard-screen');
+    // Remove 'selected' de todos os irmãos
+    parent.querySelectorAll('.onboard-option').forEach(op => {
+        op.classList.remove('selected');
+    });
+    // Adiciona 'selected' ao item clicado
+    element.classList.add('selected');
+
+    // Salva a seleção no localStorage
+    const valor = element.getAttribute('data-value');
+    localStorage.setItem('onboard_tipo_uso', valor);
+    
+    // Habilita o botão 'Continuar' (se houver)
+    const btnContinuar = parent.querySelector('.btn-primary');
+    if (btnContinuar) {
+        btnContinuar.disabled = false;
+    }
 }
 
 function fecharAguarde(event) {
@@ -5312,14 +5360,15 @@ function selecionarInteresse(interesse) {
     onboardingState.interesse_principal = interesse;
     const buttons = document.querySelectorAll('.interest-options button');
     buttons.forEach(btn => {
-        btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(interesse.split('_')[0]));
+        // Lógica mais precisa: verifica qual botão corresponde exatamente ao interesse clicado.
+        const isSelected = btn.getAttribute('onclick') === `selecionarInteresse('${interesse}')`;
+        btn.classList.toggle('selected', isSelected);
     });
     document.getElementById('btnOnboardingNext2').disabled = false;
 }
 
 function renderOnboardingTela3() {
     document.getElementById('onboardingContent').innerHTML = `
-      <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" class="onboarding-background-img" alt="">
       <div class="onboarding-content-wrapper">
         <h2 style="color:var(--cor-destaque-ouro);">Como você usará o app?</h2>
         <p>Escolha seu perfil principal.</p>
