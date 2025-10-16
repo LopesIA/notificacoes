@@ -18,6 +18,13 @@
 
   <style>
     :root {
+/* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
+.onboard-screen[style*="background-image"] {
+    background-repeat: no-repeat;
+    background-position: center center !important; 
+    background-size: cover !important;
+}
+
       --cor-fundo: #0c0c0c;
       --cor-card: #181818;
       --cor-botoes: #222222;
@@ -943,14 +950,16 @@
         margin-bottom: 20px;
     }
     .interest-options button {
-        background: var(--cor-botoes);
-        border: 2px solid transparent;
-    }
+    background: var(--cor-botoes);
+    border: 2px solid transparent;
+    transition: all 0.3s ease; /* Adicionado para suavizar o efeito */
+}
     .interest-options button.selected {
-        border-color: var(--cor-destaque);
-        background: var(--cor-destaque-ouro);
-        color: var(--cor-fundo);
-    }
+    border-color: var(--cor-destaque);
+    background: var(--cor-destaque-ouro);
+    color: var(--cor-fundo);
+    box-shadow: 0 0 15px var(--cor-destaque-ouro); /* Adicionado para o efeito de brilho */
+}
     .onboarding-background-img {
       position: absolute;
       top: 0;
@@ -969,6 +978,21 @@
       color: white;
       text-shadow: 1px 1px 3px black;
     }
+
+/* Adicionado para a tela de onboarding ficar cheia */
+#modalOnboarding .modal-content {
+    padding: 0;
+    border-radius: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: linear-gradient(rgba(0,0,0, 0.7), rgba(0,0,0, 0.7)), url('https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif');
+    background-size: cover;
+    background-position: center;
+}
+
     @keyframes blink-animation {
       0%, 100% { background-color: var(--cor-botoes); }
       50% { background-color: var(--cor-destaque); }
@@ -1172,12 +1196,6 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
     
-    <div class="popup-section config-section">
-      <h4>📍 Minha Localização</h4>
-      <select id="configEstado" onchange="carregarCidades('config')"></select>
-      <select id="configCidade"></select>
-      <button onclick="salvarLocalizacaoConfig()">Salvar Localização</button>
-    </div>
 
     <div class="popup-section config-section">
       <h4>❤️ Meu Interesse Principal</h4>
@@ -2307,13 +2325,27 @@ function entrar() {
 }
 
 function prepararCriarConta() {
-    document.getElementById("email").classList.add("hidden");
     document.getElementById("senha").classList.add("hidden");
     document.querySelector("#authView button:first-of-type").style.display = "none";
     document.getElementById("cadastro-fields").classList.remove("hidden");
-    
+
     // Mantém a senha se já digitada, senão, deixa em branco
     document.getElementById("senha-cadastro").value = document.getElementById("senha").value;
+
+    // --- LÓGICA ADICIONADA AQUI ---
+    const tipoSelect = document.getElementById("tipo");
+    if (onboardingState.perfil_basico === 'profissional') {
+        tipoSelect.classList.remove('hidden');
+        // Remove a opção "Cliente" para evitar confusão
+        if (tipoSelect.querySelector('option[value="cliente"]')) {
+             tipoSelect.querySelector('option[value="cliente"]').remove();
+        }
+    } else {
+        // Se for cliente, esconde o select e define o valor padrão
+        tipoSelect.classList.add('hidden');
+        tipoSelect.value = 'cliente';
+    }
+    // --- FIM DA LÓGICA ADICIONADA ---
 
     document.getElementById("btnCriarConta").onclick = criarConta;
     document.getElementById("btnCriarConta").textContent = "🆕 Criar Conta";
@@ -5250,16 +5282,19 @@ function iniciarOnboarding() {
 
 function renderOnboardingTela1() {
     document.getElementById('onboardingContent').innerHTML = `
-        <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" alt="Boas-vindas">
-        <h2>Bem-vindo(a) ao VersãoPro!</h2>
-        <p>O seu novo ecossistema de beleza e bem-estar.</p>
-        <button onclick="renderOnboardingTela2()">Próximo</button>
+        <div class="onboarding-content-wrapper" style="text-align: center;">
+            <img src="https://i.postimg.cc/Zq2BvjSZ/icone.png" alt="Logo VersãoPro" style="width: 150px; height: 150px; margin-bottom: 20px;">
+            <h2 style="color: var(--cor-destaque-ouro);">Bem-vindo(a) ao VersãoPro!</h2>
+            <p style="color: var(--cor-destaque-ouro);">O seu novo ecossistema de beleza e bem-estar.</p>
+            <button onclick="renderOnboardingTela2()">Próximo</button>
+        </div>
     `;
 }
 
 function renderOnboardingTela2() {
-    document.getElementById('onboardingContent').innerHTML = `
-      <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" class="onboarding-background-img" alt="">
+    const onboardingContent = document.getElementById('onboardingContent');
+    
+    onboardingContent.innerHTML = `
       <div class="onboarding-content-wrapper">
         <h2 style="color:var(--cor-destaque-ouro);">Qual o seu maior interesse?</h2>
         <p>Isso nos ajuda a personalizar sua experiência.</p>
