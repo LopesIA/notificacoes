@@ -5483,14 +5483,21 @@ function avancarOnboarding(etapa) {
             updates.usaAgendaManual = false;
         }
         userRef.update(updates).then(() => {
-            fecharTodosOsModais();
-            alert("Configuração concluída!");
-        }).catch(e => {
-            fecharTodosOsModais();
-            alert("Erro ao salvar: " + e.message);
-        });
-    }
-}
+    // 1. Exibe o alerta de sucesso IMEDIATAMENTE
+    alert("Configuração concluída!");
+    
+    // 2. Usa setTimeout para atrasar o fechamento do modal
+    setTimeout(() => {
+        // Esta função só será executada após 2000 milissegundos (2 segundos)
+        fecharTodosOsModais(); 
+    }, 2000); // 2000 é o tempo em milissegundos
+
+}).catch(e => {
+    // Manter o tratamento de erro rápido, fechando imediatamente em caso de falha.
+    fecharTodosOsModais(); 
+    alert("Erro ao salvar: " + e.message);
+});
+
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
     alert(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
