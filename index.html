@@ -3352,14 +3352,6 @@ function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
   db.collection("avisos").add(avisoData);
 }
 
-// Definição da função notifyAdmins para evitar o erro "is not defined"
-function notifyAdmins(message) {
-    console.warn("notifyAdmins chamado, mas sem implementação. Mensagem: " + message);
-    // Adicionar aqui a lógica real para notificar administradores (ex: Cloud Function)
-}
-
-// ... o restante do seu código ...
-
 function enviarDenuncia() {
   const texto = document.getElementById("textoDenuncia").value.trim();
   if (!texto) return alert("Por favor, descreva o problema.");
@@ -5482,12 +5474,10 @@ function avancarOnboarding(etapa) {
             updates.vagaImediata = onboardingState.vagaImediata || false;
             updates.usaAgendaManual = false;
         }
-        // ... dentro do .then()
-userRef.update(updates).then(() => {
+        userRef.update(updates).then(() => {
     fecharTodosOsModais(); // <--- ESTA LINHA FECHA IMEDIATAMENTE
     alert("Configuração concluída!");
 }).catch(e => {
-// ...
 
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
