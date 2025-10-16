@@ -18,18 +18,6 @@
 
   <style>
     :root {
-/* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
-@keyframes brilhoDouradoPulsante {
-    0% {
-        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
-    }
-    50% {
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 25px rgba(212, 175, 55, 0.6);
-    }
-    100% {
-        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
-    }
-}
 /* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
 .onboard-screen[style*="background-image"] {
     background-repeat: no-repeat;
@@ -52,17 +40,26 @@
 /* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
 @keyframes brilhoDourado {
     0% {
-        box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
     }
     50% {
-        /* Corrigido para usar a variável certa e com mais intensidade */
-        box-shadow: 0 0 20px var(--cor-destaque-ouro), 0 0 30px var(--cor-destaque-ouro); 
+        box-shadow: 0 0 15px var(--cor-tema-forte), 0 0 25px var(--cor-tema-forte); /* cor-tema-forte é o seu dourado */
     }
     100% {
-        box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
     }
 }
 
+/* CLASSE QUE APLICA A ANIMAÇÃO QUANDO SELECIONADO */
+.onboard-option.selected {
+    border: 2px solid var(--cor-tema-forte) !important; /* Adiciona uma borda dourada sólida */
+    animation: brilhoDourado 1.5s infinite alternate; /* Aplica o brilho piscante */
+}
+
+/* Garante que o item não selecionado não tenha a animação */
+.onboard-option:not(.selected) {
+    animation: none;
+}
     body.tema-claro {
       --cor-fundo: #f0f0f0;
       --cor-card: #ffffff;
@@ -77,15 +74,15 @@
     }
     body {
       background-image: url('C:\Users\arlan\Desktop\NavalhadeOuro3.1.9/icone.png'); /* <-- ATUALIZE AQUI */
-      background-size: cover; /* Garante que a imagem cubra todo o elemento */
-      background-position: center; /* Centraliza a imagem */
-      background-repeat: no-repeat; /* Evita repetição */
-      background-attachment: fixed; /* Opcional: mantém a imagem fixa ao rolar */
+      background-size: cover; /* Garante que a imagem cubra todo o elemento */
+      background-position: center; /* Centraliza a imagem */
+      background-repeat: no-repeat; /* Evita repetição */
+      background-attachment: fixed; /* Opcional: mantém a imagem fixa ao rolar */
 
-      /* Adiciona um overlay escuro para o texto ficar mais legível */
-      background-blend-mode: multiply;
-      background-color: rgba(0, 0, 0, 0.6); /* Cor de fundo escura (ajuste a opacidade 0.6 se necessário) */
-      
+      /* Adiciona um overlay escuro para o texto ficar mais legível */
+      background-blend-mode: multiply;
+      background-color: rgba(0, 0, 0, 0.6); /* Cor de fundo escura (ajuste a opacidade 0.6 se necessário) */
+      
       margin: 0;
       background: var(--cor-fundo);
       color: var(--cor-texto-principal);
@@ -984,8 +981,7 @@
     border-color: var(--cor-destaque);
     background: var(--cor-destaque-ouro);
     color: var(--cor-fundo);
-    /* A linha abaixo aplica a animação que criamos! */
-    animation: brilhoDouradoPulsante 2s infinite ease-in-out; 
+    box-shadow: 0 0 15px var(--cor-destaque-ouro); /* Adicionado para o efeito de brilho */
 }
     .onboarding-background-img {
       position: absolute;
@@ -2354,14 +2350,6 @@ function carregarCidades(prefix = '') {
 carregarEstados();
 
 function entrar() {
-  // VERIFICA SE O FORMULÁRIO DE CADASTRO ESTÁ VISÍVEL
-  const cadastroFields = document.getElementById("cadastro-fields");
-  if (!cadastroFields.classList.contains('hidden')) {
-    criarConta(); // Se estiver visível, chama a função de criar conta
-    return;
-  }
-
-  // Lógica original de login
   exibirAguarde("Entrando...");
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value.trim();
@@ -2446,7 +2434,7 @@ function criarConta() {
   if (senha !== senhaConfirm) { fecharTodosOsModais(); return alert("As senhas não coincidem."); }
   if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
   if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return alert("Preencha todos os campos obrigatórios"); }
-  
+  if (tipo !== 'cliente' && !cadastroCoords) { fecharTodosOsModais(); return alert("Por favor, permita o acesso à localização para continuar o cadastro de profissional."); }
 
 
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
@@ -5368,15 +5356,14 @@ function selecionarInteresse(interesse) {
     onboardingState.interesse_principal = interesse;
     const buttons = document.querySelectorAll('.interest-options button');
     buttons.forEach(btn => {
-        // Lógica mais precisa: verifica qual botão corresponde exatamente ao interesse clicado.
-        const isSelected = btn.getAttribute('onclick') === `selecionarInteresse('${interesse}')`;
-        btn.classList.toggle('selected', isSelected);
+        btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(interesse.split('_')[0]));
     });
     document.getElementById('btnOnboardingNext2').disabled = false;
 }
 
 function renderOnboardingTela3() {
     document.getElementById('onboardingContent').innerHTML = `
+      <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" class="onboarding-background-img" alt="">
       <div class="onboarding-content-wrapper">
         <h2 style="color:var(--cor-destaque-ouro);">Como você usará o app?</h2>
         <p>Escolha seu perfil principal.</p>
@@ -5475,10 +5462,14 @@ function avancarOnboarding(etapa) {
             updates.usaAgendaManual = false;
         }
         userRef.update(updates).then(() => {
-    fecharTodosOsModais(); // <--- ESTA LINHA FECHA IMEDIATAMENTE
-    alert("Configuração concluída!");
-}).catch(e => {
-
+            fecharTodosOsModais();
+            alert("Configuração concluída!");
+        }).catch(e => {
+            fecharTodosOsModais();
+            alert("Erro ao salvar: " + e.message);
+        });
+    }
+}
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
     alert(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
