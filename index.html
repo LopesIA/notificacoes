@@ -3352,6 +3352,14 @@ function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
   db.collection("avisos").add(avisoData);
 }
 
+// Definição da função notifyAdmins para evitar o erro "is not defined"
+function notifyAdmins(message) {
+    console.warn("notifyAdmins chamado, mas sem implementação. Mensagem: " + message);
+    // Adicionar aqui a lógica real para notificar administradores (ex: Cloud Function)
+}
+
+// ... o restante do seu código ...
+
 function enviarDenuncia() {
   const texto = document.getElementById("textoDenuncia").value.trim();
   if (!texto) return alert("Por favor, descreva o problema.");
