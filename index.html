@@ -2070,7 +2070,9 @@ function mostrar(id) {
     document.getElementById("btnSair").classList.toggle("hidden", isAuth || id === 'guestView');
 }
 
+// --- FIM DA PARTE 1: CONTINUA NA PARTE 2 COM O RESTANTE DO JAVASCRIPT E FUNÇÕES DE ROTEAMENTO ---
 
+// --- INÍCIO DA PARTE 2: CONTINUAÇÃO DO JAVASCRIPT DO index.html ---
 function configurarBotoesGuest() {
     const guestView = document.getElementById('guestView');
     const buttons = guestView.querySelectorAll('#guestFuncoesContainer button');
@@ -3091,11 +3093,16 @@ function alternarChat(tipo) {
     chatContainer.innerHTML = "";
     if (chatListener) chatListener();
 
+    const agora = new Date();
+    
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+    
     if (tipo === 'local') {
         query = query.where("cidade", "==", perfil.cidade);
     }
-    query = query.orderBy("ts", "desc").limit(15);
+    
+    // Filtra mensagens que ainda não expiraram
+    query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(15);
 
     chatListener = query.onSnapshot(async snapshot => {
         if(snapshot.empty) {
@@ -3124,11 +3131,12 @@ async function carregarMensagensAnteriores() {
     btn.textContent = 'Carregando...';
     btn.disabled = true;
 
+    const agora = new Date();
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
     if (chatAtual === 'local') {
         query = query.where("cidade", "==", perfil.cidade);
     }
-    query = query.orderBy("ts", "desc").startAfter(oldestMessageSnapshot).limit(50);
+    query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").startAfter(oldestMessageSnapshot).limit(50);
 
     const snapshot = await query.get();
 
@@ -3199,10 +3207,12 @@ function sendBotMessage() {
     let randomIndex;
     do { randomIndex = Math.floor(Math.random() * botMessages.length); } while (randomIndex === lastBotMessageIndex);
     lastBotMessageIndex = randomIndex;
+    const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
         remetenteUid: "bot-uid", remetenteNome: "VersãoPro Bot", tipo: "bot",
         texto: botMessages[randomIndex], ts: firebase.firestore.FieldValue.serverTimestamp(),
-        cidade: "global" // Mensagem do bot é global
+        cidade: "global", // Mensagem do bot é global
+        deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
     });
 }
 
@@ -3217,10 +3227,12 @@ function enviarMensagem() {
     const texto = document.getElementById("chatInput").value.trim();
     if (!texto) return;
     isSending = true;
+    const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
         remetenteUid: auth.currentUser.uid, remetenteNome: perfil.nome, tipo: perfil.tipo, texto,
         ts: firebase.firestore.FieldValue.serverTimestamp(),
-        cidade: perfil.cidade // Adiciona a cidade à mensagem
+        cidade: perfil.cidade, // Adiciona a cidade à mensagem
+        deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
     }).then(() => {
         document.getElementById("chatInput").value = "";
         if (texto.toLowerCase().includes('suporte')) {
@@ -3234,14 +3246,15 @@ function enviarRespostaAI() {
     const resposta = `Olá! Sou a assistente virtual. Como posso ajudar? <br><br>
         • Para <b>dúvidas sobre o app</b> (agendamentos, carteira, VIP, etc.), tente ser específico na sua pergunta. <br>
         • Para <b>contatar um administrador</b> sobre problemas urgentes, denúncias ou sugestões, use o botão 🚨 no canto inferior esquerdo ou chame diretamente no WhatsApp: <a href="https://wa.me/${WHATSAPP_ADM_PHONE}" target="_blank">clique aqui</a>.`;
-    
+    const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
         remetenteUid: "ai-suporte-uid",
         remetenteNome: "Suporte AI",
         tipo: "ai_suporte",
         texto: resposta,
         ts: firebase.firestore.FieldValue.serverTimestamp(),
-        cidade: chatAtual === 'local' ? perfil.cidade : 'global'
+        cidade: chatAtual === 'local' ? perfil.cidade : 'global',
+        deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
     });
 }
 
@@ -5271,107 +5284,17 @@ function selecionarInteresse(interesse) {
 
 function renderOnboardingTela3() {
     document.getElementById('onboardingContent').innerHTML = `
-        <form id="formCriarConta">
-            <h3>Criar Nova Conta</h3>
-            <input type="text" id="nomeCriarConta" placeholder="Nome Completo" required>
-            
-            <input type="email" id="emailCriarConta" placeholder="Email" required>
-
-            <div class="show-password-container">
-                <input type="password" id="senhaCriarConta" placeholder="Senha" required>
-                <span class="show-password-toggle" data-target="senhaCriarConta">👁️</span>
-            </div>
-            <div class="show-password-container">
-                <input type="password" id="confirmaSenhaCriarConta" placeholder="Confirme a Senha" required>
-                <span class="show-password-toggle" data-target="confirmaSenhaCriarConta">👁️</span>
-            </div>
-            <button type="submit" class="botao">Criar Conta</button>
-            
-            <button type="button" id="btnLoginNaTelaDeCriarConta" style="background: none; border: none; color: var(--cor-destaque); margin-top: 20px; font-weight: 400; width: auto;">Já tenho conta. *Fazer Login*</button>
-        </form>
+      <img src="https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif" class="onboarding-background-img" alt="">
+      <div class="onboarding-content-wrapper">
+        <h2 style="color:var(--cor-destaque-ouro);">Como você usará o app?</h2>
+        <p>Escolha seu perfil principal.</p>
+        <div class="interest-options" style="display:flex; flex-direction:column; gap:10px;">
+            <button onclick="selecionarPerfilBasico('cliente')">Sou Cliente</button>
+            <button onclick="selecionarPerfilBasico('profissional')">Sou Profissional</button>
+        </div>
+        <button onclick="finalizarOnboarding()" style="margin-top:20px;" id="btnOnboardingNext3" disabled>Começar!</button>
+      </div>
     `;
-    // CHAMA A FUNÇÃO QUE ANEXA OS LISTENER APÓS O HTML SER CRIADO
-    adicionarListenersCriarConta();
-}
-
-// Função auxiliar que anexa os listeners do formulário de Criar Conta e Login
-function adicionarListenersCriarConta() {
-    const formCriarConta = document.getElementById('formCriarConta');
-    
-    // 1. LÓGICA DE REGISTRO (AO CLICAR EM "Criar Conta")
-    if (formCriarConta) {
-        formCriarConta.onsubmit = (event) => {
-            event.preventDefault();
-
-            const nome = document.getElementById('nomeCriarConta').value;
-            const email = document.getElementById('emailCriarConta').value; 
-            const senha = document.getElementById('senhaCriarConta').value;
-            const confirmaSenha = document.getElementById('confirmaSenhaCriarConta').value;
-
-            if (senha !== confirmaSenha) {
-                alert("As senhas não coincidem!");
-                return;
-            }
-
-            exibirAguarde("Criando conta...");
-
-            // FIREBASE: CRIAÇÃO DE CONTA
-            firebase.auth().createUserWithEmailAndPassword(email, senha)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    // Salva o nome no perfil do usuário
-                    return user.updateProfile({ displayName: nome }).then(() => user);
-                })
-                .then(() => {
-                    // SUCESSO: Fecha o modal e inicia o app
-                    fecharTodosOsModais();
-                    // 💡 Se você tiver uma função para iniciar o app (ex: iniciarApp()), chame-a aqui.
-                })
-                .catch((error) => {
-                    console.error("Erro ao criar conta:", error);
-                    fecharTodosOsModais();
-                    if (error.code === 'auth/email-already-in-use') {
-                        alert("Este e-mail já está sendo usado. Por favor, faça login.");
-                    } else {
-                        alert(`Erro ao criar conta: ${error.message}`);
-                    }
-                });
-        };
-    }
-    
-    // 2. LÓGICA DE LOGIN (AO CLICAR EM "Fazer Login" na tela de Registro)
-    const btnLogin = document.getElementById('btnLoginNaTelaDeCriarConta');
-    if (btnLogin) {
-        btnLogin.onclick = () => {
-            // Reutiliza os campos Email e Senha
-            const email = document.getElementById('emailCriarConta').value;
-            const senha = document.getElementById('senhaCriarConta').value;
-            
-            if (!email || !senha) {
-                alert("Por favor, preencha o Email e a Senha para fazer login.");
-                return;
-            }
-
-            exibirAguarde("Entrando...");
-
-            // FIREBASE: LOGIN
-            firebase.auth().signInWithEmailAndPassword(email, senha)
-                .then(() => {
-                    // SUCESSO: Fecha o modal e inicia o app
-                    fecharTodosOsModais();
-                    // 💡 Se você tiver uma função para iniciar o app (ex: iniciarApp()), chame-a aqui.
-                })
-                .catch((error) => {
-                    console.error("Erro no login:", error);
-                    fecharTodosOsModais();
-                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                        alert("Credenciais inválidas. Verifique seu e-mail e senha.");
-                    } else {
-                        alert(`Erro ao fazer login: ${error.message}`);
-                    }
-                });
-        };
-    }
 }
 
 function selecionarPerfilBasico(tipo) {
