@@ -5482,21 +5482,12 @@ function avancarOnboarding(etapa) {
             updates.vagaImediata = onboardingState.vagaImediata || false;
             updates.usaAgendaManual = false;
         }
-        userRef.update(updates).then(() => {
-    // 1. Exibe o alerta de sucesso IMEDIATAMENTE
+        // ... dentro do .then()
+userRef.update(updates).then(() => {
+    fecharTodosOsModais(); // <--- ESTA LINHA FECHA IMEDIATAMENTE
     alert("Configuração concluída!");
-    
-    // 2. Usa setTimeout para atrasar o fechamento do modal
-    setTimeout(() => {
-        // Esta função só será executada após 2000 milissegundos (2 segundos)
-        fecharTodosOsModais(); 
-    }, 2000); // 2000 é o tempo em milissegundos
-
 }).catch(e => {
-    // Manter o tratamento de erro rápido, fechando imediatamente em caso de falha.
-    fecharTodosOsModais(); 
-    alert("Erro ao salvar: " + e.message);
-});
+// ...
 
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
