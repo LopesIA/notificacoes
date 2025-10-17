@@ -1108,6 +1108,25 @@
     <button id="btnVoltar" class="hidden" onclick="voltarParaLogin()">⬅️ Voltar</button>
   </div>
   
+  <div id="guestView" class="card">
+    <h2>🙋 Painel de Visitante</h2>
+    <p style="text-align: center; font-size: 14px; opacity: 0.8;">Bem-vindo! Para interagir, crie uma conta ou faça login.</p>
+    <button onclick="toggleFuncoes('guestFuncoesContainer')">⚙️ Funções do Visitante</button>
+    <div id="guestFuncoesContainer" class="hidden">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
+          <button>📜 Histórico</button>
+          <button>💎 VIP</button>
+          <button>💰 Carteira</button>
+          <button>🏆 Fidelidade</button>
+          <button>📰 Blog</button>
+          <button>🏅 Conquistas</button>
+          <button>📊 Ranking</button>
+          <button onclick="mostrar('lojaView'); carregarProdutos();">🛍️ Loja</button>
+        </div>
+    </div>
+    <hr style="border-color: var(--cor-borda); margin: 20px 0;">
+    <div id="listaBarbeirosPrincipalGuest" class="barbeiro-list-container"></div>
+  </div>
 
   <div id="clienteView" class="hidden card">
     <h2>🙋 Painel do Cliente</h2>
@@ -5429,7 +5448,8 @@ function finalizarOnboarding() {
     const modal = document.getElementById('modalOnboarding');
     modal.classList.remove('show');
     setTimeout(() => modal.style.display = 'none', 500);
-    prepararCriarConta(); // <-- ESTA É A MUDANÇA
+    prepararCriarConta();
+    mostrar('authView'); // <-- ADICIONE ESTA LINHA
 }
 
 function aplicarTemaPorProfissao(interesse) {
