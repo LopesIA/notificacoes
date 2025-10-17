@@ -5493,6 +5493,7 @@ function avancarOnboarding(etapa) {
         abrirModal('modalOnboardingProfissionalAgenda');
         // Lógica da agenda do onboarding
         const horariosContainer = document.getElementById("onboardingHorariosContainer");
+        horariosContainer.innerHTML = ''; // Limpa para evitar duplicatas
         for (let i = 7; i <= 18; i++) {
             const horario = `${i}:00`;
             horariosContainer.innerHTML += `<button class="horario-btn" onclick="this.classList.toggle('selecionado')">${horario}</button>`;
@@ -5500,11 +5501,18 @@ function avancarOnboarding(etapa) {
         document.getElementById('onboardingBtnVagaImediata').onclick = () => {
             onboardingState.vagaImediata = true;
             onboardingState.usaAgendaManual = false;
-            alert('Vaga imediata selecionada!');
+            // Feedback visual para o usuário
+            document.getElementById('onboardingBtnVagaImediata').classList.add('selected');
+            document.getElementById('onboardingBtnAgendaManual').classList.remove('selected');
+            document.getElementById('onboardingAgendaManualPainel').classList.add('hidden');
+            alert('Vaga imediata selecionada! Clique em "Concluir" para salvar.');
         }
         document.getElementById('onboardingBtnAgendaManual').onclick = () => {
             onboardingState.vagaImediata = false;
             onboardingState.usaAgendaManual = true;
+            // Feedback visual para o usuário
+            document.getElementById('onboardingBtnAgendaManual').classList.add('selected');
+            document.getElementById('onboardingBtnVagaImediata').classList.remove('selected');
             document.getElementById('onboardingAgendaManualPainel').classList.remove('hidden');
         }
     } else if (etapa === 3) {
@@ -5523,12 +5531,14 @@ function avancarOnboarding(etapa) {
             });
             updates.agenda = agenda;
         } else {
-            updates.vagaImediata = onboardingState.vagaImediata || false;
+            updates.vagaImediata = onboardingState.vagaImediata || false; // Garante que a vaga imediata seja salva
             updates.usaAgendaManual = false;
         }
         userRef.update(updates).then(() => {
             fecharTodosOsModais();
-            alert("Configuração concluída!");
+            alert("Configuração concluída! Bem-vindo(a) ao seu painel.");
+            // ADICIONADO: Redireciona para o painel correto
+            mostrar('barbeiroView'); 
         }).catch(e => {
             fecharTodosOsModais();
             alert("Erro ao salvar: " + e.message);
