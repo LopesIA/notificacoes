@@ -5504,37 +5504,76 @@ function avancarOnboarding(etapa) {
     if (etapa === 2) {
         fecharModalAtual();
         abrirModal('modalOnboardingProfissionalAgenda');
-        // Lógica da agenda do onboarding
+        
+        // Pega os elementos dos botões
+        const btnVaga = document.getElementById('onboardingBtnVagaImediata');
+        const btnManual = document.getElementById('onboardingBtnAgendaManual');
+        const painelManual = document.getElementById('onboardingAgendaManualPainel');
+
+        // Reseta o estado inicial
+        onboardingState.vagaImediata = false;
+        onboardingState.usaAgendaManual = false;
+        btnVaga.textContent = '⚡ Ativar Vaga Imediata';
+        btnVaga.classList.remove('selected');
+        btnManual.classList.remove('selected');
+        painelManual.classList.add('hidden');
+        
         const horariosContainer = document.getElementById("onboardingHorariosContainer");
         horariosContainer.innerHTML = ''; // Limpa para evitar duplicatas
         for (let i = 7; i <= 18; i++) {
             const horario = `${i}:00`;
             horariosContainer.innerHTML += `<button class="horario-btn" onclick="this.classList.toggle('selecionado')">${horario}</button>`;
         }
-        document.getElementById('onboardingBtnVagaImediata').onclick = () => {
-            onboardingState.vagaImediata = true;
-            onboardingState.usaAgendaManual = false;
-            // Feedback visual para o usuário
-            document.getElementById('onboardingBtnVagaImediata').classList.add('selected');
-            document.getElementById('onboardingBtnAgendaManual').classList.remove('selected');
-            document.getElementById('onboardingAgendaManualPainel').classList.add('hidden');
-            alert('Vaga imediata selecionada! Clique em "Concluir" para salvar.');
-        }
-        document.getElementById('onboardingBtnAgendaManual').onclick = () => {
-            onboardingState.vagaImediata = false;
-            onboardingState.usaAgendaManual = true;
-            // Feedback visual para o usuário
-            document.getElementById('onboardingBtnAgendaManual').classList.add('selected');
-            document.getElementById('onboardingBtnVagaImediata').classList.remove('selected');
-            document.getElementById('onboardingAgendaManualPainel').classList.remove('hidden');
-        }
+        
+        // --- LÓGICA APRIMORADA PARA O BOTÃO DE VAGA IMEDIATA ---
+        btnVaga.onclick = () => {
+            // Inverte o estado atual
+            onboardingState.vagaImediata = !onboardingState.vagaImediata;
+            
+            if (onboardingState.vagaImediata) {
+                // Se ativou a Vaga Imediata
+                btnVaga.textContent = '⚡ Vaga Imediata Ativa ✅';
+                btnVaga.classList.add('selected');
+                
+                // Garante que a outra opção seja desativada
+                onboardingState.usaAgendaManual = false;
+                btnManual.classList.remove('selected');
+                painelManual.classList.add('hidden');
+            } else {
+                // Se desativou a Vaga Imediata
+                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
+                btnVaga.classList.remove('selected');
+            }
+        };
+        
+        // --- LÓGICA APRIMORADA PARA O BOTÃO DE AGENDA MANUAL ---
+        btnManual.onclick = () => {
+            onboardingState.usaAgendaManual = !onboardingState.usaAgendaManual;
+            
+            if (onboardingState.usaAgendaManual) {
+                btnManual.classList.add('selected');
+                painelManual.classList.remove('hidden');
+
+                // Garante que a outra opção seja desativada
+                onboardingState.vagaImediata = false;
+                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
+                btnVaga.classList.remove('selected');
+            } else {
+                btnManual.classList.remove('selected');
+                painelManual.classList.add('hidden');
+            }
+        };
+
     } else if (etapa === 3) {
-        exibirAguarde("Finalizando configuração...");
+        // MUDANÇA: Mostra o "Aguarde" ANTES de salvar e reiniciar
+        exibirAguarde("Finalizando configuração e reiniciando...");
+
         const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
         const updates = {
             listaServicos: tempOnboardingServicos,
             onboarding_profissional_concluido: true
         };
+
         if (onboardingState.usaAgendaManual) {
             updates.usaAgendaManual = true;
             updates.vagaImediata = false;
@@ -5544,20 +5583,24 @@ function avancarOnboarding(etapa) {
             });
             updates.agenda = agenda;
         } else {
-            updates.vagaImediata = onboardingState.vagaImediata || false; // Garante que a vaga imediata seja salva
+            // Salva o estado da Vaga Imediata (seja true ou false)
+            updates.vagaImediata = onboardingState.vagaImediata;
             updates.usaAgendaManual = false;
         }
+
+        // Atualiza o banco de dados
         userRef.update(updates).then(() => {
-            fecharTodosOsModais();
-            alert("Configuração concluída! Bem-vindo(a) ao seu painel.");
-            // ADICIONADO: Redireciona para o painel correto
-            mostrar('barbeiroView'); 
+            // MUDANÇA PRINCIPAL: Em vez de fechar modais, REINICIA O APP
+            // Isso garante que tudo carregue do zero, já com o perfil de profissional configurado.
+            location.reload(); 
         }).catch(e => {
+            // Se der erro, fecha o "Aguarde" e mostra a falha
             fecharTodosOsModais();
             alert("Erro ao salvar: " + e.message);
         });
     }
 }
+
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
     alert(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
