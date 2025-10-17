@@ -2681,6 +2681,26 @@ async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   }
 }
 
+// FUNÇÃO ESSENCIAL QUE ESTAVA FALTANDO
+async function notifyAdmins(title, body, data = {}) {
+    try {
+        console.log(`[notifyAdmins] Notificando admins: "${title}"`);
+        const adminSnapshot = await db.collection('usuarios').where('tipo', '==', 'admin').get();
+        if (adminSnapshot.empty) {
+            console.warn("[notifyAdmins] Nenhum administrador encontrado para notificar.");
+            return;
+        }
+        
+        adminSnapshot.forEach(doc => {
+            console.log(`[notifyAdmins] Enviando para o admin: ${doc.data().nome}`);
+            enviarNotificacaoParaBackend(doc.id, title, body, data);
+        });
+
+    } catch (error) {
+        console.error("Erro crítico ao tentar notificar os administradores:", error);
+    }
+}
+
 async function abrirPortaSecreta() {
   const codigo = prompt("💎 Insira o código de resgate:");
   if (!codigo) return;
@@ -5432,7 +5452,7 @@ function finalizarOnboarding() {
     const modal = document.getElementById('modalOnboarding');
     modal.classList.remove('show');
     setTimeout(() => modal.style.display = 'none', 500);
-    mostrar('authView');
+    prepararCriarConta(); // <-- ESTA É A MUDANÇA
 }
 
 function aplicarTemaPorProfissao(interesse) {
