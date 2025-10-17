@@ -2487,16 +2487,13 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 auth.onAuthStateChanged(async user => {
   // ... (código existente) ...
   if (!user) {
-    // VERIFICA SE O ONBOARDING FOI CONCLUÍDO
-    if (localStorage.getItem('onboardingCompleto') === 'true') {
-        // Se sim, vai direto para a criação de conta
-        prepararCriarConta(); 
+    // VERIFICA SE O ONBOARDING JÁ FOI CONCLUÍDO ANTES
+    if (localStorage.getItem('onboarding_concluido') === 'true') {
+        // Se JÁ COMPLETOU, mostra a tela de login/cadastro normal.
+        mostrar('authView');
     } else {
-        // Se não, mostra a tela de visitante (comportamento antigo)
-        userView = { originalType: null, currentType: null };
-        mostrar("guestView");
-        configurarBotoesGuest();
-        carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
+        // SE É A PRIMEIRA VEZ, INICIA AS TELAS DE BOAS-VINDAS.
+        iniciarOnboarding();
     }
     
     document.getElementById("btnSair").classList.add("hidden");
@@ -2672,7 +2669,6 @@ async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
     } else {
       // ERRO: O backend respondeu com um erro (ex: 500)
       console.error(`[NOTIFICAÇÃO] Falha! O backend respondeu com status ${response.status}.`, responseData);
-      alert(`Ocorreu um erro no servidor ao tentar enviar a notificação. Detalhes: ${responseData.message || 'Sem detalhes'}`);
     }
   } catch (error) {
     // ERRO: Falha de rede ou o backend não respondeu
