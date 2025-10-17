@@ -2809,7 +2809,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
-            const reputacaoEstrelas = '⭐'.repeat(Math.round((b.reputacao || 100) / 20));
+            
             let statusHtml = '';
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
