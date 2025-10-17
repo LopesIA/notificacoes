@@ -2191,42 +2191,37 @@ async function garantirTokenAtualizadoNoPerfil(uid) {
 }
 
 
+// SUBSTITUA a função setupFCM inteira por esta
 function setupFCM(uid) {
     if (fcmSetupDone || !('serviceWorker' in navigator) || !firebase.messaging.isSupported()) {
+        console.log("FCM não suportado ou já configurado.");
         return;
     }
 
-    navigator.serviceWorker.ready.then(async (registration) => {
-        const permission = await Notification.requestPermission();
+    // Garante que a permissão seja solicitada
+    Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
+            console.log('Permissão de notificação concedida.');
             fcmSetupDone = true;
 
-            try {
-                // Obtém o token do dispositivo. Essa função já gerencia a renovação.
-                const currentToken = await firebase.messaging().getToken({
-                    vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE'
-                });
-
+            // Obtém o token do dispositivo
+            messaging.getToken({ vapidKey: 'BGkXq9v27VKT9Tl1DF2QBhP3c77lF4xDdptbay3jaKtlhw-5-G6D2GP7qcsjlweme9WggzBipoCDulIdSiuEfPE' })
+            .then((currentToken) => {
                 if (currentToken) {
-                    // Salva o token no perfil do usuário
-                    const user = firebase.auth().currentUser;
-                    if (user) {
-                        await firebase.firestore().collection('usuarios').doc(user.uid).update({
-                            fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
-                        });
-                        console.log('Token FCM salvo com sucesso:', currentToken);
-                    }
+                    console.log('Token FCM obtido:', currentToken);
+                    // Salva o token no perfil do usuário no Firestore
+                    db.collection('usuarios').doc(uid).update({
+                        fcmTokens: firebase.firestore.FieldValue.arrayUnion(currentToken)
+                    });
                 } else {
-                    console.log('Nenhum token de notificação disponível. O usuário pode ter bloqueado as notificações.');
+                    console.warn('Não foi possível obter o token de notificação. A permissão foi concedida, mas o token está vazio.');
                 }
-            } catch (err) {
-                console.error('Erro ao obter ou atualizar o token de notificação.', err);
-            }
+            }).catch((err) => {
+                console.error('Ocorreu um erro ao obter o token.', err);
+            });
         } else {
-            console.warn('Permissão de notificação negada. O usuário não receberá notificações.');
+            console.warn('Permissão de notificação negada.');
         }
-    }).catch(err => {
-        console.error('Service Worker não está pronto.', err);
     });
 }
 
@@ -2377,6 +2372,7 @@ function entrar() {
 }
 
 function prepararCriarConta() {
+    obterLocalizacaoCadastro(); // Adicione esta linha
     document.getElementById("senha").classList.add("hidden");
     document.querySelector("#authView button:first-of-type").style.display = "none";
     document.getElementById("cadastro-fields").classList.remove("hidden");
