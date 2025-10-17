@@ -2965,24 +2965,37 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
 }
 
 function confirmarAgendamento() {
-    exibirAguarde("Agendando...");
+    // MOVEMOS A LÓGICA PARA ANTES DO "AGUARDE"
     const { barbeiroUid, barbeiroNome, servico, horario } = agendamentoState;
-    if (!servico || !horario) return fecharTodosOsModais();
+    if (!servico || !horario) {
+        // Se algo der errado, apenas fecha o modal de perfil
+        fecharModalAtual();
+        return;
+    }
+
     const preco = isVipAtivo(perfil) ? servico.valor * 0.9 : servico.valor;
+    
+    // 1. PRIMEIRO, VERIFICA O SALDO
     if (perfil.saldo < preco) {
-        fecharTodosOsModais();
+        // Se não tiver saldo, fecha o modal de agendamento e abre o da carteira. NENHUM "AGUARDE" É MOSTRADO.
+        fecharModalAtual(); // Fecha o modal do perfil do barbeiro
         alert("💸 Saldo insuficiente. Por favor, deposite mais dinheiro em sua carteira.");
         abrirModal('modalCarteira');
         return;
     }
+    
+    // 2. SE O SALDO FOR SUFICIENTE, PEDE A CONFIRMAÇÃO
     const horarioTexto = horario === 'imediato' ? 'uma Vaga Imediata' : `o horário das ${horario}`;
     let detalhes = `Confirma o agendamento?\n\nProfissional: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
     if (servico.duracao) detalhes += `Duração Estimada: ${servico.duracao} minutos\n`;
     detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${isVipAtivo(perfil) ? ' (Desconto VIP de 10% aplicado)' : ''}`;
+    
     if (!confirm(detalhes)) {
-        fecharTodosOsModais();
-        return;
+        return; // Usuário cancelou, não faz nada
     }
+
+    // 3. SÓ AGORA, DEPOIS DE TUDO VERIFICADO, MOSTRA O "AGUARDE" E PROCESSA
+    exibirAguarde("Agendando...");
     
     const agendamentoData = {
         clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
@@ -3000,7 +3013,7 @@ function confirmarAgendamento() {
         notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
         fecharTodosOsModais();
         alert("Pedido enviado com sucesso!");
-        fecharModalAtual();
+        // fecharModalAtual(); // Removido, pois fecharTodosOsModais já faz isso.
     }).catch(e => {
         fecharTodosOsModais();
         alert("Erro ao enviar pedido: " + e.message)
