@@ -2485,17 +2485,20 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 });
 
 auth.onAuthStateChanged(async user => {
-  if (pendenciasInterval) clearInterval(pendenciasInterval);
-
+  // ... (código existente) ...
   if (!user) {
-    if (!localStorage.getItem('onboarding_concluido')) {
-        iniciarOnboarding();
+    // VERIFICA SE O ONBOARDING FOI CONCLUÍDO
+    if (localStorage.getItem('onboardingCompleto') === 'true') {
+        // Se sim, vai direto para a criação de conta
+        prepararCriarConta(); 
     } else {
+        // Se não, mostra a tela de visitante (comportamento antigo)
         userView = { originalType: null, currentType: null };
         mostrar("guestView");
         configurarBotoesGuest();
         carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
     }
+    
     document.getElementById("btnSair").classList.add("hidden");
     document.getElementById("redeemContainer").classList.add("hidden");
     if(globalChatListener) globalChatListener(); 
@@ -2642,6 +2645,41 @@ window.addEventListener('beforeinstallprompt', (e) => {
         };
     }
 });
+
+async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
+  const backendUrl = "https://navalhabackend.onrender.com"; 
+  const notificationEndpoint = "/enviar-notificacao";
+  const fullUrl = backendUrl + notificationEndpoint;
+
+  if (!uid) {
+    console.error("[NOTIFICAÇÃO] Tentativa de enviar notificação sem um UID de usuário.");
+    return;
+  }
+  
+  console.log(`[NOTIFICAÇÃO] Preparando para enviar para: ${fullUrl}`);
+  
+  try {
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, title, body, data }),
+    });
+
+    const responseData = await response.json();
+    
+    if (response.ok) {
+      console.log('[NOTIFICAÇÃO] Sucesso! Resposta do backend:', responseData);
+    } else {
+      // ERRO: O backend respondeu com um erro (ex: 500)
+      console.error(`[NOTIFICAÇÃO] Falha! O backend respondeu com status ${response.status}.`, responseData);
+      alert(`Ocorreu um erro no servidor ao tentar enviar a notificação. Detalhes: ${responseData.message || 'Sem detalhes'}`);
+    }
+  } catch (error) {
+    // ERRO: Falha de rede ou o backend não respondeu
+    console.error('[NOTIFICAÇÃO] Erro CRÍTICO de rede ou na chamada da API:', error);
+    alert('Não foi possível se comunicar com o servidor de notificações. Verifique sua conexão ou contate o suporte.');
+  }
+}
 
 async function abrirPortaSecreta() {
   const codigo = prompt("💎 Insira o código de resgate:");
