@@ -1755,9 +1755,28 @@
 <div id="modalAddPromocao" class="modal">
   <div class="modal-content">
     <h2>➕ Adicionar Nova Promoção</h2>
-    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção" required>
-    <textarea id="addPromocaoDescricao" placeholder="Descrição" required></textarea>
-    <input type="number" id="addPromocaoDesconto" placeholder="Desconto (%)" required>
+
+    <input type="text" id="addPromocaoNome" placeholder="Nome da Promoção (Ex: Combo Barba+Cabelo)" required>
+    <textarea id="addPromocaoDescricao" placeholder="Descrição (Ex: Válido de segunda a quarta)" required></textarea>
+
+    <div class="popup-section">
+      <h4>✂️ Aplicar a quais serviços?</h4>
+      <p style="font-size: 12px; opacity: 0.7;">Segure Ctrl (ou Cmd) para selecionar vários.</p>
+      <select id="addPromocaoServicos" multiple style="height: 120px;"></select>
+    </div>
+
+    <div class="popup-section">
+      <h4>⚙️ Condições da Promoção</h4>
+      <label for="addPromocaoDesconto">Desconto (%):</label>
+      <input type="number" id="addPromocaoDesconto" placeholder="Ex: 15" required>
+
+      <label for="addPromocaoValidade">Válida até (opcional):</label>
+      <input type="date" id="addPromocaoValidade">
+
+      <label for="addPromocaoValorMinimo">Valor mínimo do serviço para aplicar (opcional):</label>
+      <input type="number" id="addPromocaoValorMinimo" placeholder="Ex: 50">
+    </div>
+
     <button onclick="salvarNovaPromocao()">💾 Salvar Promoção</button>
     <button data-modal-id="modalAddPromocao" onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
@@ -2900,7 +2919,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         document.getElementById("barbeiroPerfilNome").textContent = `💈 ${b.nome}`;
         document.getElementById("barbeiroPerfilEndereco").textContent = (b.rua && b.numero) ? `${b.rua}, ${b.numero} - ${b.cidade}` : b.cidade;
         document.getElementById("barbeiroPerfilReputacao").textContent = `${'⭐'.repeat(Math.round((b.reputacao || 100) / 20))} (${b.reputacao || 100})`;
-        
+
         const logoImg = document.getElementById('profissionalLogo');
         if (b.logo_url) {
             logoImg.src = b.logo_url;
@@ -2912,9 +2931,38 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         const servicosList = document.getElementById("barbeiroPerfilServicosList");
         servicosList.innerHTML = "";
         if (b.listaServicos?.length > 0) {
+            // LÓGICA DE PROMOÇÃO APLICADA AQUI
+            const promocoesAtivas = (b.promocoes || []).filter(p => {
+                if (!p.validade) return true; // Sem data de validade
+                return new Date(p.validade.seconds * 1000) > new Date(); // Verifica se não expirou
+            });
+
             b.listaServicos.forEach(s => {
+                const servicoOriginal = { ...s };
+                let precoHtml = `R$ ${s.valor.toFixed(2)}`;
+                let promoAplicada = null;
+
+                if (promocoesAtivas.length > 0) {
+                    const promo = promocoesAtivas.find(p => 
+                        p.servicosAplicaveis.includes(s.nome) && s.valor >= (p.valorMinimo || 0)
+                    );
+
+                    if (promo) {
+                        const novoValor = s.valor * (1 - promo.desconto / 100);
+                        s.valor = novoValor; // ATUALIZA O VALOR DO SERVIÇO PARA O AGENDAMENTO
+                        precoHtml = `<span style="text-decoration: line-through; opacity: 0.7;">R$ ${servicoOriginal.valor.toFixed(2)}</span> <b style="color: var(--cor-destaque);">R$ ${novoValor.toFixed(2)}</b>`;
+                        promoAplicada = promo;
+                    }
+                }
+
                 const servicoJSON = JSON.stringify(s).replace(/"/g, '"');
-                servicosList.innerHTML += `<div class="selectable-item" onclick='selecionarServico(this, ${servicoJSON})'>${s.nome} - R$ ${s.valor.toFixed(2)}${s.duracao ? ` - ${s.duracao} min` : ''}</div>`;
+                const promoInfo = promoAplicada ? `<p style="font-size: 11px; color: var(--cor-destaque); margin: 2px 0 0 0;">🎁 ${promoAplicada.nome} (${promoAplicada.desconto}% OFF)</p>` : '';
+
+                servicosList.innerHTML += `
+                    <div class="selectable-item" onclick='selecionarServico(this, ${servicoJSON})'>
+                        ${s.nome} - ${precoHtml}${s.duracao ? ` - ${s.duracao} min` : ''}
+                        ${promoInfo}
+                    </div>`;
             });
         } else {
             servicosList.innerHTML = "<p>Nenhum serviço cadastrado.</p>";
@@ -2939,7 +2987,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         if (!hasOptions) {
             horariosList.innerHTML = "<p>Nenhuma opção de agendamento disponível no momento.</p>";
         }
-        
+
         const btnPortfolio = document.getElementById('btnAcessarPortfolio');
         if (b.portfolio && b.portfolio.length > 0) {
             btnPortfolio.classList.remove('hidden');
@@ -2955,11 +3003,12 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         } else {
             btnRota.classList.add('hidden');
         }
-        
+
         document.getElementById('btnConfirmarAgendamento').onclick = confirmarAgendamento;
         verificarEstadoBotaoAgendar();
         abrirModal('modalBarbeiroPerfil');
     } catch (error) {
+        console.error("Erro ao abrir perfil do barbeiro:", error);
         alert("Ocorreu um erro ao carregar as informações do profissional.");
     }
 }
@@ -3820,6 +3869,102 @@ function removerPromocao(index) {
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     promocoes: firebase.firestore.FieldValue.arrayRemove(p)
   }).then(() => alert("Promoção removida!")).catch(e => alert("Erro: " + e.message));
+}
+
+function carregarPromocoesAtivas() {
+    const container = document.getElementById('listaPromocoes');
+    container.innerHTML = '';
+    if (perfil.promocoes && perfil.promocoes.length > 0) {
+        perfil.promocoes.forEach((promo, index) => {
+            const validadeStr = promo.validade ? `Válida até: ${new Date(promo.validade.seconds * 1000).toLocaleDateString('pt-BR')}` : 'Sem data de expiração';
+            container.innerHTML += `
+                <div class="card">
+                    <b>${promo.nome} (${promo.desconto}%)</b>
+                    <p style="font-size:14px;">${promo.descricao}</p>
+                    <p style="font-size:12px; opacity: 0.7;">${validadeStr}</p>
+                    <button onclick="removerPromocao(${index})" style="background:#c0392b; float:right;">🗑️</button>
+                </div>`;
+        });
+    } else {
+        container.innerHTML = '<p>Nenhuma promoção ativa no momento.</p>';
+    }
+}
+
+// Substitua a função abrirPromocoes inteira por esta
+function abrirPromocoes() {
+    abrirModal('modalPromocoesBarbeiro');
+    carregarPromocoesAtivas();
+}
+
+// SUBSTITUA a função abrirModalAddPromocao por esta:
+function abrirModalAddPromocao() {
+    const selectServicos = document.getElementById('addPromocaoServicos');
+    selectServicos.innerHTML = ''; // Limpa opções antigas
+
+    if (perfil.listaServicos && perfil.listaServicos.length > 0) {
+        perfil.listaServicos.forEach(servico => {
+            const option = document.createElement('option');
+            option.value = servico.nome; // Usaremos o nome como identificador
+            option.textContent = `${servico.nome} - R$ ${servico.valor.toFixed(2)}`;
+            selectServicos.appendChild(option);
+        });
+    } else {
+        selectServicos.innerHTML = '<option disabled>Você não tem serviços cadastrados</option>';
+    }
+
+    // Limpa os campos do formulário
+    document.getElementById('addPromocaoNome').value = '';
+    document.getElementById('addPromocaoDescricao').value = '';
+    document.getElementById('addPromocaoDesconto').value = '';
+    document.getElementById('addPromocaoValidade').value = '';
+    document.getElementById('addPromocaoValorMinimo').value = '';
+
+    abrirModal('modalAddPromocao');
+}
+
+// SUBSTITUA a função salvarNovaPromocao por esta:
+async function salvarNovaPromocao() {
+    const nome = document.getElementById('addPromocaoNome').value.trim();
+    const descricao = document.getElementById('addPromocaoDescricao').value.trim();
+    const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
+    const validadeInput = document.getElementById('addPromocaoValidade').value;
+    const valorMinimo = parseFloat(document.getElementById('addPromocaoValorMinimo').value) || 0;
+
+    const servicosSelecionados = Array.from(document.getElementById('addPromocaoServicos').selectedOptions)
+                                       .map(option => option.value);
+
+    if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) {
+        return alert("Preencha nome, descrição e um desconto válido.");
+    }
+
+    if (servicosSelecionados.length === 0) {
+        return alert("Selecione pelo menos um serviço para aplicar a promoção.");
+    }
+
+    const novaPromocao = {
+        id: `promo_${new Date().getTime()}`, // ID único para a promoção
+        nome,
+        descricao,
+        desconto,
+        servicosAplicaveis: servicosSelecionados,
+        valorMinimo: valorMinimo,
+        validade: validadeInput ? new Date(validadeInput + 'T23:59:59') : null // Pega o dia todo
+    };
+
+    try {
+        await db.collection("usuarios").doc(auth.currentUser.uid).update({
+            promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
+        });
+        alert("Promoção salva com sucesso!");
+        fecharModalAtual();
+        // Atualiza a lista de promoções visível
+        const promocoesDoc = await db.collection("usuarios").doc(auth.currentUser.uid).get();
+        perfil.promocoes = promocoesDoc.data().promocoes;
+        carregarPromocoesAtivas(); // Adicionaremos esta função
+
+    } catch (e) {
+        alert("Erro ao salvar promoção: " + e.message);
+    }
 }
 
 function abrirAvaliacoesBarbeiro() {
