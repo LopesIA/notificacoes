@@ -2677,6 +2677,12 @@ async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   }
 }
 
+function notifyUser(uid, title, body, data = {}) {
+    // Esta função simplesmente "chama" a outra que já existe.
+    // Assim, você não precisa trocar todas as chamadas no código.
+    enviarNotificacaoParaBackend(uid, title, body, data);
+}
+
 // FUNÇÃO ESSENCIAL QUE ESTAVA FALTANDO
 async function notifyAdmins(title, body, data = {}) {
     try {
