@@ -2442,7 +2442,6 @@ function criarConta() {
   if (senha !== senhaConfirm) { fecharTodosOsModais(); return alert("As senhas não coincidem."); }
   if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
   if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return alert("Preencha todos os campos obrigatórios"); }
-  if (tipo !== 'cliente' && !cadastroCoords) { fecharTodosOsModais(); return alert("Por favor, permita o acesso à localização para continuar o cadastro de profissional."); }
 
 
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
@@ -5364,7 +5363,9 @@ function selecionarInteresse(interesse) {
     onboardingState.interesse_principal = interesse;
     const buttons = document.querySelectorAll('.interest-options button');
     buttons.forEach(btn => {
-        btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(interesse.split('_')[0]));
+        // Lógica mais precisa: verifica qual botão corresponde exatamente ao interesse clicado.
+        const isSelected = btn.getAttribute('onclick') === `selecionarInteresse('${interesse}')`;
+        btn.classList.toggle('selected', isSelected);
     });
     document.getElementById('btnOnboardingNext2').disabled = false;
 }
