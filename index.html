@@ -2350,6 +2350,14 @@ function carregarCidades(prefix = '') {
 carregarEstados();
 
 function entrar() {
+  // VERIFICA SE O FORMULÁRIO DE CADASTRO ESTÁ VISÍVEL
+  const cadastroFields = document.getElementById("cadastro-fields");
+  if (!cadastroFields.classList.contains('hidden')) {
+    criarConta(); // Se estiver visível, chama a função de criar conta
+    return;
+  }
+
+  // Lógica original de login
   exibirAguarde("Entrando...");
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value.trim();
