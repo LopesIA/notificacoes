@@ -5491,7 +5491,8 @@ async function salvarAvaliacaoProduto(pedidoId, produtoId, nota, comentario) {
 
 function fazerLogout() {
     auth.signOut().then(() => {
-        localStorage.removeItem('onboarding_concluido');
+        // Apenas recarrega a página. A lógica de verificação de login
+        // irá automaticamente direcionar para a tela de autenticação.
         location.reload();
     });
 }
