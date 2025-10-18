@@ -3232,7 +3232,21 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
     const barbeiroRef = db.collection("usuarios").doc(barbeiroUid);
     const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
     
-    const agendamentoDoc = await t.get(agendamentoRef);
+    // --- INÍCIO DA NOVA CORREÇÃO ---
+    // Primeiro, lemos os documentos que VAMOS alterar ou verificar
+    const [agendamentoDoc, barbeiroDoc] = await Promise.all([
+        t.get(agendamentoRef),
+        t.get(barbeiroRef) // Tenta ler o documento do barbeiro
+    ]);
+    
+    // Verificamos se o barbeiro AINDA EXISTE
+    if (!barbeiroDoc.exists) {
+        // Se não existir, falha a transação com uma mensagem clara
+        throw "O profissional deste agendamento não foi encontrado. A conta pode ter sido excluída.";
+    }
+    // --- FIM DA NOVA CORREÇÃO ---
+
+    // Agora continuamos com a lógica original, sabendo que o barbeiro existe
     if (agendamentoDoc.data().avaliado) throw "Este serviço já foi avaliado.";
     
     const valor = agendamentoDoc.data().valor;
@@ -3241,8 +3255,7 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
     // 1. Atualiza o agendamento
     t.update(agendamentoRef, { avaliado: true });
 
-    // --- INÍCIO DA CORREÇÃO ---
-    // 2. Prepara TODAS as atualizações para o barbeiro em um objeto
+    // 2. Prepara TODAS as atualizações para o barbeiro (igual à correção anterior)
     const barbeiroUpdates = {
         reputacao: firebase.firestore.FieldValue.increment(reputacaoGanho),
         somaAvaliacoes: firebase.firestore.FieldValue.increment(nota),
@@ -3251,7 +3264,6 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
 
     if (fotoUrl) {
         const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        // Adiciona a atualização do portfólio AO MESMO objeto
         barbeiroUpdates.portfolio = firebase.firestore.FieldValue.arrayUnion({
             url: fotoUrl,
             enviadaPorCliente: true,
@@ -3261,9 +3273,8 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
         });
     }
     
-    // 3. Executa a atualização no barbeiro UMA ÚNICA VEZ
-    t.update(barbeiroRef, barbeiroUpdates);
-    // --- FIM DA CORREÇÃO ---
+    // 3. Executa a atualização no barbeiro (agora sabemos que ele existe)
+    t.update(barbeiroRef, barbeiroUpdates); 
 
     // 4. Cria o documento de avaliação
     t.set(db.collection("avaliacoes").doc(), {
@@ -3280,11 +3291,13 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
 
   }).then((pontosGanhos) => {
     alert(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
+    // Só notifica o barbeiro se ele ainda existir (o que já foi checado)
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
   }).catch(e => {
-    console.error("Erro detalhado ao avaliar:", e); // Loga o erro no console
-    alert("Erro ao avaliar: " + e); // Exibe o alerta
+    console.error("Erro detalhado ao avaliar:", e); 
+    // Agora o alerta vai mostrar a mensagem de erro amigável que definimos:
+    alert("Erro ao avaliar: " + e); 
   });
 }
 
