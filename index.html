@@ -788,6 +788,45 @@
         display: flex;
         flex-direction: column;
     }
+
+/* Estilos para o novo gerenciador de portfólio do profissional */
+#portfolioInputsContainer {
+    display: grid;
+    /* Cria um grid que se ajusta, mostrando quantas colunas de 120px couberem */
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+    gap: 10px;
+    max-height: 400px; /* Aumentado de 250px para 400px para caber mais */
+    overflow-y: auto;
+    padding: 5px;
+    background: var(--cor-fundo); /* Fundo para ver os cards */
+    border-radius: 8px;
+}
+.portfolio-admin-item {
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    overflow: hidden; /* Para o input não vazar */
+    background: var(--cor-botoes);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.portfolio-admin-item img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    background: #333; /* Cor de fundo enquanto a imagem carrega */
+    border-bottom: 1px solid var(--cor-borda);
+}
+.portfolio-admin-item input {
+    width: 100%;
+    border-radius: 0;
+    margin: 0;
+    border: none;
+    font-size: 12px;
+    padding: 8px;
+    box-sizing: border-box; /* Garante que o padding não quebre o layout */
+}
+
     /* Estilos da Loja */
     .loja-grid {
         display: grid;
@@ -2843,13 +2882,11 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     
     if (barbeirosListener) barbeirosListener();
     let query;
-if (isGuest) {
-    // NOVO: Se for visitante, busca todos os tipos de profissionais
-    query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
-} else {
-    // LÓGICA ANTIGA: Se estiver logado, busca pelo interesse principal
-    query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
-}
+    if (isGuest) {
+        query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
+    } else {
+        query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
+    }
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
@@ -2869,59 +2906,44 @@ if (isGuest) {
             barbeiros.push(b);
         });
 
-        // NOVO CÓDIGO DE ORDENAÇÃO (JÁ COM COMENTÁRIOS EXPLICATIVOS)
-barbeiros.sort((a, b) => {
-    // Critério 1: Disponibilidade (Disponíveis vêm primeiro)
-    const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
-    const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-    if (aDisponivel !== bDisponivel) {
-        return aDisponivel ? -1 : 1; // Se 'a' está disponível e 'b' não, 'a' vem primeiro.
-    }
-
-    // Se a disponibilidade for a mesma, vamos para o próximo critério.
-
-    // Critério 2: Turbinamento (Turbinados vêm primeiro)
-    const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
-    const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
-    if (aBoosted !== bBoosted) {
-        return aBoosted ? -1 : 1; // Se 'a' está turbinado e 'b' não, 'a' vem primeiro.
-    }
-
-    // Se o status de turbinamento for o mesmo, vamos para o próximo critério.
-
-    // Critério 3: Status PRO (Profissionais PRO vêm primeiro)
-    // A função isProAtivo já existe no seu código, então podemos usá-la.
-    const aPro = isProAtivo(a);
-    const bPro = isProAtivo(b);
-    if (aPro !== bPro) {
-        return aPro ? -1 : 1; // Se 'a' é PRO e 'b' não, 'a' vem primeiro.
-    }
-
-    // Se o status PRO for o mesmo, vamos para o critério final.
-
-    // Critério 4: Distância (Mais próximos vêm primeiro)
-    return a.distancia - b.distancia; // Ordena do menor para o maior valor de distância.
-});
+        barbeiros.sort((a, b) => {
+            const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
+            const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+            if (aDisponivel !== bDisponivel) {
+                return aDisponivel ? -1 : 1;
+            }
+            const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
+            const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            if (aBoosted !== bBoosted) {
+                return aBoosted ? -1 : 1;
+            }
+            const aPro = isProAtivo(a);
+            const bPro = isProAtivo(b);
+            if (aPro !== bPro) {
+                return aPro ? -1 : 1;
+            }
+            return a.distancia - b.distancia;
+        });
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
             const reputacaoEstrelas = ''.repeat(Math.round((b.reputacao || 100) / 20));
+            
+            // --- INÍCIO DA MODIFICAÇÃO ---
             let statusHtml = '';
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+
+            const agora = new Date();
+            const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim &&
+                                agora >= b.ausenciaInicio.toDate() && 
+                                agora <= b.ausenciaFim.toDate();
+
             const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
             
-            let promocoesHtml = '';
-            if (b.promocoes && b.promocoes.length > 0) {
-              promocoesHtml = '<div class="promo-info">';
-              b.promocoes.forEach(p => {
-                  promocoesHtml += `🎁 ${p.nome} (${p.desconto}% OFF)<br>`;
-              });
-              promocoesHtml += '</div>';
-            }
-            
-            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px;">` : '';
-
-            if (!isDisponivel) {
+            if (estaAusente) {
+                const dataFimAusencia = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
+                statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente (Retorna ${dataFimAusencia})</div>`;
+            } else if (!isDisponivel) {
                  statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível no momento</div>`;
             } else if (b.vagaImediata) {
                 statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata Disponível!</div>`;
@@ -2933,7 +2955,18 @@ barbeiros.sort((a, b) => {
                     statusHtml = `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
                 }
             }
+            // --- FIM DA MODIFICAÇÃO ---
+
+            let promocoesHtml = '';
+            if (b.promocoes && b.promocoes.length > 0) {
+              promocoesHtml = '<div class="promo-info">';
+              b.promocoes.forEach(p => {
+                  promocoesHtml += `🎁 ${p.nome} (${p.desconto}% OFF)<br>`;
+              });
+              promocoesHtml += '</div>';
+            }
             
+            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px;">` : '';
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
 
@@ -3008,10 +3041,9 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         const servicosList = document.getElementById("barbeiroPerfilServicosList");
         servicosList.innerHTML = "";
         if (b.listaServicos?.length > 0) {
-            // LÓGICA DE PROMOÇÃO APLICADA AQUI
             const promocoesAtivas = (b.promocoes || []).filter(p => {
-                if (!p.validade) return true; // Sem data de validade
-                return new Date(p.validade.seconds * 1000) > new Date(); // Verifica se não expirou
+                if (!p.validade) return true;
+                return new Date(p.validade.seconds * 1000) > new Date();
             });
 
             b.listaServicos.forEach(s => {
@@ -3026,7 +3058,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
 
                     if (promo) {
                         const novoValor = s.valor * (1 - promo.desconto / 100);
-                        s.valor = novoValor; // ATUALIZA O VALOR DO SERVIÇO PARA O AGENDAMENTO
+                        s.valor = novoValor;
                         precoHtml = `<span style="text-decoration: line-through; opacity: 0.7;">R$ ${servicoOriginal.valor.toFixed(2)}</span> <b style="color: var(--cor-destaque);">R$ ${novoValor.toFixed(2)}</b>`;
                         promoAplicada = promo;
                     }
@@ -3045,25 +3077,41 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
             servicosList.innerHTML = "<p>Nenhum serviço cadastrado.</p>";
         }
 
+        // --- INÍCIO DA MODIFICAÇÃO ---
         const horariosList = document.getElementById("barbeiroPerfilHorariosList");
         horariosList.innerHTML = "";
+        
+        const agora = new Date();
+        const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim &&
+                            agora >= b.ausenciaInicio.toDate() && 
+                            agora <= b.ausenciaFim.toDate();
+        
         let hasOptions = false;
-        if (b.vagaImediata) {
-            horariosList.innerHTML += `<div class="selectable-item" onclick='selecionarHorario(this, "imediato")'>⚡ Vaga Imediata</div>`;
-            hasOptions = true;
-        }
-        if (b.usaAgendaManual) {
-            const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
-            if (horarios.length > 0) {
-                horarios.forEach(h => {
-                    horariosList.innerHTML += `<div class="selectable-item" onclick='selecionarHorario(this, "${h}")'>📅 ${h}</div>`;
-                });
+
+        if (estaAusente) {
+            const dataFimAusencia = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
+            horariosList.innerHTML = `<p style="color: var(--cor-destaque-rosa); text-align: center; font-weight: bold;">🏖️ Profissional ausente até ${dataFimAusencia}. O agendamento está indisponível.</p>`;
+            hasOptions = false; // Garante que o botão de agendar ficará desabilitado
+        } else {
+            // Lógica original de horários
+            if (b.vagaImediata) {
+                horariosList.innerHTML += `<div class="selectable-item" onclick='selecionarHorario(this, "imediato")'>⚡ Vaga Imediata</div>`;
                 hasOptions = true;
             }
+            if (b.usaAgendaManual) {
+                const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
+                if (horarios.length > 0) {
+                    horarios.forEach(h => {
+                        horariosList.innerHTML += `<div class="selectable-item" onclick='selecionarHorario(this, "${h}")'>📅 ${h}</div>`;
+                    });
+                    hasOptions = true;
+                }
+            }
+            if (!hasOptions) {
+                horariosList.innerHTML = "<p>Nenhuma opção de agendamento disponível no momento.</p>";
+            }
         }
-        if (!hasOptions) {
-            horariosList.innerHTML = "<p>Nenhuma opção de agendamento disponível no momento.</p>";
-        }
+        // --- FIM DA MODIFICAÇÃO ---
 
         const btnPortfolio = document.getElementById('btnAcessarPortfolio');
         if (b.portfolio && b.portfolio.length > 0) {
@@ -3232,48 +3280,44 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
     const barbeiroRef = db.collection("usuarios").doc(barbeiroUid);
     const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
     
-    // --- INÍCIO DA NOVA CORREÇÃO ---
-    // Primeiro, lemos os documentos que VAMOS alterar ou verificar
+    // Lê os documentos necessários primeiro
     const [agendamentoDoc, barbeiroDoc] = await Promise.all([
         t.get(agendamentoRef),
-        t.get(barbeiroRef) // Tenta ler o documento do barbeiro
+        t.get(barbeiroRef) 
     ]);
     
-    // Verificamos se o barbeiro AINDA EXISTE
     if (!barbeiroDoc.exists) {
-        // Se não existir, falha a transação com uma mensagem clara
         throw "O profissional deste agendamento não foi encontrado. A conta pode ter sido excluída.";
     }
-    // --- FIM DA NOVA CORREÇÃO ---
-
-    // Agora continuamos com a lógica original, sabendo que o barbeiro existe
     if (agendamentoDoc.data().avaliado) throw "Este serviço já foi avaliado.";
     
+    const barbeiroData = barbeiroDoc.data(); // Dados do profissional
     const valor = agendamentoDoc.data().valor;
     const pontosGanhos = Math.floor(valor / 10) * (isVipAtivo(perfil) ? 2 : 1);
     
     // 1. Atualiza o agendamento
     t.update(agendamentoRef, { avaliado: true });
 
-    // 2. Prepara TODAS as atualizações para o barbeiro (igual à correção anterior)
+    // 2. Prepara as atualizações para o barbeiro
     const barbeiroUpdates = {
         reputacao: firebase.firestore.FieldValue.increment(reputacaoGanho),
         somaAvaliacoes: firebase.firestore.FieldValue.increment(nota),
         numAvaliacoes: firebase.firestore.FieldValue.increment(1)
     };
 
+    // --- INÍCIO DA MODIFICAÇÃO ---
     if (fotoUrl) {
-        const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        barbeiroUpdates.portfolio = firebase.firestore.FieldValue.arrayUnion({
-            url: fotoUrl,
-            enviadaPorCliente: true,
-            clienteNome: perfil.nome,
-            expiraEm: firebase.firestore.Timestamp.fromDate(expiracao),
-            permanente: false
-        });
+        const portfolioAtual = barbeiroData.portfolio || [];
+        // Adiciona a foto APENAS se o portfólio tiver menos de 30 itens
+        if (portfolioAtual.length < 30) {
+            // Adiciona a URL como uma string simples, não mais um objeto
+            barbeiroUpdates.portfolio = firebase.firestore.FieldValue.arrayUnion(fotoUrl);
+        }
+        // Se o portfólio estiver cheio (30/30), a foto do cliente é ignorada.
     }
+    // --- FIM DA MODIFICAÇÃO ---
     
-    // 3. Executa a atualização no barbeiro (agora sabemos que ele existe)
+    // 3. Executa a atualização no barbeiro
     t.update(barbeiroRef, barbeiroUpdates); 
 
     // 4. Cria o documento de avaliação
@@ -3291,12 +3335,10 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
 
   }).then((pontosGanhos) => {
     alert(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
-    // Só notifica o barbeiro se ele ainda existir (o que já foi checado)
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
   }).catch(e => {
     console.error("Erro detalhado ao avaliar:", e); 
-    // Agora o alerta vai mostrar a mensagem de erro amigável que definimos:
     alert("Erro ao avaliar: " + e); 
   });
 }
@@ -5048,10 +5090,35 @@ async function abrirModalDashboardBarbeiro() {
 function abrirModalPortfolioBarbeiro() {
     abrirModal('modalPortfolioBarbeiro');
     const container = document.getElementById('portfolioInputsContainer');
-    container.innerHTML = '';
+    container.innerHTML = ''; // Limpa o container
+    
+    // Atualiza o texto de ajuda
+    const p = document.querySelector('#modalPortfolioBarbeiro .modal-content p');
+    if (p) p.innerHTML = 'Gerencie suas 30 imagens de portfólio. Cole o link direto (que termina com .png ou .jpg) e a imagem aparecerá instantaneamente.';
+
+    // Pega o portfólio atual (que é um array de strings)
     const portfolioAtual = perfil.portfolio || [];
-    for (let i = 0; i < 10; i++) {
-        container.innerHTML += `<input type="url" class="portfolio-url-input" placeholder="🔗 Link direto que termina com .png/.jpg aqui" value="${portfolioAtual[i] || ''}">`;
+    
+    // Loop para criar os 30 slots
+    for (let i = 0; i < 30; i++) {
+        const url = portfolioAtual[i] || ''; // Pega a URL existente ou uma string vazia
+        const placeholder = `https://via.placeholder.com/120x100?text=Slot+${i + 1}`;
+        
+        // Cria o HTML para cada item do portfólio
+        container.innerHTML += `
+            <div class="portfolio-admin-item">
+                <img id="preview-img-${i}" 
+                     src="${url || placeholder}" 
+                     alt="Preview Slot ${i + 1}"
+                     onerror="this.src='${placeholder}'"> 
+                     
+                <input type="url" 
+                       class="portfolio-url-input" 
+                       placeholder="🔗 Cole o link aqui" 
+                       value="${url}"
+                       oninput="document.getElementById('preview-img-${i}').src = this.value || '${placeholder}'">
+            </div>
+        `;
     }
 }
 
