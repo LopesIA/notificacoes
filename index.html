@@ -3224,8 +3224,7 @@ function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl);
 }
 
-// ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
-function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = null) {
+async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = null) {
   const reputacaoGanho = nota >= 7 ? 10 : (nota <= 4 ? -10 : 0);
   
   db.runTransaction(async t => {
@@ -3239,42 +3238,54 @@ function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = 
     const valor = agendamentoDoc.data().valor;
     const pontosGanhos = Math.floor(valor / 10) * (isVipAtivo(perfil) ? 2 : 1);
     
+    // 1. Atualiza o agendamento
     t.update(agendamentoRef, { avaliado: true });
-    t.update(barbeiroRef, { 
+
+    // --- INÍCIO DA CORREÇÃO ---
+    // 2. Prepara TODAS as atualizações para o barbeiro em um objeto
+    const barbeiroUpdates = {
         reputacao: firebase.firestore.FieldValue.increment(reputacaoGanho),
         somaAvaliacoes: firebase.firestore.FieldValue.increment(nota),
         numAvaliacoes: firebase.firestore.FieldValue.increment(1)
-    });
+    };
 
     if (fotoUrl) {
-        // Adiciona a foto ao portfólio com data de expiração
         const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        t.update(barbeiroRef, {
-            portfolio: firebase.firestore.FieldValue.arrayUnion({
-                url: fotoUrl,
-                enviadaPorCliente: true,
-                clienteNome: perfil.nome,
-                expiraEm: firebase.firestore.Timestamp.fromDate(expiracao),
-                permanente: false
-            })
+        // Adiciona a atualização do portfólio AO MESMO objeto
+        barbeiroUpdates.portfolio = firebase.firestore.FieldValue.arrayUnion({
+            url: fotoUrl,
+            enviadaPorCliente: true,
+            clienteNome: perfil.nome,
+            expiraEm: firebase.firestore.Timestamp.fromDate(expiracao),
+            permanente: false
         });
     }
+    
+    // 3. Executa a atualização no barbeiro UMA ÚNICA VEZ
+    t.update(barbeiroRef, barbeiroUpdates);
+    // --- FIM DA CORREÇÃO ---
 
+    // 4. Cria o documento de avaliação
     t.set(db.collection("avaliacoes").doc(), {
       barbeiroUid, clienteUid: auth.currentUser.uid, nota,
       comentario: comentario || "Sem comentário",
       ts: firebase.firestore.FieldValue.serverTimestamp()
     });
     
+    // 5. Atualiza os pontos do cliente (se houver)
     if (pontosGanhos > 0) {
         t.update(clienteRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(pontosGanhos) });
     }
     return pontosGanhos;
+
   }).then((pontosGanhos) => {
     alert(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
-  }).catch(e => alert("Erro ao avaliar: " + e));
+  }).catch(e => {
+    console.error("Erro detalhado ao avaliar:", e); // Loga o erro no console
+    alert("Erro ao avaliar: " + e); // Exibe o alerta
+  });
 }
 
 function resgatarPontos() {
