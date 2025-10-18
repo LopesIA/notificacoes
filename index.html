@@ -1375,6 +1375,11 @@
   </div>
 </div>
 
+<div id="adminChatSelectorContainer" class="hidden" style="display: flex; gap: 10px; margin-bottom: 10px; padding: 5px; background: var(--cor-botoes); border-radius: 8px;">
+    <select id="adminChatEstado" onchange="adminCarregarCidadesChat()"></select>
+    <select id="adminChatCidade" onchange="adminRecarregarChat()"></select>
+</div>
+
 <div id="modalDenuncia" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🚨 Denunciar</h3>
@@ -3288,21 +3293,47 @@ function alternarChat(tipo) {
     chatAtual = tipo;
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
     document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
-    document.getElementById("chatTitle").textContent = tipo === 'global' ? '💬 Chat Global' : `📍 Chat Local (${perfil.cidade})`;
 
+    const adminSelector = document.getElementById('adminChatSelectorContainer');
     const chatContainer = document.getElementById("chatMessages");
-    chatContainer.innerHTML = "";
+    chatContainer.innerHTML = ""; // Limpa antes de carregar
     if (chatListener) chatListener();
 
-    const agora = new Date();
-    
-    let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
-    
-    if (tipo === 'local') {
-        query = query.where("cidade", "==", perfil.cidade);
+    let cidadeParaVisualizar = perfil.cidade; // Padrão para cliente
+
+    if (tipo === 'local' && perfil.tipo === 'admin') {
+        adminSelector.classList.remove('hidden');
+        const estadoSelect = document.getElementById('adminChatEstado');
+
+        // Popula os estados apenas uma vez para não perder a seleção
+        if (estadoSelect.options.length <= 1) {
+            estadoSelect.innerHTML = '<option value="">Selecione o estado</option>';
+            Object.keys(cidadesPorEstado).forEach(sigla => {
+                estadoSelect.innerHTML += `<option value="${sigla}">${sigla}</option>`;
+            });
+            estadoSelect.value = perfil.estado; // Padrão para o estado do admin
+            adminCarregarCidadesChat(); // Carrega as cidades do estado padrão
+        }
+
+        cidadeParaVisualizar = document.getElementById('adminChatCidade').value;
+        document.getElementById("chatTitle").textContent = `📍 Chat Local (${cidadeParaVisualizar || 'Selecione uma cidade'})`;
+
+    } else {
+        adminSelector.classList.add('hidden');
+        document.getElementById("chatTitle").textContent = tipo === 'global' ? '💬 Chat Global' : `📍 Chat Local (${perfil.cidade})`;
     }
-    
-    // Filtra mensagens que ainda não expiraram
+
+    const agora = new Date();
+    let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+
+    if (tipo === 'local') {
+        if (!cidadeParaVisualizar) {
+            chatContainer.innerHTML = `<p>👑 Administrador, por favor, selecione um estado e cidade para visualizar o chat.</p>`;
+            return; // Impede a query de rodar sem cidade selecionada
+        }
+        query = query.where("cidade", "==", cidadeParaVisualizar);
+    }
+
     query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(15);
 
     chatListener = query.onSnapshot(async snapshot => {
@@ -3313,14 +3344,14 @@ function alternarChat(tipo) {
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
         chatContainer.innerHTML = ""; // Limpa para re-renderizar
         for(const doc of snapshot.docs.reverse()) { // Renderiza na ordem correta
-             const msg = doc.data();
-             const messageDiv = await createMessageDiv(msg);
-             chatContainer.prepend(messageDiv);
+            const msg = doc.data();
+            const messageDiv = await createMessageDiv(msg);
+            chatContainer.prepend(messageDiv);
         }
     });
-    
+
     document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } });
-    if (!botInterval) botInterval = setInterval(sendBotMessage, 3600000); // 1 hora
+    if (!botInterval) botInterval = setInterval(sendBotMessage, 3600000);
 }
 
 
@@ -3457,6 +3488,30 @@ function enviarRespostaAI() {
         cidade: chatAtual === 'local' ? perfil.cidade : 'global',
         deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
     });
+}
+
+// Funções novas para o admin no chat
+function adminCarregarCidadesChat() {
+    const estado = document.getElementById('adminChatEstado').value;
+    const cidadeSelect = document.getElementById('adminChatCidade');
+    const valorAtual = cidadeSelect.value;
+    cidadeSelect.innerHTML = '<option value="">Selecione a cidade</option>';
+    const cidades = cidadesPorEstado[estado] || [];
+    cidades.forEach(c => {
+        // Seleciona a cidade do perfil do admin por padrão na primeira vez
+        const isSelected = c === valorAtual || (c === perfil.cidade && !valorAtual);
+        cidadeSelect.innerHTML += `<option value="${c}" ${isSelected ? 'selected' : ''}>${c}</option>`;
+    });
+    // Após carregar as cidades, se for um admin, recarrega o chat
+    if(perfil.tipo === 'admin') {
+        adminRecarregarChat();
+    }
+}
+
+function adminRecarregarChat() {
+    // Simplesmente chama a função de alternar, que agora contém a lógica 
+    // para ler os selects do admin e carregar as mensagens da cidade escolhida.
+    alternarChat('local');
 }
 
 function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
