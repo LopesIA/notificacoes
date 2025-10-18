@@ -1177,7 +1177,7 @@
           <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
           <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
           
-          <button id="btnVipPro" onclick="abrirModalVipPro()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-azul), #00c6ff);">🌟 Seja PRO (R$ 30,00/mês)</button>
+          <button id="btnVipPro" onclick="abrirModalVipPro()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-azul), #00c6ff);">🌟 Seja PRO (R$ 29,99/mês)</button>
         </div>
     </div>
      <hr style="border-color: var(--cor-borda); margin: 20px 0;">
@@ -2570,7 +2570,7 @@ const btnVipPro = document.getElementById('btnVipPro');
             btnVipPro.textContent = '🌟 Sou PRO';
             btnVipPro.classList.add('pro-glow');
         } else {
-            btnVipPro.textContent = '🌟 Seja PRO (R$ 30,00/mês)';
+            btnVipPro.textContent = '🌟 Seja PRO (R$ 29,99/mês)';
             btnVipPro.classList.remove('pro-glow');
         }
     }
