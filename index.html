@@ -408,6 +408,12 @@
       box-shadow: 0 0 8px var(--cor-destaque), 0 0 12px var(--cor-destaque);
       border: 1px solid var(--cor-destaque);
     }
+    
+    /* NOVO ESTILO ADICIONADO AQUI */
+    .pro-glow {
+      box-shadow: 0 0 8px var(--cor-destaque-azul), 0 0 12px var(--cor-destaque-azul);
+      border: 1px solid var(--cor-destaque-azul);
+    }
     .promocao-card {
       background: linear-gradient(45deg, #181818, var(--cor-destaque));
       padding: 15px;
@@ -1170,6 +1176,8 @@
           <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
           <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
           <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
+          
+          <button id="btnVipPro" onclick="abrirModalVipPro()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-azul), #00c6ff);">🌟 Seja PRO (R$ 30,00/mês)</button>
         </div>
     </div>
      <hr style="border-color: var(--cor-borda); margin: 20px 0;">
@@ -1415,6 +1423,14 @@
     <div id="vipContentContainer">
     </div>
     <button data-modal-id="modalVip" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalVipPro" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div id="vipProContentContainer">
+      </div>
+    <button data-modal-id="modalVipPro" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -1971,6 +1987,7 @@ const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
 const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
+const PRECO_PRO = 30;
 
 let fcmSetupDone = false;
 let isSending = false;
@@ -2166,9 +2183,8 @@ function configurarBotoesGuest() {
         const originalOnclick = btn.onclick;
         if(btn.textContent.trim() === 'Loja') return; // Mantém a funcionalidade do botão Loja
         btn.onclick = () => {
-            alert("Para acessar esta função, por favor, faça login ou crie uma conta.");
-            mostrar('authView');
-        };
+    iniciarOnboarding(); // NOVO: Chama a primeira tela de boas-vindas
+};
     });
 }
 
@@ -2547,6 +2563,18 @@ auth.onAuthStateChanged(async user => {
       btnVip.textContent = '💎 VIP';
       btnVip.classList.remove('vip-glow');
     }
+
+const btnVipPro = document.getElementById('btnVipPro');
+    if (btnVipPro) { // Verifica se o botão existe (só na tela de profissional)
+        if (isProAtivo(perfil)) {
+            btnVipPro.textContent = '🌟 Sou PRO';
+            btnVipPro.classList.add('pro-glow');
+        } else {
+            btnVipPro.textContent = '🌟 Seja PRO (R$ 30,00/mês)';
+            btnVipPro.classList.remove('pro-glow');
+        }
+    }
+
     aplicarTemaPorProfissao(perfil.interesse_principal);
   });
 
@@ -2801,7 +2829,14 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     }
     
     if (barbeirosListener) barbeirosListener();
-    let query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
+    let query;
+if (isGuest) {
+    // NOVO: Se for visitante, busca todos os tipos de profissionais
+    query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
+} else {
+    // LÓGICA ANTIGA: Se estiver logado, busca pelo interesse principal
+    query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
+}
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
@@ -3270,6 +3305,107 @@ function assinarVip() {
     });
 }
 
+/**
+ * Verifica se a assinatura PRO do profissional está ativa.
+ */
+function isProAtivo(perfilUsuario) {
+    if (!perfilUsuario || !perfilUsuario.proAtivo || !perfilUsuario.proExpirationDate) {
+        return false;
+    }
+    // Verifica se a data de expiração ainda não passou
+    return perfilUsuario.proExpirationDate.toDate() > new Date();
+}
+
+/**
+ * Abre o modal para o profissional assinar ou ver o status do PRO.
+ */
+function abrirModalVipPro() {
+    const container = document.getElementById('vipProContentContainer');
+    
+    // Verifica se o perfil atual (carregado) é PRO
+    if (isProAtivo(perfil)) {
+        const dataExpiracao = perfil.proExpirationDate.toDate().toLocaleDateString('pt-BR');
+        container.innerHTML = `
+            <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
+                <h3 style="color: var(--cor-destaque-azul);">🌟 Você é um Profissional PRO!</h3>
+                <p>Sua assinatura mensal é válida até: <strong>${dataExpiracao}</strong>.</p>
+                <div class="vantagens" style="text-align: left; margin-top: 20px;">
+                    <h4>Seus Benefícios Atuais:</h4>
+                    <ul>
+                        <li>Selo 🌟 PRO no perfil e chat.</li>
+                        <li>(Benefício 2 a ser definido...)</li>
+                        <li>(Benefício 3 a ser definido...)</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div style="padding: 20px; border-radius: 15px; text-align: center;">
+                <h3 style="color: var(--cor-destaque-azul);">🌟 Torne-se um Profissional PRO!</h3>
+                <p>Destaque-se da concorrência e tenha acesso a benefícios exclusivos.</p>
+                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Assinatura: R$ ${PRECO_PRO.toFixed(2)} / mês</p>
+                <div class="vantagens" style="text-align: left; margin-top: 20px;">
+                    <h4>Vantagens Exclusivas:</h4>
+                    <ul>
+                        <li><strong>Selo 🌟 PRO</strong> no seu perfil e no chat.</li>
+                        <li>(Benefício 2 a ser definido...)</li>
+                        <li>(Benefício 3 a ser definido...)</li>
+                    </ul>
+                </div>
+                <button onclick="assinarPro()" style="margin-top: 15px;">🌟 Assinar Agora (R$ ${PRECO_PRO.toFixed(2)})</button>
+            </div>
+        `;
+    }
+    abrirModal('modalVipPro');
+}
+
+/**
+ * Processa a assinatura PRO, descontando do saldo.
+ */
+function assinarPro() {
+    if (perfil.saldo < PRECO_PRO) {
+        alert("Saldo insuficiente para assinar o PRO. Por favor, deposite fundos na sua carteira.");
+        return abrirModal('modalCarteira');
+    }
+    if (!confirm(`Deseja assinar o plano PRO por R$ ${PRECO_PRO.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`)) return;
+
+    exibirAguarde("Ativando PRO...");
+
+    db.runTransaction(async t => {
+        const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        const financeiroRef = db.collection("config").doc("financeiro");
+        const proDoc = await t.get(proRef);
+
+        // Verifica se já é PRO para evitar cobrança dupla
+        if (isProAtivo(proDoc.data())) {
+            throw "Você já é um membro PRO ativo.";
+        }
+        
+        const expiracao = new Date();
+        expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
+
+        t.update(proRef, {
+            saldo: firebase.firestore.FieldValue.increment(-PRECO_PRO),
+            proAtivo: true,
+            proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+        });
+        
+        // Cria um novo campo para rastrear essa receita
+        t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(PRECO_PRO) }, { merge: true });
+
+    }).then(() => {
+        fecharTodosOsModais();
+        alert("Parabéns! Você agora é um Profissional PRO!");
+        notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
+        fecharModalAtual(); // Fecha o modal PRO
+    }).catch(e => {
+        fecharTodosOsModais();
+        alert("Erro ao assinar PRO: " + e.message);
+    });
+}
+// --- FIM DAS NOVAS FUNÇÕES ---
+
 function isVipAtivo(perfilUsuario) {
     if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
         return false;
@@ -3413,7 +3549,13 @@ async function createMessageDiv(msg) {
                 iconeBase = `🧠`;
                 messageDiv.style.textShadow = '0 0 5px #000';
             } else if (remetenteData.tipo !== "cliente") {
-                classeCSS = `barbeiro-chat`; iconeBase = `💼`;
+                classeCSS = `barbeiro-chat`;
+                if (isProAtivo(remetenteData)) {
+                    iconeBase = `🌟`; // Icone PRO
+                } else {
+                    iconeBase = `💼`; // Icone profissional normal
+                }
+
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'profissional');
             } else if (isVipAtivo(remetenteData)) {
                 classeCSS = `cliente-chat`; iconeBase = `👑`;
@@ -4275,7 +4417,7 @@ async function abrirModalEstatisticas() {
     try {
         const usuariosSnap = await db.collection("usuarios").get();
         let totalUsuarios = usuariosSnap.size;
-        let clientes = 0, barbeiros = 0, vip = 0, totalSaldo = 0, somaReputacao = 0, barbeirosComReputacao = 0;
+        let clientes = 0, barbeiros = 0, vip = 0, pro = 0, totalSaldo = 0, somaReputacao = 0, barbeirosComReputacao = 0;
         let manicure = 0, cilios = 0;
         usuariosSnap.forEach(doc => {
             const u = doc.data();
@@ -4288,6 +4430,7 @@ async function abrirModalEstatisticas() {
                 }
             }
             if (u.vip) vip++;
+            if (isProAtivo(u)) pro++;
             totalSaldo += u.saldo || 0;
         });
         const mediaReputacao = barbeirosComReputacao > 0 ? (somaReputacao / barbeirosComReputacao).toFixed(0) : 'N/A';
@@ -4305,7 +4448,7 @@ async function abrirModalEstatisticas() {
         let solicitacoesPendentes = solicitacoesSnap.size;
 
         const financeiroDoc = await db.collection("config").doc("financeiro").get();
-        const fin = financeiroDoc.data() || { arrecadadoTaxas: 0, arrecadadoVip: 0 };
+        const fin = financeiroDoc.data() || { arrecadadoTaxas: 0, arrecadadoVip: 0, arrecadadoPro: 0 };
         
         painel.innerHTML = `
             <div class="popup-section"><h4>👥 Usuários</h4>
@@ -5848,6 +5991,10 @@ function setupConfiguracoes() {
             document.getElementById('configCidade').value = perfil.cidade;
         }, 100);
     }, 100);
+
+// ADICIONAR ESTAS DUAS LINHAS
+configurarBotoesGuest();
+carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
 
     const interesseContainer = document.getElementById('configInteresseContainer');
     const buttons = interesseContainer.querySelectorAll('button');
