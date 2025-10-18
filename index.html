@@ -1953,6 +1953,19 @@
     </div>
 </div>
 
+<div id="modalModoFerias" class="modal">
+  <div class="modal-content">
+    <h3>📅 Modo Férias/Ausência</h3>
+    <p>Bloqueie um período na sua agenda. Seus clientes serão notificados.</p>
+    <label for="feriasInicio">Data de Início:</label>
+    <input type="date" id="feriasInicio">
+    <label for="feriasFim">Data de Fim:</label>
+    <input type="date" id="feriasFim">
+    <button onclick="ativarModoFerias()">✅ Ativar e Notificar Clientes</button>
+    <button data-modal-id="modalModoFerias" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
@@ -2856,15 +2869,39 @@ if (isGuest) {
             barbeiros.push(b);
         });
 
-        barbeiros.sort((a, b) => {
-            const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
-            const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
-            const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
-            const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
-            if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
-            return a.distancia - b.distancia;
-        });
+        // NOVO CÓDIGO DE ORDENAÇÃO (JÁ COM COMENTÁRIOS EXPLICATIVOS)
+barbeiros.sort((a, b) => {
+    // Critério 1: Disponibilidade (Disponíveis vêm primeiro)
+    const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
+    const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+    if (aDisponivel !== bDisponivel) {
+        return aDisponivel ? -1 : 1; // Se 'a' está disponível e 'b' não, 'a' vem primeiro.
+    }
+
+    // Se a disponibilidade for a mesma, vamos para o próximo critério.
+
+    // Critério 2: Turbinamento (Turbinados vêm primeiro)
+    const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
+    const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+    if (aBoosted !== bBoosted) {
+        return aBoosted ? -1 : 1; // Se 'a' está turbinado e 'b' não, 'a' vem primeiro.
+    }
+
+    // Se o status de turbinamento for o mesmo, vamos para o próximo critério.
+
+    // Critério 3: Status PRO (Profissionais PRO vêm primeiro)
+    // A função isProAtivo já existe no seu código, então podemos usá-la.
+    const aPro = isProAtivo(a);
+    const bPro = isProAtivo(b);
+    if (aPro !== bPro) {
+        return aPro ? -1 : 1; // Se 'a' é PRO e 'b' não, 'a' vem primeiro.
+    }
+
+    // Se o status PRO for o mesmo, vamos para o critério final.
+
+    // Critério 4: Distância (Mais próximos vêm primeiro)
+    return a.distancia - b.distancia; // Ordena do menor para o maior valor de distância.
+});
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
@@ -3166,23 +3203,40 @@ function abrirHistoricoCliente() {
     });
 }
 
+// ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
 function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   const nota = parseInt(prompt("Avalie o serviço de 1 a 10:"));
   if (isNaN(nota) || nota < 1 || nota > 10) return alert("Avaliação inválida. Use um número de 1 a 10.");
+  
   const comentario = prompt("Deixe um comentário sobre o serviço:");
-  avaliarServico(agendamentoId, barbeiroUid, nota, comentario);
+
+  const querEnviarFoto = confirm("Gostaria de enviar uma foto do resultado? (Opcional)\n\nSua foto ficará visível no perfil do profissional por 24 horas.");
+  let fotoUrl = null;
+
+  if (querEnviarFoto) {
+      fotoUrl = prompt("Ótimo! Siga os passos:\n1. Acesse postimages.org\n2. Envie sua foto.\n3. Copie o 'Link Direto' e cole aqui:");
+      if (fotoUrl && !fotoUrl.startsWith("http")) {
+          alert("Link inválido. Certifique-se de copiar o 'Link Direto'.");
+          fotoUrl = null;
+      }
+  }
+
+  avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl);
 }
 
-function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
+// ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
+function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = null) {
   const reputacaoGanho = nota >= 7 ? 10 : (nota <= 4 ? -10 : 0);
+  
   db.runTransaction(async t => {
     const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
     const barbeiroRef = db.collection("usuarios").doc(barbeiroUid);
     const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
+    
     const agendamentoDoc = await t.get(agendamentoRef);
     if (agendamentoDoc.data().avaliado) throw "Este serviço já foi avaliado.";
+    
     const valor = agendamentoDoc.data().valor;
-
     const pontosGanhos = Math.floor(valor / 10) * (isVipAtivo(perfil) ? 2 : 1);
     
     t.update(agendamentoRef, { avaliado: true });
@@ -3191,11 +3245,27 @@ function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
         somaAvaliacoes: firebase.firestore.FieldValue.increment(nota),
         numAvaliacoes: firebase.firestore.FieldValue.increment(1)
     });
+
+    if (fotoUrl) {
+        // Adiciona a foto ao portfólio com data de expiração
+        const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        t.update(barbeiroRef, {
+            portfolio: firebase.firestore.FieldValue.arrayUnion({
+                url: fotoUrl,
+                enviadaPorCliente: true,
+                clienteNome: perfil.nome,
+                expiraEm: firebase.firestore.Timestamp.fromDate(expiracao),
+                permanente: false
+            })
+        });
+    }
+
     t.set(db.collection("avaliacoes").doc(), {
       barbeiroUid, clienteUid: auth.currentUser.uid, nota,
       comentario: comentario || "Sem comentário",
       ts: firebase.firestore.FieldValue.serverTimestamp()
     });
+    
     if (pontosGanhos > 0) {
         t.update(clienteRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(pontosGanhos) });
     }
@@ -3204,7 +3274,6 @@ function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
     alert(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
-    notifyUser(auth.currentUser.uid, "🏆 Pontos Recebidos!", `Você ganhou ${pontosGanhos} pontos por avaliar o serviço.`);
   }).catch(e => alert("Erro ao avaliar: " + e));
 }
 
@@ -3319,9 +3388,10 @@ function isProAtivo(perfilUsuario) {
 /**
  * Abre o modal para o profissional assinar ou ver o status do PRO.
  */
+// CÓDIGO ATUALIZADO (COPIE E COLE SUBSTITUINDO A FUNÇÃO INTEIRA)
 function abrirModalVipPro() {
     const container = document.getElementById('vipProContentContainer');
-    
+
     // Verifica se o perfil atual (carregado) é PRO
     if (isProAtivo(perfil)) {
         const dataExpiracao = perfil.proExpirationDate.toDate().toLocaleDateString('pt-BR');
@@ -3332,9 +3402,9 @@ function abrirModalVipPro() {
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Seus Benefícios Atuais:</h4>
                     <ul>
-                        <li>Selo 🌟 PRO no perfil e chat.</li>
-                        <li>(Benefício 2 a ser definido...)</li>
-                        <li>(Benefício 3 a ser definido...)</li>
+                        <li>Selo 🌟 PRO de destaque no perfil e no chat.</li>
+                        <li><strong>Taxa de serviço reduzida para apenas 2,5%.</strong></li>
+                        <li>Acesso ao Dashboard de Desempenho com métricas avançadas.</li>
                     </ul>
                 </div>
             </div>
@@ -3343,14 +3413,14 @@ function abrirModalVipPro() {
         container.innerHTML = `
             <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-azul);">🌟 Torne-se um Profissional PRO!</h3>
-                <p>Destaque-se da concorrência e tenha acesso a benefícios exclusivos.</p>
+                <p>Aumente seus lucros e destaque-se da concorrência com benefícios exclusivos.</p>
                 <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Assinatura: R$ ${PRECO_PRO.toFixed(2)} / mês</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Vantagens Exclusivas:</h4>
                     <ul>
-                        <li><strong>Selo 🌟 PRO</strong> no seu perfil e no chat.</li>
-                        <li>(Benefício 2 a ser definido...)</li>
-                        <li>(Benefício 3 a ser definido...)</li>
+                        <li><strong>✅ Taxa de Serviço Reduzida (2,5%):</strong> Aumente seu lucro em cada agendamento.</li>
+                        <li><strong>📊 Dashboard Avançado:</strong> Tenha insights sobre seus ganhos, clientes e serviços mais populares.</li>
+                        <li><strong>🌟 Selo PRO:</strong> Ganhe mais destaque e confiança no seu perfil e no chat.</li>
                     </ul>
                 </div>
                 <button onclick="assinarPro()" style="margin-top: 15px;">🌟 Assinar Agora (R$ ${PRECO_PRO.toFixed(2)})</button>
@@ -3745,8 +3815,20 @@ function alterarEnderecoBarbeiro(event) {
     }).catch(e => alert("Erro ao alterar endereço: " + e.message));
 }
 
+// ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
 function abrirAgenda() {
     abrirModal('modalAgendaBarbeiro');
+    // Adiciona o novo botão no painel da agenda
+    const container = document.getElementById('modalAgendaBarbeiro').querySelector('.modal-content');
+    if (!container.querySelector('#btnModoFerias')) {
+        const btnFerias = document.createElement('button');
+        btnFerias.id = 'btnModoFerias';
+        btnFerias.textContent = '🏖️ Ativar Modo Férias/Ausência';
+        btnFerias.onclick = () => abrirModal('modalModoFerias');
+        // Insere antes do painel da agenda manual para melhor organização
+        const painelManual = document.getElementById('agendaManualPainel');
+        container.insertBefore(btnFerias, painelManual);
+    }
     carregarAgenda();
 }
 
@@ -3996,28 +4078,67 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
   }
 }
 
-function abrirClientesBarbeiro() {
+// ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
+async function abrirClientesBarbeiro() {
   abrirModal('modalClientesBarbeiro');
   const lista = document.getElementById("listaClientesBarbeiro");
   lista.innerHTML = "<p>⏳ Carregando...</p>";
-  db.collection("agendamentos").where("barbeiroUid", "==", auth.currentUser.uid)
+  
+  const agendamentosSnap = await db.collection("agendamentos")
+    .where("barbeiroUid", "==", auth.currentUser.uid)
     .where("status", "==", "concluido")
-    .get()
-    .then(snap => {
-      const clientesMap = {};
-      snap.forEach(doc => {
-        const ag = doc.data();
-        if (!clientesMap[ag.clienteUid]) {
-          clientesMap[ag.clienteUid] = { nome: ag.clienteNome, totalCortes: 0, telefone: ag.clienteTelefone };
-        }
-        clientesMap[ag.clienteUid].totalCortes++;
-      });
-      lista.innerHTML = Object.keys(clientesMap).length === 0 ? "<p>Você ainda não tem clientes.</p>" : "";
-      Object.values(clientesMap).sort((a, b) => b.totalCortes - a.totalCortes).forEach(c => {
-        const whatsappLink = c.telefone ? `<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" onclick="event.stopPropagation()"><button style="font-size:12px; padding: 5px 8px; margin-top:5px;">💬 WhatsApp</button></a>` : '<p style="font-size:11px; opacity:0.6;">Sem telefone</p>';
-        lista.innerHTML += `<div class="card"><b>${c.nome}</b><p>Serviços concluídos: ${c.totalCortes}</p>${whatsappLink}</div>`;
-      });
-    });
+    .get();
+
+  const clientesMap = {};
+  agendamentosSnap.forEach(doc => {
+    const ag = doc.data();
+    if (!clientesMap[ag.clienteUid]) {
+      clientesMap[ag.clienteUid] = { 
+          nome: ag.clienteNome, 
+          totalCortes: 0, 
+          telefone: ag.clienteTelefone,
+          uid: ag.clienteUid // Adiciona o UID para salvar a nota
+      };
+    }
+    clientesMap[ag.clienteUid].totalCortes++;
+  });
+
+  // Carrega as notas salvas
+  const notasSnap = await db.collection("profissionais_notas_clientes").doc(auth.currentUser.uid).get();
+  const notasData = notasSnap.exists ? notasSnap.data().notas : {};
+
+  lista.innerHTML = Object.keys(clientesMap).length === 0 ? "<p>Você ainda não tem clientes.</p>" : "";
+  
+  Object.values(clientesMap).sort((a, b) => b.totalCortes - a.totalCortes).forEach(c => {
+    const notaAtual = notasData[c.uid] || "";
+    const whatsappLink = c.telefone ? `<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" onclick="event.stopPropagation()"><button style="font-size:12px; padding: 5px 8px; margin-top:5px;">💬 WhatsApp</button></a>` : '';
+    
+    lista.innerHTML += `
+        <div class="card">
+            <b>${c.nome}</b>
+            <p>Serviços concluídos: ${c.totalCortes}</p>
+            ${whatsappLink}
+            <textarea id="nota_${c.uid}" placeholder="Adicione notas sobre este cliente..." style="margin-top: 10px; width: 100%; min-height: 50px;">${notaAtual}</textarea>
+            <button onclick="salvarNotaCliente('${c.uid}')" style="font-size:12px; padding: 5px 8px; margin-top:5px;">Salvar Nota</button>
+        </div>`;
+  });
+}
+
+// ADICIONE ESTA NOVA FUNÇÃO EM INDEX.HTML
+async function salvarNotaCliente(clienteUid) {
+    const nota = document.getElementById(`nota_${clienteUid}`).value;
+    const ref = db.collection("profissionais_notas_clientes").doc(auth.currentUser.uid);
+    try {
+        await ref.set({
+            notas: {
+                [clienteUid]: nota
+            }
+        }, { merge: true });
+        alert("Nota salva com sucesso!");
+    } catch (e) {
+        console.error("Erro ao salvar nota:", e);
+        alert("Não foi possível salvar a nota.");
+    }
 }
 
 function abrirHistoricoBarbeiro() {
@@ -5804,6 +5925,64 @@ function selecionarPerfilBasico(tipo) {
         btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(tipo));
     });
     document.getElementById('btnOnboardingNext3').disabled = false;
+}
+
+// ADICIONE ESTA NOVA FUNÇÃO EM INDEX.HTML
+async function ativarModoFerias() {
+    const inicio = document.getElementById('feriasInicio').value;
+    const fim = document.getElementById('feriasFim').value;
+
+    if (!inicio || !fim) {
+        return alert("Por favor, selecione a data de início e fim.");
+    }
+
+    const dataInicio = new Date(inicio);
+    const dataFim = new Date(fim);
+
+    if (dataFim < dataInicio) {
+        return alert("A data de fim não pode ser anterior à data de início.");
+    }
+    
+    if (!confirm(`Você tem certeza que deseja bloquear sua agenda de ${dataInicio.toLocaleDateString()} até ${dataFim.toLocaleDateString()}? Seus clientes serão notificados.`)) {
+        return;
+    }
+
+    exibirAguarde("Bloqueando agenda e notificando...");
+
+    try {
+        // Lógica de notificação (simples, para não sobrecarregar)
+        // Uma implementação mais avançada usaria Cloud Functions para notificar em lotes
+        const clientesSnap = await db.collection("agendamentos")
+            .where("barbeiroUid", "==", auth.currentUser.uid)
+            .where("status", "==", "concluido")
+            .get();
+
+        const clientesNotificados = new Set();
+        clientesSnap.forEach(doc => {
+            const clienteUid = doc.data().clienteUid;
+            if (!clientesNotificados.has(clienteUid)) {
+                notifyUser(
+                    clienteUid, 
+                    `🗓️ Aviso de ${perfil.nome}`, 
+                    `O profissional estará ausente de ${dataInicio.toLocaleDateString()} a ${dataFim.toLocaleDateString()}.`
+                );
+                clientesNotificados.add(clienteUid);
+            }
+        });
+
+        await db.collection("usuarios").doc(auth.currentUser.uid).update({
+            ausente: true,
+            ausenciaInicio: firebase.firestore.Timestamp.fromDate(dataInicio),
+            ausenciaFim: firebase.firestore.Timestamp.fromDate(dataFim)
+        });
+
+        fecharTodosOsModais();
+        alert("Modo férias ativado com sucesso! Sua agenda está bloqueada para o período e seus clientes foram notificados.");
+
+    } catch (e) {
+        fecharTodosOsModais();
+        alert("Ocorreu um erro: " + e.message);
+    }
 }
 
 function finalizarOnboarding() {
