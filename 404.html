@@ -3,135 +3,114 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sem Conexão - VersãoPro</title>
-
+    <title>Você está Offline - VersãoPro</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
     <style>
-        /* Variáveis de Cores e Estilos */
         :root {
             --cor-fundo: #0c0c0c;
             --cor-texto: #f0f0f0;
-            --cor-destaque: #d4af37; /* Dourado */
-            --cor-card: rgba(30, 30, 30, 0.9); /* Fundo sutilmente transparente */
+            --cor-destaque: #d4af37;
+            --cor-card: rgba(24, 24, 24, 0.8);
             --cor-sombra: rgba(0, 0, 0, 0.7);
         }
 
         body {
-            background: var(--cor-fundo);
-            color: var(--cor-texto);
             font-family: 'Poppins', sans-serif;
             margin: 0;
-            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             text-align: center;
-            /* Fundo com gradiente sutil para profundidade */
-            background-image: radial-gradient(circle at top left, #1f1f1f, var(--cor-fundo));
-            animation: fadeIn 1s ease-out;
+            color: var(--cor-texto);
+            /* NOVO: Fundo com gradiente animado */
+            background: linear-gradient(-45deg, #111, #0c0c0c, #1a1a1a, #000);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
         }
 
-        /* Efeito Glassmorphism/Card Moderno */
+        /* ANIMAÇÃO DE FUNDO ADICIONADA */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         #container {
-            max-width: 420px;
-            padding: 40px 30px;
-            margin: 0 20px;
+            max-width: 400px;
+            padding: 40px;
+            margin: 20px;
             background: var(--cor-card);
-            border-radius: 16px;
-            border: 1px solid rgba(212, 175, 55, 0.1); /* Borda sutil dourada */
+            border-radius: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
             box-shadow: 0 8px 32px var(--cor-sombra);
-            backdrop-filter: blur(5px); /* Efeito de vidro fosco (Glassmorphism) */
-            -webkit-backdrop-filter: blur(5px);
-            transform: translateY(0);
-            transition: transform 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
         }
 
-        /* Logo/Ícone */
-        .logo-404 {
-            width: 120px; /* Um pouco maior */
-            height: 120px;
-            margin-bottom: 25px;
-            border-radius: 50%;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.7); /* Brilho mais forte */
-            animation: pulse 2s infinite ease-in-out; /* Animação sutil */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        h1 {
-            font-size: 80px;
-            font-weight: 700;
+        /* ÍCONE SVG ADICIONADO */
+        .offline-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
             color: var(--cor-destaque);
-            margin: 0 0 5px;
-            line-height: 1;
-            text-shadow: 0 0 8px rgba(212, 175, 55, 0.5); /* Sombra de texto dourada */
         }
 
         h2 {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 600;
-            margin: 0 0 15px;
+            margin: 0 0 10px;
             color: var(--cor-texto);
         }
 
         p {
-            line-height: 1.6;
-            margin: 0 0 35px;
+            line-height: 1.7;
+            margin: 0 0 30px;
             font-size: 15px;
-            color: #bbb;
+            color: #ccc;
         }
 
-        /* Botão Moderno com gradiente */
+        /* BOTÃO MELHORADO */
         a.btn {
             display: inline-block;
-            text-align: center;
-            /* Gradiente Dourado */
-            background: linear-gradient(135deg, var(--cor-destaque), #e6c757);
-            color: var(--cor-fundo); 
-            padding: 12px 30px;
-            border-radius: 6px;
+            background: var(--cor-destaque);
+            color: #0c0c0c;
+            padding: 14px 35px;
+            border-radius: 10px;
             text-decoration: none;
-            font-weight: 700;
+            font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
-            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+            border: none;
         }
 
         a.btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.5);
-            background: linear-gradient(135deg, #e6c757, var(--cor-destaque));
-        }
-        
-        /* Animações */
-        @keyframes pulse {
-            0% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.7); }
-            50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.9); }
-            100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.7); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <img src="/icone.png" alt="Logo VersãoPro" class="logo-404">
+        <svg class="offline-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m-12.728 0a9 9 0 010-12.728m12.728 0L5.636 18.364M12 18h.01M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
         
-        <h1>OFFLINE</h1>
-        <h2>Sem Conexão com a Internet</h2>
+        <h2>Você está Offline</h2>
         
         <p>
-            Não conseguimos carregar esta página. 
-            <br>
-            Verifique sua conexão Wi-Fi ou dados móveis para continuar navegando.
-            <br><br>
-            Enquanto isso, você ainda pode acessar as telas que já foram carregadas anteriormente.
+            Parece que não há conexão com a internet.
+            Verifique sua rede Wi-Fi ou dados móveis e tente novamente.
         </p>
         
-        <a href="/" class="btn">Tentar Novamente / Ir para o Início</a>
+        <a href="/" class="btn">Tentar Novamente</a>
     </div>
 </body>
 </html>
