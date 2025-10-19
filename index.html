@@ -3,7 +3,7 @@
 <head>
   <link rel="manifest" href="/manifest.json">
   <meta charset="UTF-8">
-  <title>VersãoPro</title>
+  <title>Nova Versão</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
@@ -12,7 +12,7 @@
   
   <link rel="icon" href="/icone.png" type="image/png">
   <link rel="apple-touch-icon" href="/icone.png">
-  <title>VersãoPro</title>
+  <title>Nova Versão</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
@@ -968,7 +968,7 @@
         background-color: var(--cor-botoes);
     }
 
-    /* ESTILOS ADICIONAIS VersãoPro */
+    /* ESTILOS ADICIONAIS Nova Versão */
     #popupAguarde {
         background-color: rgba(0, 0, 0, 0.7);
         color: white;
@@ -1106,7 +1106,7 @@
 </div>
 
 <div class="topbar hidden" id="topbar">
-  <div class="logo">VersãoPro</div>
+  <div class="logo">Nova Versão</div>
   <div class="topbar-right">
     <button id="btnTema" onclick="alternarTema()">🌙</button>
     <button id="btnConfig" onclick="abrirModal('modalConfiguracoes')">⚙️</button>
@@ -1239,7 +1239,7 @@
 
   <div id="lojaView" class="hidden card">
     <div class="card-header">
-        <h3>🛍️ Loja VersãoPro</h3>
+        <h3>🛍️ Loja Nova Versão</h3>
     </div>
     <div id="lojaContainer" class="loja-grid">
     </div>
@@ -1288,9 +1288,9 @@
   </div>
 </div>
 
-<div id="modalTermosUso" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Uso</h3><p class="scrollable-list">Bem-vindo ao VersãoPro! Ao usar nosso aplicativo, você concorda em seguir nossas regras de conduta, respeitar outros usuários e profissionais, e usar a plataforma para os fins a que se destina. Violações podem resultar na suspensão da conta.</p><button data-modal-id="modalTermosUso" onclick="fecharModal(event)">Fechar</button></div></div>
+<div id="modalTermosUso" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Uso</h3><p class="scrollable-list">Bem-vindo ao Nova Versão! Ao usar nosso aplicativo, você concorda em seguir nossas regras de conduta, respeitar outros usuários e profissionais, e usar a plataforma para os fins a que se destina. Violações podem resultar na suspensão da conta.</p><button data-modal-id="modalTermosUso" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosPrivacidade" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Privacidade</h3><p class="scrollable-list">Sua privacidade é importante. Coletamos dados como nome, e-mail e localização para fornecer e melhorar nossos serviços. Não compartilhamos seus dados pessoais com terceiros sem seu consentimento, exceto quando exigido por lei.</p><button data-modal-id="modalTermosPrivacidade" onclick="fecharModal(event)">Fechar</button></div></div>
-<div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o VersãoPro, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies" onclick="fecharModal(event)">Fechar</button></div></div>
+<div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o Nova Versão, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies" onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1791,7 +1791,7 @@
 
 <div id="modalAtualizacao" class="modal" style="z-index: 100;" onclick="fecharModal(event)">
     <div class="modal-content" style="border: 2px solid var(--cor-destaque);" onclick="event.stopPropagation()">
-        <h3>🚀 Nova Versão Disponível!</h3>
+        <h3>🚀 Nova Versão do App Disponível!</h3>
         <p>Uma nova versão do aplicativo está pronta. Clique no botão abaixo para atualizar e ter acesso às últimas novidades e melhorias.</p>
         <div style="display:flex; gap: 10px; margin-top: 20px;">
            <button data-modal-id="modalAtualizacao" onclick="fecharModal(event)" style="background: #555;">🤔 Depois</button>
@@ -3672,7 +3672,7 @@ async function createMessageDiv(msg) {
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
-        remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 VersãoPro Bot'}</span>`;
+        remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
     } else {
         const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
         if(remetenteDoc.exists) {
@@ -3721,7 +3721,7 @@ function sendBotMessage() {
     lastBotMessageIndex = randomIndex;
     const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
-        remetenteUid: "bot-uid", remetenteNome: "VersãoPro Bot", tipo: "bot",
+        remetenteUid: "bot-uid", remetenteNome: "Nova Versão Bot", tipo: "bot",
         texto: botMessages[randomIndex], ts: firebase.firestore.FieldValue.serverTimestamp(),
         cidade: "global", // Mensagem do bot é global
         deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
@@ -4491,7 +4491,7 @@ function copiarCodigoPixAprimorado(event) {
 }
 
 function confirmarEnvioComprovante() {
-    const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app VersãoPro.");
+    const mensagem = encodeURIComponent("Olá! Segue o comprovante do meu depósito no app Nova Versão.");
     window.open(`https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank');
     fecharTodosOsModais();
 }
@@ -5302,7 +5302,7 @@ async function carregarProdutos() {
 
         const produtosSnap = await db.collection('loja_produtos').orderBy('ts', 'desc').get();
         
-        let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Oficiais VersãoPro ⭐</h4>';
+        let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Oficiais Nova Versão ⭐</h4>';
         let communityProducts = [];
         let officialProductsFound = false;
 
@@ -5380,7 +5380,7 @@ async function exibirVersaoApp() {
             document.getElementById('appVersion').textContent = version;
         }
     } catch(e) {
-        console.error("Erro ao obter versão do app:", e);
+        console.error("Erro ao obter nova versão do app:", e);
         document.getElementById('appVersion').textContent = 'V.Local';
     }
 }
@@ -5793,7 +5793,7 @@ async function verificarPendencias(uid) {
 async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
     container.innerHTML = '';
     
-    if (produtoNome.toLowerCase().includes('versãopro')) {
+    if (produtoNome.toLowerCase().includes('Nova Versão')) {
         const hoje = new Date().toISOString().split('T')[0]; 
         const seed = produtoId + hoje;
         let hash = 0;
@@ -5949,7 +5949,7 @@ function handleDeepLink() {
     history.pushState("", document.title, window.location.pathname + window.location.search);
 }
 
-// --- NOVAS FUNÇÕES VersãoPro ---
+// --- NOVAS FUNÇÕES Nova Versão ---
 
 function iniciarOnboarding() {
     const modal = document.getElementById('modalOnboarding');
@@ -5962,7 +5962,7 @@ function renderOnboardingTela1() {
     document.getElementById('onboardingContent').innerHTML = `
         <div class="onboarding-content-wrapper" style="text-align: center;">
             <img src="https://i.postimg.cc/KYbBp2VR/image-removebg-preview.png" alt="Logo VersãoPro" style="width: 150px; height: 150px; margin-bottom: 20px;">
-            <h2 style="color: var(--cor-destaque-ouro);">Bem-vindo(a) ao VersãoPro!</h2>
+            <h2 style="color: var(--cor-destaque-ouro);">Bem-vindo(a) ao Nova Versão!</h2>
             <p style="color: var(--cor-destaque-ouro);">seu ecossistema de beleza e bem-estar.</p>
             <button onclick="renderOnboardingTela2()">Próximo</button>
         </div>
