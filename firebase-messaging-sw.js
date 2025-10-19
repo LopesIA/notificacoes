@@ -1,6 +1,11 @@
+// firebase-messaging-sw.js (CÓDIGO MESCLADO)
+
 // Importa os scripts do Firebase necessários para o Service Worker
 importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js');
+// 1. ADIÇÃO DO WORKBOX AQUI
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox-sw.js'); 
+
 
 // Suas credenciais do Firebase
 const firebaseConfig = {
@@ -15,6 +20,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
+// 2. CONFIGURAÇÕES DO OFFLINE/WORKBOX AQUI
+const CACHE = "pwabuilder-page";
+const offlineFallbackPage = "404.html"; // Usando seu arquivo 404.html existente
+
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
@@ -24,17 +33,17 @@ self.addEventListener('message', event => {
 // Listener para o evento 'push' (notificação recebida com app fechado/em segundo plano)
 self.addEventListener('push', event => {
   console.log('[Service Worker] Push Recebido.');
+  // ... (restante do código push aqui)
+  
+  // Seu código existente do listener 'push'
   const payload = event.data.json();
-  console.log('[Service Worker] Payload:', payload);
-
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
     icon: payload.notification.icon || '/icone.png',
-    // A mágica do deep linking acontece aqui:
-    // O backend envia um 'link' dentro do campo 'data'
     data: {
-      url: payload.data.link || '/' // Se nenhum link for fornecido, abre a página inicial
+      url: payload.data.link || '/', // Usa o link do payload ou volta para a raiz
+      // Adicione mais dados se necessário
     }
   };
 
@@ -80,9 +89,49 @@ messaging.onBackgroundMessage(function(payload) {
     body: payload.notification.body,
     icon: payload.notification.icon || '/icone.png',
     data: {
-      url: payload.data.link || '/'
+      url: payload.data.link || '/' // Usa o link do payload ou volta para a raiz
     }
   };
 
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
+// -------------------------------------------------------------------------
+// INÍCIO DA LÓGICA DO WORKBOX PARA CACHE E OFFLINE (NOVO CÓDIGO)
+// -------------------------------------------------------------------------
+
+self.addEventListener('install', async (event) => {
+  event.waitUntil(
+    caches.open(CACHE)
+      .then((cache) => cache.add(offlineFallbackPage))
+  );
+});
+
+if (workbox.navigationPreload.isSupported()) {
+  workbox.navigationPreload.enable();
+}
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const preloadResp = await event.preloadResponse;
+
+        if (preloadResp) {
+          return preloadResp;
+        }
+
+        const networkResp = await fetch(event.request);
+        return networkResp;
+      } catch (error) {
+
+        const cache = await caches.open(CACHE);
+        const cachedResp = await cache.match(offlineFallbackPage);
+        return cachedResp;
+      }
+    })());
+  }
+});
+
+// -------------------------------------------------------------------------
+// FIM DA LÓGICA DO WORKBOX
+// -------------------------------------------------------------------------
