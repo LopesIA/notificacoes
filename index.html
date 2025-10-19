@@ -6254,6 +6254,13 @@ async function abrirGerenciarLojaAdmin() {
     });
 }
 
+async function registrarSincronizacaoDeMensagem(mensagemData) {
+    const swRegistration = await navigator.serviceWorker.ready;
+    // Salve a mensagem no IndexedDB (armazenamento local) aqui
+    await swRegistration.sync.register('enviar-mensagem-chat');
+    console.log('Sincronização para envio de mensagem registrada.');
+}
+
 function setupConfiguracoes() {
     carregarEstados('config');
     setTimeout(() => { // Garante que os estados carregaram
