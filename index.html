@@ -2089,6 +2089,8 @@ let deferredInstallPrompt = null;
 let chatPreviewTimeout = null; 
 let aguardeClickCount = 0;
 
+const BACKEND_API_URL = 'https://navalhabackend.onrender.com';
+
 // --- [LÓGICA DE POPUP DE AGUARDE E MODAIS] ---
 function exibirAguarde(texto = "Aguarde...") {
     document.getElementById('popupAguardeTexto').textContent = texto;
