@@ -6327,6 +6327,26 @@ document.getElementById('btnConfig').onclick = () => {
         });
       });
     }
+
+// --- NOVO CÓDIGO: Adiciona a funcionalidade de login com a tecla Enter ---
+const loginFields = [document.getElementById('email'), document.getElementById('senha')];
+loginFields.forEach(field => {
+    field.addEventListener('keyup', function(event) {
+        // Verifica se a tecla pressionada foi "Enter"
+        if (event.key === 'Enter') {
+            // Impede qualquer ação padrão do navegador
+            event.preventDefault();
+            // Pega o botão de entrar pelo texto, pois não tem ID
+            const entrarButton = Array.from(document.querySelectorAll('#authView button')).find(btn => btn.textContent.includes('Entrar'));
+            // Clica no botão
+            if (entrarButton) {
+                entrarButton.click();
+            }
+        }
+    });
+});
+// --- FIM DO NOVO CÓDIGO ---
+
 </script>
 </body>
 </html>
