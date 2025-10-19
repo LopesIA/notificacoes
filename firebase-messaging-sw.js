@@ -95,6 +95,17 @@ messaging.onBackgroundMessage(function(payload) {
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
+self.addEventListener('sync', event => {
+  if (event.tag === 'enviar-mensagem-chat') {
+    event.waitUntil(
+      // Coloque aqui a lógica para pegar a mensagem salva
+      // do IndexedDB e enviá-la para o Firestore.
+      console.log('Conexão reestabelecida, enviando mensagem em segundo plano...')
+    );
+  }
+});
+
 // -------------------------------------------------------------------------
 // INÍCIO DA LÓGICA DO WORKBOX PARA CACHE E OFFLINE (NOVO CÓDIGO)
 // -------------------------------------------------------------------------
