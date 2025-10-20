@@ -1969,6 +1969,13 @@
 .rating-stars span.selected {
     color: var(--cor-destaque);
 }
+
+/* ADICIONE ESTE CÓDIGO DENTRO DA TAG <style> */
+#modalAdminGerenciarUsuario .modal-content {
+    max-height: 80vh; /* Limita a altura máxima do modal */
+    overflow-y: auto;   /* Adiciona a barra de rolagem vertical quando necessário */
+}
+
 </style>
 
 
@@ -3563,51 +3570,38 @@ function abrirChatGlobal() {
     alternarChat('global'); // Começa sempre no global
 }
 
+// SUBSTITUA TODA A FUNÇÃO 'alternarChat' POR ESTA
 function alternarChat(tipo) {
     chatAtual = tipo;
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
     document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
 
+    // Remove permanentemente o seletor de cidade do admin da tela
     const adminSelector = document.getElementById('adminChatSelectorContainer');
+    adminSelector.classList.add('hidden'); 
+
     const chatContainer = document.getElementById("chatMessages");
     chatContainer.innerHTML = ""; // Limpa antes de carregar
     if (chatListener) chatListener();
 
-    let cidadeParaVisualizar = perfil.cidade; // Padrão para cliente
-
-    if (tipo === 'local' && perfil.tipo === 'admin') {
-        adminSelector.classList.remove('hidden');
-        const estadoSelect = document.getElementById('adminChatEstado');
-
-        // Popula os estados apenas uma vez para não perder a seleção
-        if (estadoSelect.options.length <= 1) {
-            estadoSelect.innerHTML = '<option value="">Selecione o estado</option>';
-            Object.keys(cidadesPorEstado).forEach(sigla => {
-                estadoSelect.innerHTML += `<option value="${sigla}">${sigla}</option>`;
-            });
-            estadoSelect.value = perfil.estado; // Padrão para o estado do admin
-            adminCarregarCidadesChat(); // Carrega as cidades do estado padrão
-        }
-
-        cidadeParaVisualizar = document.getElementById('adminChatCidade').value;
-        document.getElementById("chatTitle").textContent = `📍 Chat Local (${cidadeParaVisualizar || 'Selecione uma cidade'})`;
-
-    } else {
-        adminSelector.classList.add('hidden');
-        document.getElementById("chatTitle").textContent = tipo === 'global' ? '💬 Chat Global' : `📍 Chat Local (${perfil.cidade})`;
-    }
-
-    const agora = new Date();
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+    const agora = new Date();
 
     if (tipo === 'local') {
-        if (!cidadeParaVisualizar) {
-            chatContainer.innerHTML = `<p>👑 Administrador, por favor, selecione um estado e cidade para visualizar o chat.</p>`;
-            return; // Impede a query de rodar sem cidade selecionada
+        if (perfil.tipo === 'admin') {
+            // Admin vê todas as mensagens locais, sem filtro de cidade
+            document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
+        } else {
+            // Usuário comum vê apenas o chat da sua cidade
+            query = query.where("cidade", "==", perfil.cidade);
+            document.getElementById("chatTitle").textContent = `📍 Chat Local (${perfil.cidade})`;
         }
-        query = query.where("cidade", "==", cidadeParaVisualizar);
+    } else {
+        // Lógica para o chat global
+        document.getElementById("chatTitle").textContent = '💬 Chat Global';
     }
 
+    // A ordenação e o limite continuam os mesmos
     query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(15);
 
     chatListener = query.onSnapshot(async snapshot => {
@@ -3664,6 +3658,7 @@ async function carregarMensagensAnteriores() {
     btn.disabled = false;
 }
 
+// SUBSTITUA TODA A FUNÇÃO 'createMessageDiv' POR ESTA
 async function createMessageDiv(msg) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
     let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = "";
@@ -3693,7 +3688,6 @@ async function createMessageDiv(msg) {
                 } else {
                     iconeBase = `💼`; // Icone profissional normal
                 }
-
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'profissional');
             } else if (isVipAtivo(remetenteData)) {
                 classeCSS = `cliente-chat`; iconeBase = `👑`;
@@ -3702,7 +3696,14 @@ async function createMessageDiv(msg) {
                 classeCSS = `cliente-chat`; iconeBase = `👤`;
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
             }
-            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+            
+            // LÓGICA PRINCIPAL ADICIONADA AQUI
+            let cidadeLabel = '';
+            if (perfil.tipo === 'admin' && chatAtual === 'local' && msg.cidade) {
+                cidadeLabel = ` <small style="opacity: 0.7; font-weight: normal;">(${msg.cidade})</small>`;
+            }
+
+            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}${cidadeLabel}</span>`;
         }
     }
     
@@ -4798,6 +4799,7 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => alert("Denúncia fechada!"));
 }
 
+// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
 async function abrirModalGerenciarUsuario(uid) {
   const doc = await db.collection("usuarios").doc(uid).get();
   const u = doc.data();
@@ -4836,6 +4838,8 @@ async function abrirModalGerenciarUsuario(uid) {
       <div class="popup-section">
           <button style="background-color: #c0392b;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
       </div>
+      
+      <button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
   `;
   abrirModal('modalAdminGerenciarUsuario');
 }
