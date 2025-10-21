@@ -1,20 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="manifest" href="/manifest.json">
   <meta charset="UTF-8">
   <title>Nova Versão</title>
+  <link rel="manifest" href="/manifest.json">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-<link rel="manifest" href="/manifest.json">
-  <meta charset="UTF-8">
-  
   <link rel="icon" href="/icone.png" type="image/png">
   <link rel="apple-touch-icon" href="/icone.png">
-  <title>Nova Versão</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="[https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap](https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap)" rel="stylesheet">
 
   <style>
     :root {
@@ -1151,8 +1144,8 @@
     <button onclick="entrar()">➡️ Entrar</button>
     <button id="btnCriarConta" onclick="prepararCriarConta()">🆕 Criar conta</button>
     <button id="btnVoltar" class="hidden" onclick="voltarParaLogin()">⬅️ Voltar</button>
+    <button onclick="abrirModal('modalEsqueciSenha')" style="background: none; border: none; color: var(--cor-destaque); margin-top: 10px; width: 100%;">Esqueci minha senha</button>
   </div>
-<button onclick="abrirModal('modalEsqueciSenha')" style="background: none; border: none; color: var(--cor-destaque); margin-top: 10px;">Esqueci minha senha</button>
   
   <div id="guestView" class="card">
     <h2>🙋 Painel de Visitante</h2>
@@ -4226,12 +4219,10 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
-        fecharTodosOsModais();
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         alert("Agendamento aprovado!");
     }).catch(e => {
-        fecharTodosOsModais();
         alert("Erro ao aprovar: " + e);
     });
 }
@@ -4270,12 +4261,10 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
   }).then(() => {
-      fecharTodosOsModais();
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
       alert("Agendamento aprovado!");
   }).catch(e => {
-      fecharTodosOsModais();
       alert("Erro ao aprovar: " + e);
   });
 }
@@ -4315,12 +4304,10 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
       if (!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(-valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
   }).then(() => {
-      fecharTodosOsModais();
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
       alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
   }).catch(e => {
-      fecharTodosOsModais();
       alert("Erro ao cancelar: " + e);
   });
 }
@@ -4341,7 +4328,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    fecharTodosOsModais();
+    
     alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
@@ -4358,7 +4345,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         }
     }
   } catch(e) {
-    fecharTodosOsModais();
     alert("Erro ao concluir serviço: " + e);
   }
 }
