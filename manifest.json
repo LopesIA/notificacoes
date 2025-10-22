@@ -68,27 +68,28 @@
       "name": "Minha Carteira",
       "short_name": "Carteira",
       "description": "Acessar saldo e fazer depósitos",
-      "url": "/#carteira",
+      "url": "/",
       "icons": [{ "src": "/icone-carteira.png", "sizes": "96x96" }]
     },
     {
       "name": "Meus Agendamentos",
       "short_name": "Agenda",
       "description": "Ver seus agendamentos pendentes e histórico",
-      "url": "/#historico",
+      "url": "/",
       "icons": [{ "src": "/icone-agenda.png", "sizes": "96x96" }]
     },
     {
       "name": "Ver Loja",
       "short_name": "Loja",
       "description": "Explorar produtos da comunidade",
-      "url": "/#loja",
+      "url": "/",
       "icons": [{ "src": "/icone-loja.png", "sizes": "96x96" }]
     }
   ],
   "share_target": {
     "action": "/?shared=true",
     "method": "GET",
+    "enctype": "application/x-www-form-urlencoded", // <-- ADICIONE ESTA LINHA
     "params": {
       "title": "title",
       "text": "text",
