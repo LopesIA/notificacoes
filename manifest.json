@@ -89,7 +89,7 @@
   "share_target": {
     "action": "/?shared=true",
     "method": "GET",
-    "enctype": "application/x-www-form-urlencoded", // <-- ADICIONE ESTA LINHA
+    "enctype": "application/x-www-form-urlencoded",
     "params": {
       "title": "title",
       "text": "text",
