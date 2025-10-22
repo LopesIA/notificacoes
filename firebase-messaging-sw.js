@@ -59,7 +59,8 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   
   // Abre a URL que foi definida no 'data' da notificação
-  const urlToOpen = new URL(event.notification.data.url, self.location.origin).href;
+  const urlToOpen = new URL('/', self.location.origin).href;
+
 
   event.waitUntil(
     clients.matchAll({
