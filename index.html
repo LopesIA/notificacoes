@@ -2252,11 +2252,18 @@ function configurarBotoesGuest() {
     const guestView = document.getElementById('guestView');
     const buttons = guestView.querySelectorAll('#guestFuncoesContainer button');
     buttons.forEach(btn => {
-        const originalOnclick = btn.onclick;
-        if(btn.textContent.trim() === 'Loja') return; // Mantém a funcionalidade do botão Loja
+        const originalText = btn.textContent.trim();
+        // Mantém a funcionalidade original do botão "Loja"
+        if (originalText === 'Loja') {
+            btn.onclick = () => { mostrar('lojaView'); carregarProdutos(); };
+            return;
+        }
+        
+        // Para todos os outros botões, exibe um alerta para o usuário se logar
         btn.onclick = () => {
-    iniciarOnboarding(); // NOVO: Chama a primeira tela de boas-vindas
-};
+            alert("Para acessar esta função, por favor, crie uma conta ou faça login.");
+            mostrar('authView'); // Direciona para a tela de login
+        };
     });
 }
 
