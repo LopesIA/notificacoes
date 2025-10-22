@@ -1080,9 +1080,33 @@
         background-color: var(--cor-destaque);
         color: var(--cor-fundo);
     }
+
+#modalVipPro .modal-content {
+    max-height: 85vh; /* Limita a altura a 85% da altura da tela */
+    overflow-y: auto; /* Adiciona barra de rolagem vertical se necessário */
+}
+
+/* Opcional: Melhora o espaçamento interno se necessário */
+#vipProContentContainer {
+    padding-bottom: 20px; /* Adiciona espaço no final para não cortar o botão */
+}
+
   </style>
 </head>
 <body>
+
+<!-- Modal para Alterar Senha -->
+<div id="modalAlterarSenha" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🔑 Alterar Senha</h3>
+    <input id="senhaAntiga" type="password" placeholder="Senha Atual">
+    <input id="senhaNova" type="password" placeholder="Nova Senha (mínimo 6 caracteres)">
+    <input id="senhaNovaConfirm" type="password" placeholder="Confirmar Nova Senha">
+    <button onclick="alterarSenhaUsuario()">✅ Confirmar Alteração</button>
+    <button data-modal-id="modalAlterarSenha" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+<!-- Fim Modal Alterar Senha -->
 
 <div id="popupAguarde" class="modal" onclick="fecharAguarde(event)">
   <div class="modal-content">
@@ -1260,6 +1284,12 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
     
+<!-- Botão Adicionado -->
+    <div class="popup-section">
+      <h4>🔒 Segurança</h4>
+      <button onclick="abrirModal('modalAlterarSenha'); fecharModalAtual();">Alterar Minha Senha</button>
+    </div>
+    <!-- Fim Botão Adicionado -->
 
     <div class="popup-section config-section">
       <h4>❤️ Meu Interesse Principal</h4>
@@ -2440,25 +2470,43 @@ const cidadesPorEstado = {
 
 function carregarEstados(prefix = '') {
   const estadoSelect = document.getElementById(`${prefix}estado`);
-  if(!estadoSelect) return;
+  // VERIFICAÇÃO ADICIONADA:
+  if (!estadoSelect) {
+      console.error(`Elemento ${prefix}estado não encontrado.`);
+      return;
+  }
   const valorAtual = estadoSelect.value;
   estadoSelect.innerHTML = '<option value="">🌎 Selecione seu estado</option>';
-  Object.keys(cidadesPorEstado).forEach(sigla => {
+  // Ordena os estados alfabeticamente
+  const estadosOrdenados = Object.keys(cidadesPorEstado).sort();
+  estadosOrdenados.forEach(sigla => {
     estadoSelect.innerHTML += `<option value="${sigla}" ${sigla === valorAtual ? 'selected' : ''}>${sigla}</option>`;
   });
 }
 
+
 function carregarCidades(prefix = '') {
-  const estado = document.getElementById(`${prefix}estado`).value;
+  const estadoSelect = document.getElementById(`${prefix}estado`);
   const cidadeSelect = document.getElementById(`${prefix}cidade`);
-  if(!cidadeSelect) return;
+  // VERIFICAÇÕES ADICIONADAS:
+  if (!estadoSelect) {
+      console.error(`Elemento ${prefix}estado não encontrado ao carregar cidades.`);
+      return;
+  }
+   if (!cidadeSelect) {
+      console.error(`Elemento ${prefix}cidade não encontrado.`);
+      return;
+  }
+  const estado = estadoSelect.value;
   const valorAtual = cidadeSelect.value;
   cidadeSelect.innerHTML = '<option value="">🏙️ Selecione sua cidade</option>';
   const cidades = cidadesPorEstado[estado] || [];
-  cidades.forEach(c => {
+  // Ordena as cidades alfabeticamente
+  cidades.sort().forEach(c => {
     cidadeSelect.innerHTML += `<option value="${c}" ${c === valorAtual ? 'selected' : ''}>${c}</option>`;
   });
 }
+
 
 carregarEstados();
 
@@ -3751,7 +3799,30 @@ function isVipAtivo(perfilUsuario) {
     if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
         return false;
     }
-    return perfilUsuario.vipExpirationDate.toDate() > new Date();
+    // Verifica se vipExpirationDate é um objeto Timestamp do Firebase (possui toDate)
+    if (perfilUsuario.vipExpirationDate && typeof perfilUsuario.vipExpirationDate.toDate === 'function') {
+        return perfilUsuario.vipExpirationDate.toDate() > new Date();
+    }
+    // Se não for um Timestamp, tenta converter de outras formas comuns (ex: string ISO ou segundos)
+    try {
+        let expiryDate;
+        // Tenta tratar como objeto { _seconds: ..., _nanoseconds: ... } (serialização comum)
+        if (typeof perfilUsuario.vipExpirationDate === 'object' && perfilUsuario.vipExpirationDate._seconds) {
+             expiryDate = new Date(perfilUsuario.vipExpirationDate._seconds * 1000);
+        }
+        // Tenta tratar como string ISO 8601
+        else if (typeof perfilUsuario.vipExpirationDate === 'string') {
+             expiryDate = new Date(perfilUsuario.vipExpirationDate);
+        }
+        // Se conseguiu converter, compara
+        if (expiryDate instanceof Date && !isNaN(expiryDate)) {
+            return expiryDate > new Date();
+        }
+    } catch (e) {
+        console.error("Erro ao processar vipExpirationDate:", e, perfilUsuario.vipExpirationDate);
+    }
+    // Se não conseguiu converter ou deu erro, considera como inativo por segurança
+    return false;
 }
 
 // FUNÇÃO DO CHAT ATUALIZADA
@@ -3923,6 +3994,64 @@ function sendBotMessage() {
         cidade: "global", // Mensagem do bot é global
         deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
     });
+}
+
+async function alterarSenhaUsuario() {
+    const senhaAntiga = document.getElementById('senhaAntiga').value;
+    const senhaNova = document.getElementById('senhaNova').value;
+    const senhaNovaConfirm = document.getElementById('senhaNovaConfirm').value;
+    const user = auth.currentUser;
+
+    if (!user) {
+        alert("Você precisa estar logado para alterar a senha.");
+        return;
+    }
+
+    if (!senhaAntiga || !senhaNova || !senhaNovaConfirm) {
+        alert("Por favor, preencha todos os campos.");
+        return;
+    }
+
+    if (senhaNova.length < 6) {
+        alert("A nova senha deve ter pelo menos 6 caracteres.");
+        return;
+    }
+
+    if (senhaNova !== senhaNovaConfirm) {
+        alert("A nova senha e a confirmação não coincidem.");
+        return;
+    }
+
+    exibirAguarde("Verificando senha atual...");
+
+    try {
+        // Reautenticar o usuário com a senha antiga
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, senhaAntiga);
+        await user.reauthenticateWithCredential(credential);
+
+        // Se a reautenticação foi bem-sucedida, atualiza a senha
+        exibirAguarde("Atualizando senha...");
+        await user.updatePassword(senhaNova);
+
+        fecharTodosOsModais();
+        alert("✅ Senha alterada com sucesso!");
+        // Limpa os campos e fecha o modal
+        document.getElementById('senhaAntiga').value = '';
+        document.getElementById('senhaNova').value = '';
+        document.getElementById('senhaNovaConfirm').value = '';
+        fecharModalAtual(); // Fecha o modal de alterar senha
+
+    } catch (error) {
+        fecharTodosOsModais();
+        console.error("Erro ao alterar senha:", error);
+        if (error.code === 'auth/wrong-password') {
+            alert("❌ A senha atual informada está incorreta.");
+        } else if (error.code === 'auth/too-many-requests') {
+             alert("❌ Muitas tentativas incorretas. Tente novamente mais tarde.");
+        } else {
+            alert("❌ Ocorreu um erro ao tentar alterar a senha: " + error.message);
+        }
+    }
 }
 
 function enviarMensagem() {
@@ -5080,6 +5209,16 @@ async function abrirModalGerenciarUsuario(uid) {
         <h4 style="word-break: break-all;">${u.nome}</h4>
         <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
 
+<!-- Seção Adicionada para Gerenciar Loja -->
+        <div class="popup-section">
+            <p><strong>Gerenciar Loja do Vendedor:</strong></p>
+            <p><strong>Loja Ativa:</strong> ${u.lojaLiberada ? 'Sim ✅' : 'Não ❌'}</p>
+            <button id="btnToggleLojaAdmin" onclick="toggleLojaAdmin('${uid}', ${!u.lojaLiberada})">
+                ${u.lojaLiberada ? 'Desativar Loja' : 'Ativar Loja'}
+            </button>
+        </div>
+        <!-- Fim da Seção Adicionada -->
+
         <div class="popup-section">
             <p><strong>Informações da Conta:</strong></p>
             <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
@@ -5145,6 +5284,36 @@ async function abrirModalGerenciarUsuario(uid) {
       console.error("Erro ao buscar dados do usuário:", error);
       alert("Não foi possível carregar os dados completos do usuário. " + error.message);
   }
+}
+
+async function toggleLojaAdmin(uid, novoEstado) {
+    const acao = novoEstado ? "ativar" : "desativar";
+    if (!confirm(`Tem certeza que deseja ${acao} a loja para este usuário?`)) {
+        return;
+    }
+    exibirAguarde(`${acao.charAt(0).toUpperCase() + acao.slice(1)}ndo loja...`);
+    try {
+        // Usa a mesma rota do backend, apenas envia o campo 'lojaLiberada'
+        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                adminUid: auth.currentUser.uid,
+                targetUid: uid,
+                updates: { lojaLiberada: novoEstado } // Envia a atualização específica
+            })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+
+        fecharTodosOsModais();
+        alert(`Loja ${novoEstado ? 'ativada' : 'desativada'} com sucesso!`);
+        // Reabre o modal para mostrar o status atualizado
+        abrirModalGerenciarUsuario(uid);
+    } catch (error) {
+        fecharTodosOsModais();
+        alert(`Erro ao ${acao} a loja: ` + error.message);
+    }
 }
 
 // ADICIONE ESTAS NOVAS FUNÇÕES NO INDEX.HTML
