@@ -5050,16 +5050,28 @@ function fecharDenuncia(id) {
 }
 
 // SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
+// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
 async function abrirModalGerenciarUsuario(uid) {
+  exibirAguarde("Carregando dados do usuário...");
   try {
-    const userRecord = await admin.auth().getUser(uid); // Busca dados do Auth
-    const doc = await db.collection("usuarios").doc(uid).get();
-    if (!doc.exists) {
-        return alert("Usuário não encontrado no banco de dados.");
+    // 1. CHAMA O BACKEND PARA BUSCAR OS DADOS DE FORMA SEGURA
+    const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            adminUid: auth.currentUser.uid, // Envia o UID do admin para verificação
+            targetUid: uid // Envia o UID do usuário que queremos ver
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status}`);
     }
-    const u = doc.data();
-    
-    // Formata as datas para exibição
+
+    const { auth: userRecord, firestore: u } = await response.json();
+
+    // 2. O RESTANTE DO CÓDIGO MONTA O MODAL, IGUAL ANTES
     const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
     const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
 
@@ -5116,7 +5128,8 @@ async function abrirModalGerenciarUsuario(uid) {
         <button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
     `;
     
-    // Carrega os selects de estado e cidade
+    fecharTodosOsModais(); // Fecha o "Aguarde..."
+    
     carregarEstados('adminNovo');
     setTimeout(() => {
         document.getElementById('adminNovoEstado').value = u.estado;
@@ -5128,6 +5141,7 @@ async function abrirModalGerenciarUsuario(uid) {
     
     abrirModal('modalAdminGerenciarUsuario');
   } catch (error) {
+      fecharTodosOsModais();
       console.error("Erro ao buscar dados do usuário:", error);
       alert("Não foi possível carregar os dados completos do usuário. " + error.message);
   }
