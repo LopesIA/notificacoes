@@ -18,6 +18,7 @@
     background-size: cover !important;
 }
 
+--cor-destaque-vermelho: #ff0000; /* Vermelho */
       --cor-fundo: #0c0c0c;
       --cor-card: #181818;
       --cor-botoes: #222222;
@@ -54,6 +55,7 @@
     animation: none;
 }
     body.tema-claro {
+--cor-destaque-vermelho: #cc0000; /* Vermelho mais escuro para tema claro */
       --cor-fundo: #f0f0f0;
       --cor-card: #ffffff;
       --cor-botoes: #e0e0e0;
@@ -514,9 +516,9 @@
         text-shadow: 0 0 8px var(--cor-destaque-azul);
     }
     .cliente-chat {
-        color: var(--cor-texto-principal);
-        text-shadow: 0 0 8px var(--cor-destaque-prata);
-    }
+    color: var(--cor-destaque-prata); /* Cor do texto para prateado */
+    text-shadow: 0 0 8px var(--cor-destaque-vermelho); /* Brilho vermelho */
+}
     .show-password-container {
         position: relative;
         display: flex;
