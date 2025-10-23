@@ -1597,12 +1597,12 @@
 <div id="modalLogomarca" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🎨 Adicionar Logomarca</h3>
-<p style="font-size: 12px; opacity: 0.8;">Faça o upload da sua logomarca (imagem ou GIF).</p>
-<img id="logomarcaPreview" src="https://via.placeholder.com/100?text=Logo" alt="Preview" style="max-width: 100px; border-radius: 50%; display: block; margin: 10px auto; border: 1px solid var(--cor-borda);">
+    <p style="font-size: 12px; opacity: 0.8;">Use o site <a href="https://postimages.org/" target="_blank">Postimages.org</a> para hospedar sua imagem gratuitamente e cole o "Link Direto" abaixo.</p>
+    <img id="logomarcaPreview" src="https://via.placeholder.com/100?text=Logo" alt="Preview" style="max-width: 100px; border-radius: 50%; display: block; margin: 10px auto; border: 1px solid var(--cor-borda);">
 <input type="file" id="logomarcaFile" accept="image/*,image/gif" onchange="previewImage(this, 'logomarcaPreview')">
 <progress id="logomarcaProgress" value="0" max="100" style="width: 100%; display: none;"></progress>
 <button onclick="uploadLogomarca()">💾 Salvar Logomarca</button>
-<button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
+    <button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -2237,21 +2237,19 @@ function fecharModalAtual(forcePopupAguarde = false) {
         setTimeout(() => popup.style.display = 'none', 300);
         return;
     }
-
+    
     if (modalStack.length > 0) {
         const modalParaFechar = modalStack.pop();
-        modalParaFechar.classList.remove('show');
-        setTimeout(() => {
-            modalParaFechar.style.display = 'none';
+    modalParaFechar.classList.remove('show');
+    setTimeout(() => {
+        modalParaFechar.style.display = 'none';
+    }, 300);
 
-            // --- ADICIONADO AQUI ---
-            // Se o modal fechado for o de agendamentos do barbeiro, verifica se ainda há pendências
-            if (modalParaFechar.id === 'modalAgendamentosBarbeiro') {
-                verificarPendenciasVisuaisBarbeiro(); // Chama a função para atualizar o botão
-            }
-            // --- FIM DA ADIÇÃO ---
-
-        }, 300);
+    // --- ADICIONADO AQUI ---
+    // Se o modal fechado for o de agendamentos do barbeiro, verifica se ainda há pendências
+    if (modalParaFechar.id === 'modalAgendamentosBarbeiro') {
+        verificarPendenciasVisuaisBarbeiro();
+    // --- FIM DA ADIÇÃO ---
     }
 }
 
@@ -2371,19 +2369,16 @@ async function garantirTokenAtualizadoNoPerfil(uid) {
 }
 
 async function verificarPendenciasVisuaisBarbeiro() {
-    // Só executa se estiver logado e for um profissional
-    if (!auth.currentUser || !perfil || perfil.tipo === 'cliente' || perfil.tipo === 'admin') return;
-
+    if (!auth.currentUser || perfil.tipo === 'cliente' || perfil.tipo === 'admin') return; // Só para profissionais logados
     try {
         const agendamentosSnap = await db.collection('agendamentos')
             .where('barbeiroUid', '==', auth.currentUser.uid)
-            .where('status', '==', 'pendente') // Verifica APENAS pendentes
-            .limit(1) // Só precisamos saber se existe pelo menos 1 pendente
+            .where('status', '==', 'pendente')
+            .limit(1) // Só precisamos saber se existe pelo menos 1
             .get();
 
         const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
         if (btnAgendamentos) {
-            // Adiciona ou remove a classe com base na existência de pendentes
             btnAgendamentos.classList.toggle('notificacao-pulsante', !agendamentosSnap.empty);
         }
     } catch (error) {
@@ -2878,21 +2873,21 @@ const btnVipPro = document.getElementById('btnVipPro');
     }
 
     // Listener de confirmação para compradores
-            if (comprasClienteListener) comprasClienteListener();
-            comprasClienteListener = db.collection('loja_pedidos')
-              .where('clienteUid', '==', user.uid)
-              .where('status', '==', 'entregue_pendente_confirmacao')
-              .onSnapshot(snapshot => {
-                if (!snapshot.empty) {
-                    const pedido = snapshot.docs[0].data();
-                    pedido.id = snapshot.docs[0].id;
-                    abrirModalConfirmacaoComprador(pedido);
-                }
-              });
-        // <<<----- ADD THIS LINE ----->>>
-        }); // linha 2240 - Final do comprasClienteListener
-                window.addEventListener('beforeinstallprompt', (e) => { // linha 2242 (Existente)
-            e.preventDefault(); // linha 2243 (Existente)
+    if (comprasClienteListener) comprasClienteListener();
+    comprasClienteListener = db.collection('loja_pedidos')
+      .where('clienteUid', '==', user.uid)
+      .where('status', '==', 'entregue_pendente_confirmacao')
+      .onSnapshot(snapshot => {
+        if (!snapshot.empty) {
+            const pedido = snapshot.docs[0].data();
+            pedido.id = snapshot.docs[0].id;
+            abrirModalConfirmacaoComprador(pedido);
+        }
+      });
+});
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
     deferredInstallPrompt = e;
     const modalInstalar = document.getElementById('modalInstalarApp');
     if (modalInstalar) {
@@ -4640,8 +4635,7 @@ criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamen
 exibirInfoPopup("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
   }).catch(e => {
       exibirInfoPopup("Erro ao cancelar: " + e);
-});
-
+  });
 }
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
@@ -5124,6 +5118,10 @@ function carregarAdmin() {
                         exibirInfoPopup(`⚠️ Alerta de Saldo! ${novo.nome} ultrapassou R$${Math.floor(novoSaldo / 100) * 100}.`);
                     }
                     adminUserBalances[id] = novoSaldo;
+                }
+            });
+        });
+    });
 
     // Listener para solicitações pendentes
     db.collection("solicitacoes").where("status", "==", "pendente").onSnapshot(snap => {
@@ -5859,117 +5857,36 @@ async function abrirModalDashboardBarbeiro() {
 function abrirModalPortfolioBarbeiro() {
     abrirModal('modalPortfolioBarbeiro');
     const container = document.getElementById('portfolioInputsContainer');
-    const pInfo = document.querySelector('#modalPortfolioBarbeiro .modal-content p');
+    container.innerHTML = ''; // Limpa o container
+    
+    // Atualiza o texto de ajuda
+    const p = document.querySelector('#modalPortfolioBarbeiro .modal-content p');
+    if (p) p.innerHTML = 'Gerencie suas 30 imagens de portfólio. Cole o link direto (que termina com .png ou .jpg) e a imagem aparecerá instantaneamente.';
 
-    // Atualiza texto de ajuda
-    pInfo.innerHTML = `Faça upload de até 30 imagens (JPG, PNG, GIF) para seu portfólio. As imagens existentes serão mantidas se você não enviar novas.`;
-
-    // Limpa o container e adiciona input de ARQUIVO MÚLTIPLO e área de preview
-    container.innerHTML = `
-        <label for="portfolioFiles" style="display:block; margin-bottom: 10px; cursor:pointer; background: var(--cor-botoes); padding: 10px; border-radius: 5px; text-align: center;">
-            ➕ Selecionar Imagens (até 30)
-        </label>
-        <input type="file" id="portfolioFiles" accept="image/*,image/gif" multiple onchange="previewPortfolioImages(this)" style="display: none;">
-        <div id="portfolioPreviews" class="portfolio-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); max-height: 250px; overflow-y: auto; border: 1px dashed var(--cor-borda); min-height: 50px; padding: 5px;">
+    // Pega o portfólio atual (que é um array de strings)
+    const portfolioAtual = perfil.portfolio || [];
+    
+    // Loop para criar os 30 slots
+    for (let i = 0; i < 30; i++) {
+        const url = portfolioAtual[i] || ''; // Pega a URL existente ou uma string vazia
+        const placeholder = `https://via.placeholder.com/120x100?text=Slot+${i + 1}`;
+        
+        // Cria o HTML para cada item do portfólio
+        container.innerHTML += `
+            <div class="portfolio-admin-item">
+                <img id="preview-img-${i}" 
+                     src="${url || placeholder}" 
+                     alt="Preview Slot ${i + 1}"
+                     onerror="this.src='${placeholder}'"> 
+                     
+                <input type="url" 
+                       class="portfolio-url-input" 
+                       placeholder="🔗 Cole o link aqui" 
+                       value="${url}"
+                       oninput="document.getElementById('previ
+ew-img-${i}').src = this.value || '${placeholder}'">
             </div>
-        <progress id="portfolioProgress" value="0" max="100" style="width: 100%; display: none; margin-top: 10px;"></progress>
-    `;
-    // Garante que o botão Salvar chame a função correta
-     const saveButton = document.querySelector('#modalPortfolioBarbeiro button[onclick="salvarPortfolio()"]');
-     if(saveButton) saveButton.onclick = salvarPortfolio; // Reatribui para garantir
-}
-
-// NOVA FUNÇÃO para salvar múltiplas imagens do portfólio via upload
-async function salvarPortfolio() {
-    const fileInput = document.getElementById('portfolioFiles');
-    const files = fileInput.files;
-    if (!auth.currentUser) return;
-
-    // Se nenhum arquivo novo foi selecionado, não faz nada (mantém o existente)
-    if (!files || files.length === 0) {
-        exibirInfoPopup("Nenhuma nova imagem selecionada. O portfólio existente foi mantido.");
-        fecharModalAtual();
-        return;
-    }
-
-    // Limita a 30 arquivos
-    const filesToUpload = Array.from(files).slice(0, 30);
-    if (files.length > 30) {
-        exibirInfoPopup("Limite excedido. Apenas as primeiras 30 imagens serão enviadas.");
-    }
-
-    const progressBar = document.getElementById('portfolioProgress');
-    const saveButton = document.querySelector('#modalPortfolioBarbeiro button[onclick="salvarPortfolio()"]'); // Seleciona o botão correto
-    exibirAguarde("Enviando imagens do portfólio...");
-    progressBar.style.display = 'block';
-    progressBar.value = 0;
-    saveButton.disabled = true;
-
-    const uploadPromises = [];
-    const newDownloadURLs = []; // Armazena as URLs das novas imagens
-    let uploadedCount = 0;
-
-    for (const file of filesToUpload) {
-        const storageRef = storage.ref(`portfolio/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
-        const uploadTask = storageRef.put(file);
-
-        const promise = new Promise((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    // Calcula o progresso geral baseado em todos os arquivos
-                    const progress = ((uploadedCount + (snapshot.bytesTransferred / snapshot.totalBytes)) / filesToUpload.length) * 100;
-                    progressBar.value = progress;
-                },
-                (error) => reject(error),
-                async () => {
-                    try {
-                        const url = await uploadTask.snapshot.ref.getDownloadURL();
-                        newDownloadURLs.push(url); // Salva a URL obtida
-                        uploadedCount++;
-                        // Atualiza o progresso após completar um upload
-                        progressBar.value = (uploadedCount / filesToUpload.length) * 100;
-                        resolve();
-                    } catch (getUrlError) {
-                        reject(getUrlError); // Rejeita se não conseguir a URL
-                    }
-                }
-            );
-        });
-        uploadPromises.push(promise);
-    }
-
-    try {
-        await Promise.all(uploadPromises); // Espera todos os uploads
-
-        // Pega portfólio existente
-        const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
-        const portfolioAtual = userDoc.data()?.portfolio || [];
-
-        // Combina o atual com as novas URLs e garante que são strings válidas
-        const portfolioCombinado = [...portfolioAtual, ...newDownloadURLs]
-                                     .filter(url => typeof url === 'string' && url.startsWith('http'));
-
-        // Mantém apenas os últimos 30 itens únicos (os mais recentes ficam no final)
-        const portfolioFinal = [...new Set(portfolioCombinado)].slice(-30);
-
-        // Atualiza o portfólio no Firestore
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({ portfolio: portfolioFinal });
-
-        progressBar.style.display = 'none';
-        saveButton.disabled = false;
-        fecharTodosOsModais();
-        exibirInfoPopup('Portfólio salvo com sucesso!');
-        fecharModalAtual();
-        // Limpa o input de arquivo para a próxima vez
-        fileInput.value = '';
-        document.getElementById('portfolioPreviews').innerHTML = '';
-
-    } catch (error) {
-        fecharTodosOsModais();
-        console.error("Erro no upload do portfólio:", error);
-        exibirInfoPopup("Falha no upload de uma ou mais imagens: " + (error.code || error.message));
-        progressBar.style.display = 'none';
-        saveButton.disabled = false;
+        `;
     }
 }
 
@@ -6048,7 +5965,6 @@ async function uploadPortfolio() {
     }
 }
 
-// NOVA FUNÇÃO para preview de múltiplas imagens do portfólio
 function previewPortfolioImages(input) {
     const previewsContainer = document.getElementById('portfolioPreviews');
     previewsContainer.innerHTML = ''; // Limpa previews antigos
@@ -6057,11 +5973,7 @@ function previewPortfolioImages(input) {
         files.forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.alt = "Preview";
-                img.style.cssText = "width: 80px; height: 80px; object-fit: cover; border-radius: 5px;";
-                previewsContainer.appendChild(img);
+                previewsContainer.innerHTML += `<img src="${e.target.result}" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">`;
             }
             reader.readAsDataURL(file);
         });
@@ -7394,9 +7306,8 @@ loginFields.forEach(field => {
         }
     });
 });
+// --- FIM DO NOVO CÓDIGO ---
 
 </script>
 </body>
 </html>
-
-
