@@ -2891,8 +2891,7 @@ const btnVipPro = document.getElementById('btnVipPro');
               });
         // <<<----- ADD THIS LINE ----->>>
         }); // linha 2240 - Final do comprasClienteListener
-        }); // <<<<----- LINHA ADICIONADA PARA FECHAR O onAuthStateChanged -----<<<< linha 2241 (NOVA)
-        window.addEventListener('beforeinstallprompt', (e) => { // linha 2242 (Existente)
+                window.addEventListener('beforeinstallprompt', (e) => { // linha 2242 (Existente)
             e.preventDefault(); // linha 2243 (Existente)
     deferredInstallPrompt = e;
     const modalInstalar = document.getElementById('modalInstalarApp');
@@ -4641,7 +4640,9 @@ criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamen
 exibirInfoPopup("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
   }).catch(e => {
       exibirInfoPopup("Erro ao cancelar: " + e);
-  });
+});
+
+}
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
   exibirAguarde("Concluindo serviço..."); // <-- MOVIDO PARA ANTES
