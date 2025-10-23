@@ -4355,10 +4355,12 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
+fecharTodosOsModais();
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         alert("Agendamento aprovado!");
     }).catch(e => {
+fecharTodosOsModais();
         alert("Erro ao aprovar: " + e);
     });
 }
@@ -4449,7 +4451,7 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
 }
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
-  exibirAguarde("Concluindo...");
+  exibirAguarde("Concluindo serviço...");
   try {
     const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
@@ -4464,7 +4466,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    
+    fecharTodosOsModais();
     alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
@@ -4481,6 +4483,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         }
     }
   } catch(e) {
+fecharTodosOsModais();
     alert("Erro ao concluir serviço: " + e);
   }
 }
