@@ -2890,10 +2890,10 @@ const btnVipPro = document.getElementById('btnVipPro');
                 }
               });
         // <<<----- ADD THIS LINE ----->>>
-        }); // Closes the auth.onAuthStateChanged callback
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
+        }); // linha 2240 - Final do comprasClienteListener
+        }); // <<<<----- LINHA ADICIONADA PARA FECHAR O onAuthStateChanged -----<<<< linha 2241 (NOVA)
+        window.addEventListener('beforeinstallprompt', (e) => { // linha 2242 (Existente)
+            e.preventDefault(); // linha 2243 (Existente)
     deferredInstallPrompt = e;
     const modalInstalar = document.getElementById('modalInstalarApp');
     if (modalInstalar) {
