@@ -3414,7 +3414,7 @@ function abrirHistoricoCliente() {
 // ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
 function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   const nota = parseInt(prompt("Avalie o serviço de 1 a 10:"));
-  if (isNaN(nota) || nota < 1 || nota > 10) return return exibirInfoPopup("Erro", "Avaliação inválida. Use um número de 1 a 10.");
+  if (isNaN(nota) || nota < 1 || nota > 10) return exibirInfoPopup("Erro", "Avaliação inválida. Use um número de 1 a 10.");
   
   const comentario = prompt("Deixe um comentário sobre o serviço:");
 
