@@ -4642,7 +4642,6 @@ exibirInfoPopup("Agendamento cancelado e valor reembolsado. Sua reputação dimi
   }).catch(e => {
       exibirInfoPopup("Erro ao cancelar: " + e);
   });
-}
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
   exibirAguarde("Concluindo serviço..."); // <-- MOVIDO PARA ANTES
