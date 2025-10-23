@@ -2878,18 +2878,19 @@ const btnVipPro = document.getElementById('btnVipPro');
     }
 
     // Listener de confirmação para compradores
-    if (comprasClienteListener) comprasClienteListener();
-    comprasClienteListener = db.collection('loja_pedidos')
-      .where('clienteUid', '==', user.uid)
-      .where('status', '==', 'entregue_pendente_confirmacao')
-      .onSnapshot(snapshot => {
-        if (!snapshot.empty) {
-            const pedido = snapshot.docs[0].data();
-            pedido.id = snapshot.docs[0].id;
-            abrirModalConfirmacaoComprador(pedido);
-        }
-      });
-});
+            if (comprasClienteListener) comprasClienteListener();
+            comprasClienteListener = db.collection('loja_pedidos')
+              .where('clienteUid', '==', user.uid)
+              .where('status', '==', 'entregue_pendente_confirmacao')
+              .onSnapshot(snapshot => {
+                if (!snapshot.empty) {
+                    const pedido = snapshot.docs[0].data();
+                    pedido.id = snapshot.docs[0].id;
+                    abrirModalConfirmacaoComprador(pedido);
+                }
+              });
+        // <<<----- ADD THIS LINE ----->>>
+        }); // Closes the auth.onAuthStateChanged callback
 
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
