@@ -18,7 +18,6 @@
     background-size: cover !important;
 }
 
---cor-destaque-vermelho: #ff0000; /* Vermelho */
       --cor-fundo: #0c0c0c;
       --cor-card: #181818;
       --cor-botoes: #222222;
@@ -55,7 +54,6 @@
     animation: none;
 }
     body.tema-claro {
---cor-destaque-vermelho: #cc0000; /* Vermelho mais escuro para tema claro */
       --cor-fundo: #f0f0f0;
       --cor-card: #ffffff;
       --cor-botoes: #e0e0e0;
@@ -516,9 +514,9 @@
         text-shadow: 0 0 8px var(--cor-destaque-azul);
     }
     .cliente-chat {
-    color: var(--cor-destaque-prata); /* Cor do texto para prateado */
-    text-shadow: 0 0 8px var(--cor-destaque-vermelho); /* Brilho vermelho */
-}
+        color: var(--cor-texto-principal);
+        text-shadow: 0 0 8px var(--cor-destaque-prata);
+    }
     .show-password-container {
         position: relative;
         display: flex;
@@ -2216,17 +2214,12 @@ function fecharModalAtual(forcePopupAguarde = false) {
         return;
     }
     
-    const modalParaFechar = modalStack.pop();
-    modalParaFechar.classList.remove('show');
-    setTimeout(() => {
-        modalParaFechar.style.display = 'none';
-    }, 300);
-
-    // --- ADICIONADO AQUI ---
-    // Se o modal fechado for o de agendamentos do barbeiro, verifica se ainda há pendências
-    if (modalParaFechar.id === 'modalAgendamentosBarbeiro') {
-        verificarPendenciasVisuaisBarbeiro();
-    // --- FIM DA ADIÇÃO ---
+    if (modalStack.length > 0) {
+        const modalParaFechar = modalStack.pop();
+        modalParaFechar.classList.remove('show');
+        setTimeout(() => {
+            modalParaFechar.style.display = 'none';
+        }, 300);
     }
 }
 
@@ -3125,7 +3118,6 @@ function verificarEstadoBotaoAgendar() {
 }
 
 async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
-fecharModalAtual();
     if (isGuest || !auth.currentUser) {
         alert("Para agendar um horário, por favor, faça login ou crie uma conta.");
         return mostrar('authView');
@@ -4334,18 +4326,37 @@ function toggleDisponibilidade() {
 // SUBSTITUA A FUNÇÃO 'aprovarAgendamentoImediato'
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
-    exibirAguarde("Aprovando vaga..."); // <-- MOVIDO PARA ANTES
-    // Lógica de cálculo de taxa dinâmica...
-    // ...
+    exibirAguarde("Aprovando...");
+    
+    // Lógica de cálculo de taxa dinâmica
+    let taxaAplicada = TAXA;
+    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+        taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
+    }
+    const valorComTaxa = valor * (1 - taxaAplicada);
+    const valorAdmin = valor * taxaAplicada;
+
     db.runTransaction(async t => {
-        // ... (lógica interna da transação) ...
+        const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
+        const clienteRef = db.collection("usuarios").doc(clienteUid);
+        const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+        if (agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada.";
+        if (!clienteDoc.exists) throw "Cliente não encontrado.";
+        if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
+        if (barbeiroDoc.data().vagaImediata === false) throw "Vaga imediata não está mais ativa.";
+
+        t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
+        t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa), vagaImediata: false });
+        t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+        const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+        if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+        t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
-        fecharTodosOsModais(); // <-- ADICIONADO AQUI
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
-        alert("Agendamento aprovado!"); // Alert pode vir depois de fechar
+        alert("Agendamento aprovado!");
     }).catch(e => {
-        fecharTodosOsModais(); // <-- ADICIONADO AQUI
         alert("Erro ao aprovar: " + e);
     });
 }
@@ -4436,45 +4447,40 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
 }
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
-  exibirAguarde("Concluindo serviço..."); // <-- ADICIONADO AQUI
+  exibirAguarde("Concluindo...");
   try {
     const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
     const clienteRef = db.collection("usuarios").doc(clienteUid);
     await db.runTransaction(async t => {
-        // ... (lógica interna da transação) ...
+        const agendamentoDoc = await t.get(agendamentoRef);
+        if (agendamentoDoc.data().status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
+        t.update(barbeiroRef, { cortesSemana: firebase.firestore.FieldValue.increment(1), clientesAtendidos: firebase.firestore.FieldValue.increment(1) });
+        t.update(agendamentoRef, { status: "concluido" });
+        t.update(clienteRef, { cortesRealizados: firebase.firestore.FieldValue.increment(1) });
     });
-    // Roda as verificações DEPOIS da transação, ANTES de fechar o aguarde
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    fecharTodosOsModais(); // <-- ADICIONADO AQUI (antes dos alerts/notificações)
+    
     alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
-    // ... (lógica de bônus de indicação) ...
+    const clienteDoc = await clienteRef.get();
+    const clienteData = clienteDoc.data();
+    if (clienteData.bonusIndicacaoPendente) {
+        await clienteRef.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO), bonusIndicacaoPendente: false });
+        notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade!`);
+        const query = await db.collection("usuarios").where("email", "==", clienteData.indicadoPorEmail).limit(1).get();
+        if (!query.empty) {
+            const indicadorDoc = query.docs[0];
+            await indicadorDoc.ref.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO) });
+            notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o serviço!`);
+        }
+    }
   } catch(e) {
-    fecharTodosOsModais(); // <-- ADICIONADO AQUI
     alert("Erro ao concluir serviço: " + e);
   }
-}
-
-async function verificarPendenciasVisuaisBarbeiro() {
-    if (!auth.currentUser || perfil.tipo === 'cliente' || perfil.tipo === 'admin') return; // Só para profissionais logados
-    try {
-        const agendamentosSnap = await db.collection('agendamentos')
-            .where('barbeiroUid', '==', auth.currentUser.uid)
-            .where('status', '==', 'pendente')
-            .limit(1) // Só precisamos saber se existe pelo menos 1
-            .get();
-
-        const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
-        if (btnAgendamentos) {
-            btnAgendamentos.classList.toggle('notificacao-pulsante', !agendamentosSnap.empty);
-        }
-    } catch (error) {
-        console.error("Erro ao verificar pendências visuais:", error);
-    }
 }
 
 // ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
@@ -5457,91 +5463,59 @@ async function enviarNotificacaoMarketing() {
 }
 
 const conquistasDefinidas = {
-    'cliente': { // Conquistas para clientes
-        'cortes_1':    { nome: 'Primeiro Agendamento', icone: '1️⃣', descricao: 'Concluiu seu primeiro agendamento.', level: 1 },
-        'cortes_5':    { nome: 'Cliente Iniciante',   icone: '🖐️', descricao: 'Concluiu 5 agendamentos.', level: 2 },
-        'cortes_10':   { nome: 'Cliente Regular',     icone: '🔟', descricao: 'Concluiu 10 agendamentos.', level: 3 },
-        'cortes_20':   { nome: 'Fã do App',           icone: '⭐', descricao: 'Concluiu 20 agendamentos.', level: 4 },
-        'cortes_50':   { nome: 'Sócio do Clube',      icone: '🤝', descricao: 'Concluiu 50 agendamentos.', level: 5 },
-        'cortes_100':  { nome: 'Membro de Honra',     icone: '🏆', descricao: 'Concluiu 100 agendamentos.', level: 6 },
-        'cortes_1000': { nome: 'Lenda da Navalha',    icone: '👑', descricao: 'Concluiu 1000 agendamentos!', level: 7 }
+    'cliente': {
+        'cortes_1': { nome: 'Primeiro Agendamento', icone: '👶', descricao: 'Concluiu seu primeiro agendamento.', level: 1 },
+        'cortes_5': { nome: 'Cliente Iniciante', icone: '👍', descricao: 'Concluiu 5 agendamentos.', level: 2 },
+        'cortes_10': { nome: 'Cliente Regular', icone: '⭐', descricao: 'Concluiu 10 agendamentos.', level: 3 },
+        'cortes_50': { nome: 'Parceiro da Beleza', icone: '💪', descricao: 'Concluiu 50 agendamentos.', level: 5 },
+        'cortes_100': { nome: 'Membro de Honra', icone: '👑', descricao: 'Concluiu 100 agendamentos.', level: 6 }
     },
-    'profissional': { // Conquistas para profissionais
-        'atendimento_1':    { nome: 'Primeiro Cliente',          icone: '🎉', descricao: 'Concluiu seu primeiro serviço.', level: 1 },
-        'atendimento_5':    { nome: 'Mãos à Obra',             icone: '💪', descricao: 'Concluiu 5 serviços.', level: 2 },
-        'atendimento_10':   { nome: 'Profissional em Ascensão',  icone: '🔥', descricao: 'Concluiu 10 serviços.', level: 3 },
-        'atendimento_20':   { nome: 'Profissional da Cadeira',   icone: '✂️', descricao: 'Concluiu 20 serviços.', level: 4 },
-        'atendimento_50':   { nome: 'Mestre da Área',          icone: '😎', descricao: 'Concluiu 50 serviços.', level: 5 },
-        'atendimento_100':  { nome: 'Barbeiro Confiável',      icone: '💎', descricao: 'Concluiu 100 serviços.', level: 6 },
-        'atendimento_1000': { nome: 'Lenda do Ramo',           icone: '👑', descricao: 'Concluiu 1000 serviços!', level: 7 }
+    'profissional': {
+        'cortes_1': { nome: 'Primeiro Cliente', icone: '🎉', descricao: 'Concluiu seu primeiro serviço.', level: 1 },
+        'cortes_10': { nome: 'Profissional em Ascensão', icone: '🔥', descricao: 'Concluiu 10 serviços.', level: 3 },
+        'cortes_50': { nome: 'Profissional Experiente', icone: '😎', descricao: 'Concluiu 50 serviços.', level: 5 },
+        'cortes_100': { nome: 'Mestre da Área', icone: '💎', descricao: 'Concluiu 100 serviços.', level: 6 },
+        'cortes_1000': { nome: 'Lenda do Ramo', icone: '🏆', descricao: 'Concluiu 1000 serviços.', level: 7 }
     }
 };
-// Ordem de importância (do maior para o menor level) para exibir no chat
-const conquistasOrdemCliente = ['cortes_1000', 'cortes_100', 'cortes_50', 'cortes_20', 'cortes_10', 'cortes_5', 'cortes_1'];
-const conquistasOrdemProfissional = ['atendimento_1000', 'atendimento_100', 'atendimento_50', 'atendimento_20', 'atendimento_10', 'atendimento_5', 'atendimento_1'];
 
 async function verificarConquistas(uid) {
     const userRef = db.collection('usuarios').doc(uid);
-    try {
-        const userDoc = await userRef.get();
-        if (!userDoc.exists || userDoc.data().tipo !== 'cliente') return; // Só para clientes
-        const { conquistas = [], cortesRealizados = 0 } = userDoc.data();
-        const definicoes = conquistasDefinidas.cliente;
-        const niveis = { 1: 'cortes_1', 5: 'cortes_5', 10: 'cortes_10', 20: 'cortes_20', 50: 'cortes_50', 100: 'cortes_100', 1000: 'cortes_1000' };
-        let novaConquistaId = null;
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return;
+    const userData = userDoc.data();
+    const conquistasAtuais = userData.conquistas || [];
+    const cortes = userData.cortesRealizados || 0;
+    const definicoes = conquistasDefinidas.cliente;
+    const niveis = { 1: 'cortes_1', 5: 'cortes_5', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100' };
 
-        // Verifica do maior nível para o menor, para garantir que apenas a mais alta nova seja notificada
-        const niveisOrdenados = Object.keys(niveis).map(Number).sort((a, b) => b - a);
-
-        for (const nivel of niveisOrdenados) {
-            const conquistaId = niveis[nivel];
-            if (cortesRealizados >= nivel && !conquistas.includes(conquistaId)) {
-                novaConquistaId = conquistaId; // Encontrou a mais alta nova conquista
-                break; // Para aqui, pois só queremos notificar a mais recente/alta
-            }
+    for (const nivel in niveis) {
+        const conquistaId = niveis[nivel];
+        if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
+            await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
+            const conquista = definicoes[conquistaId];
+            notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"!`, { link: '#conquistas' });
         }
-
-        if (novaConquistaId) {
-            await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(novaConquistaId) });
-            const conquista = definicoes[novaConquistaId];
-            notifyUser(uid, "🏅 Nova Conquista!", `Você desbloqueou: "${conquista.nome}"! Veja suas conquistas no painel.`, { link: '#conquistas' });
-            // Se precisar atualizar o perfil local imediatamente:
-            // perfil = (await userRef.get()).data();
-        }
-    } catch (error) {
-        console.error("Erro ao verificar conquistas do cliente:", error);
     }
 }
 
 async function verificarConquistasBarbeiro(uid) {
     const userRef = db.collection('usuarios').doc(uid);
-     try {
-        const userDoc = await userRef.get();
-        if (!userDoc.exists || userDoc.data().tipo === 'cliente' || userDoc.data().tipo === 'admin') return; // Só para profissionais
-        const { conquistas = [], clientesAtendidos = 0 } = userDoc.data();
-        const definicoes = conquistasDefinidas.profissional;
-        const niveis = { 1: 'atendimento_1', 5: 'atendimento_5', 10: 'atendimento_10', 20: 'atendimento_20', 50: 'atendimento_50', 100: 'atendimento_100', 1000: 'atendimento_1000' };
-        let novaConquistaId = null;
-
-        const niveisOrdenados = Object.keys(niveis).map(Number).sort((a, b) => b - a);
-
-        for (const nivel of niveisOrdenados) {
-            const conquistaId = niveis[nivel];
-            if (clientesAtendidos >= nivel && !conquistas.includes(conquistaId)) {
-                novaConquistaId = conquistaId;
-                break;
-            }
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return;
+    const userData = userDoc.data();
+    const conquistasAtuais = userData.conquistas || [];
+    const cortes = userData.clientesAtendidos || 0;
+    const definicoes = conquistasDefinidas.profissional;
+    const niveis = { 1: 'cortes_1', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100', 1000: 'cortes_1000' };
+    
+    for (const nivel in niveis) {
+        const conquistaId = niveis[nivel];
+        if (cortes >= nivel && !conquistasAtuais.includes(conquistaId)) {
+            await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(conquistaId) });
+            const conquista = definicoes[conquistaId];
+            notifyUser(uid, "🏅 Nova Conquista de Profissional!", `Você desbloqueou: "${conquista.nome}"!`, { link: '#conquistas' });
         }
-
-        if (novaConquistaId) {
-            await userRef.update({ conquistas: firebase.firestore.FieldValue.arrayUnion(novaConquistaId) });
-            const conquista = definicoes[novaConquistaId];
-            notifyUser(uid, "🏅 Nova Conquista de Profissional!", `Você desbloqueou: "${conquista.nome}"! Confira no seu painel.`, { link: '#conquistas' });
-             // Se precisar atualizar o perfil local imediatamente:
-             // perfil = (await userRef.get()).data();
-        }
-    } catch (error) {
-        console.error("Erro ao verificar conquistas do profissional:", error);
     }
 }
 
@@ -5549,120 +5523,70 @@ function abrirModalConquistas() {
     abrirModal('modalConquistas');
     const container = document.getElementById('listaConquistas');
     container.innerHTML = "";
-    const conquistasDoUsuario = perfil?.conquistas || [];
-    const definicoes = conquistasDefinidas.cliente; // Acessa as definições de cliente
-
-    // Itera sobre a ordem definida para garantir a exibição correta
-    conquistasOrdemCliente.forEach(id => {
-        if (definicoes[id]) { // Verifica se a definição existe
-            const c = definicoes[id];
-            const unlocked = conquistasDoUsuario.includes(id);
-            container.innerHTML += `
-                <div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}">
-                    <div class="conquista-icon">${c.icone}</div>
-                    <div>
-                        <b>${c.nome}</b>
-                        <p style="font-size:12px; margin:0;">${c.descricao}</p>
-                    </div>
-                </div>`;
-        }
-    });
-     if (container.innerHTML === "") {
-         container.innerHTML = "<p>Complete agendamentos para desbloquear conquistas!</p>";
-     }
+    const conquistasDoUsuario = perfil.conquistas || [];
+    const definicoes = conquistasDefinidas.cliente;
+    for (const id in definicoes) {
+        const c = definicoes[id];
+        const unlocked = conquistasDoUsuario.includes(id);
+        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
+    }
 }
 
 function abrirModalConquistasBarbeiro() {
     abrirModal('modalConquistasBarbeiro');
     const container = document.getElementById('listaConquistasBarbeiro');
     container.innerHTML = "";
-    const conquistasDoUsuario = perfil?.conquistas || [];
-    const definicoes = conquistasDefinidas.profissional; // Acessa as definições de profissional
-
-    conquistasOrdemProfissional.forEach(id => {
-         if (definicoes[id]) {
-            const c = definicoes[id];
-            const unlocked = conquistasDoUsuario.includes(id);
-            container.innerHTML += `
-                <div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}">
-                    <div class="conquista-icon">${c.icone}</div>
-                    <div>
-                        <b>${c.nome}</b>
-                        <p style="font-size:12px; margin:0;">${c.descricao}</p>
-                    </div>
-                </div>`;
-         }
-    });
-     if (container.innerHTML === "") {
-         container.innerHTML = "<p>Conclua serviços para desbloquear conquistas!</p>";
-     }
+    const conquistasDoUsuario = perfil.conquistas || [];
+    const definicoes = conquistasDefinidas.profissional;
+    for (const id in definicoes) {
+        const c = definicoes[id];
+        const unlocked = conquistasDoUsuario.includes(id);
+        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
+    }
 }
 
 async function abrirModalRankingUnificado() {
     abrirModal('modalRankingUnificado');
     const container = document.getElementById('listaRankingUnificado');
-    container.innerHTML = '<p>Carregando ranking...</p>';
-
+    container.innerHTML = '<p>Carregando...</p>';
+    
     try {
-        // Busca os dois rankings separadamente
-        const [clientesDoc, profissionaisDoc] = await Promise.all([
-            db.collection('config').doc('rankingClientes').get(),
-            db.collection('config').doc('rankingBarbeiros').get()
+        const [clientesSnap, profissionaisSnap] = await Promise.all([
+            db.collection('usuarios').where('tipo', '==', 'cliente').orderBy('cortesRealizados', 'desc').limit(50).get(),
+            db.collection('usuarios').where('tipo', 'in', ['barbeiro', 'manicure_pedicure', 'designer_cilios']).orderBy('clientesAtendidos', 'desc').limit(50).get()
         ]);
+        
+        let ranking = [];
+        clientesSnap.forEach(doc => ranking.push({ nome: doc.data().nome, contagem: doc.data().cortesRealizados || 0, tipo: 'cliente' }));
+        profissionaisSnap.forEach(doc => ranking.push({ nome: doc.data().nome, contagem: doc.data().clientesAtendidos || 0, tipo: 'profissional' }));
 
-        let rankingClientes = [];
-        if (clientesDoc.exists) {
-            rankingClientes = clientesDoc.data().ranking.map(item => ({ ...item, tipo: 'cliente' }));
-        }
-
-        let rankingProfissionais = [];
-        if (profissionaisDoc.exists) {
-            rankingProfissionais = profissionaisDoc.data().ranking.map(item => ({ ...item, tipo: 'profissional' }));
-        }
-
-        // Combina e ordena pelo número de contagem (cortes/agendamentos)
-        const rankingCombinado = [...rankingClientes, ...rankingProfissionais];
-        rankingCombinado.sort((a, b) => b.contagem - a.contagem);
-
-        container.innerHTML = ""; // Limpa o container
-
-        if (rankingCombinado.length === 0) {
-            container.innerHTML = '<p>Ninguém no ranking ainda.</p>';
-            return;
-        }
-
-        // Exibe os top 100 (ou menos, se não houver tantos)
-        rankingCombinado.slice(0, 100).forEach((item, i) => {
-            const icone = item.tipo === 'cliente' ? '🙋' : '💼'; // Ícone diferente para cliente e profissional
-            container.innerHTML += `
-                <div class="ranking-item">
-                    <span>${i + 1}. ${icone} ${item.nome}</span>
-                    <span>${item.contagem}</span>
-                </div>`;
+        ranking.sort((a, b) => b.contagem - a.contagem);
+        
+        container.innerHTML = "";
+        ranking.slice(0, 100).forEach((item, i) => {
+            const icone = item.tipo === 'cliente' ? '🙋' : '💼';
+            container.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${icone} ${item.nome}</span><span>${item.contagem}</span></div>`;
         });
 
-    } catch (e) {
-        container.innerHTML = '<p>Erro ao carregar o ranking.</p>';
-        console.error("Erro ao carregar ranking unificado:", e);
+    } catch (e) { 
+        container.innerHTML = '<p>Erro ao carregar ranking.</p>'; 
+        console.error(e);
     }
 }
 
 
-function obterIconeMaiorConquista(conquistas, tipoUsuario) {
+function obterIconeMaiorConquista(conquistas, tipo) {
     if (!conquistas || conquistas.length === 0) return '';
-    // Determina qual conjunto de definições e ordem usar
-    const definicoes = (tipoUsuario === 'cliente' || tipoUsuario === 'admin') ? conquistasDefinidas.cliente : conquistasDefinidas.profissional;
-    const ordem = (tipoUsuario === 'cliente' || tipoUsuario === 'admin') ? conquistasOrdemCliente : conquistasOrdemProfissional;
-
-    // Itera sobre a ordem (do mais alto para o mais baixo)
-    for (const id of ordem) {
-        // Se o usuário possui esta conquista e ela existe nas definições
-        if (conquistas.includes(id) && definicoes[id]) {
-            // Retorna o ícone da primeira (e mais alta) que encontrar
-            return `<span class="chat-medal">${definicoes[id].icone}</span>`;
+    const definicoes = tipo === 'cliente' ? conquistasDefinidas.cliente : conquistasDefinidas.profissional;
+    let maiorLevel = -1;
+    let melhorIcone = '';
+    for (const id of conquistas) {
+        if (definicoes[id] && definicoes[id].level > maiorLevel) {
+            maiorLevel = definicoes[id].level;
+            melhorIcone = definicoes[id].icone;
         }
     }
-    return ''; // Retorna vazio se nenhuma conquista for encontrada (ou se não houver ícone definido)
+    return maiorLevel > -1 ? `<span class="chat-medal">${melhorIcone}</span>` : '';
 }
 
 async function abrirModalDashboardBarbeiro() {
