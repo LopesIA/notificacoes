@@ -1,7 +1,6 @@
 {
   "name": "Nova Versão",
   "short_name": "Nova Versão",
-  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#0c0c0c",
   "theme_color": "#d4af37",
@@ -20,8 +19,11 @@
   "iarc_rating_id": "e84b072d-df9b-45b7-957a-9f86a7d5b7c7",
   "related_applications": [],
   "prefer_related_applications": false,
+"scope": "/",                   // <-- ADICIONADO
+  "id": "/",                      // <-- ADICIONADO
+  "orientation": "portrait-primary", // <-- ADICIONADO
   "display_override": [
-    "window-controls-overlay"
+    "standalone"
   ],
   "icons": [
     {
