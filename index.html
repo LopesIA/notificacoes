@@ -2218,10 +2218,16 @@ function fecharModalAtual(forcePopupAguarde = false) {
     
     if (modalStack.length > 0) {
         const modalParaFechar = modalStack.pop();
-        modalParaFechar.classList.remove('show');
-        setTimeout(() => {
-            modalParaFechar.style.display = 'none';
-        }, 300);
+    modalParaFechar.classList.remove('show');
+    setTimeout(() => {
+        modalParaFechar.style.display = 'none';
+    }, 300);
+
+    // --- ADICIONADO AQUI ---
+    // Se o modal fechado for o de agendamentos do barbeiro, verifica se ainda há pendências
+    if (modalParaFechar.id === 'modalAgendamentosBarbeiro') {
+        verificarPendenciasVisuaisBarbeiro();
+    // --- FIM DA ADIÇÃO ---
     }
 }
 
@@ -2340,6 +2346,23 @@ async function garantirTokenAtualizadoNoPerfil(uid) {
     }
 }
 
+async function verificarPendenciasVisuaisBarbeiro() {
+    if (!auth.currentUser || perfil.tipo === 'cliente' || perfil.tipo === 'admin') return; // Só para profissionais logados
+    try {
+        const agendamentosSnap = await db.collection('agendamentos')
+            .where('barbeiroUid', '==', auth.currentUser.uid)
+            .where('status', '==', 'pendente')
+            .limit(1) // Só precisamos saber se existe pelo menos 1
+            .get();
+
+        const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
+        if (btnAgendamentos) {
+            btnAgendamentos.classList.toggle('notificacao-pulsante', !agendamentosSnap.empty);
+        }
+    } catch (error) {
+        console.error("Erro ao verificar pendências visuais:", error);
+    }
+}
 
 // SUBSTITUA a função setupFCM inteira por esta
 function setupFCM(uid) {
