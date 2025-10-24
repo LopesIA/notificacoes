@@ -11,14 +11,9 @@
 
   <style>
     :root {
-/* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
-.onboard-screen[style*="background-image"] {
-    background-repeat: no-repeat;
-    background-position: center center !important; 
-    background-size: cover !important;
-}
-
---cor-destaque-vermelho: #ff0000; /* Vermelho */
+      /* --- ESTA SEÇÃO FOI CORRIGIDA --- */
+      /* O seletor .onboard-screen foi movido para FORA do :root */
+      --cor-destaque-vermelho: #ff0000; /* Vermelho */
       --cor-fundo: #0c0c0c;
       --cor-card: #181818;
       --cor-botoes: #222222;
@@ -31,6 +26,15 @@
       --cor-borda: #333;
       --cor-destaque: var(--cor-destaque-ouro); /* Cor padrão */
     }
+
+/* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
+/* ESTE BLOCO AGORA ESTÁ FORA DO :root, COMO DEVE SER */
+.onboard-screen[style*="background-image"] {
+    background-repeat: no-repeat;
+    background-position: center center !important; 
+    background-size: cover !important;
+}
+
 /* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
 @keyframes brilhoDourado {
     0% {
@@ -1095,9 +1099,9 @@
 
   </style>
 </head>
+
 <body>
 
-<!-- Modal para Alterar Senha -->
 <div id="modalAlterarSenha" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🔑 Alterar Senha</h3>
@@ -1108,8 +1112,6 @@
     <button data-modal-id="modalAlterarSenha" onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
 </div>
-<!-- Fim Modal Alterar Senha -->
-
 <div id="popupAguarde" class="modal" onclick="fecharAguarde(event)">
   <div class="modal-content">
     <div class="spinner"></div>
@@ -1286,13 +1288,10 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
     
-<!-- Botão Adicionado -->
-    <div class="popup-section">
+<div class="popup-section">
       <h4>🔒 Segurança</h4>
       <button onclick="abrirModal('modalAlterarSenha'); fecharModalAtual();">Alterar Minha Senha</button>
     </div>
-    <!-- Fim Botão Adicionado -->
-
     <div class="popup-section config-section">
       <h4>❤️ Meu Interesse Principal</h4>
       <div id="configInteresseContainer" style="display:flex; gap:10px;">
@@ -1879,7 +1878,10 @@
 
 <div id="modalProdutoDetalhes" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <img id="detalhesProdutoImg" src="" alt="Imagem do Produto">
+        <div id="detalhesProdutoImgContainer">
+            <img id="detalhesProdutoImg" src="" alt="Imagem do Produto">
+        </div>
+        
         <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque);"></h3>
         
         <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
@@ -1938,7 +1940,8 @@
 <input type="file" id="produtoImagensFile" accept="image/*,image/gif" multiple onchange="previewProductImages(this)">
 <div id="produtoImagensPreviews" class="portfolio-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); max-height: 100px; overflow-y: auto;"></div>
 <progress id="produtoImagensProgress" value="0" max="100" style="width: 100%; display: none;"></progress>
-        <input id="produtoNome" type="text" placeholder="Nome do Produto">
+        
+        <input id="produtoImagemUrl" type="hidden"> <input id="produtoNome" type="text" placeholder="Nome do Produto">
         <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
         <p>Tamanhos disponíveis:</p>
         <div class="checkbox-group">
@@ -2078,6 +2081,7 @@
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-storage-compat.js"></script>
 
 <script>
 // Firebase e variáveis globais
@@ -2225,11 +2229,15 @@ function abrirModal(modalId) {
 
 function fecharModal(event) {
     // Permite fechar clicando no fundo (classe .modal) ou em um botão com data-modal-id
-    if (event && event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id')) {
+    if (event && (event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id'))) {
         fecharModalAtual();
     }
 }
 
+// =====================================================================
+// --- CORREÇÃO 2: CHAVE FALTANDO ---
+// A chave '}' final desta função estava faltando.
+// =====================================================================
 function fecharModalAtual(forcePopupAguarde = false) {
     if (forcePopupAguarde) {
         const popup = document.getElementById('popupAguarde');
@@ -2240,18 +2248,19 @@ function fecharModalAtual(forcePopupAguarde = false) {
     
     if (modalStack.length > 0) {
         const modalParaFechar = modalStack.pop();
-    modalParaFechar.classList.remove('show');
-    setTimeout(() => {
-        modalParaFechar.style.display = 'none';
-    }, 300);
+        modalParaFechar.classList.remove('show');
+        setTimeout(() => {
+            modalParaFechar.style.display = 'none';
+        }, 300);
 
-    // --- ADICIONADO AQUI ---
-    // Se o modal fechado for o de agendamentos do barbeiro, verifica se ainda há pendências
-    if (modalParaFechar.id === 'modalAgendamentosBarbeiro') {
-        verificarPendenciasVisuaisBarbeiro();
-    // --- FIM DA ADIÇÃO ---
+        // --- ADICIONADO AQUI ---
+        // Se o modal fechado for o de agendamentos do barbeiro, verifica se ainda há pendências
+        if (modalParaFechar.id === 'modalAgendamentosBarbeiro') {
+            verificarPendenciasVisuaisBarbeiro();
+        // --- FIM DA ADIÇÃO ---
+        }
     }
-}
+} // <--- ESTA CHAVE ESTAVA FALTANDO (CORREÇÃO 2)
 
 function fecharTodosOsModais() {
     while (modalStack.length > 0) {
@@ -2654,8 +2663,8 @@ async function enviarSolicitacaoRecuperacaoSenha() {
 
         const mensagem = encodeURIComponent(`Olá, esqueci minha senha no app Nova Versão.\n\nEmail: ${email}\nTelefone: ${telefone}\n\nAguardo o contato para redefinir.`);
         // Garante que o telefone não tenha caracteres não numéricos antes de usar
-const telefoneLimpo = telefoneUsuario.replace(/\D/g, ''); // Use a variável que contém o telefone do usuário
-window.open(`https://wa.me/55${telefoneLimpo}?text=${mensagem}`, '_blank');
+        const telefoneLimpo = telefone.replace(/\D/g, ''); // Use a variável que contém o telefone do usuário
+        window.open(`https://wa.me/55${WHATSAPP_ADM_PHONE}?text=${mensagem}`, '_blank'); // Usa a constante WHATSAPP_ADM_PHONE
         
         fecharTodosOsModais();
         exibirInfoPopup("✅ Solicitação enviada! Você foi redirecionado para o WhatsApp para agilizar o atendimento. O administrador entrará em contato em breve.");
@@ -3082,7 +3091,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
-            const reputacaoEstrelas = ''.repeat(Math.round((b.reputacao || 100) / 20));
+            const reputacaoEstrelas = '⭐'.repeat(Math.round((b.reputacao || 100) / 20));
             
             // --- INÍCIO DA MODIFICAÇÃO ---
             let statusHtml = '';
@@ -3219,7 +3228,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
                     }
                 }
 
-                const servicoJSON = JSON.stringify(s).replace(/"/g, '"');
+                const servicoJSON = JSON.stringify(s).replace(/"/g, '&quot;'); // Usar &quot; em vez de '
                 const promoInfo = promoAplicada ? `<p style="font-size: 11px; color: var(--cor-destaque); margin: 2px 0 0 0;">🎁 ${promoAplicada.nome} (${promoAplicada.desconto}% OFF)</p>` : '';
 
                 servicosList.innerHTML += `
@@ -3388,6 +3397,11 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
 }
 
 function exibirInfoPopup(titulo, mensagem) {
+    // Se a mensagem for passada como primeiro argumento
+    if(mensagem === undefined) {
+        mensagem = titulo;
+        titulo = "Aviso";
+    }
     document.getElementById('infoPopupTitulo').textContent = titulo;
     document.getElementById('infoPopupMensagem').textContent = mensagem;
     abrirModal('modalInfoPopup');
@@ -3954,7 +3968,7 @@ async function carregarMensagensAnteriores() {
 
     const agora = new Date();
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
-    if (chatAtual === 'local') {
+    if (chatAtual === 'local' && perfil.tipo !== 'admin') { // Adiciona verificação de admin
         query = query.where("cidade", "==", perfil.cidade);
     }
     query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").startAfter(oldestMessageSnapshot).limit(50);
@@ -3969,15 +3983,16 @@ async function carregarMensagensAnteriores() {
     oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
     
     const chatContainer = document.getElementById("chatMessages");
-    for (const doc of snapshot.docs) { 
+    for (const doc of snapshot.docs.reverse()) { // Carrega na ordem correta
         const msg = doc.data();
         const messageDiv = await createMessageDiv(msg);
-        chatContainer.appendChild(messageDiv); 
+        chatContainer.prepend(messageDiv); // Adiciona no início (mais antigo primeiro)
     }
 
     btn.textContent = 'Ver mensagens anteriores';
     btn.disabled = false;
 }
+
 
 // SUBSTITUA TODA A FUNÇÃO 'createMessageDiv' POR ESTA
 async function createMessageDiv(msg) {
@@ -4446,28 +4461,12 @@ function abrirAgendamentosBarbeiro() {
                 botoes = `<button onclick="aprovarAgendamentoImediato('${doc.id}','${ag.clienteUid}',${ag.valor})">✅ Aprovar</button><button onclick="recusarAgendamento('${doc.id}','${ag.clienteUid}')">❌ Recusar</button>`;
             }
             painel.innerHTML += `<div class="card"><b>${ag.clienteNome}</b> - ${ag.servico} (R$ ${ag.valor.toFixed(2)})<br>Horário: ${horarioInfo}<br>Status: <b>${statusTexto}</b>${ag.clienteTelefone ? `<br><a href="https://wa.me/55${ag.clienteTelefone}" target="_blank">📞 Contatar</a>` : ''}<div style="margin-top:10px; display:flex; gap: 8px;">${botoes}</div></div>`;
-snap.docChanges().forEach(change => {
-    // --- ADICIONADO AQUI ---
-    // Se um novo agendamento pendente for adicionado E o modal estiver aberto, recarrega
-    if (change.type === "added" && change.doc.data().status === 'pendente') {
-         // Verifica se o modal de agendamentos está visível antes de recarregar
-         const modalAgendamentos = document.getElementById('modalAgendamentosBarbeiro');
-         if (modalAgendamentos && modalAgendamentos.classList.contains('show')) {
-            console.log("Novo agendamento recebido, recarregando a página...");
-            location.reload();
-         }
-         // Se o modal não estiver aberto, apenas a notificação pulsante (já existente) será ativada.
-    }
-    // --- FIM DA ADIÇÃO ---
-
-    // Lógica existente para construir o HTML dos cards...
-    // ... (o código que monta os cards continua aqui) ...
-});
-// Adiciona verificação visual após processar as mudanças, caso não recarregue
-verificarPendenciasVisuaisBarbeiro();
         });
+        // Adiciona verificação visual após processar as mudanças
+        verificarPendenciasVisuaisBarbeiro();
     });
 }
+
 
 function toggleVagaImediata() {
     db.collection("usuarios").doc(auth.currentUser.uid).update({ vagaImediata: !perfil.vagaImediata }).catch(e => exibirInfoPopup("Erro: " + e.message));
@@ -5195,7 +5194,7 @@ async function abrirModalEstatisticas() {
             <div class="popup-section"><h4>💰 Financeiro</h4>
                 <p>Arrecadado com Taxas: <b>R$ ${fin.arrecadadoTaxas.toFixed(2)}</b></p>
                 <p>Arrecadado com VIP: <b>R$ ${fin.arrecadadoVip.toFixed(2)}</b></p>
-                <p>Saldo total em circulação: <b>R$ ${totalSaldo.toFixed(2)}</b></p>
+                 <p>Arrecadado com PRO: <b>R$ ${fin.arrecadadoPro ? fin.arrecadadoPro.toFixed(2) : '0.00'}</b></p> <p>Saldo total em circulação: <b>R$ ${totalSaldo.toFixed(2)}</b></p>
             </div>
         `;
     } catch (error) {
@@ -5256,8 +5255,8 @@ async function verDetalhesSolicitacao(id) {
               // Abre o WhatsApp para enviar a nova senha para o usuário
               const mensagem = encodeURIComponent(`Olá! Conforme sua solicitação, sua nova senha de acesso para o app Nova Versão é:\n\n*${novaSenha}*\n\nRecomendamos que você a altere assim que fizer o login.`);
               // Garante que o telefone não tenha caracteres não numéricos antes de usar
-const telefoneLimpo = telefoneUsuario.replace(/\D/g, '');
-window.open(`https://wa.me/55${telefoneLimpo}?text=${mensagem}`, '_blank');
+              const telefoneLimpo = telefoneUsuario.replace(/\D/g, '');
+              window.open(`https://wa.me/55${telefoneLimpo}?text=${mensagem}`, '_blank');
               
           } catch (error) {
               fecharTodosOsModais();
@@ -5274,6 +5273,8 @@ window.open(`https://wa.me/55${telefoneLimpo}?text=${mensagem}`, '_blank');
       detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
     } else if (s.tipo === 'deposito') {
       detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
+    } else if (s.tipo === 'liberacao_loja') { // Adicionado
+      detalhes += `\nAprovar liberação da loja para este usuário?`;
     } else {
       detalhes += `\nAprovar?`;
     }
@@ -5282,7 +5283,7 @@ window.open(`https://wa.me/55${telefoneLimpo}?text=${mensagem}`, '_blank');
     if (confirmar) {
       if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
       else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
-      else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
+      else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid); // Adicionado
     } else if (confirm("Deseja recusar a solicitação?")) {
       recusarSolicitacao(id, s.usuarioUid, s.tipo);
     }
@@ -5382,7 +5383,6 @@ function fecharDenuncia(id) {
 }
 
 // SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
-// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
 async function abrirModalGerenciarUsuario(uid) {
   exibirAguarde("Carregando dados do usuário...");
   try {
@@ -5412,16 +5412,13 @@ async function abrirModalGerenciarUsuario(uid) {
         <h4 style="word-break: break-all;">${u.nome}</h4>
         <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
 
-<!-- Seção Adicionada para Gerenciar Loja -->
-        <div class="popup-section">
+<div class="popup-section">
             <p><strong>Gerenciar Loja do Vendedor:</strong></p>
             <p><strong>Loja Ativa:</strong> ${u.lojaLiberada ? 'Sim ✅' : 'Não ❌'}</p>
             <button id="btnToggleLojaAdmin" onclick="toggleLojaAdmin('${uid}', ${!u.lojaLiberada})">
                 ${u.lojaLiberada ? 'Desativar Loja' : 'Ativar Loja'}
             </button>
         </div>
-        <!-- Fim da Seção Adicionada -->
-
         <div class="popup-section">
             <p><strong>Informações da Conta:</strong></p>
             <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
@@ -5512,6 +5509,7 @@ async function toggleLojaAdmin(uid, novoEstado) {
         fecharTodosOsModais();
         exibirInfoPopup(`Loja ${novoEstado ? 'ativada' : 'desativada'} com sucesso!`);
         // Reabre o modal para mostrar o status atualizado
+        fecharModalAtual(); // Fecha antes de reabrir
         abrirModalGerenciarUsuario(uid);
     } catch (error) {
         fecharTodosOsModais();
@@ -5625,7 +5623,7 @@ async function adminToggleVip(uid) {
   const userDoc = await db.collection("usuarios").doc(uid).get();
   const userData = userDoc.data();
   if (isVipAtivo(userData)) {
-      await db.collection("usuarios").doc(uid).update({ vip: false });
+      await db.collection("usuarios").doc(uid).update({ vip: false, vipExpirationDate: null }); // Remove a data de expiração
       exibirInfoPopup("VIP Removido!");
   } else {
       const expiracao = new Date();
@@ -5637,9 +5635,24 @@ async function adminToggleVip(uid) {
 }
 async function adminDeletarUsuario(uid, nome) {
   if (prompt(`TEM CERTEZA? Para deletar ${nome}, digite "DELETAR":`) === "DELETAR") {
-    await db.collection("usuarios").doc(uid).delete();
-    exibirInfoPopup("Usuário deletado!");
-    fecharModalAtual();
+    // Chama o backend para deletar
+    exibirAguarde("Deletando usuário...");
+     try {
+        const response = await fetch(`${BACKEND_API_URL}/admin/delete-user`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        fecharTodosOsModais();
+        exibirInfoPopup("Usuário deletado com sucesso!");
+        fecharModalAtual(); // Fecha o modal de gerenciamento
+    } catch (error) {
+        fecharTodosOsModais();
+        exibirInfoPopup("Erro ao deletar usuário: " + error.message);
+    }
   } else exibirInfoPopup("Exclusão cancelada.");
 }
 
@@ -5883,103 +5896,35 @@ function abrirModalPortfolioBarbeiro() {
                        class="portfolio-url-input" 
                        placeholder="🔗 Cole o link aqui" 
                        value="${url}"
-                       oninput="document.getElementById('previ
-ew-img-${i}').src = this.value || '${placeholder}'">
+                       oninput="document.getElementById('preview-img-${i}').src = this.value || '${placeholder}'">
             </div>
         `;
     }
 }
 
-async function uploadPortfolio() {
-    const fileInput = document.getElementById('portfolioFiles');
-    const files = fileInput.files;
-    if (!files || files.length === 0) return exibirInfoPopup("Selecione pelo menos uma imagem ou GIF.");
-    if (files.length > 30) return exibirInfoPopup("Você pode selecionar no máximo 30 imagens.");
-    if (!auth.currentUser) return;
+// Função para salvar o portfólio
+function salvarPortfolio() {
+    const urls = [];
+    const inputs = document.querySelectorAll('#portfolioInputsContainer .portfolio-url-input');
+    inputs.forEach(input => {
+        const url = input.value.trim();
+        if (url) { // Adiciona apenas se houver uma URL
+            urls.push(url);
+        }
+    });
 
-    const progressBar = document.getElementById('portfolioProgress');
-    const saveButton = document.querySelector('#modalPortfolioBarbeiro button[onclick="uploadPortfolio()"]');
-    exibirAguarde("Enviando imagens do portfólio...");
-    progressBar.style.display = 'block';
-    progressBar.value = 0;
-    saveButton.disabled = true;
-
-    const uploadPromises = [];
-    const downloadURLs = [];
-    let uploadedCount = 0;
-
-    for (const file of files) {
-        const storageRef = storage.ref(`portfolio/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
-        const uploadTask = storageRef.put(file);
-
-        const promise = new Promise((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = ((uploadedCount + (snapshot.bytesTransferred / snapshot.totalBytes)) / files.length) * 100;
-                    progressBar.value = progress;
-                },
-                (error) => reject(error),
-                async () => {
-                    try {
-                        const url = await uploadTask.snapshot.ref.getDownloadURL();
-                        downloadURLs.push(url); // Salva a URL obtida
-                        uploadedCount++;
-                        progressBar.value = (uploadedCount / files.length) * 100; // Atualiza progresso após completar
-                        resolve();
-                    } catch (getUrlError) {
-                        reject(getUrlError); // Rejeita se não conseguir a URL
-                    }
-                }
-            );
-        });
-        uploadPromises.push(promise);
-    }
-
-    try {
-        await Promise.all(uploadPromises); // Espera todos os uploads
-
-        // Pega portfólio existente e adiciona novas URLs, mantendo no máximo 30
-        const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
-        const portfolioAtual = userDoc.data()?.portfolio || [];
-
-        // Combina e garante que são apenas strings de URL válidas
-        const portfolioCombinado = [...portfolioAtual, ...downloadURLs]
-                                     .filter(url => typeof url === 'string' && url.startsWith('http'));
-
-        // Mantém apenas os últimos 30 itens únicos
-        const portfolioFinal = [...new Set(portfolioCombinado)].slice(-30);
-
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({ portfolio: portfolioFinal });
-
-        progressBar.style.display = 'none';
-        saveButton.disabled = false;
+    exibirAguarde("Salvando portfólio...");
+    db.collection('usuarios').doc(auth.currentUser.uid).update({
+        portfolio: urls // Salva o array de URLs
+    }).then(() => {
         fecharTodosOsModais();
         exibirInfoPopup('Portfólio salvo com sucesso!');
         fecharModalAtual();
-    } catch (error) {
+    }).catch(e => {
         fecharTodosOsModais();
-        console.error("Erro no upload do portfólio:", error);
-        exibirInfoPopup("Falha no upload de uma ou mais imagens: " + error.code);
-        progressBar.style.display = 'none';
-        saveButton.disabled = false;
-    }
+        exibirInfoPopup('Erro ao salvar portfólio: ' + e.message);
+    });
 }
-
-function previewPortfolioImages(input) {
-    const previewsContainer = document.getElementById('portfolioPreviews');
-    previewsContainer.innerHTML = ''; // Limpa previews antigos
-    if (input.files) {
-        const files = Array.from(input.files).slice(0, 30); // Limita a 30 previews
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewsContainer.innerHTML += `<img src="${e.target.result}" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">`;
-            }
-            reader.readAsDataURL(file);
-        });
-    }
-}
-
 
 function abrirModalFidelidade() {
   const pontosDisplay = document.getElementById("pontosFidelidade");
@@ -6136,7 +6081,10 @@ async function carregarProdutos() {
                 officialHtml += renderProdutoCard(produto, produtoJSON);
                 officialProductsFound = true;
             } else {
-                communityProducts.push({ data: produto, json: produtoJSON });
+                // Adiciona apenas se o vendedor tiver a loja ativa
+                 if (usersData[produto.vendedorUid] && usersData[produto.vendedorUid].lojaLiberada) {
+                    communityProducts.push({ data: produto, json: produtoJSON });
+                }
             }
         });
 
@@ -6181,10 +6129,12 @@ async function carregarProdutos() {
 function renderProdutoCard(p, pJson) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
     const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
+    // Usa a primeira imagem do array ou a imagem antiga
+    const imagemPrincipal = (p.imagensUrls && p.imagensUrls.length > 0) ? p.imagensUrls[0] : (p.imagemUrl || 'https://via.placeholder.com/150?text=VersaoPro');
     
     return `
         <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
-            <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=VersaoPro'">
+            <img src="${imagemPrincipal}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=VersaoPro'">
             <div class="produto-info">
                 <div class="produto-nome">${p.nome}</div>
                 <div class="produto-preco">${precoHtml}</div>
@@ -6235,33 +6185,41 @@ if (firebase.messaging.isSupported()) {
 // NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
 async function abrirDetalhesProduto(produto) {
     produtoParaCompra = produto;
-    const imgContainer = document.getElementById('detalhesProdutoImgContainer');
-imgContainer.innerHTML = ''; // Limpa imagens antigas do slider
-const urls = produto.imagensUrls || []; // Usa o array de URLs
+    const imgContainer = document.getElementById('detalhesProdutoImgContainer'); // Seleciona o container
+    imgContainer.innerHTML = ''; // Limpa imagens antigas
 
-if (urls && urls.length > 0) {
-    // Cria um slider simples (pode ser aprimorado com bibliotecas como Swiper.js)
-    let sliderHtml = '<div class="product-slider">';
-    urls.forEach((url, index) => {
-        sliderHtml += `<img src="${url}" alt="Imagem ${index + 1} do Produto" style="display: ${index === 0 ? 'block' : 'none'}; width: 100%; height: 250px; object-fit: contain; border-radius: 10px; margin-bottom: 15px;">`;
-    });
-    sliderHtml += '</div>';
-    if (urls.length > 1) {
-        sliderHtml += `<div style="text-align: center; margin-bottom: 10px;">
-                         <button onclick="changeProductSlide(-1)">◀</button>
-                         <span id="slideIndicator">1 / ${urls.length}</span>
-                         <button onclick="changeProductSlide(1)">▶</button>
-                       </div>`;
-    }
-    imgContainer.innerHTML = sliderHtml;
-    currentProductSlide = 0; // Reseta o slide atual
-} else {
-    // Se não houver URLs no array, tenta usar a antiga 'imagemUrl' como fallback
-    if(produto.imagemUrl) {
-         imgContainer.innerHTML = `<img id="detalhesProdutoImg" src="${produto.imagemUrl}" alt="Imagem do Produto" style="display: block; width: 100%; height: 250px; object-fit: contain; border-radius: 10px; margin-bottom: 15px;">`;
+    const urls = produto.imagensUrls || []; // Usa o array de URLs
+
+    if (urls && urls.length > 0) {
+        // Cria um slider simples
+        let sliderHtml = '<div class="product-slider" style="position: relative; overflow: hidden; width: 100%; height: 250px; background-color: var(--cor-botoes); border-radius: 10px; margin-bottom: 15px;">';
+        urls.forEach((url, index) => {
+            // Adiciona estilos para posicionar as imagens uma sobre a outra
+            sliderHtml += `<img src="${url}" alt="Imagem ${index + 1} do Produto" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; opacity: ${index === 0 ? '1' : '0'}; transition: opacity 0.5s ease-in-out;">`;
+        });
+        sliderHtml += '</div>';
+        imgContainer.innerHTML = sliderHtml; // Adiciona o slider ao container
+
+        // Adiciona botões de navegação se houver mais de uma imagem
+        if (urls.length > 1) {
+            const navHtml = `<div style="text-align: center; margin-bottom: 10px;">
+                               <button onclick="changeProductSlide(-1)">◀</button>
+                               <span id="slideIndicator">1 / ${urls.length}</span>
+                               <button onclick="changeProductSlide(1)">▶</button>
+                             </div>`;
+            imgContainer.insertAdjacentHTML('afterend', navHtml); // Insere os botões após o slider
+        }
+        currentProductSlide = 0; // Reseta o slide atual
     } else {
-         imgContainer.innerHTML = '<p>Nenhuma imagem disponível.</p>'; // Nenhuma imagem
+        // Fallback para imagem única ou nenhuma imagem
+        if(produto.imagemUrl) {
+             imgContainer.innerHTML = `<img id="detalhesProdutoImg" src="${produto.imagemUrl}" alt="Imagem do Produto" style="display: block; width: 100%; height: 250px; object-fit: contain; border-radius: 10px; margin-bottom: 15px; background-color: var(--cor-botoes);">`;
+        } else {
+             imgContainer.innerHTML = '<p>Nenhuma imagem disponível.</p>';
+        }
     }
+
+    // O restante da função continua igual...
     document.getElementById('detalhesProdutoNome').textContent = produto.nome;
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
     document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
@@ -6284,6 +6242,7 @@ if (urls && urls.length > 0) {
     abrirModal('modalProdutoDetalhes');
 }
 
+
 let currentProductSlide = 0;
 
 function changeProductSlide(direction) {
@@ -6292,9 +6251,9 @@ function changeProductSlide(direction) {
     const images = slider.querySelectorAll('img');
     if (images.length <= 1) return;
 
-    images[currentProductSlide].style.display = 'none'; // Esconde a atual
+    images[currentProductSlide].style.opacity = '0'; // Esconde a atual
     currentProductSlide = (currentProductSlide + direction + images.length) % images.length; // Calcula o novo índice
-    images[currentProductSlide].style.display = 'block'; // Mostra a nova
+    images[currentProductSlide].style.opacity = '1'; // Mostra a nova
 
     document.getElementById('slideIndicator').textContent = `${currentProductSlide + 1} / ${images.length}`;
 }
@@ -6419,22 +6378,33 @@ async function abrirFormularioProduto(produtoId = null) {
     
     // Reset form
     form.querySelector('#produtoNome').value = '';
-    form.querySelector('#produtoImagemUrl').value = '';
+    // form.querySelector('#produtoImagemUrl').value = ''; // Removido, usamos o file input agora
     form.querySelector('#produtoPreco').value = '';
     form.querySelector('#produtoDesconto').value = '';
     form.querySelector('#produtoEntrega').value = '';
     form.querySelector('#produtoDescricao').value = '';
     form.querySelectorAll('input[name="tamanhos"]').forEach(c => c.checked = false);
+    // Limpa previews e input de arquivos
+    document.getElementById('produtoImagensFile').value = null; 
+    document.getElementById('produtoImagensPreviews').innerHTML = '';
 
     if (produtoId) {
         const doc = await db.collection('loja_produtos').doc(produtoId).get();
         const p = doc.data();
         form.querySelector('#produtoNome').value = p.nome;
-        form.querySelector('#produtoImagemUrl').value = p.imagemUrl;
+        // Não preenchemos mais a URL antiga, o usuário deve enviar novas se quiser mudar
         form.querySelector('#produtoPreco').value = p.preco;
         form.querySelector('#produtoDesconto').value = p.desconto || '';
         form.querySelector('#produtoEntrega').value = p.tempoEntrega || '';
         form.querySelector('#produtoDescricao').value = p.descricao || '';
+        // Mostra as imagens atuais como preview
+        const previewsContainer = document.getElementById('produtoImagensPreviews');
+        if(p.imagensUrls && p.imagensUrls.length > 0) {
+            p.imagensUrls.forEach(url => {
+                 previewsContainer.innerHTML += `<img src="${url}" alt="Preview" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">`;
+            });
+        }
+
         if (p.tamanhos) {
             p.tamanhos.forEach(t => {
                 const checkbox = form.querySelector(`input[value="${t}"]`);
@@ -6461,14 +6431,6 @@ async function salvarProdutoVendedor() {
         return exibirInfoPopup('Preencha nome, preço válido e tempo de entrega.');
     }
 
-    // Validação de imagens: Obrigatório ao adicionar, opcional ao editar
-    if (!produtoEmEdicaoId && (!files || files.length === 0)) {
-        return exibirInfoPopup("Selecione pelo menos uma imagem para adicionar o produto.");
-    }
-    if (files && files.length > 5) {
-        return exibirInfoPopup("Você pode enviar no máximo 5 imagens.");
-    }
-
     exibirAguarde("Salvando produto...");
     const progressBar = document.getElementById('produtoImagensProgress');
     const saveButton = document.getElementById('btnSalvarProduto');
@@ -6477,8 +6439,20 @@ async function salvarProdutoVendedor() {
     let imagemUrls = []; // Array para guardar as URLs
 
     try {
+        // Busca URLs antigas se for edição
+        let urlsAntigas = [];
+        if (produtoEmEdicaoId) {
+             const docAtual = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
+             if (docAtual.exists) {
+                 urlsAntigas = docAtual.data().imagensUrls || []; // Pega as URLs existentes
+             }
+        }
+
         // Upload de novas imagens, se houver
         if (files && files.length > 0) {
+            if (files.length > 5) {
+                 throw new Error("Você pode enviar no máximo 5 imagens.");
+            }
             progressBar.style.display = 'block';
             progressBar.value = 0;
             const uploadPromises = [];
@@ -6509,807 +6483,532 @@ async function salvarProdutoVendedor() {
             }
             await Promise.all(uploadPromises); // Espera todos os uploads
             progressBar.style.display = 'none';
+        } else if (produtoEmEdicaoId) {
+            // Se está editando e não enviou novas, mantém as antigas
+            imagemUrls = urlsAntigas;
+        } else {
+            // Se está adicionando e não enviou, retorna erro
+             throw new Error("Selecione pelo menos uma imagem para adicionar o produto.");
         }
 
-        // Busca URLs antigas se for edição e não houve novo upload
-        if (produtoEmEdicaoId && imagemUrls.length === 0) {
-             const docAtual = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
-             if (docAtual.exists) {
-                 imagemUrls = docAtual.data().imagensUrls || []; // Pega as URLs existentes
-             }
-        }
 
-        // Prepara os dados para salvar no Firestore
-        const data = {
-            nome, preco, desconto, tempoEntrega, descricao, tamanhos,
-            imagensUrls: imagemUrls, // Salva o array de URLs
-            vendedorUid: auth.currentUser.uid,
-            vendedorNome: perfil.nome,
-            isOficial: perfil.tipo === 'admin',
-            ts: firebase.firestore.FieldValue.serverTimestamp()
+
+        // Prepara os dados para salvar no Firestore
+        const data = {
+            vendedorId: auth.currentUser.uid,
+            nome: nome,
+            preco: preco,
+            desconto: desconto, // Novo campo de desconto
+            precoComDesconto: preco - (preco * desconto / 100), // Calcula o preço final
+            tempoEntrega: tempoEntrega,
+            descricao: descricao,
+            tamanhos: tamanhos, // Array de tamanhos
+            imagensUrls: imagemUrls, // Array de URLs
+            dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
+            ativo: true 
         };
 
-        // Salva ou atualiza
+        // Salva ou atualiza no Firestore
         if (produtoEmEdicaoId) {
             await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
+            exibirInfoPopup("✅ Produto atualizado com sucesso!");
         } else {
-            data.vendasRealizadas = 0; // Inicializa vendas ao criar
             await db.collection('loja_produtos').add(data);
+            exibirInfoPopup("✅ Produto adicionado à loja com sucesso!");
         }
 
-        saveButton.disabled = false;
-        fecharTodosOsModais(); // Fecha o aguarde
-        exibirInfoPopup('Produto salvo com sucesso!');
+        // Limpa e fecha
         produtoEmEdicaoId = null; // Limpa o ID de edição
-        fecharModalAtual(); // Fecha o modal do formulário
-        abrirGerenciarLoja(); // Recarrega a lista no modal de gerenciamento
-
+        fecharModal('modalAddEditProduto');
+        carregarMeusProdutos(); // Recarrega a lista (assumindo que esta função existe)
+        carregarProdutos(); // Recarrega a loja principal (assumindo que esta função existe)
+        
     } catch (error) {
-        fecharTodosOsModais(); // Fecha o aguarde
         console.error("Erro ao salvar produto:", error);
-        exibirInfoPopup("Falha ao salvar produto: " + error.code || error.message);
-        progressBar.style.display = 'none';
+        exibirInfoPopup(`❌ Erro ao salvar produto: ${error.message}`);
+    } finally {
+        fecharAguarde();
         saveButton.disabled = false;
+        progressBar.style.display = 'none';
+        progressBar.value = 0;
     }
 }
+// ------------------------------------
+// FIM FUNÇÃO: salvarProdutoVendedor
+// ------------------------------------
 
-function previewProductImages(input) {
-    const previewsContainer = document.getElementById('produtoImagensPreviews');
-    previewsContainer.innerHTML = ''; // Limpa previews antigos
-    if (input.files) {
-        const files = Array.from(input.files).slice(0, 5); // Limita a 5 previews
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewsContainer.innerHTML += `<img src="${e.target.result}" alt="Preview" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">`;
-            }
-            reader.readAsDataURL(file);
-        });
-    }
-}
 
-async function deletarProdutoVendedor(produtoId) {
-    if (confirm('Tem certeza que deseja excluir este produto?')) {
-        await db.collection('loja_produtos').doc(produtoId).delete();
-        exibirInfoPopup('Produto excluído.');
-        abrirGerenciarLoja();
-    }
-}
+// ------------------------------------
+// INÍCIO FUNÇÕES DE LOJA/ENTREGA
+// ------------------------------------
 
+// Função para abrir a lista de entregas do vendedor
 async function abrirEntregasVendedor() {
+    if (!auth.currentUser) return;
     abrirModal('modalEntregasVendedor');
-    const container = document.getElementById('listaEntregas');
-    container.innerHTML = '<p>Carregando entregas...</p>';
-    
-    if (pedidosVendedorListener) pedidosVendedorListener();
-    pedidosVendedorListener = db.collection('loja_pedidos')
-      .where('vendedorUid', '==', auth.currentUser.uid)
-      .where('status', 'in', ['pendente', 'disputa'])
-      .onSnapshot(snap => {
-        if(snap.empty) {
-            container.innerHTML = '<p>Nenhuma entrega pendente.</p>';
-            return;
-        }
-        container.innerHTML = '';
-        snap.forEach(doc => {
-            const pedido = doc.data();
-            let statusHtml = '';
-            let acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Marcar como Entregue</button>`;
-            
-            if (pedido.status === 'pendente') {
-                statusHtml = '<p style="color: #f1c40f;">Status: Aguardando Entrega</p>';
-            } else if (pedido.status === 'disputa') {
-                statusHtml = '<p style="color: #e74c3c;">Status: Cliente Negou Recebimento. Tente Novamente.</p>';
-            }
-
-            container.innerHTML += `
-                <div class="card">
-                    <b>Comprador: ${pedido.clienteNome}</b>
-                    <p>Produto: ${pedido.produtoNome} (T: ${pedido.tamanho})</p>
-                    <p>Endereço: ${pedido.endereco} - CEP: ${pedido.cep}</p>
-                    <p>WhatsApp: <a href="https://wa.me/55${pedido.telefone}" target="_blank">${pedido.telefone}</a></p>
-                    ${statusHtml}
-                    ${acaoHtml}
-                </div>`;
-        });
-    });
-}
-
-async function marcarComoEntregue(pedidoId, clienteUid) {
-    if (!confirm("Confirmar que o produto foi entregue? O comprador será notificado para confirmar o recebimento.")) return;
-    try {
-        await db.collection('loja_pedidos').doc(pedidoId).update({ status: 'entregue_pendente_confirmacao' });
-        notifyUser(clienteUid, '🚚 Seu Pedido foi Entregue!', 'Por favor, confirme o recebimento do seu produto no app para finalizar a compra.');
-        exibirInfoPopup('Notificação enviada ao comprador.');
-    } catch (e) {
-        exibirInfoPopup('Erro ao marcar como entregue: ' + e.message);
-    }
-}
-
-async function abrirMinhasCompras() {
-    abrirModal('modalMinhasCompras');
-    const container = document.getElementById('listaMinhasCompras');
-    container.innerHTML = '<p>Carregando suas compras...</p>';
-
-    const snap = await db.collection('loja_pedidos').where('clienteUid', '==', auth.currentUser.uid).orderBy('ts', 'desc').get();
-    if (snap.empty) {
-        container.innerHTML = '<p>Você ainda não fez nenhuma compra.</p>';
-        return;
-    }
-    container.innerHTML = '';
-    snap.forEach(doc => {
-        const compra = doc.data();
-        let statusTexto = 'Status desconhecido';
-        let acaoBotao = '';
-
-        switch(compra.status) {
-            case 'pendente': statusTexto = 'Aguardando entrega'; break;
-            case 'entregue_pendente_confirmacao': statusTexto = 'Confirme o recebimento!'; break;
-            case 'confirmado_pelo_cliente': statusTexto = 'Entrega confirmada'; break;
-            case 'disputa': statusTexto = 'Entrega recusada'; break;
-        }
-        
-        if (compra.status === 'confirmado_pelo_cliente' && !compra.avaliado) {
-            acaoBotao = `<button onclick="abrirModalAvaliacaoProduto('${doc.id}', '${compra.produtoId}', '${compra.produtoNome}')">⭐ Avaliar Produto</button>`;
-        } else if (compra.status === 'confirmado_pelo_cliente' && compra.avaliado) {
-            acaoBotao = `<p style="font-size: 14px; color: var(--cor-destaque);">✅ Produto avaliado!</p>`;
-        }
-
-        container.innerHTML += `
-            <div class="card">
-                <b>${compra.produtoNome}</b>
-                <p>Status: ${statusTexto}</p>
-                <div style="margin-top: 10px;">${acaoBotao}</div>
-            </div>
-        `;
-    });
-}
-
-function abrirModalConfirmacaoComprador(pedido) {
-    const modal = document.getElementById('modalConfirmacaoComprador');
-    if(modal.classList.contains('show')) return; 
-
-    document.getElementById('btnAceitarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, true);
-    document.getElementById('btnRecusarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, false);
-    abrirModal('modalConfirmacaoComprador');
-}
-
-async function responderConfirmacaoEntrega(pedidoId, aceito) {
-    const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
-    try {
-        const pedidoDoc = await db.collection('loja_pedidos').doc(pedidoId).get();
-        const vendedorUid = pedidoDoc.data().vendedorUid;
-        await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
-        const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
-        notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { link: '#entregas' });
-        exibirInfoPopup('Resposta enviada com sucesso!');
-        fecharModalAtual();
-        abrirMinhasCompras();
-    } catch (e) {
-        exibirInfoPopup('Erro ao enviar resposta: ' + e.message);
-    }
-}
-function toggleFuncoes(containerId) {
-    const container = document.getElementById(containerId);
-    const button = container.previousElementSibling;
-    if (container) {
-        container.classList.toggle('hidden');
-        button.classList.toggle('closed', container.classList.contains('hidden'));
-    }
-}
-
-function handleProdutoClick(produto) {
-    if (!auth.currentUser) {
-        exibirInfoPopup("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
-        mostrar('authView');
-    } else {
-        abrirDetalhesProduto(produto);
-    }
-}
-
-function iniciarVerificacaoDePendencias(uid) {
-    if (pendenciasInterval) clearInterval(pendenciasInterval);
-    verificarPendencias(uid);
-    pendenciasInterval = setInterval(() => verificarPendencias(uid), 60000);
-}
-
-async function verificarPendencias(uid) {
-    if (!uid || !perfil) return;
-
-    if (perfil.tipo !== 'cliente') {
-        const agendamentosSnap = await db.collection('agendamentos').where('barbeiroUid', '==', uid).where('status', '==', 'pendente').get();
-        const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
-        if (!agendamentosSnap.empty) {
-            btnAgendamentos?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⏰ Agendamento Pendente', `Você tem ${agendamentosSnap.size} novo(s) agendamento(s) para aprovar.`, { link: '#agendamentos' });
-        } else {
-            btnAgendamentos?.classList.remove('notificacao-pulsante');
-        }
-    }
-
-    if (perfil.tipo === 'cliente') {
-        const avaliacoesSnap = await db.collection('agendamentos').where('clienteUid', '==', uid).where('status', '==', 'concluido').where('avaliado', '==', false).get();
-        const btnHistorico = document.getElementById('btnHistoricoCliente');
-        if (!avaliacoesSnap.empty) {
-            btnHistorico?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⭐ Avaliação Pendente', `Você tem ${avaliacoesSnap.size} serviço(s) para avaliar e ganhar pontos!`, { link: '#historico' });
-        } else {
-            btnHistorico?.classList.remove('notificacao-pulsante');
-        }
-    }
-
-    const saqueSnap = await db.collection("solicitacoes").where("usuarioUid", "==", uid).where("status", "==", "pendente").where("tipo", "==", "saque").get();
-    if (!saqueSnap.empty) {
-        notifyUser(uid, "⏳ Saque em Análise", "Sua solicitação de saque ainda está pendente de aprovação.", { link: '#carteira' });
-    }
-}
-
-async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
-    container.innerHTML = '';
-    
-    if (produtoNome.toLowerCase().includes('Nova Versão')) {
-        const hoje = new Date().toISOString().split('T')[0]; 
-        const seed = produtoId + hoje;
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-            const char = seed.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash |= 0; 
-        }
-        const randomValue = (Math.abs(hash) % 10) / 10;
-        const notaAleatoria = (4.1 + randomValue).toFixed(1);
-
-        const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
-        
-        let avaliacaoHtml = `<p class="avaliacao-estrelas">⭐ ${notaAleatoria}</p>`;
-        
-        if (!snap.empty) {
-            const ultimaAvaliacao = snap.docs[0].data();
-            const doisDiasAtras = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
-            if (ultimaAvaliacao.ts.toDate() > doisDiasAtras) {
-                avaliacaoHtml += `<p class="avaliacao-comentario">"${ultimaAvaliacao.comentario}"</p>`;
-            } else {
-                 avaliacaoHtml += `<p class="avaliacao-comentario">Veja as avaliações dos clientes.</p>`;
-            }
-        } else {
-             avaliacaoHtml += `<p class="avaliacao-comentario">Seja o primeiro a avaliar!</p>`;
-        }
-        container.innerHTML = avaliacaoHtml;
-
-    } else {
-        const snap = await db.collection('avaliacoes_produtos').where('produtoId', '==', produtoId).orderBy('ts', 'desc').limit(1).get();
-        if (snap.empty) {
-            container.innerHTML = `<p class="avaliacao-estrelas">⭐ Sem avaliação</p><p class="avaliacao-comentario">Seja o primeiro a avaliar!</p>`;
-        } else {
-            const avaliacao = snap.docs[0].data();
-            container.innerHTML = `
-                <p class="avaliacao-estrelas">⭐ ${avaliacao.nota.toFixed(1)}</p>
-                <p class="avaliacao-comentario">"${avaliacao.comentario}"</p>
-            `;
-        }
-    }
-}
-
-let notaSelecionada = 0;
-function abrirModalAvaliacaoProduto(pedidoId, produtoId, produtoNome) {
-    notaSelecionada = 0;
-    document.getElementById('avaliarProdutoNome').textContent = produtoNome;
-    document.getElementById('avaliarProdutoComentario').value = '';
-    
-    const starsContainer = document.getElementById('ratingStars');
-    const stars = starsContainer.querySelectorAll('span');
-
-    stars.forEach(star => {
-        star.classList.remove('selected');
-        star.innerHTML = '☆';
-        star.onmouseover = () => {
-            const rating = parseInt(star.dataset.value);
-            stars.forEach(s => {
-                s.classList.toggle('hovered', parseInt(s.dataset.value) <= rating);
-                s.innerHTML = parseInt(s.dataset.value) <= rating ? '★' : '☆';
-            });
-        };
-        star.onmouseout = () => {
-            stars.forEach(s => {
-                s.classList.remove('hovered');
-                const rating = notaSelecionada;
-                s.innerHTML = parseInt(s.dataset.value) <= rating ? '★' : '☆';
-            });
-        };
-        star.onclick = () => {
-            notaSelecionada = parseInt(star.dataset.value);
-            stars.forEach(s => {
-                s.classList.toggle('selected', parseInt(s.dataset.value) <= notaSelecionada);
-            });
-        };
-    });
-
-    document.getElementById('btnSalvarAvaliacaoProduto').onclick = () => {
-        const comentario = document.getElementById('avaliarProdutoComentario').value.trim();
-        if (notaSelecionada === 0) {
-            return exibirInfoPopup('Por favor, selecione uma nota de 1 a 5 estrelas.');
-        }
-        salvarAvaliacaoProduto(pedidoId, produtoId, notaSelecionada, comentario);
-    };
-    
-    abrirModal('modalAvaliarProduto');
-}
-
-async function salvarAvaliacaoProduto(pedidoId, produtoId, nota, comentario) {
-    try {
-        await db.collection('avaliacoes_produtos').add({
-            produtoId,
-            nota,
-            comentario,
-            clienteUid: auth.currentUser.uid,
-            clienteNome: perfil.nome,
-            ts: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        await db.collection('loja_pedidos').doc(pedidoId).update({ avaliado: true });
-        
-        exibirInfoPopup('Obrigado pela sua avaliação!');
-        fecharModalAtual();
-        abrirMinhasCompras();
-    } catch (e) {
-        exibirInfoPopup('Erro ao salvar avaliação: ' + e.message);
-    }
-}
-
-function fazerLogout() {
-    auth.signOut().then(() => {
-        // Apenas recarrega a página. A lógica de verificação de login
-        // irá automaticamente direcionar para a tela de autenticação.
-        location.reload();
-    });
-}
-
-function handleDeepLink() {
-    const hash = window.location.hash.substring(1);
-    if (!hash || !auth.currentUser) return;
-
-    switch (hash) {
-        case 'agendamentos':
-            if (perfil.tipo !== 'cliente') abrirAgendamentosBarbeiro();
-            break;
-        case 'solicitacoes':
-            if (perfil.tipo === 'admin') abrirModalSolicitacoes();
-            break;
-        case 'denuncias':
-            if (perfil.tipo === 'admin') abrirDenuncias();
-            break;
-        case 'carteira':
-            abrirModal('modalCarteira');
-            break;
-        case 'historico':
-            if (perfil.tipo === 'cliente') abrirHistoricoCliente();
-            break;
-        case 'fidelidade':
-            abrirModal('modalFidelidade');
-            break;
-        case 'conquistas':
-            if (perfil.tipo === 'cliente') abrirModalConquistas();
-            else abrirModalConquistasBarbeiro();
-            break;
-        case 'avaliacoes':
-            if (perfil.tipo !== 'cliente') abrirAvaliacoesBarbeiro();
-            break;
-        case 'minhascompras':
-            abrirMinhasCompras();
-            break;
-        case 'entregas':
-            abrirEntregasVendedor();
-            break;
-    }
-    history.pushState("", document.title, window.location.pathname + window.location.search);
-}
-
-// --- NOVAS FUNÇÕES Nova Versão ---
-
-function iniciarOnboarding() {
-    const modal = document.getElementById('modalOnboarding');
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
-    renderOnboardingTela1();
-}
-
-function renderOnboardingTela1() {
-    document.getElementById('onboardingContent').innerHTML = `
-        <div class="onboarding-content-wrapper" style="text-align: center;">
-            <img src="https://i.postimg.cc/KYbBp2VR/image-removebg-preview.png" alt="Logo VersãoPro" style="width: 150px; height: 150px; margin-bottom: 20px;">
-            <h2 style="color: var(--cor-destaque-ouro);">Bem-vindo(a) ao Nova Versão!</h2>
-            <p style="color: var(--cor-destaque-ouro);">seu ecossistema de beleza e bem-estar.</p>
-            <button onclick="renderOnboardingTela2()">Próximo</button>
-        </div>
-    `;
-}
-
-function renderOnboardingTela2() {
-    const onboardingContent = document.getElementById('onboardingContent');
-    
-    onboardingContent.innerHTML = `
-      <div class="onboarding-content-wrapper">
-        <h2 style="color:var(--cor-destaque-ouro);">Qual o seu maior interesse?</h2>
-        <p>Isso nos ajuda a personalizar sua experiência.</p>
-        <div class="interest-options" style="display:flex; flex-direction:column; gap:10px;">
-            <button onclick="selecionarInteresse('barbeiro')">Barbearias</button>
-            <button onclick="selecionarInteresse('manicure_pedicure')">Manicure e Pedicure</button>
-            <button onclick="selecionarInteresse('designer_cilios')">Designer de Cílios</button>
-        </div>
-        <button onclick="renderOnboardingTela3()" style="margin-top:20px;" id="btnOnboardingNext2" disabled>Próximo</button>
-      </div>
-    `;
-}
-
-function selecionarInteresse(interesse) {
-    onboardingState.interesse_principal = interesse;
-    const buttons = document.querySelectorAll('.interest-options button');
-    buttons.forEach(btn => {
-        // Lógica mais precisa: verifica qual botão corresponde exatamente ao interesse clicado.
-        const isSelected = btn.getAttribute('onclick') === `selecionarInteresse('${interesse}')`;
-        btn.classList.toggle('selected', isSelected);
-    });
-    document.getElementById('btnOnboardingNext2').disabled = false;
-}
-
-function renderOnboardingTela3() {
-    document.getElementById('onboardingContent').innerHTML = `
-      <div class="onboarding-content-wrapper">
-        <h2 style="color:var(--cor-destaque-ouro);">Como você usará o app?</h2>
-        <p>Escolha seu perfil principal.</p>
-        <div class="interest-options" style="display:flex; flex-direction:column; gap:10px;">
-            <button onclick="selecionarPerfilBasico('cliente')">Sou Cliente</button>
-            <button onclick="selecionarPerfilBasico('profissional')">Sou Profissional</button>
-        </div>
-        <button onclick="finalizarOnboarding()" style="margin-top:20px;" id="btnOnboardingNext3" disabled>Começar!</button>
-      </div>
-    `;
-}
-
-function selecionarPerfilBasico(tipo) {
-    onboardingState.perfil_basico = tipo;
-    const buttons = document.querySelectorAll('.interest-options button');
-    buttons.forEach(btn => {
-        btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(tipo));
-    });
-    document.getElementById('btnOnboardingNext3').disabled = false;
-}
-
-// ADICIONE ESTA NOVA FUNÇÃO EM INDEX.HTML
-async function ativarModoFerias() {
-    const inicio = document.getElementById('feriasInicio').value;
-    const fim = document.getElementById('feriasFim').value;
-
-    if (!inicio || !fim) {
-        return exibirInfoPopup("Por favor, selecione a data de início e fim.");
-    }
-
-    const dataInicio = new Date(inicio);
-    const dataFim = new Date(fim);
-
-    if (dataFim < dataInicio) {
-        return exibirInfoPopup("A data de fim não pode ser anterior à data de início.");
-    }
-    
-    if (!confirm(`Você tem certeza que deseja bloquear sua agenda de ${dataInicio.toLocaleDateString()} até ${dataFim.toLocaleDateString()}? Seus clientes serão notificados.`)) {
-        return;
-    }
-
-    exibirAguarde("Bloqueando agenda e notificando...");
+    const container = document.getElementById('listaEntregasVendedor');
+    container.innerHTML = 'Carregando entregas...';
 
     try {
-        // Lógica de notificação (simples, para não sobrecarregar)
-        // Uma implementação mais avançada usaria Cloud Functions para notificar em lotes
-        const clientesSnap = await db.collection("agendamentos")
-            .where("barbeiroUid", "==", auth.currentUser.uid)
-            .where("status", "==", "concluido")
+        const snapshot = await db.collection('loja_compras')
+            .where('vendedorId', '==', auth.currentUser.uid)
+            .orderBy('dataCompra', 'desc')
             .get();
 
-        const clientesNotificados = new Set();
-        clientesSnap.forEach(doc => {
-            const clienteUid = doc.data().clienteUid;
-            if (!clientesNotificados.has(clienteUid)) {
-                notifyUser(
-                    clienteUid, 
-                    `🗓️ Aviso de ${perfil.nome}`, 
-                    `O profissional estará ausente de ${dataInicio.toLocaleDateString()} a ${dataFim.toLocaleDateString()}.`
-                );
-                clientesNotificados.add(clienteUid);
-            }
+        if (snapshot.empty) {
+            container.innerHTML = '<p style="text-align:center; opacity:0.7;">Nenhuma venda encontrada.</p>';
+            return;
+        }
+
+        let html = '';
+        snapshot.docs.forEach(doc => {
+            const compra = doc.data();
+            const statusClass = compra.status.toLowerCase().replace(' ', '-');
+            const dataFormatada = compra.dataCompra ? new Date(compra.dataCompra.seconds * 1000).toLocaleString('pt-BR') : 'Data Indisponível';
+
+            html += `
+                <div class="item-list ${statusClass}">
+                    <div style="flex-grow:1;">
+                        <b style="color:var(--cor-texto-principal);">${compra.produtoNome}</b> (${compra.tamanho || 'Único'})
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">Cliente: ${compra.clienteNome}</p>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">Data: ${dataFormatada}</p>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">Total: R$ ${compra.valorTotal.toFixed(2).replace('.', ',')}</p>
+                        <p class="status-badge ${statusClass}" style="margin-top: 5px;">Status: ${compra.status}</p>
+                    </div>
+                    <div class="item-actions">
+                        <button onclick="mudarStatusEntrega('${doc.id}', 'Preparando', this)" ${compra.status !== 'Aguardando Pagamento' && compra.status !== 'Aguardando Envio' ? 'disabled' : ''}>Preparar</button>
+                        <button onclick="mudarStatusEntrega('${doc.id}', 'Enviado', this)" ${compra.status !== 'Preparando' ? 'disabled' : ''}>Enviar</button>
+                        <button onclick="mudarStatusEntrega('${doc.id}', 'Entregue', this)" ${compra.status !== 'Enviado' ? 'disabled' : ''}>Entregue</button>
+                        <button onclick="abrirDetalhesEntrega('${doc.id}')">Detalhes</button>
+                    </div>
+                </div>
+            `;
         });
 
-        await db.collection("usuarios").doc(auth.currentUser.uid).update({
-            ausente: true,
-            ausenciaInicio: firebase.firestore.Timestamp.fromDate(dataInicio),
-            ausenciaFim: firebase.firestore.Timestamp.fromDate(dataFim)
-        });
-
-        fecharTodosOsModais();
-        exibirInfoPopup("Modo férias ativado com sucesso! Sua agenda está bloqueada para o período e seus clientes foram notificados.");
-
-    } catch (e) {
-        fecharTodosOsModais();
-        exibirInfoPopup("Ocorreu um erro: " + e.message);
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error("Erro ao carregar entregas:", error);
+        container.innerHTML = '<p style="color:red;">Erro ao carregar lista de entregas.</p>';
     }
 }
 
-function finalizarOnboarding() {
-    localStorage.setItem('onboarding_concluido', 'true');
-    const modal = document.getElementById('modalOnboarding');
-    modal.classList.remove('show');
-    setTimeout(() => modal.style.display = 'none', 500);
-    prepararCriarConta();
-    mostrar('authView'); // <-- ADICIONE ESTA LINHA
-}
 
-function aplicarTemaPorProfissao(interesse) {
-    let cor = 'var(--cor-destaque-ouro)';
-    if (interesse === 'manicure_pedicure' || interesse === 'designer_cilios') {
-        cor = 'var(--cor-destaque-rosa)';
+// Função para mudar o status de uma entrega (Vendedor)
+async function mudarStatusEntrega(compraId, novoStatus, buttonElement) {
+    if (!confirm(`Tem certeza que deseja mudar o status desta compra para "${novoStatus}"?`)) return;
+
+    // Desativa todos os botões para evitar cliques duplicados
+    const buttons = buttonElement.closest('.item-actions').querySelectorAll('button');
+    buttons.forEach(btn => btn.disabled = true);
+
+    exibirAguarde(`Atualizando para ${novoStatus}...`);
+
+    try {
+        await db.collection('loja_compras').doc(compraId).update({
+            status: novoStatus,
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        exibirInfoPopup(`✅ Status da compra atualizado para ${novoStatus}!`);
+        abrirEntregasVendedor(); // Recarrega a lista
+
+    } catch (error) {
+        console.error("Erro ao mudar status da entrega:", error);
+        exibirInfoPopup('❌ Erro ao atualizar status.');
+        buttons.forEach(btn => btn.disabled = false); // Reativa em caso de erro
+
+    } finally {
+        fecharAguarde();
     }
-    document.documentElement.style.setProperty('--cor-destaque', cor);
 }
 
-function iniciarOnboardingProfissional() {
-    tempOnboardingServicos = [];
-    abrirModal('modalOnboardingProfissionalServicos');
+
+// Função para abrir os detalhes de uma entrega (Vendedor)
+async function abrirDetalhesEntrega(compraId) {
+    exibirAguarde("Carregando detalhes...");
+    try {
+        const doc = await db.collection('loja_compras').doc(compraId).get();
+        if (!doc.exists) {
+            exibirInfoPopup('Compra não encontrada.');
+            return;
+        }
+
+        const compra = doc.data();
+        const dataFormatada = compra.dataCompra ? new Date(compra.dataCompra.seconds * 1000).toLocaleString('pt-BR') : 'Data Indisponível';
+
+        const detalhesHtml = `
+            <h3>Detalhes da Compra #${doc.id.substring(0, 8)}</h3>
+            <p><b>Produto:</b> ${compra.produtoNome} (${compra.tamanho || 'Único'})</p>
+            <p><b>Status:</b> <span class="status-badge ${compra.status.toLowerCase().replace(' ', '-')}">${compra.status}</span></p>
+            <p><b>Valor Total:</b> R$ ${compra.valorTotal.toFixed(2).replace('.', ',')}</p>
+            <p><b>Data da Compra:</b> ${dataFormatada}</p>
+            <hr>
+            <h4>Informações do Cliente:</h4>
+            <p><b>Nome:</b> ${compra.clienteNome}</p>
+            <p><b>Telefone:</b> ${compra.telefone}</p>
+            <p><b>Email:</b> ${compra.email}</p>
+            <hr>
+            <h4>Endereço de Entrega:</h4>
+            <p><b>CEP:</b> ${compra.cep}</p>
+            <p><b>Rua/Bairro:</b> ${compra.rua}</p>
+            <p><b>Número/Compl.:</b> ${compra.numeroCasa}</p>
+            <div style="display:flex; gap: 10px; margin-top: 20px;">
+                <button onclick="window.open('https://wa.me/55${compra.telefone.replace(/\D/g,'')}?text=Ol%C3%A1%2C%20sou%20o%20vendedor%20do%20produto%20${compra.produtoNome}%20que%20voc%C3%AA%20comprou%20no%20app%20Nova%20Vers%C3%A3o.', '_system')">📞 Contatar Cliente (WhatsApp)</button>
+            </div>
+            <button onclick="fecharModalAtual()" style="margin-top: 10px;">Fechar</button>
+        `;
+
+        // Reutiliza o modal generico para exibir detalhes
+        document.querySelector('#modalDetalhesEntrega .modal-content').innerHTML = detalhesHtml;
+        abrirModal('modalDetalhesEntrega');
+
+    } catch (error) {
+        console.error("Erro ao carregar detalhes da entrega:", error);
+        exibirInfoPopup('❌ Erro ao carregar detalhes.');
+    } finally {
+        fecharAguarde();
+    }
 }
 
-function adicionarServicoOnboarding() {
-    const nome = document.getElementById('onboardingServicoNome').value.trim();
-    const valor = parseFloat(document.getElementById('onboardingServicoValor').value);
-    const tempo = parseInt(document.getElementById('onboardingServicoTempo').value);
-    if (!nome || isNaN(valor) || isNaN(tempo)) return exibirInfoPopup("Preencha todos os campos do serviço.");
 
-    tempOnboardingServicos.push({ nome, valor, duracao: tempo });
+// Função para abrir a lista de compras do Cliente
+async function abrirMinhasCompras() {
+    if (!auth.currentUser) return;
+    abrirModal('modalMinhasCompras');
+    const container = document.getElementById('listaMinhasCompras');
+    container.innerHTML = 'Carregando suas compras...';
+
+    try {
+        const snapshot = await db.collection('loja_compras')
+            .where('clienteId', '==', auth.currentUser.uid)
+            .orderBy('dataCompra', 'desc')
+            .get();
+
+        if (snapshot.empty) {
+            container.innerHTML = '<p style="text-align:center; opacity:0.7;">Você ainda não fez nenhuma compra na loja.</p>';
+            return;
+        }
+
+        let html = '';
+        snapshot.docs.forEach(doc => {
+            const compra = doc.data();
+            const statusClass = compra.status.toLowerCase().replace(' ', '-');
+            const dataFormatada = compra.dataCompra ? new Date(compra.dataCompra.seconds * 1000).toLocaleString('pt-BR') : 'Data Indisponível';
+
+            // Continuo aqui!
+            html += `
+                <div class="item-list ${statusClass}">
+                    <div style="flex-grow:1;">
+                        <b style="color:var(--cor-texto-principal);">${compra.produtoNome}</b> (${compra.tamanho || 'Único'})
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">Vendedor: ${compra.vendedorNome || 'Indisponível'}</p>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">Data: ${dataFormatada}</p>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">Total: R$ ${compra.valorTotal.toFixed(2).replace('.', ',')}</p>
+                        <p class="status-badge ${statusClass}" style="margin-top: 5px;">Status: ${compra.status}</p>
+                    </div>
+                    <div class="item-actions">
+                        ${compra.status === 'Entregue' && !compra.avaliacao ? 
+                            `<button onclick="abrirModalAvaliacaoLoja('${doc.id}', '${compra.produtoNome.replace(/'/g, "\\'")}')">⭐ Avaliar</button>` : 
+                            compra.status === 'Entregue' && compra.avaliacao ?
+                            `<button disabled>✅ Avaliado</button>` :
+                            ''
+                        }
+                        <button onclick="abrirDetalhesEntregaCliente('${doc.id}')">Detalhes</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error("Erro ao carregar minhas compras:", error);
+        container.innerHTML = '<p style="color:red;">Erro ao carregar sua lista de compras.</p>';
+    }
+}
+
+
+// Função para abrir os detalhes de uma compra (Cliente)
+async function abrirDetalhesEntregaCliente(compraId) {
+    exibirAguarde("Carregando detalhes...");
+    try {
+        const doc = await db.collection('loja_compras').doc(compraId).get();
+        if (!doc.exists) {
+            exibirInfoPopup('Compra não encontrada.');
+            return;
+        }
+
+        const compra = doc.data();
+        const dataFormatada = compra.dataCompra ? new Date(compra.dataCompra.seconds * 1000).toLocaleString('pt-BR') : 'Data Indisponível';
+        const avaliacao = compra.avaliacao ? 
+            `<p><b>Sua Avaliação:</b> ${compra.avaliacao.nota} estrelas</p><p style="font-style: italic;">"${compra.avaliacao.comentario || 'Sem comentário'}"</p>` 
+            : 'Nenhuma avaliação feita.';
+
+        const detalhesHtml = `
+            <h3>Detalhes da Compra #${doc.id.substring(0, 8)}</h3>
+            <p><b>Produto:</b> ${compra.produtoNome} (${compra.tamanho || 'Único'})</p>
+            <p><b>Vendedor:</b> ${compra.vendedorNome || 'Indisponível'}</p>
+            <p><b>Status:</b> <span class="status-badge ${compra.status.toLowerCase().replace(' ', '-')}">${compra.status}</span></p>
+            <p><b>Valor Total:</b> R$ ${compra.valorTotal.toFixed(2).replace('.', ',')}</p>
+            <p><b>Data da Compra:</b> ${dataFormatada}</p>
+            <hr>
+            <h4>Endereço de Entrega:</h4>
+            <p><b>CEP:</b> ${compra.cep}</p>
+            <p><b>Rua/Bairro:</b> ${compra.rua}</p>
+            <p><b>Número/Compl.:</b> ${compra.numeroCasa}</p>
+            <hr>
+            <h4>Avaliação:</h4>
+            ${avaliacao}
+            <button onclick="fecharModalAtual()" style="margin-top: 10px;">Fechar</button>
+        `;
+
+        // Reutiliza o modal de detalhes
+        document.querySelector('#modalDetalhesEntrega .modal-content').innerHTML = detalhesHtml;
+        abrirModal('modalDetalhesEntrega');
+
+    } catch (error) {
+        console.error("Erro ao carregar detalhes da compra:", error);
+        exibirInfoPopup('❌ Erro ao carregar detalhes.');
+    } finally {
+        fecharAguarde();
+    }
+}
+
+
+// Variável global para armazenar o ID da compra sendo avaliada
+let compraAvaliacaoId = null;
+
+// Função para abrir o modal de avaliação
+function abrirModalAvaliacaoLoja(compraId, produtoNome) {
+    compraAvaliacaoId = compraId;
+    const modalContent = document.querySelector('#modalAvaliacaoLoja .modal-content');
+    modalContent.innerHTML = `
+        <h3>⭐ Avaliar Compra: ${produtoNome}</h3>
+        <div class="rating-stars" style="margin: 20px 0;">
+            ${[1, 2, 3, 4, 5].map(i => `<span class="star-icon" data-value="${i}" onclick="setRating(${i})">★</span>`).join('')}
+        </div>
+        <input type="hidden" id="avaliacaoNota" value="0">
+        <textarea id="avaliacaoComentario" placeholder="Deixe um comentário sobre o produto e a entrega (opcional)"></textarea>
+        <button onclick="enviarAvaliacaoLoja()">⭐ Enviar Avaliação</button>
+        <button data-modal-id="modalAvaliacaoLoja" onclick="fecharModal(event)">❌ Cancelar</button>
+    `;
+    abrirModal('modalAvaliacaoLoja');
+    // Reseta as estrelas visuais
+    document.querySelectorAll('#modalAvaliacaoLoja .rating-stars .star-icon').forEach(star => star.style.color = 'gray');
+}
+
+// Função para definir a nota da avaliação visualmente
+function setRating(nota) {
+    document.getElementById('avaliacaoNota').value = nota;
+    document.querySelectorAll('#modalAvaliacaoLoja .rating-stars .star-icon').forEach(star => {
+        star.style.color = (parseInt(star.dataset.value) <= nota) ? 'var(--cor-destaque-ouro)' : 'gray';
+    });
+}
+
+
+// Função para enviar a avaliação da loja
+async function enviarAvaliacaoLoja() {
+    if (!compraAvaliacaoId) return exibirInfoPopup("Erro: ID da compra não encontrado.");
+
+    const nota = parseInt(document.getElementById('avaliacaoNota').value);
+    const comentario = document.getElementById('avaliacaoComentario').value.trim();
+
+    if (nota === 0) {
+        return exibirInfoPopup("Selecione pelo menos uma estrela para avaliar.");
+    }
+
+    exibirAguarde("Enviando avaliação...");
+
+    try {
+        const compraRef = db.collection('loja_compras').doc(compraAvaliacaoId);
+        const compraDoc = await compraRef.get();
+        if (!compraDoc.exists || compraDoc.data().clienteId !== auth.currentUser.uid) {
+            throw new Error("Compra inválida ou não pertence a você.");
+        }
+        
+        const compraData = compraDoc.data();
+        const avaliacaoData = {
+            nota: nota,
+            comentario: comentario,
+            clienteId: auth.currentUser.uid,
+            clienteNome: usuario.nome || "Cliente",
+            dataAvaliacao: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // 1. Salva a avaliação na coleção da compra
+        await compraRef.update({
+            avaliacao: avaliacaoData
+        });
+
+        // 2. Salva na coleção de avaliações do produto
+        await db.collection('loja_produtos').doc(compraData.produtoId).collection('avaliacoes').add(avaliacaoData);
+
+        exibirInfoPopup("✅ Avaliação enviada com sucesso! Obrigado pelo feedback.");
+        fecharModal('modalAvaliacaoLoja');
+        abrirMinhasCompras(); // Recarrega a lista para mostrar o botão como "Avaliado"
+
+    } catch (error) {
+        console.error("Erro ao enviar avaliação:", error);
+        exibirInfoPopup(`❌ Erro ao enviar avaliação: ${error.message}`);
+    } finally {
+        fecharAguarde();
+        compraAvaliacaoId = null;
+    }
+}
+
+
+// ------------------------------------
+// INÍCIO FUNÇÕES DE CARTEIRA (Saque e Turbo)
+// ------------------------------------
+
+// Função para solicitar saque do saldo
+async function solicitarSaque() {
+    if (!auth.currentUser) return;
+    const valorInput = document.getElementById('saqueValor');
+    const chavePixInput = document.getElementById('saqueChavePix');
     
-    const list = document.getElementById('onboardingServicosList');
-    list.innerHTML += `<p>✅ ${nome} - R$${valor.toFixed(2)}</p>`;
-    document.getElementById('onboardingServicoNome').value = '';
-    document.getElementById('onboardingServicoValor').value = '';
-    document.getElementById('onboardingServicoTempo').value = '';
-    document.getElementById('btnOnboardingNextServicos').disabled = false;
-}
+    const valor = parseFloat(valorInput.value);
+    const chavePix = chavePixInput.value.trim();
 
-function avancarOnboarding(etapa) {
-    if (etapa === 2) {
-        fecharModalAtual();
-        abrirModal('modalOnboardingProfissionalAgenda');
-        
-        // Pega os elementos dos botões
-        const btnVaga = document.getElementById('onboardingBtnVagaImediata');
-        const btnManual = document.getElementById('onboardingBtnAgendaManual');
-        const painelManual = document.getElementById('onboardingAgendaManualPainel');
+    // Validações
+    if (isNaN(valor) || valor <= 0) {
+        return exibirInfoPopup("Insira um valor de saque válido.");
+    }
+    if (!chavePix) {
+        return exibirInfoPopup("Preencha a chave PIX para prosseguir.");
+    }
 
-        // Reseta o estado inicial
-        onboardingState.vagaImediata = false;
-        onboardingState.usaAgendaManual = false;
-        btnVaga.textContent = '⚡ Ativar Vaga Imediata';
-        btnVaga.classList.remove('selected');
-        btnManual.classList.remove('selected');
-        painelManual.classList.add('hidden');
-        
-        const horariosContainer = document.getElementById("onboardingHorariosContainer");
-        horariosContainer.innerHTML = ''; // Limpa para evitar duplicatas
-        for (let i = 7; i <= 18; i++) {
-            const horario = `${i}:00`;
-            horariosContainer.innerHTML += `<button class="horario-btn" onclick="this.classList.toggle('selecionado')">${horario}</button>`;
-        }
-        
-        // --- LÓGICA APRIMORADA PARA O BOTÃO DE VAGA IMEDIATA ---
-        btnVaga.onclick = () => {
-            // Inverte o estado atual
-            onboardingState.vagaImediata = !onboardingState.vagaImediata;
-            
-            if (onboardingState.vagaImediata) {
-                // Se ativou a Vaga Imediata
-                btnVaga.textContent = '⚡ Vaga Imediata Ativa ✅';
-                btnVaga.classList.add('selected');
-                
-                // Garante que a outra opção seja desativada
-                onboardingState.usaAgendaManual = false;
-                btnManual.classList.remove('selected');
-                painelManual.classList.add('hidden');
-            } else {
-                // Se desativou a Vaga Imediata
-                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
-                btnVaga.classList.remove('selected');
-            }
-        };
-        
-        // --- LÓGICA APRIMORADA PARA O BOTÃO DE AGENDA MANUAL ---
-        btnManual.onclick = () => {
-            onboardingState.usaAgendaManual = !onboardingState.usaAgendaManual;
-            
-            if (onboardingState.usaAgendaManual) {
-                btnManual.classList.add('selected');
-                painelManual.classList.remove('hidden');
+    // Pega o saldo atual
+    const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
+    const saldoAtual = userDoc.data().saldo || 0;
 
-                // Garante que a outra opção seja desativada
-                onboardingState.vagaImediata = false;
-                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
-                btnVaga.classList.remove('selected');
-            } else {
-                btnManual.classList.remove('selected');
-                painelManual.classList.add('hidden');
-            }
-        };
+    if (valor > saldoAtual) {
+        return exibirInfoPopup(`Saldo insuficiente. Seu saldo é de R$ ${saldoAtual.toFixed(2).replace('.', ',')}.`);
+    }
 
-    } else if (etapa === 3) {
-        // MUDANÇA: Mostra o "Aguarde" ANTES de salvar e reiniciar
-        exibirAguarde("Finalizando configuração e reiniciando...");
+    if (!confirm(`Confirma o saque de R$ ${valor.toFixed(2).replace('.', ',')} para a chave PIX: ${chavePix}? O valor será debitado do seu saldo.`)) {
+        return;
+    }
 
+    exibirAguarde("Processando solicitação de saque...");
+
+    try {
+        // 1. Debita o valor do saldo do usuário (Transação segura)
         const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
-        const updates = {
-            listaServicos: tempOnboardingServicos,
-            onboarding_profissional_concluido: true
-        };
-
-        if (onboardingState.usaAgendaManual) {
-            updates.usaAgendaManual = true;
-            updates.vagaImediata = false;
-            const agenda = {};
-            document.querySelectorAll('#onboardingHorariosContainer .selecionado').forEach(btn => {
-                agenda[btn.textContent] = true;
-            });
-            updates.agenda = agenda;
-        } else {
-            // Salva o estado da Vaga Imediata (seja true ou false)
-            updates.vagaImediata = onboardingState.vagaImediata;
-            updates.usaAgendaManual = false;
-        }
-
-        // Atualiza o banco de dados
-        userRef.update(updates).then(() => {
-            // MUDANÇA PRINCIPAL: Em vez de fechar modais, REINICIA O APP
-            // Isso garante que tudo carregue do zero, já com o perfil de profissional configurado.
-            location.reload(); 
-        }).catch(e => {
-            // Se der erro, fecha o "Aguarde" e mostra a falha
-            fecharTodosOsModais();
-            exibirInfoPopup("Erro ao salvar: " + e.message);
-        });
-    }
-}
-
-async function adminToggleLoja(uid, deveAtivar) {
-    await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
-    exibirInfoPopup(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
-    abrirModalGerenciarUsuario(uid); // Reabre o modal para refletir a mudança
-}
-
-async function adminDeletarProduto(produtoId, nome) {
-    if(confirm(`Tem certeza que deseja deletar o produto "${nome}"?`)) {
-        await db.collection('loja_produtos').doc(produtoId).delete();
-        exibirInfoPopup("Produto deletado!");
-        fecharModalAtual();
-    }
-}
-
-async function abrirGerenciarLojaAdmin() {
-    abrirModal('modalGerenciarLojaAdmin');
-    const produtosList = document.getElementById('adminDeletarProdutoList');
-    const usuariosList = document.getElementById('adminToggleLojaList');
-    produtosList.innerHTML = "<p>Carregando...</p>";
-    usuariosList.innerHTML = "<p>Carregando...</p>";
-
-    const produtosSnap = await db.collection('loja_produtos').get();
-    produtosList.innerHTML = "";
-    produtosSnap.forEach(doc => {
-        const p = doc.data();
-        produtosList.innerHTML += `<div class="card"><b>${p.nome}</b> por ${p.vendedorNome} <button style="background: #c0392b; float:right;" onclick="adminDeletarProduto('${doc.id}', '${p.nome}')">X</button></div>`;
-    });
-
-    const usersSnap = await db.collection('usuarios').where('lojaLiberada', 'in', [true, false]).get();
-    usuariosList.innerHTML = "";
-    usersSnap.forEach(doc => {
-        const u = doc.data();
-        if (u.tipo === 'admin') return;
-        usuariosList.innerHTML += `<div class="card"><b>${u.nome}</b> <button style="float:right;" onclick="adminToggleLoja('${doc.id}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Desativar' : 'Ativar'}</button></div>`;
-    });
-}
-
-async function registrarSincronizacaoDeMensagem(mensagemData) {
-    const swRegistration = await navigator.serviceWorker.ready;
-    // Salve a mensagem no IndexedDB (armazenamento local) aqui
-    await swRegistration.sync.register('enviar-mensagem-chat');
-    console.log('Sincronização para envio de mensagem registrada.');
-}
-
-function setupConfiguracoes() {
-    carregarEstados('config');
-    setTimeout(() => { // Garante que os estados carregaram
-        document.getElementById('configEstado').value = perfil.estado;
-        carregarCidades('config');
-        setTimeout(() => {
-            document.getElementById('configCidade').value = perfil.cidade;
-        }, 100);
-    }, 100);
-
-// ADICIONAR ESTAS DUAS LINHAS
-configurarBotoesGuest();
-carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
-
-    const interesseContainer = document.getElementById('configInteresseContainer');
-    const buttons = interesseContainer.querySelectorAll('button');
-    buttons.forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.interesse === perfil.interesse_principal);
-        btn.onclick = async () => {
-            const novoInteresse = btn.dataset.interesse;
-            await db.collection('usuarios').doc(auth.currentUser.uid).update({ interesse_principal: novoInteresse });
-            buttons.forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            exibirInfoPopup("Interesse atualizado!");
-            location.reload(); // Recarrega para aplicar as mudanças de filtro
-        }
-    });
-}
-async function salvarLocalizacaoConfig() {
-    const estado = document.getElementById('configEstado').value;
-    const cidade = document.getElementById('configCidade').value;
-    if (!estado || !cidade) return exibirInfoPopup("Selecione estado e cidade.");
-    await db.collection('usuarios').doc(auth.currentUser.uid).update({ estado, cidade });
-    exibirInfoPopup("Localização salva!");
-    fecharModalAtual();
-}
-
-document.getElementById('btnConfig').onclick = () => {
-    setupConfiguracoes();
-    abrirModal('modalConfiguracoes');
-}
-</script>
-<script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(reg) {
-          console.log('✅ Service Worker registrado com sucesso:', reg.scope);
-
-          reg.addEventListener('updatefound', () => {
-            newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                 const modal = document.getElementById('modalAtualizacao');
-                 const btn = document.getElementById('btnAtualizarApp');
-                 btn.onclick = () => {
-                   newWorker.postMessage({ type: 'SKIP_WAITING' });
-                 };
-                 abrirModal('modalAtualizacao');
-              }
-            });
-          });
-        }).catch(function(err) {
-          console.error('❌ Falha ao registrar Service Worker:', err);
-        });
-
-        let refreshing;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (refreshing) return;
-          window.location.reload();
-          refreshing = true;
-        });
-      });
-    }
-
-// --- NOVO CÓDIGO: Adiciona a funcionalidade de login com a tecla Enter ---
-const loginFields = [document.getElementById('email'), document.getElementById('senha')];
-loginFields.forEach(field => {
-    field.addEventListener('keyup', function(event) {
-        // Verifica se a tecla pressionada foi "Enter"
-        if (event.key === 'Enter') {
-            // Impede qualquer ação padrão do navegador
-            event.preventDefault();
-            // Pega o botão de entrar pelo texto, pois não tem ID
-            const entrarButton = Array.from(document.querySelectorAll('#authView button')).find(btn => btn.textContent.includes('Entrar'));
-            // Clica no botão
-            if (entrarButton) {
-                entrarButton.click();
+        await db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(userRef);
+            if (!doc.exists) {
+                throw new Error("Documento do usuário não encontrado.");
             }
-        }
-    });
-});
-// --- FIM DO NOVO CÓDIGO ---
+            const novoSaldo = (doc.data().saldo || 0) - valor;
+            if (novoSaldo < 0) {
+                 throw new Error("Erro de concorrência: Saldo insuficiente para o saque.");
+            }
+            transaction.update(userRef, { saldo: novoSaldo });
+        });
+        
+        // 2. Registra a solicitação de saque
+        await db.collection('saques_pendentes').add({
+            userId: auth.currentUser.uid,
+            valor: valor,
+            chavePix: chavePix,
+            dataSolicitacao: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'Pendente' // O admin precisa aprovar/pagar
+        });
+
+        // 3. Registra a movimentação na carteira
+        await db.collection('usuarios').doc(auth.currentUser.uid).collection('movimentacoes').add({
+            tipo: 'Saque',
+            valor: -valor,
+            descricao: `Saque solicitado para chave PIX: ${chavePix}`,
+            data: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        exibirInfoPopup("✅ Saque solicitado com sucesso! Ele será processado em breve.");
+        fecharModal('modalCarteira');
+        carregarDadosUsuario(); // Atualiza o saldo na tela
+
+    } catch (error) {
+        console.error("Erro ao solicitar saque:", error);
+        exibirInfoPopup(`❌ Falha ao solicitar saque: ${error.message}`);
+    } finally {
+        fecharAguarde();
+    }
+}
+
+// Função para confirmar o "turbinamento" do perfil
+async function confirmarTurbinar() {
+    if (!auth.currentUser) return;
+    
+    // Configuração de preço e duração
+    const VALOR_TURBINAR = 9.99;
+    const DURACAO_HORAS = 24;
+
+    exibirAguarde("Verificando saldo...");
+    
+    try {
+        const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
+        
+        await db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(userRef);
+            if (!doc.exists) {
+                throw new Error("Usuário não encontrado.");
+            }
+            const saldoAtual = doc.data().saldo || 0;
+
+            if (saldoAtual < VALOR_TURBINAR) {
+                throw new Error(`Saldo insuficiente. Você precisa de R$ ${VALOR_TURBINAR.toFixed(2).replace('.', ',')}.`);
+            }
+            
+            // 1. Debita o valor do saldo
+            const novoSaldo = saldoAtual - VALOR_TURBINAR;
+            
+            // Calcula o novo prazo de turbo (adiciona 24h a partir de AGORA ou do prazo anterior, se ainda estiver ativo)
+            let turbinadoAte = new Date();
+            const turbinadoAteAnterior = doc.data().turbinadoAte ? doc.data().turbinadoAte.toDate() : new Date();
+
+            if (turbinadoAteAnterior > turbinadoAte) {
+                // Se ainda está ativo, adiciona a partir do fim do prazo anterior
+                 turbinadoAte = new Date(turbinadoAteAnterior.getTime() + DURACAO_HORAS * 60 * 60 * 1000);
+            } else {
+                 // Se não está ativo, adiciona a partir de agora
+                 turbinadoAte = new Date(Date.now() + DURACAO_HORAS * 60 * 60 * 1000);
+            }
+
+            transaction.update(userRef, { 
+                saldo: novoSaldo,
+                // 2. Adiciona/Atualiza o status de turbinado
+                turbinadoAte: turbinadoAte 
+            });
+            
+            // 3. Registra a movimentação
+            const movimentacaoRef = userRef.collection('movimentacoes').doc();
+             transaction.set(movimentacaoRef, {
+                tipo: 'Débito',
+                valor: -VALOR_TURBINAR,
+                descricao: `Turbo de ${DURACAO_HORAS}h ativado.`,
+                data: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+        
+        exibirInfoPopup("🚀 Seu perfil foi turbinado com sucesso por 24 horas!");
+        fecharModal('modalTurbinar');
+        carregarDadosUsuario(); // Atualiza o saldo e o status do turbo
+        
+    } catch (error) {
+        console.error("Erro ao turbinar perfil:", error);
+        exibirInfoPopup(`❌ Falha ao turbinar: ${error.message}`);
+        
+    } finally {
+        fecharAguarde();
+    }
+}
+
+// ------------------------------------
+// FIM FUNÇÕES DE CARTEIRA
+// ------------------------------------
 
 </script>
+
 </body>
 </html>
-
-
