@@ -1270,6 +1270,11 @@
       </div>
     </div>
 
+<div class="popup-section">
+          <h4>Conta</h4>
+          <button onclick="abrirModalAlterarSenha()">🔑 Alterar Senha</button> {/* <-- NOVO BOTÃO AQUI */}
+        </div>
+
     <div class="popup-section">
       <h4>⚖️ Legal</h4>
       <div style="display:flex; flex-direction:column; gap:10px;">
@@ -1310,6 +1315,26 @@
   </div>
 </div>
 
+<div id="modalAlterarSenha" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🔑 Alterar Senha</h3>
+    <p style="font-size: 14px;">Para sua segurança, digite sua senha atual e a nova senha desejada.</p>
+    <div class="show-password-container">
+      <input id="senhaAtual" type="password" placeholder="Senha Atual">
+      <span class="show-password-toggle" onclick="togglePasswordVisibility('senhaAtual', this)">👁️</span>
+    </div>
+     <div class="show-password-container">
+      <input id="novaSenha" type="password" placeholder="Nova Senha (mínimo 6 caracteres)">
+       <span class="show-password-toggle" onclick="togglePasswordVisibility('novaSenha', this)">👁️</span>
+    </div>
+     <div class="show-password-container">
+      <input id="confirmarNovaSenha" type="password" placeholder="Confirmar Nova Senha">
+       <span class="show-password-toggle" onclick="togglePasswordVisibility('confirmarNovaSenha', this)">👁️</span>
+    </div>
+    <button onclick="executarAlteracaoSenha()">✅ Salvar Nova Senha</button>
+    <button data-modal-id="modalAlterarSenha" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
 
 <div id="modalDeposito" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1968,6 +1993,18 @@
 #modalAdminGerenciarUsuario .modal-content {
     max-height: 80vh; /* Limita a altura máxima do modal */
     overflow-y: auto;   /* Adiciona a barra de rolagem vertical quando necessário */
+}
+
+#modalVipPro .modal-content {
+    max-height: 85vh; /* Define uma altura máxima */
+    /* display: flex;  Removido ou ajustado para não interferir no scroll */
+    /* flex-direction: column; Removido ou ajustado */
+}
+#vipProContentContainer {
+     max-height: calc(85vh - 120px); /* Calcula altura máxima do conteúdo (85vh - paddings - altura botão fechar aprox) */
+     overflow-y: auto; /* Adiciona scroll se necessário */
+     padding-right: 10px; /* Espaço para a barra de rolagem não colar no conteúdo */
+     box-sizing: border-box; /* Garante que o padding não aumente o tamanho */
 }
 
 </style>
@@ -3747,22 +3784,53 @@ function abrirModalVipPro() {
  * Processa a assinatura PRO, descontando do saldo.
  */
 
-// SUBSTITUA a função isVipAtivo existente por esta:
+
 function isVipAtivo(perfilUsuario) {
     if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
         return false;
     }
     // Verifica se é um objeto Timestamp antes de chamar toDate()
+    // E verifica se toDate é realmente uma função
     if (perfilUsuario.vipExpirationDate && typeof perfilUsuario.vipExpirationDate.toDate === 'function') {
         try {
-            return perfilUsuario.vipExpirationDate.toDate() > new Date();
+            // Compara diretamente os timestamps ou datas, se possível
+            const agora = new Date();
+            const expiracao = perfilUsuario.vipExpirationDate.toDate(); // Converte para Date
+            return expiracao > agora;
         } catch (e) {
             console.error("Erro ao processar vipExpirationDate:", e, perfilUsuario.vipExpirationDate);
             return false; // Trata como inativo se houver erro
         }
+    } else if (perfilUsuario.vipExpirationDate instanceof Date) {
+         // Caso já seja um objeto Date (menos comum vindo do Firestore, mas seguro verificar)
+         return perfilUsuario.vipExpirationDate > new Date();
     }
-    return false; // Retorna false se não for um timestamp válido
+    // Se não for Timestamp nem Date, assume que não é válido
+    console.warn("vipExpirationDate não é um Timestamp ou Date válido:", perfilUsuario.vipExpirationDate);
+    return false;
 }
+
+// ADICIONE esta versão segura para isProAtivo também (boa prática)
+function isProAtivo(perfilUsuario) {
+    if (!perfilUsuario || !perfilUsuario.proAtivo || !perfilUsuario.proExpirationDate) {
+        return false;
+    }
+    if (perfilUsuario.proExpirationDate && typeof perfilUsuario.proExpirationDate.toDate === 'function') {
+        try {
+            const agora = new Date();
+            const expiracao = perfilUsuario.proExpirationDate.toDate();
+            return expiracao > agora;
+        } catch (e) {
+            console.error("Erro ao processar proExpirationDate:", e, perfilUsuario.proExpirationDate);
+            return false;
+        }
+    } else if (perfilUsuario.proExpirationDate instanceof Date) {
+         return perfilUsuario.proExpirationDate > new Date();
+    }
+    console.warn("proExpirationDate não é um Timestamp ou Date válido:", perfilUsuario.proExpirationDate);
+    return false;
+}
+
 
 // ADICIONE esta versão segura para isProAtivo também (boa prática)
 function isProAtivo(perfilUsuario) {
@@ -5075,8 +5143,6 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => alert("Denúncia fechada!"));
 }
 
-// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
-// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
 async function abrirModalGerenciarUsuario(uid) {
   exibirAguarde("Carregando dados do usuário...");
   try {
@@ -5097,7 +5163,7 @@ async function abrirModalGerenciarUsuario(uid) {
 
     const { auth: userRecord, firestore: u } = await response.json();
 
-    // 2. O RESTANTE DO CÓDIGO MONTA O MODAL, IGUAL ANTES
+    // 2. MONTA O MODAL COM OS DADOS E NOVAS OPÇÕES
     const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
     const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
 
@@ -5117,28 +5183,62 @@ async function abrirModalGerenciarUsuario(uid) {
             <p><strong>Alterar Dados Cadastrais:</strong></p>
             <label for="adminNovoNome">Nome de Exibição:</label>
             <input id="adminNovoNome" type="text" value="${u.nome}">
-            
+
             <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
-            <input id="adminNovoTelefone" type="tel" value="${u.telefone}">
+            <input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
 
             <label for="adminNovoEstado">Estado:</label>
-            <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')"></select>
-            
+            <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')"> {/* Corrigido onchange */}
+                <option value="">Carregando...</option>
+            </select>
+
             <label for="adminNovoCidade">Cidade:</label>
-            <select id="adminNovoCidade"></select>
+            <select id="adminNovoCidade">
+                <option value="">Selecione o estado</option>
+            </select>
             <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
         </div>
 
         <div class="popup-section">
-            <p><strong>Gerenciar Saldo e VIP:</strong></p>
+            <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
             <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
             <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
             <button onclick="adminModificarSaldo('${uid}')">Modificar Saldo</button>
             <hr style="border-color: var(--cor-borda); margin: 15px 0;">
-            <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim' : 'Não'}</p>
-            <button onclick="adminToggleVip('${uid}')">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
+
+            <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim ✅' : 'Não ❌'}</p>
+            {/* Alterado o segundo parâmetro da função adminToggleVip para boolean */}
+            <button onclick="adminToggleVip('${uid}', ${!isVipAtivo(u)})">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
+            <hr style="border-color: var(--cor-borda); margin: 15px 0;">
+
+            <p><strong>PRO Ativo:</strong> ${isProAtivo(u) ? `Sim ✅ (Tier: ${u.proTier || 'N/A'})` : 'Não ❌'}</p>
+            ${!isProAtivo(u) ? `
+                <select id="adminConcederProTier">
+                    <option value="tier1">Conceder PRO Tier 1 (30 dias)</option>
+                    <option value="tier2">Conceder PRO Tier 2 (30 dias)</option>
+                    <option value="tier3">Conceder PRO Tier 3 (30 dias)</option>
+                </select>
+                <button onclick="adminTogglePro('${uid}', true)">Conceder PRO</button>
+            ` : `
+                <button onclick="adminTogglePro('${uid}', false)">Remover PRO</button>
+            `}
+            <hr style="border-color: var(--cor-borda); margin: 15px 0;">
+
+             <p><strong>Pontos Fidelidade:</strong> ${u.pontosFidelidade || 0}</p>
+             <input id="adminModificarPontos" type="number" placeholder="Pontos a adicionar/remover (-)">
+             <button onclick="adminModificarPontos('${uid}')">Modificar Pontos</button>
         </div>
-        
+
+        {/* ---> NOVA SEÇÃO PARA LOJA <--- */}
+        <div class="popup-section">
+            <p><strong>Acesso à Loja:</strong></p>
+            <p><strong>Loja Liberada:</strong> ${u.lojaLiberada ? 'Sim ✅' : 'Não ❌'}</p>
+            <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">
+                ${u.lojaLiberada ? 'Bloquear Acesso à Loja' : 'Liberar Acesso à Loja'}
+            </button>
+        </div>
+        {/* ---> FIM DA NOVA SEÇÃO <--- */}
+
         <div class="popup-section">
             <p><strong>Ações de Segurança:</strong></p>
             <input id="adminNovaSenha" type="password" placeholder="🔑 Definir Nova Senha para o Usuário">
@@ -5153,18 +5253,29 @@ async function abrirModalGerenciarUsuario(uid) {
 
         <button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
     `;
-    
+
     fecharTodosOsModais(); // Fecha o "Aguarde..."
-    
+
+    // --- CORREÇÃO CARREGAMENTO ESTADO/CIDADE ---
+    // Chama carregarEstados DEPOIS que o HTML foi inserido
     carregarEstados('adminNovo');
+    // Adiciona um pequeno delay para garantir que os estados carregaram antes de selecionar e carregar cidades
     setTimeout(() => {
-        document.getElementById('adminNovoEstado').value = u.estado;
-        carregarCidades('adminNovo');
-        setTimeout(() => {
-            document.getElementById('adminNovoCidade').value = u.cidade;
-        }, 200);
-    }, 200);
-    
+        const estadoSelect = document.getElementById('adminNovoEstado');
+        if (estadoSelect) {
+            estadoSelect.value = u.estado || ""; // Define o valor do estado
+            // Chama carregarCidades DEPOIS de definir o estado
+            carregarCidades('adminNovo');
+            // Outro delay para garantir que as cidades carregaram antes de selecionar
+            setTimeout(() => {
+                const cidadeSelect = document.getElementById('adminNovoCidade');
+                if (cidadeSelect) {
+                    cidadeSelect.value = u.cidade || ""; // Define o valor da cidade
+                }
+            }, 150); // Delay menor para a cidade
+        }
+    }, 150); // Delay para o estado
+
     abrirModal('modalAdminGerenciarUsuario');
   } catch (error) {
       fecharTodosOsModais();
@@ -5172,8 +5283,6 @@ async function abrirModalGerenciarUsuario(uid) {
       alert("Não foi possível carregar os dados completos do usuário. " + error.message);
   }
 }
-
-// ADICIONE ESTAS NOVAS FUNÇÕES NO INDEX.HTML
 
 async function adminSalvarAlteracoesUsuario(uid) {
     const updates = {
@@ -5275,20 +5384,37 @@ async function adminModificarSaldo(uid) {
     fecharModalAtual();
   } else alert("Valor inválido.");
 }
-async function adminToggleVip(uid) {
-  const userDoc = await db.collection("usuarios").doc(uid).get();
-  const userData = userDoc.data();
-  if (isVipAtivo(userData)) {
-      await db.collection("usuarios").doc(uid).update({ vip: false });
-      alert("VIP Removido!");
-  } else {
-      const expiracao = new Date();
-      expiracao.setDate(expiracao.getDate() + 180);
-      await db.collection("usuarios").doc(uid).update({ vip: true, vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao) });
-      alert("VIP concedido por 6 meses!");
+
+async function adminToggleVip(uid, conceder) { // Modificado para receber 'conceder'
+  exibirAguarde(conceder ? "Concedendo VIP..." : "Removendo VIP...");
+  try {
+      let updates = {};
+      if (conceder) {
+          const expiracao = new Date();
+          expiracao.setDate(expiracao.getDate() + 180); // 6 meses
+          updates = {
+              vip: true,
+              vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+          };
+          alert("VIP concedido por 6 meses!");
+          notifyUser(uid, "👑 VIP Concedido!", "Um administrador ativou sua assinatura VIP por 6 meses.");
+      } else {
+          updates = {
+              vip: false,
+              vipExpirationDate: firebase.firestore.FieldValue.delete() // Remove a data de expiração
+          };
+          alert("VIP Removido!");
+          notifyUser(uid, "ℹ️ VIP Removido", "Sua assinatura VIP foi removida por um administrador.");
+      }
+      await db.collection("usuarios").doc(uid).update(updates);
+      fecharTodosOsModais();
+      abrirModalGerenciarUsuario(uid); // Reabre para atualizar a UI
+  } catch (error) {
+      fecharTodosOsModais();
+      alert("Erro ao gerenciar VIP: " + error.message);
   }
-  fecharModalAtual();
 }
+
 async function adminDeletarUsuario(uid, nome) {
   if (prompt(`TEM CERTEZA? Para deletar ${nome}, digite "DELETAR":`) === "DELETAR") {
     await db.collection("usuarios").doc(uid).delete();
@@ -5297,6 +5423,89 @@ async function adminDeletarUsuario(uid, nome) {
   } else alert("Exclusão cancelada.");
 }
 
+async function adminToggleLoja(uid, deveAtivar) {
+    const acao = deveAtivar ? "liberar" : "bloquear";
+    if (!confirm(`Tem certeza que deseja ${acao} o acesso à loja para este usuário?`)) return;
+
+    exibirAguarde(`${deveAtivar ? 'Liberando' : 'Bloqueando'} acesso...`);
+    try {
+        await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
+        fecharTodosOsModais();
+        alert(`Acesso à loja ${deveAtivar ? 'liberado' : 'bloqueado'} com sucesso!`);
+        // Reabre o modal para atualizar a interface
+        abrirModalGerenciarUsuario(uid); // Chama a função que recarrega os dados e reabre
+    } catch (error) {
+        fecharTodosOsModais();
+        alert(`Erro ao ${acao} acesso: ${error.message}`);
+    }
+}
+
+// ADICIONE ESTA NOVA FUNÇÃO PARA GERENCIAR O PRO
+async function adminTogglePro(uid, conceder) {
+    exibirAguarde(conceder ? "Concedendo PRO..." : "Removendo PRO...");
+    try {
+        let updates = {};
+        if (conceder) {
+            const tierSelecionado = document.getElementById('adminConcederProTier').value;
+            if (!tierSelecionado) throw new Error("Selecione um nível PRO.");
+            const expiracao = new Date();
+            expiracao.setDate(expiracao.getDate() + 30); // 30 dias de PRO
+            updates = {
+                proAtivo: true,
+                proTier: tierSelecionado,
+                proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+            };
+            alert(`PRO ${tierSelecionado} concedido por 30 dias!`);
+            notifyUser(uid, "🌟 PRO Ativado!", `Um administrador concedeu a você o plano PRO ${tierSelecionado} por 30 dias.`);
+        } else {
+            updates = {
+                proAtivo: false,
+                proTier: firebase.firestore.FieldValue.delete(), // Remove o campo
+                proExpirationDate: firebase.firestore.FieldValue.delete() // Remove o campo
+            };
+            alert("Assinatura PRO removida.");
+            notifyUser(uid, "ℹ️ PRO Removido", "Sua assinatura PRO foi removida por um administrador.");
+        }
+
+        await db.collection('usuarios').doc(uid).update(updates);
+        fecharTodosOsModais();
+        abrirModalGerenciarUsuario(uid); // Reabre para atualizar a UI
+
+    } catch (error) {
+        fecharTodosOsModais();
+        alert("Erro ao gerenciar PRO: " + error.message);
+    }
+}
+
+// ADICIONE ESTA NOVA FUNÇÃO PARA GERENCIAR OS PONTOS
+async function adminModificarPontos(uid) {
+    const inputPontos = document.getElementById('adminModificarPontos');
+    const valor = parseInt(inputPontos.value);
+
+    if (isNaN(valor)) {
+        return alert("Por favor, insira um número válido de pontos.");
+    }
+
+    const acao = valor >= 0 ? "adicionar" : "remover";
+    if (!confirm(`Tem certeza que deseja ${acao} ${Math.abs(valor)} pontos ${valor >= 0 ? 'para' : 'de'} este usuário?`)) {
+        return;
+    }
+
+    exibirAguarde("Modificando pontos...");
+    try {
+        await db.collection('usuarios').doc(uid).update({
+            pontosFidelidade: firebase.firestore.FieldValue.increment(valor)
+        });
+        fecharTodosOsModais();
+        alert(`Pontos modificados com sucesso!`);
+        notifyUser(uid, "🏆 Pontos Alterados!", `Um administrador alterou seus pontos de fidelidade em ${valor}.`, { link: '#fidelidade' });
+        inputPontos.value = ''; // Limpa o input
+        abrirModalGerenciarUsuario(uid); // Reabre para atualizar
+    } catch (error) {
+        fecharTodosOsModais();
+        alert("Erro ao modificar pontos: " + error.message);
+    }
+}
 
 async function enviarNotificacaoMarketing() {
     const title = document.getElementById('marketingTitulo').value.trim();
@@ -5651,6 +5860,77 @@ function abrirModalTurbinar(){
     abrirModal('modalTurbinar');
 }
 
+function togglePasswordVisibility(inputId, iconElement) {
+    const input = document.getElementById(inputId);
+    if (!input || !iconElement) return; // Adiciona verificação
+    if (input.type === "password") {
+        input.type = "text";
+        iconElement.textContent = '🙈';
+    } else {
+        input.type = "password";
+        iconElement.textContent = '👁️';
+    }
+}
+
+function abrirModalAlterarSenha() {
+    // Limpa os campos ao abrir
+    document.getElementById('senhaAtual').value = '';
+    document.getElementById('novaSenha').value = '';
+    document.getElementById('confirmarNovaSenha').value = '';
+    // Garante que comecem como password
+    document.getElementById('senhaAtual').type = 'password';
+    document.getElementById('novaSenha').type = 'password';
+    document.getElementById('confirmarNovaSenha').type = 'password';
+    document.querySelectorAll('#modalAlterarSenha .show-password-toggle').forEach(el => el.textContent = '👁️'); // Seleciona ícones específicos deste modal
+
+    abrirModal('modalAlterarSenha');
+}
+
+async function executarAlteracaoSenha() {
+    const senhaAtual = document.getElementById('senhaAtual').value;
+    const novaSenha = document.getElementById('novaSenha').value;
+    const confirmarNovaSenha = document.getElementById('confirmarNovaSenha').value;
+
+    if (!senhaAtual || !novaSenha || !confirmarNovaSenha) {
+        return alert("Preencha todos os campos.");
+    }
+    if (novaSenha.length < 6) {
+        return alert("A nova senha deve ter pelo menos 6 caracteres.");
+    }
+    if (novaSenha !== confirmarNovaSenha) {
+        return alert("As novas senhas não coincidem.");
+    }
+
+    exibirAguarde("Verificando senha atual...");
+    const user = auth.currentUser;
+    if (!user) { // Adiciona verificação de usuário
+        fecharTodosOsModais();
+        alert("Erro: Usuário não está logado.");
+        mostrar('authView');
+        return;
+    }
+    const credential = firebase.auth.EmailAuthProvider.credential(user.email, senhaAtual);
+
+    try {
+        await user.reauthenticateWithCredential(credential);
+        // Reautenticação bem-sucedida, agora atualiza a senha
+        exibirAguarde("Atualizando senha..."); // Atualiza texto do popup
+        await user.updatePassword(novaSenha);
+        fecharTodosOsModais();
+        alert("✅ Senha alterada com sucesso!");
+        fecharModalAtual(); // Fecha o modal de alterar senha
+    } catch (error) {
+        fecharTodosOsModais();
+        console.error("Erro ao alterar senha:", error);
+        if (error.code === 'auth/wrong-password') {
+            alert("❌ Senha atual incorreta. Tente novamente.");
+        } else if (error.code === 'auth/too-many-requests') {
+             alert("❌ Muitas tentativas incorretas. Tente novamente mais tarde.");
+        } else {
+            alert("❌ Erro ao alterar senha: " + error.message);
+        }
+    }
+}
 
 // Funções da Loja
 function abrirModalParaVender() {
