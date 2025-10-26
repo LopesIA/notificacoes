@@ -4399,13 +4399,13 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
+        setTimeout(() => location.reload(), 100);
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         exibirPopup("Agendamento aprovado!");
-setTimeout(() => location.reload(), 3000);
     }).catch(e => {
         exibirPopup("Erro ao aprovar: " + e);
-setTimeout(() => location.reload(), 3000);
+setTimeout(() => location.reload(), 100);
     });
 }
 
@@ -4442,13 +4442,13 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
   }).then(() => {
+      setTimeout(() => location.reload(), 100);
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
       exibirPopup("Agendamento aprovado!");
-setTimeout(() => location.reload(), 3000);
   }).catch(e => {
       exibirPopup("Erro ao aprovar: " + e);
-setTimeout(() => location.reload(), 3000);
+setTimeout(() => location.reload(), 100);
   });
 }
 
@@ -4461,10 +4461,10 @@ function recusarAgendamento(agendamentoId, clienteUid) {
       if (status !== 'pendente' && status !== 'imediato') throw "Solicitação já processada.";
       t.update(agendamentoRef, { status: "cancelado" });
   }).then(() => {
+      setTimeout(() => location.reload(), 100);
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} recusou seu agendamento.`);
       notifyUser(clienteUid, "❌ Agendamento Recusado", `O profissional ${perfil.nome} não pôde aceitar seu pedido.`);
       exibirPopup("Agendamento recusado.");
-setTimeout(() => location.reload(), 3000);
   }).catch(e => exibirPopup("Erro ao recusar: " + e));
 }
 
@@ -4488,13 +4488,13 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
       if (!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(-valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
   }).then(() => {
+      setTimeout(() => location.reload(), 100);
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
       exibirPopup("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
-setTimeout(() => location.reload(), 3000);
   }).catch(e => {
+      setTimeout(() => location.reload(), 100);
       exibirPopup("Erro ao cancelar: " + e);
-setTimeout(() => location.reload(), 3000);
   });
 }
 
@@ -4515,8 +4515,8 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
     
+    setTimeout(() => location.reload(), 100);
     exibirPopup("Serviço concluído!");
-setTimeout(() => location.reload(), 3000);
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
     const clienteDoc = await clienteRef.get();
