@@ -2203,6 +2203,7 @@ let pixTimerInterval = null;
 let pendenciasInterval = null; 
 let pedidosVendedorListener = null;
 let comprasClienteListener = null; 
+let aguardeTimeoutId = null;
 
 let userView = {
     originalType: null,
@@ -2233,11 +2234,29 @@ const BACKEND_API_URL = 'https://navalhabackend.onrender.com';
 
 // --- [LÓGICA DE POPUP DE AGUARDE E MODAIS] ---
 function exibirAguarde(texto = "Aguarde...") {
+    // Limpa qualquer timeout anterior para evitar múltiplos popups de erro
+    if (aguardeTimeoutId) {
+        clearTimeout(aguardeTimeoutId);
+        aguardeTimeoutId = null;
+    }
+
     document.getElementById('popupAguardeTexto').textContent = texto;
     const popup = document.getElementById('popupAguarde');
+    // Garante que está visível antes de adicionar a classe show
     popup.style.display = 'flex';
+    // Adiciona um pequeno delay para a transição CSS funcionar
     setTimeout(() => popup.classList.add('show'), 10);
-    aguardeClickCount = 0; // Reseta a contagem de cliques
+    aguardeClickCount = 0; // Reseta a contagem de cliques para fechar
+
+    // Define o timeout de 10 segundos
+    aguardeTimeoutId = setTimeout(() => {
+        // Verifica se o popup ainda está visível (pode já ter sido fechado por sucesso)
+        if (popup.classList.contains('show')) {
+            fecharAguarde(null, true); // Força o fechamento do "Aguarde"
+            exibirPopup('Ops!', 'A operação demorou mais que o esperado. Verifique sua conexão e tente novamente.', 'erro');
+        }
+        aguardeTimeoutId = null; // Limpa o ID do timeout
+    }, 10000); // 10000 milissegundos = 10 segundos
 }
 
 /* === Onboarding Tela 2 - Funções de Seleção === */
