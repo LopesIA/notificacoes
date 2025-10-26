@@ -7251,12 +7251,19 @@ async function salvarLocalizacaoConfig() {
     fecharModalAtual();
 }
 
+// Event listener para o botão de Configurações
 document.getElementById('btnConfig').onclick = () => {
     setupConfiguracoes();
     abrirModal('modalConfiguracoes');
 }
+
+// --- FIM DO BLOCO PRINCIPAL DE SCRIPT ---
 </script>
+
 <script>
+// --- INÍCIO DO SEGUNDO BLOCO DE SCRIPT (SERVICE WORKER & LOGIN COM ENTER) ---
+
+    // Lógica do Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(reg) {
@@ -7265,13 +7272,14 @@ document.getElementById('btnConfig').onclick = () => {
           reg.addEventListener('updatefound', () => {
             newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {
+              // Verifica se há um novo worker instalado e se já existe um controlador ativo
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                  const modal = document.getElementById('modalAtualizacao');
                  const btn = document.getElementById('btnAtualizarApp');
                  btn.onclick = () => {
-                   newWorker.postMessage({ type: 'SKIP_WAITING' });
+                   newWorker.postMessage({ type: 'SKIP_WAITING' }); // Envia mensagem para o novo SW pular a espera
                  };
-                 abrirModal('modalAtualizacao');
+                 abrirModal('modalAtualizacao'); // Mostra o modal para o usuário atualizar
               }
             });
           });
@@ -7279,34 +7287,37 @@ document.getElementById('btnConfig').onclick = () => {
           console.error('❌ Falha ao registrar Service Worker:', err);
         });
 
+        // Lógica para recarregar a página após a atualização do Service Worker
         let refreshing;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (refreshing) return;
-          window.location.reload();
+          if (refreshing) return; // Evita recarregamentos múltiplos
+          window.location.reload(); // Recarrega a página para usar o novo SW
           refreshing = true;
         });
       });
     }
 
-// --- NOVO CÓDIGO: Adiciona a funcionalidade de login com a tecla Enter ---
-const loginFields = [document.getElementById('email'), document.getElementById('senha')];
-loginFields.forEach(field => {
-    field.addEventListener('keyup', function(event) {
-        // Verifica se a tecla pressionada foi "Enter"
-        if (event.key === 'Enter') {
-            // Impede qualquer ação padrão do navegador
-            event.preventDefault();
-            // Pega o botão de entrar pelo texto, pois não tem ID
-            const entrarButton = Array.from(document.querySelectorAll('#authView button')).find(btn => btn.textContent.includes('Entrar'));
-            // Clica no botão
-            if (entrarButton) {
-                entrarButton.click();
+    // --- Funcionalidade de login com a tecla Enter ---
+    const loginFields = [document.getElementById('email'), document.getElementById('senha')];
+    loginFields.forEach(field => {
+        // Adiciona um listener para o evento 'keyup' (tecla solta)
+        field.addEventListener('keyup', function(event) {
+            // Verifica se a tecla pressionada foi "Enter"
+            if (event.key === 'Enter') {
+                // Impede a ação padrão do Enter (como submeter um formulário)
+                event.preventDefault();
+                // Encontra o botão de "Entrar" dentro da div de autenticação
+                const entrarButton = Array.from(document.querySelectorAll('#authView button')).find(btn => btn.textContent.includes('Entrar'));
+                // Se o botão for encontrado, simula um clique nele
+                if (entrarButton) {
+                    entrarButton.click();
+                }
             }
-        }
+        });
     });
-});
-// --- FIM DO NOVO CÓDIGO ---
+    // --- FIM da funcionalidade de login com Enter ---
 
+// --- FIM DO SEGUNDO BLOCO DE SCRIPT ---
 </script>
 </body>
 </html>
