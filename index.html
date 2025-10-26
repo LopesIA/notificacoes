@@ -5918,9 +5918,8 @@ function handleDeepLink() {
             if (perfil.tipo !== 'cliente') abrirAgendamentosBarbeiro();
             break;
         case 'solicitacoes':
-            if (pe
-rfil.tipo === 'admin') abrirModalSolicitacoes();
-            break;
+    if (perfil.tipo === 'admin') abrirModalSolicitacoes(); // Corrigido
+    break;
         case 'denuncias':
             if (perfil.tipo === 'admin') abrirDenuncias();
             break;
