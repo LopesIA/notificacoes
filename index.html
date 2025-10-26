@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="manifest" href="/manifest.json">
   <meta charset="UTF-8">
   <title>Nova Versão</title>
-  <link rel="manifest" href="/manifest.json">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  
   <link rel="icon" href="/icone.png" type="image/png">
   <link rel="apple-touch-icon" href="/icone.png">
+  <title>Nova Versão</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
@@ -18,7 +25,6 @@
     background-size: cover !important;
 }
 
---cor-destaque-vermelho: #ff0000; /* Vermelho */
       --cor-fundo: #0c0c0c;
       --cor-card: #181818;
       --cor-botoes: #222222;
@@ -55,7 +61,6 @@
     animation: none;
 }
     body.tema-claro {
---cor-destaque-vermelho: #cc0000; /* Vermelho mais escuro para tema claro */
       --cor-fundo: #f0f0f0;
       --cor-card: #ffffff;
       --cor-botoes: #e0e0e0;
@@ -68,7 +73,7 @@
       --cor-borda: #ccc;
     }
     body {
-      background-image: url('/icone.png');
+      background-image: url('C:\Users\arlan\Desktop\NavalhadeOuro3.1.9/icone.png'); /* <-- ATUALIZE AQUI */
       background-size: cover; /* Garante que a imagem cubra todo o elemento */
       background-position: center; /* Centraliza a imagem */
       background-repeat: no-repeat; /* Evita repetição */
@@ -516,9 +521,9 @@
         text-shadow: 0 0 8px var(--cor-destaque-azul);
     }
     .cliente-chat {
-    color: var(--cor-destaque-prata); /* Cor do texto para prateado */
-    text-shadow: 0 0 8px var(--cor-destaque-vermelho); /* Brilho vermelho */
-}
+        color: var(--cor-texto-principal);
+        text-shadow: 0 0 8px var(--cor-destaque-prata);
+    }
     .show-password-container {
         position: relative;
         display: flex;
@@ -1082,33 +1087,9 @@
         background-color: var(--cor-destaque);
         color: var(--cor-fundo);
     }
-
-#modalVipPro .modal-content {
-    max-height: 85vh; /* Limita a altura a 85% da altura da tela */
-    overflow-y: auto; /* Adiciona barra de rolagem vertical se necessário */
-}
-
-/* Opcional: Melhora o espaçamento interno se necessário */
-#vipProContentContainer {
-    padding-bottom: 20px; /* Adiciona espaço no final para não cortar o botão */
-}
-
   </style>
 </head>
 <body>
-
-<!-- Modal para Alterar Senha -->
-<div id="modalAlterarSenha" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🔑 Alterar Senha</h3>
-    <input id="senhaAntiga" type="password" placeholder="Senha Atual">
-    <input id="senhaNova" type="password" placeholder="Nova Senha (mínimo 6 caracteres)">
-    <input id="senhaNovaConfirm" type="password" placeholder="Confirmar Nova Senha">
-    <button onclick="alterarSenhaUsuario()">✅ Confirmar Alteração</button>
-    <button data-modal-id="modalAlterarSenha" onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-<!-- Fim Modal Alterar Senha -->
 
 <div id="popupAguarde" class="modal" onclick="fecharAguarde(event)">
   <div class="modal-content">
@@ -1170,7 +1151,6 @@
     <button onclick="entrar()">➡️ Entrar</button>
     <button id="btnCriarConta" onclick="prepararCriarConta()">🆕 Criar conta</button>
     <button id="btnVoltar" class="hidden" onclick="voltarParaLogin()">⬅️ Voltar</button>
-    <button onclick="abrirModal('modalEsqueciSenha')" style="background: none; border: none; color: var(--cor-destaque); margin-top: 10px; width: 100%;">Esqueci minha senha</button>
   </div>
   
   <div id="guestView" class="card">
@@ -1286,12 +1266,6 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
     
-<!-- Botão Adicionado -->
-    <div class="popup-section">
-      <h4>🔒 Segurança</h4>
-      <button onclick="abrirModal('modalAlterarSenha'); fecharModalAtual();">Alterar Minha Senha</button>
-    </div>
-    <!-- Fim Botão Adicionado -->
 
     <div class="popup-section config-section">
       <h4>❤️ Meu Interesse Principal</h4>
@@ -1598,10 +1572,8 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🎨 Adicionar Logomarca</h3>
     <p style="font-size: 12px; opacity: 0.8;">Use o site <a href="https://postimages.org/" target="_blank">Postimages.org</a> para hospedar sua imagem gratuitamente e cole o "Link Direto" abaixo.</p>
-    <img id="logomarcaPreview" src="https://via.placeholder.com/100?text=Logo" alt="Preview" style="max-width: 100px; border-radius: 50%; display: block; margin: 10px auto; border: 1px solid var(--cor-borda);">
-<input type="file" id="logomarcaFile" accept="image/*,image/gif" onchange="previewImage(this, 'logomarcaPreview')">
-<progress id="logomarcaProgress" value="0" max="100" style="width: 100%; display: none;"></progress>
-<button onclick="uploadLogomarca()">💾 Salvar Logomarca</button>
+    <input id="logomarcaUrl" type="url" placeholder="🔗 Cole o Link Direto aqui">
+    <button onclick="salvarLogomarca()">💾 Salvar Logomarca</button>
     <button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -1611,8 +1583,9 @@
     <h3>📍 Alterar Endereço</h3>
     <input id="novoEnderecoRua" type="text" placeholder="Nova Rua">
     <input id="novoEnderecoNumero" type="text" placeholder="Novo Número">
-    <button id="btnSalvarLocalAtual" onclick="salvarLocalizacaoAtualEndereco()">📍 Salvar Localização Atual</button>
-<button data-modal-id="modalAlterarEnderecoBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
+    <button onclick="obterLocalizacaoCadastro('barbeiro')">📍 Usar minha localização atual</button>
+    <button onclick="alterarEnderecoBarbeiro(event)">💾 Salvar</button>
+    <button data-modal-id="modalAlterarEnderecoBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -1734,7 +1707,7 @@
   </div>
 </div>
 
-<div id="modalAdminGerenciarUsuario" class="modal"><div class="modal-content"><h3>Gerenciar Usuário</h3><div id="adminGerenciarConteudo"></div></div></div>
+<div id="modalAdminGerenciarUsuario" class="modal"><div class="modal-content"><h3>Gerenciar Usuário</h3><div id="adminGerenciarConteudo"></div><button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalGerenciarLojaAdmin" class="modal"><div class="modal-content"><h3>Gerenciar Loja</h3><div class="popup-section"><h4>Deletar Produto</h4><div id="adminDeletarProdutoList" class="scrollable-list"></div></div><div class="popup-section"><h4>Ativar/Desativar Loja de Vendedor</h4><div id="adminToggleLojaList" class="scrollable-list"></div></div><button data-modal-id="modalGerenciarLojaAdmin" onclick="fecharModal(event)">Fechar</button></div></div>
 
@@ -1934,10 +1907,7 @@
 <div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3 id="formProdutoTitulo">📦 Adicionar Novo Produto</h3>
-        <p>Imagens do Produto (até 5):</p>
-<input type="file" id="produtoImagensFile" accept="image/*,image/gif" multiple onchange="previewProductImages(this)">
-<div id="produtoImagensPreviews" class="portfolio-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); max-height: 100px; overflow-y: auto;"></div>
-<progress id="produtoImagensProgress" value="0" max="100" style="width: 100%; display: none;"></progress>
+        <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
         <input id="produtoNome" type="text" placeholder="Nome do Produto">
         <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
         <p>Tamanhos disponíveis:</p>
@@ -1999,33 +1969,8 @@
 .rating-stars span.selected {
     color: var(--cor-destaque);
 }
-
-/* ADICIONE ESTE CÓDIGO DENTRO DA TAG <style> */
-#modalAdminGerenciarUsuario .modal-content {
-    max-height: 80vh; /* Limita a altura máxima do modal */
-    overflow-y: auto;   /* Adiciona a barra de rolagem vertical quando necessário */
-}
-
 </style>
 
-<div id="modalInfoPopup" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3 id="infoPopupTitulo">Aviso</h3>
-    <p id="infoPopupMensagem" style="margin-top: 15px;"></p>
-    <button data-modal-id="modalInfoPopup" onclick="fecharModal(event)" style="margin-top: 20px;">✅ OK</button>
-  </div>
-</div>
-
-<div id="modalAddServico" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>➕ Adicionar Novo Serviço</h3>
-    <input id="addServicoNome" type="text" placeholder="Nome do Serviço">
-    <input id="addServicoValor" type="number" placeholder="Valor (Ex: 25.50)">
-    <input id="addServicoDuracao" type="number" placeholder="Duração em Minutos (Ex: 30)">
-    <button onclick="salvarNovoServico()">💾 Salvar Serviço</button>
-    <button data-modal-id="modalAddServico" onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
 
 <div id="modalVendaRealizada" class="modal modal-venda" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -2060,17 +2005,6 @@
   </div>
 </div>
 
-<div id="modalEsqueciSenha" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🔑 Recuperar Acesso</h3>
-    <p style="font-size: 14px;">Preencha seus dados para solicitar uma nova senha ao administrador.</p>
-    <input id="recuperaEmail" type="email" placeholder="📧 Seu email de cadastro">
-    <input id="recuperaTelefone" type="tel" placeholder="📞 Seu telefone com DDD">
-    <button onclick="enviarSolicitacaoRecuperacaoSenha()">➡️ Enviar Solicitação</button>
-    <button data-modal-id="modalEsqueciSenha" onclick="fecharModal(event)">❌ Cancelar</button>
-  </div>
-</div>
-
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
@@ -2091,7 +2025,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
-const storage = firebase.storage(); // Inicializa o Firebase Storage
+
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .then(() => {
     console.log("Persistência de autenticação definida para 'local'. O usuário ficará logado.");
@@ -2105,12 +2039,7 @@ const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
 const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
-// SUBSTITUA AS CONSTANTES DE PREÇO POR ESTAS
-const PRECOS_PRO = { // Nossos 3 novos níveis
-    tier1: { preco: 29.90, taxa: 0.04 }, // 4%
-    tier2: { preco: 59.90, taxa: 0.02 }, // 2%
-    tier3: { preco: 99.90, taxa: 0.00 }  // 0%
-};
+const PRECO_PRO = 30;
 
 let fcmSetupDone = false;
 let isSending = false;
@@ -2240,16 +2169,10 @@ function fecharModalAtual(forcePopupAguarde = false) {
     
     if (modalStack.length > 0) {
         const modalParaFechar = modalStack.pop();
-    modalParaFechar.classList.remove('show');
-    setTimeout(() => {
-        modalParaFechar.style.display = 'none';
-    }, 300);
-
-    // --- ADICIONADO AQUI ---
-    // Se o modal fechado for o de agendamentos do barbeiro, verifica se ainda há pendências
-    if (modalParaFechar.id === 'modalAgendamentosBarbeiro') {
-        verificarPendenciasVisuaisBarbeiro();
-    // --- FIM DA ADIÇÃO ---
+        modalParaFechar.classList.remove('show');
+        setTimeout(() => {
+            modalParaFechar.style.display = 'none';
+        }, 300);
     }
 }
 
@@ -2311,18 +2234,11 @@ function configurarBotoesGuest() {
     const guestView = document.getElementById('guestView');
     const buttons = guestView.querySelectorAll('#guestFuncoesContainer button');
     buttons.forEach(btn => {
-        const originalText = btn.textContent.trim();
-        // Mantém a funcionalidade original do botão "Loja"
-        if (originalText === 'Loja') {
-            btn.onclick = () => { mostrar('lojaView'); carregarProdutos(); };
-            return;
-        }
-        
-        // Para todos os outros botões, exibe um alerta para o usuário se logar
+        const originalOnclick = btn.onclick;
+        if(btn.textContent.trim() === 'Loja') return; // Mantém a funcionalidade do botão Loja
         btn.onclick = () => {
-            exibirInfoPopup("Para acessar esta função, por favor, crie uma conta ou faça login.");
-            mostrar('authView'); // Direciona para a tela de login
-        };
+    iniciarOnboarding(); // NOVO: Chama a primeira tela de boas-vindas
+};
     });
 }
 
@@ -2368,23 +2284,6 @@ async function garantirTokenAtualizadoNoPerfil(uid) {
     }
 }
 
-async function verificarPendenciasVisuaisBarbeiro() {
-    if (!auth.currentUser || perfil.tipo === 'cliente' || perfil.tipo === 'admin') return; // Só para profissionais logados
-    try {
-        const agendamentosSnap = await db.collection('agendamentos')
-            .where('barbeiroUid', '==', auth.currentUser.uid)
-            .where('status', '==', 'pendente')
-            .limit(1) // Só precisamos saber se existe pelo menos 1
-            .get();
-
-        const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
-        if (btnAgendamentos) {
-            btnAgendamentos.classList.toggle('notificacao-pulsante', !agendamentosSnap.empty);
-        }
-    } catch (error) {
-        console.error("Erro ao verificar pendências visuais:", error);
-    }
-}
 
 // SUBSTITUA a função setupFCM inteira por esta
 function setupFCM(uid) {
@@ -2517,43 +2416,25 @@ const cidadesPorEstado = {
 
 function carregarEstados(prefix = '') {
   const estadoSelect = document.getElementById(`${prefix}estado`);
-  // VERIFICAÇÃO ADICIONADA:
-  if (!estadoSelect) {
-      console.error(`Elemento ${prefix}estado não encontrado.`);
-      return;
-  }
+  if(!estadoSelect) return;
   const valorAtual = estadoSelect.value;
   estadoSelect.innerHTML = '<option value="">🌎 Selecione seu estado</option>';
-  // Ordena os estados alfabeticamente
-  const estadosOrdenados = Object.keys(cidadesPorEstado).sort();
-  estadosOrdenados.forEach(sigla => {
+  Object.keys(cidadesPorEstado).forEach(sigla => {
     estadoSelect.innerHTML += `<option value="${sigla}" ${sigla === valorAtual ? 'selected' : ''}>${sigla}</option>`;
   });
 }
 
-
 function carregarCidades(prefix = '') {
-  const estadoSelect = document.getElementById(`${prefix}estado`);
+  const estado = document.getElementById(`${prefix}estado`).value;
   const cidadeSelect = document.getElementById(`${prefix}cidade`);
-  // VERIFICAÇÕES ADICIONADAS:
-  if (!estadoSelect) {
-      console.error(`Elemento ${prefix}estado não encontrado ao carregar cidades.`);
-      return;
-  }
-   if (!cidadeSelect) {
-      console.error(`Elemento ${prefix}cidade não encontrado.`);
-      return;
-  }
-  const estado = estadoSelect.value;
+  if(!cidadeSelect) return;
   const valorAtual = cidadeSelect.value;
   cidadeSelect.innerHTML = '<option value="">🏙️ Selecione sua cidade</option>';
   const cidades = cidadesPorEstado[estado] || [];
-  // Ordena as cidades alfabeticamente
-  cidades.sort().forEach(c => {
+  cidades.forEach(c => {
     cidadeSelect.innerHTML += `<option value="${c}" ${c === valorAtual ? 'selected' : ''}>${c}</option>`;
   });
 }
-
 
 carregarEstados();
 
@@ -2571,7 +2452,7 @@ function entrar() {
   const senha = document.getElementById("senha").value.trim();
   if (!email || !senha) {
     fecharTodosOsModais();
-    return exibirInfoPopup("Preencha os campos corretamente.");
+    return alert("Preencha os campos corretamente.");
   }
   auth.signInWithEmailAndPassword(email, senha)
     .then(() => {
@@ -2580,7 +2461,7 @@ function entrar() {
     })
     .catch(e => {
         fecharTodosOsModais();
-        exibirInfoPopup("Erro ao entrar: " + e.message);
+        alert("Erro ao entrar: " + e.message);
     });
 }
 
@@ -2631,40 +2512,6 @@ function voltarParaLogin() {
     cadastroCoords = null;
 }
 
-// ADICIONE ESTA FUNÇÃO NO INDEX.HTML
-async function enviarSolicitacaoRecuperacaoSenha() {
-    const email = document.getElementById('recuperaEmail').value.trim();
-    const telefone = document.getElementById('recuperaTelefone').value.trim();
-
-    if (!email || !telefone) {
-        return exibirInfoPopup("Por favor, preencha seu email e telefone.");
-    }
-
-    exibirAguarde("Enviando solicitação...");
-
-    try {
-        await db.collection("solicitacoes").add({
-            tipo: "recuperacao_senha",
-            email: email,
-            telefone: telefone,
-            usuarioNome: `(Solicitante: ${email})`, // Nome temporário
-            status: "pendente",
-            ts: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        const mensagem = encodeURIComponent(`Olá, esqueci minha senha no app Nova Versão.\n\nEmail: ${email}\nTelefone: ${telefone}\n\nAguardo o contato para redefinir.`);
-        // Garante que o telefone não tenha caracteres não numéricos antes de usar
-const telefoneLimpo = telefoneUsuario.replace(/\D/g, ''); // Use a variável que contém o telefone do usuário
-window.open(`https://wa.me/55${telefoneLimpo}?text=${mensagem}`, '_blank');
-        
-        fecharTodosOsModais();
-        exibirInfoPopup("✅ Solicitação enviada! Você foi redirecionado para o WhatsApp para agilizar o atendimento. O administrador entrará em contato em breve.");
-    } catch (error) {
-        fecharTodosOsModais();
-        exibirInfoPopup("Erro ao enviar solicitação: " + error.message);
-    }
-}
-
 function criarConta() {
   exibirAguarde("Criando sua conta...");
   const email = document.getElementById("email").value.trim();
@@ -2682,9 +2529,9 @@ function criarConta() {
     rua = document.getElementById("rua").value.trim();
     numero = document.getElementById("numero").value.trim();
   }
-  if (senha !== senhaConfirm) { fecharTodosOsModais(); return exibirInfoPopup("As senhas não coincidem."); }
-  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirInfoPopup("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
-  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return exibirInfoPopup("Preencha todos os campos obrigatórios"); }
+  if (senha !== senhaConfirm) { fecharTodosOsModais(); return alert("As senhas não coincidem."); }
+  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
+  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return alert("Preencha todos os campos obrigatórios"); }
 
 
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
@@ -2720,7 +2567,7 @@ function criarConta() {
     })
     .catch(e => {
         fecharTodosOsModais();
-        exibirInfoPopup("Erro ao criar conta: " + e.message);
+        alert("Erro ao criar conta: " + e.message);
     });
 }
 
@@ -2750,7 +2597,7 @@ auth.onAuthStateChanged(async user => {
     if (comprasClienteListener) comprasClienteListener();
     return;
   }
-  setupPlayStoreBilling();
+  
   solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
   handleDeepLink();
@@ -2791,7 +2638,7 @@ const btnVipPro = document.getElementById('btnVipPro');
 
   const config = await db.collection("config").doc("sistema").get();
   if (config.exists && config.data().ativo === false && perfil.tipo !== "admin") {
-    exibirInfoPopup("🚧 Sistema em manutenção");
+    alert("🚧 Sistema em manutenção");
     auth.signOut();
     return;
   }
@@ -2820,7 +2667,7 @@ const btnVipPro = document.getElementById('btnVipPro');
                 if (aviso.tipo === 'vaga-aprovada' && aviso.agendamentoId) {
                     abrirModalVagaAprovada(aviso.agendamentoId);
                 } else {
-                    exibirInfoPopup(`🔔 Novo Aviso: ${aviso.mensagem}`);
+                    alert(`🔔 Novo Aviso: ${aviso.mensagem}`);
                 }
                 change.doc.ref.update({ lido: true });
             }
@@ -2932,7 +2779,7 @@ async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   } catch (error) {
     // ERRO: Falha de rede ou o backend não respondeu
     console.error('[NOTIFICAÇÃO] Erro CRÍTICO de rede ou na chamada da API:', error);
-    exibirInfoPopup('Não foi possível se comunicar com o servidor de notificações. Verifique sua conexão ou contate o suporte.');
+    alert('Não foi possível se comunicar com o servidor de notificações. Verifique sua conexão ou contate o suporte.');
   }
 }
 
@@ -2967,21 +2814,21 @@ async function abrirPortaSecreta() {
   if (!codigo) return;
 
   if (codigo === "Ja997640401") {
-    if (perfil.tipo === "admin") return exibirInfoPopup("Sua conta já é de administrador.");
+    if (perfil.tipo === "admin") return alert("Sua conta já é de administrador.");
     await db.collection("usuarios").doc(auth.currentUser.uid).update({ tipo: "admin" });
-    exibirInfoPopup("🔑 Sua conta agora é de Administrador! A página será recarregada.");
+    alert("🔑 Sua conta agora é de Administrador! A página será recarregada.");
     location.reload();
     return;
   }
 
   if (codigo.startsWith("(") && codigo.endsWith(")")) {
     if (perfil.codigosResgatados && perfil.codigosResgatados.includes(codigo)) {
-        return exibirInfoPopup("Você já resgatou este código.");
+        return alert("Você já resgatou este código.");
     }
     
     const quinzeHorasAtras = new Date(Date.now() - 15 * 60 * 60 * 1000);
     if (perfil.ultimo_resgate_ts && perfil.ultimo_resgate_ts.toDate() > quinzeHorasAtras) {
-        return exibirInfoPopup("Você só pode resgatar um código a cada 15 horas.");
+        return alert("Você só pode resgatar um código a cada 15 horas.");
     }
 
     const blogPosts = await db.collection("blog").get();
@@ -2997,13 +2844,13 @@ async function abrirPortaSecreta() {
             codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo),
             ultimo_resgate_ts: firebase.firestore.FieldValue.serverTimestamp()
         });
-        exibirInfoPopup("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
+        alert("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
         notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!", { link: '#fidelidade' });
     } else {
-        exibirInfoPopup("Código inválido ou expirado.");
+        alert("Código inválido ou expirado.");
     }
   } else {
-    exibirInfoPopup("Código inválido!");
+    alert("Código inválido!");
   }
 }
 
@@ -3168,7 +3015,7 @@ function verificarEstadoBotaoAgendar() {
 
 async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
     if (isGuest || !auth.currentUser) {
-        exibirInfoPopup("Para agendar um horário, por favor, faça login ou crie uma conta.");
+        alert("Para agendar um horário, por favor, faça login ou crie uma conta.");
         return mostrar('authView');
     }
     try {
@@ -3289,7 +3136,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         abrirModal('modalBarbeiroPerfil');
     } catch (error) {
         console.error("Erro ao abrir perfil do barbeiro:", error);
-        exibirInfoPopup("Ocorreu um erro ao carregar as informações do profissional.");
+        alert("Ocorreu um erro ao carregar as informações do profissional.");
     }
 }
 
@@ -3308,7 +3155,7 @@ function confirmarAgendamento() {
     if (perfil.saldo < preco) {
         // Se não tiver saldo, fecha o modal de agendamento e abre o da carteira. NENHUM "AGUARDE" É MOSTRADO.
         fecharModalAtual(); // Fecha o modal do perfil do barbeiro
-        exibirInfoPopup("💸 Saldo insuficiente. Por favor, deposite mais dinheiro em sua carteira.");
+        alert("💸 Saldo insuficiente. Por favor, deposite mais dinheiro em sua carteira.");
         abrirModal('modalCarteira');
         return;
     }
@@ -3341,11 +3188,11 @@ function confirmarAgendamento() {
         criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do profissional.");
         notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
         fecharTodosOsModais();
-        exibirInfoPopup("Pedido enviado com sucesso!");
+        alert("Pedido enviado com sucesso!");
         // fecharModalAtual(); // Removido, pois fecharTodosOsModais já faz isso.
     }).catch(e => {
         fecharTodosOsModais();
-        exibirInfoPopup("Erro ao enviar pedido: " + e.message)
+        alert("Erro ao enviar pedido: " + e.message)
     });
 }
 
@@ -3379,19 +3226,14 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
         criarAviso(barbeiroUid, `❌ O cliente ${perfil.nome} cancelou a vaga imediata. O valor foi estornado.`);
         notifyUser(barbeiroUid, "❌ Agendamento Cancelado", `${perfil.nome} cancelou a vaga imediata.`);
         fecharTodosOsModais();
-        exibirInfoPopup("Agendamento cancelado e valor reembolsado com sucesso.");
+        alert("Agendamento cancelado e valor reembolsado com sucesso.");
         fecharModalAtual();
     } catch (e) {
         fecharTodosOsModais();
-        exibirInfoPopup("Erro ao cancelar agendamento: " + e.message);
+        alert("Erro ao cancelar agendamento: " + e.message);
     }
 }
 
-function exibirInfoPopup(titulo, mensagem) {
-    document.getElementById('infoPopupTitulo').textContent = titulo;
-    document.getElementById('infoPopupMensagem').textContent = mensagem;
-    abrirModal('modalInfoPopup');
-}
 
 function abrirHistoricoCliente() {
   abrirModal('modalHistoricoCliente');
@@ -3414,7 +3256,7 @@ function abrirHistoricoCliente() {
 // ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
 function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   const nota = parseInt(prompt("Avalie o serviço de 1 a 10:"));
-  if (isNaN(nota) || nota < 1 || nota > 10) return exibirInfoPopup("Erro", "Avaliação inválida. Use um número de 1 a 10.");
+  if (isNaN(nota) || nota < 1 || nota > 10) return alert("Avaliação inválida. Use um número de 1 a 10.");
   
   const comentario = prompt("Deixe um comentário sobre o serviço:");
 
@@ -3424,7 +3266,7 @@ function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   if (querEnviarFoto) {
       fotoUrl = prompt("Ótimo! Siga os passos:\n1. Acesse postimages.org\n2. Envie sua foto.\n3. Copie o 'Link Direto' e cole aqui:");
       if (fotoUrl && !fotoUrl.startsWith("http")) {
-          exibirInfoPopup("Link inválido. Certifique-se de copiar o 'Link Direto'.");
+          alert("Link inválido. Certifique-se de copiar o 'Link Direto'.");
           fotoUrl = null;
       }
   }
@@ -3494,18 +3336,18 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
     return pontosGanhos;
 
   }).then((pontosGanhos) => {
-    exibirInfoPopup(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
+    alert(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
   }).catch(e => {
     console.error("Erro detalhado ao avaliar:", e); 
-    exibirInfoPopup("Erro ao avaliar: " + e); 
+    alert("Erro ao avaliar: " + e); 
   });
 }
 
 function resgatarPontos() {
   if ((perfil.pontosFidelidade || 0) < PONTOS_PARA_RESGATE) {
-    return exibirInfoPopup(`Você precisa de ${PONTOS_PARA_RESGATE} pontos para resgatar.`);
+    return alert(`Você precisa de ${PONTOS_PARA_RESGATE} pontos para resgatar.`);
   }
   if (!confirm(`Deseja resgatar ${PONTOS_PARA_RESGATE} pontos por R$ ${VALOR_RESGATE.toFixed(2)}?`)) return;
   exibirAguarde("Resgatando...");
@@ -3519,11 +3361,11 @@ function resgatarPontos() {
     });
   }).then(() => {
     fecharTodosOsModais();
-    exibirInfoPopup(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
+    alert(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
     notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)}.`, { link: '#carteira' });
   }).catch(e => {
     fecharTodosOsModais();
-    exibirInfoPopup("Erro ao resgatar pontos: " + e.message);
+    alert("Erro ao resgatar pontos: " + e.message);
   });
 }
 
@@ -3566,107 +3408,20 @@ function abrirModalVip() {
     abrirModal('modalVip');
 }
 
-// ADICIONE ESTE BLOCO NO INDEX.HTML
 
-// --- LÓGICA DE PAGAMENTO GOOGLE PLAY STORE (DIGITAL GOODS API) ---
-
-const SKUS = {
-    VIP: 'adesao_vip_6_meses',
-    PRO: 'assinatura_pro_mensal',
-    TURBINAR: 'turbinar_perfil_24h'
-};
-
-let playStoreService = null;
-
-// Função para iniciar o serviço de pagamento da Play Store
-async function setupPlayStoreBilling() {
-    if ('getDigitalGoodsService' in window) {
-        try {
-            playStoreService = await window.getDigitalGoodsService("https://play.google.com/billing");
-            if (playStoreService) {
-                console.log("✅ Serviço de cobrança da Google Play conectado com sucesso!");
-            }
-        } catch (error) {
-            console.error("Falha ao conectar com o serviço da Play Store:", error);
-            playStoreService = null;
-        }
-    }
-}
-
-// Chama a configuração assim que o perfil do usuário é carregado
-// (Você pode adicionar essa chamada dentro do 'auth.onAuthStateChanged')
-
-// Função principal para iniciar uma compra
-async function comprarComPlayStore(sku, precoEstimado) {
-    if (!playStoreService) {
-        exibirInfoPopup("O serviço de pagamento da Play Store não está disponível. Isso é esperado se você estiver acessando pelo navegador comum.");
-        return;
-    }
-
-    try {
-        console.log(`Iniciando compra para SKU: ${sku}`);
-        const paymentMethodData = [{
-            supportedMethods: "https://play.google.com/billing",
-            data: { sku: sku }
-        }];
-
-        // Detalhes do pagamento (informativo)
-        const paymentDetails = {
-            total: {
-                label: `Total`,
-                amount: { currency: "BRL", value: precoEstimado.toString() }
-            }
-        };
-
-        const request = new PaymentRequest(paymentMethodData, paymentDetails);
-        const response = await request.show();
-        
-        const { purchaseToken } = response.details;
-        
-        // **MUITO IMPORTANTE:** AQUI VOCÊ DEVE ENVIAR O 'purchaseToken' PARA O SEU BACKEND
-        // PARA VALIDAÇÃO E ATIVAÇÃO DO PRODUTO.
-        
-        // Exemplo de como seria a chamada para o backend:
-        // await validarCompraNoBackend(purchaseToken, sku);
-
-        await response.complete('success');
-        
-        // Simulação de sucesso (REMOVA APÓS IMPLEMENTAR O BACKEND)
-        exibirInfoPopup("Compra via Play Store concluída com sucesso (Simulação)! A ativação real requer validação no backend.");
-        // Exemplo: ativarBeneficioLocalmente(sku); // Função para atualizar a UI
-        location.reload();
-
-
-    } catch (error) {
-        console.error("Erro durante a compra na Play Store:", error);
-        if (error.name !== 'AbortError') {
-             exibirInfoPopup("Ocorreu um erro ao processar seu pagamento na Play Store.");
-        }
-    }
-}
-
-// 1. SUBSTITUA A SUA FUNÇÃO 'assinarVip' ANTIGA POR ESTA COMPLETA
 function assinarVip() {
-    // Se o serviço da Play Store estiver ativo, usa ele como prioridade
-    if (playStoreService) {
-        comprarComPlayStore(SKUS.VIP, PRECO_VIP);
-        return;
-    }
-
-    // Se não, usa o método antigo de saldo da carteira
     if (perfil.saldo < PRECO_VIP) {
-        exibirInfoPopup("Saldo insuficiente para assinar o VIP.");
+        alert("Saldo insuficiente para assinar o VIP.");
         return abrirModal('modalCarteira');
     }
-    if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)? O valor será descontado do seu saldo.`)) return;
-
+    if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)?`)) return;
     exibirAguarde("Ativando VIP...");
     db.runTransaction(async t => {
         const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
         const financeiroRef = db.collection("config").doc("financeiro");
         const clienteDoc = await t.get(clienteRef);
         if (isVipAtivo(clienteDoc.data())) throw "Você já é um membro VIP ativo.";
-
+        
         const expiracao = new Date();
         expiracao.setDate(expiracao.getDate() + 180); // Adiciona 180 dias
 
@@ -3678,95 +3433,13 @@ function assinarVip() {
         t.set(financeiroRef, { arrecadadoVip: firebase.firestore.FieldValue.increment(PRECO_VIP) }, { merge: true });
     }).then(() => {
         fecharTodosOsModais();
-        exibirInfoPopup("Parabéns! Você agora é um membro VIP!");
+        alert("Parabéns! Você agora é um membro VIP!");
         notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 6 meses!");
         fecharModalAtual();
     }).catch(e => {
         fecharTodosOsModais();
-        exibirInfoPopup("Erro ao assinar VIP: " + e.message);
+        alert("Erro ao assinar VIP: " + e.message);
     });
-}
-
-// 2. ADICIONE (ou SUBSTITUA) A FUNÇÃO 'assinarPro' POR ESTA NOVA VERSÃO
-function assinarPro(tier) {
-    const plano = PRECOS_PRO[tier];
-    if (!plano) {
-        return exibirInfoPopup("Plano PRO inválido selecionado.");
-    }
-    const sku = `pro_${tier}`; // Ex: pro_tier1, pro_tier2
-
-    if (playStoreService) {
-        comprarComPlayStore(sku, plano.preco);
-        return;
-    }
-
-    if (perfil.saldo < plano.preco) {
-        exibirInfoPopup("Saldo insuficiente para assinar este plano PRO. Por favor, deposite fundos na sua carteira.");
-        return abrirModal('modalCarteira');
-    }
-    if (!confirm(`Deseja assinar o plano PRO por R$ ${plano.preco.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`)) return;
-
-    exibirAguarde("Ativando PRO...");
-
-    db.runTransaction(async t => {
-        const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        const financeiroRef = db.collection("config").doc("financeiro");
-        const proDoc = await t.get(proRef);
-
-        if (isProAtivo(proDoc.data())) {
-            throw "Você já é um membro PRO ativo.";
-        }
-
-        const expiracao = new Date();
-        expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
-
-        t.update(proRef, {
-            saldo: firebase.firestore.FieldValue.increment(-plano.preco),
-            proAtivo: true,
-            proTier: tier, // Salva o nível do plano
-            proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
-        });
-
-        t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(plano.preco) }, { merge: true });
-
-    }).then(() => {
-        fecharTodosOsModais();
-        exibirInfoPopup("Parabéns! Você agora é um Profissional PRO!");
-        notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
-        fecharModalAtual();
-    }).catch(e => {
-        fecharTodosOsModais();
-        exibirInfoPopup("Erro ao assinar PRO: " + e.message);
-    });
-}
-
-// 3. SUBSTITUA A SUA FUNÇÃO 'confirmarTurbinar' ANTIGA POR ESTA COMPLETA
-function confirmarTurbinar() {
-    if (playStoreService) {
-        comprarComPlayStore(SKUS.TURBINAR, PRECO_TURBINAR);
-        return;
-    }
-
-    if (perfil.saldo < PRECO_TURBINAR) {
-        return exibirInfoPopup(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
-    }
-    if (perfil.ultimoBoostComprado) {
-        const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        if (perfil.ultimoBoostComprado.toDate() > vinteQuatroHorasAtras) {
-            return exibirInfoPopup("Você só pode turbinar o perfil uma vez a cada 24 horas.");
-        }
-    }
-    if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
-        const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        db.collection('usuarios').doc(auth.currentUser.uid).update({
-            saldo: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR),
-            boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao),
-            ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-            exibirInfoPopup('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
-            fecharModalAtual();
-        }).catch(e => exibirInfoPopup('Erro ao turbinar perfil: ' + e.message));
-    }
 }
 
 /**
@@ -3784,61 +3457,41 @@ function isProAtivo(perfilUsuario) {
  * Abre o modal para o profissional assinar ou ver o status do PRO.
  */
 // CÓDIGO ATUALIZADO (COPIE E COLE SUBSTITUINDO A FUNÇÃO INTEIRA)
-// SUBSTITUA TODA A FUNÇÃO 'abrirModalVipPro' POR ESTA
 function abrirModalVipPro() {
     const container = document.getElementById('vipProContentContainer');
-    const proAtivo = isProAtivo(perfil);
 
-    if (proAtivo) {
+    // Verifica se o perfil atual (carregado) é PRO
+    if (isProAtivo(perfil)) {
         const dataExpiracao = perfil.proExpirationDate.toDate().toLocaleDateString('pt-BR');
-        let taxaAtual = (TAXA * 100); // Taxa padrão
-        if(perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-            taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
-        }
-
         container.innerHTML = `
             <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-azul);">🌟 Você é um Profissional PRO!</h3>
                 <p>Sua assinatura mensal é válida até: <strong>${dataExpiracao}</strong>.</p>
-                <p>Sua taxa de serviço atual é de apenas: <strong>${taxaAtual.toFixed(1)}%</strong>.</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Seus Benefícios Atuais:</h4>
                     <ul>
                         <li>Selo 🌟 PRO de destaque no perfil e no chat.</li>
-                        <li><strong>Taxa de serviço reduzida.</strong></li>
-                        <li>Acesso ao Dashboard de Desempenho.</li>
+                        <li><strong>Taxa de serviço reduzida para apenas 2,5%.</strong></li>
+                        <li>Acesso ao Dashboard de Desempenho com métricas avançadas.</li>
                     </ul>
                 </div>
             </div>
         `;
     } else {
         container.innerHTML = `
-            <div style="text-align: center;">
+            <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-azul);">🌟 Torne-se um Profissional PRO!</h3>
-                <p>Aumente seus lucros reduzindo a taxa de serviço do aplicativo.</p>
-                
-                <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
-                    <div class="card" style="border: 1px solid #cd7f32;">
-                        <h4>Plano Bronze</h4>
-                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}<small>/mês</small></p>
-                        <p>Reduz a taxa de serviço para <strong>4%</strong>.</p>
-                        <button onclick="assinarPro('tier1')" style="background-color: #cd7f32;">Assinar Bronze</button>
-                    </div>
-
-                    <div class="card" style="border: 1px solid #c0c0c0;">
-                        <h4>Plano Prata</h4>
-                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}<small>/mês</small></p>
-                        <p>Reduz a taxa de serviço para <strong>2%</strong>.</p>
-                        <button onclick="assinarPro('tier2')" style="background-color: #c0c0c0; color: #333;">Assinar Prata</button>
-                    </div>
-
-                    <div class="card vip-glow">
-                        <h4>Plano Ouro</h4>
-                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}<small>/mês</small></p>
-                        <p><strong>ZERE</strong> a taxa de serviço (<strong>0%</strong>).</p>
-                        <button onclick="assinarPro('tier3')">Assinar Ouro</button>
-                    </div>
+                <p>Aumente seus lucros e destaque-se da concorrência com benefícios exclusivos.</p>
+                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Assinatura: R$ ${PRECO_PRO.toFixed(2)} / mês</p>
+                <div class="vantagens" style="text-align: left; margin-top: 20px;">
+                    <h4>Vantagens Exclusivas:</h4>
+                    <ul>
+                        <li><strong>✅ Taxa de Serviço Reduzida (2,5%):</strong> Aumente seu lucro em cada agendamento.</li>
+                        <li><strong>📊 Dashboard Avançado:</strong> Tenha insights sobre seus ganhos, clientes e serviços mais populares.</li>
+                        <li><strong>🌟 Selo PRO:</strong> Ganhe mais destaque e confiança no seu perfil e no chat.</li>
+                    </ul>
                 </div>
+                <button onclick="assinarPro()" style="margin-top: 15px;">🌟 Assinar Agora (R$ ${PRECO_PRO.toFixed(2)})</button>
             </div>
         `;
     }
@@ -3848,35 +3501,54 @@ function abrirModalVipPro() {
 /**
  * Processa a assinatura PRO, descontando do saldo.
  */
+function assinarPro() {
+    if (perfil.saldo < PRECO_PRO) {
+        alert("Saldo insuficiente para assinar o PRO. Por favor, deposite fundos na sua carteira.");
+        return abrirModal('modalCarteira');
+    }
+    if (!confirm(`Deseja assinar o plano PRO por R$ ${PRECO_PRO.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`)) return;
+
+    exibirAguarde("Ativando PRO...");
+
+    db.runTransaction(async t => {
+        const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        const financeiroRef = db.collection("config").doc("financeiro");
+        const proDoc = await t.get(proRef);
+
+        // Verifica se já é PRO para evitar cobrança dupla
+        if (isProAtivo(proDoc.data())) {
+            throw "Você já é um membro PRO ativo.";
+        }
+        
+        const expiracao = new Date();
+        expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
+
+        t.update(proRef, {
+            saldo: firebase.firestore.FieldValue.increment(-PRECO_PRO),
+            proAtivo: true,
+            proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+        });
+        
+        // Cria um novo campo para rastrear essa receita
+        t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(PRECO_PRO) }, { merge: true });
+
+    }).then(() => {
+        fecharTodosOsModais();
+        alert("Parabéns! Você agora é um Profissional PRO!");
+        notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
+        fecharModalAtual(); // Fecha o modal PRO
+    }).catch(e => {
+        fecharTodosOsModais();
+        alert("Erro ao assinar PRO: " + e.message);
+    });
+}
+// --- FIM DAS NOVAS FUNÇÕES ---
 
 function isVipAtivo(perfilUsuario) {
     if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
         return false;
     }
-    // Verifica se vipExpirationDate é um objeto Timestamp do Firebase (possui toDate)
-    if (perfilUsuario.vipExpirationDate && typeof perfilUsuario.vipExpirationDate.toDate === 'function') {
-        return perfilUsuario.vipExpirationDate.toDate() > new Date();
-    }
-    // Se não for um Timestamp, tenta converter de outras formas comuns (ex: string ISO ou segundos)
-    try {
-        let expiryDate;
-        // Tenta tratar como objeto { _seconds: ..., _nanoseconds: ... } (serialização comum)
-        if (typeof perfilUsuario.vipExpirationDate === 'object' && perfilUsuario.vipExpirationDate._seconds) {
-             expiryDate = new Date(perfilUsuario.vipExpirationDate._seconds * 1000);
-        }
-        // Tenta tratar como string ISO 8601
-        else if (typeof perfilUsuario.vipExpirationDate === 'string') {
-             expiryDate = new Date(perfilUsuario.vipExpirationDate);
-        }
-        // Se conseguiu converter, compara
-        if (expiryDate instanceof Date && !isNaN(expiryDate)) {
-            return expiryDate > new Date();
-        }
-    } catch (e) {
-        console.error("Erro ao processar vipExpirationDate:", e, perfilUsuario.vipExpirationDate);
-    }
-    // Se não conseguiu converter ou deu erro, considera como inativo por segurança
-    return false;
+    return perfilUsuario.vipExpirationDate.toDate() > new Date();
 }
 
 // FUNÇÃO DO CHAT ATUALIZADA
@@ -3891,38 +3563,51 @@ function abrirChatGlobal() {
     alternarChat('global'); // Começa sempre no global
 }
 
-// SUBSTITUA TODA A FUNÇÃO 'alternarChat' POR ESTA
 function alternarChat(tipo) {
     chatAtual = tipo;
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
     document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
 
-    // Remove permanentemente o seletor de cidade do admin da tela
     const adminSelector = document.getElementById('adminChatSelectorContainer');
-    adminSelector.classList.add('hidden'); 
-
     const chatContainer = document.getElementById("chatMessages");
     chatContainer.innerHTML = ""; // Limpa antes de carregar
     if (chatListener) chatListener();
 
-    let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
-    const agora = new Date();
+    let cidadeParaVisualizar = perfil.cidade; // Padrão para cliente
 
-    if (tipo === 'local') {
-        if (perfil.tipo === 'admin') {
-            // Admin vê todas as mensagens locais, sem filtro de cidade
-            document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
-        } else {
-            // Usuário comum vê apenas o chat da sua cidade
-            query = query.where("cidade", "==", perfil.cidade);
-            document.getElementById("chatTitle").textContent = `📍 Chat Local (${perfil.cidade})`;
+    if (tipo === 'local' && perfil.tipo === 'admin') {
+        adminSelector.classList.remove('hidden');
+        const estadoSelect = document.getElementById('adminChatEstado');
+
+        // Popula os estados apenas uma vez para não perder a seleção
+        if (estadoSelect.options.length <= 1) {
+            estadoSelect.innerHTML = '<option value="">Selecione o estado</option>';
+            Object.keys(cidadesPorEstado).forEach(sigla => {
+                estadoSelect.innerHTML += `<option value="${sigla}">${sigla}</option>`;
+            });
+            estadoSelect.value = perfil.estado; // Padrão para o estado do admin
+            adminCarregarCidadesChat(); // Carrega as cidades do estado padrão
         }
+
+        cidadeParaVisualizar = document.getElementById('adminChatCidade').value;
+        document.getElementById("chatTitle").textContent = `📍 Chat Local (${cidadeParaVisualizar || 'Selecione uma cidade'})`;
+
     } else {
-        // Lógica para o chat global
-        document.getElementById("chatTitle").textContent = '💬 Chat Global';
+        adminSelector.classList.add('hidden');
+        document.getElementById("chatTitle").textContent = tipo === 'global' ? '💬 Chat Global' : `📍 Chat Local (${perfil.cidade})`;
     }
 
-    // A ordenação e o limite continuam os mesmos
+    const agora = new Date();
+    let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+
+    if (tipo === 'local') {
+        if (!cidadeParaVisualizar) {
+            chatContainer.innerHTML = `<p>👑 Administrador, por favor, selecione um estado e cidade para visualizar o chat.</p>`;
+            return; // Impede a query de rodar sem cidade selecionada
+        }
+        query = query.where("cidade", "==", cidadeParaVisualizar);
+    }
+
     query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(15);
 
     chatListener = query.onSnapshot(async snapshot => {
@@ -3979,7 +3664,6 @@ async function carregarMensagensAnteriores() {
     btn.disabled = false;
 }
 
-// SUBSTITUA TODA A FUNÇÃO 'createMessageDiv' POR ESTA
 async function createMessageDiv(msg) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
     let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = "";
@@ -4009,6 +3693,7 @@ async function createMessageDiv(msg) {
                 } else {
                     iconeBase = `💼`; // Icone profissional normal
                 }
+
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'profissional');
             } else if (isVipAtivo(remetenteData)) {
                 classeCSS = `cliente-chat`; iconeBase = `👑`;
@@ -4017,14 +3702,7 @@ async function createMessageDiv(msg) {
                 classeCSS = `cliente-chat`; iconeBase = `👤`;
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
             }
-            
-            // LÓGICA PRINCIPAL ADICIONADA AQUI
-            let cidadeLabel = '';
-            if (perfil.tipo === 'admin' && chatAtual === 'local' && msg.cidade) {
-                cidadeLabel = ` <small style="opacity: 0.7; font-weight: normal;">(${msg.cidade})</small>`;
-            }
-
-            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}${cidadeLabel}</span>`;
+            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
         }
     }
     
@@ -4050,67 +3728,9 @@ function sendBotMessage() {
     });
 }
 
-async function alterarSenhaUsuario() {
-    const senhaAntiga = document.getElementById('senhaAntiga').value;
-    const senhaNova = document.getElementById('senhaNova').value;
-    const senhaNovaConfirm = document.getElementById('senhaNovaConfirm').value;
-    const user = auth.currentUser;
-
-    if (!user) {
-        exibirInfoPopup("Você precisa estar logado para alterar a senha.");
-        return;
-    }
-
-    if (!senhaAntiga || !senhaNova || !senhaNovaConfirm) {
-        exibirInfoPopup("Por favor, preencha todos os campos.");
-        return;
-    }
-
-    if (senhaNova.length < 6) {
-        exibirInfoPopup("A nova senha deve ter pelo menos 6 caracteres.");
-        return;
-    }
-
-    if (senhaNova !== senhaNovaConfirm) {
-        exibirInfoPopup("A nova senha e a confirmação não coincidem.");
-        return;
-    }
-
-    exibirAguarde("Verificando senha atual...");
-
-    try {
-        // Reautenticar o usuário com a senha antiga
-        const credential = firebase.auth.EmailAuthProvider.credential(user.email, senhaAntiga);
-        await user.reauthenticateWithCredential(credential);
-
-        // Se a reautenticação foi bem-sucedida, atualiza a senha
-        exibirAguarde("Atualizando senha...");
-        await user.updatePassword(senhaNova);
-
-        fecharTodosOsModais();
-        exibirInfoPopup("✅ Senha alterada com sucesso!");
-        // Limpa os campos e fecha o modal
-        document.getElementById('senhaAntiga').value = '';
-        document.getElementById('senhaNova').value = '';
-        document.getElementById('senhaNovaConfirm').value = '';
-        fecharModalAtual(); // Fecha o modal de alterar senha
-
-    } catch (error) {
-        fecharTodosOsModais();
-        console.error("Erro ao alterar senha:", error);
-        if (error.code === 'auth/wrong-password') {
-            exibirInfoPopup("❌ A senha atual informada está incorreta.");
-        } else if (error.code === 'auth/too-many-requests') {
-             exibirInfoPopup("❌ Muitas tentativas incorretas. Tente novamente mais tarde.");
-        } else {
-            exibirInfoPopup("❌ Ocorreu um erro ao tentar alterar a senha: " + error.message);
-        }
-    }
-}
-
 function enviarMensagem() {
     if (!auth.currentUser) {
-        exibirInfoPopup("Para enviar mensagens, por favor, faça login ou crie uma conta.");
+        alert("Para enviar mensagens, por favor, faça login ou crie uma conta.");
         mostrar('authView');
         fecharModalAtual();
         return;
@@ -4182,7 +3802,7 @@ function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
 
 function enviarDenuncia() {
   const texto = document.getElementById("textoDenuncia").value.trim();
-  if (!texto) return exibirInfoPopup("Por favor, descreva o problema.");
+  if (!texto) return alert("Por favor, descreva o problema.");
   db.collection("denuncias").add({
     usuarioUid: auth.currentUser.uid, usuarioNome: perfil.nome, texto,
     status: "aberta", ts: firebase.firestore.FieldValue.serverTimestamp()
@@ -4192,7 +3812,7 @@ function enviarDenuncia() {
     document.getElementById("btnWhatsappDenuncia").href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
     document.getElementById("textoDenuncia").value = "";
     notifyAdmins("🚨 Nova Denúncia!", `Uma nova denúncia foi enviada por ${perfil.nome}.`, { link: '#denuncias' });
-  }).catch(e => exibirInfoPopup("Erro ao enviar denúncia: " + e.message));
+  }).catch(e => alert("Erro ao enviar denúncia: " + e.message));
 }
 
 // Funções do Barbeiro
@@ -4218,33 +3838,13 @@ function listarServicos() {
 }
 
 function adicionarServico() {
-  // Limpa os campos do modal antes de abrir
-  document.getElementById('addServicoNome').value = '';
-  document.getElementById('addServicoValor').value = '';
-  document.getElementById('addServicoDuracao').value = '';
-  abrirModal('modalAddServico'); // Abre o novo modal
-}
-
-function salvarNovoServico() {
-  const nome = document.getElementById('addServicoNome').value.trim();
-  const valor = parseFloat(document.getElementById('addServicoValor').value);
-  const duracao = parseInt(document.getElementById('addServicoDuracao').value);
-
-  if (!nome || isNaN(valor) || valor <= 0 || isNaN(duracao) || duracao <= 0) {
-      // Usa o novo popup de informação
-      return exibirInfoPopup("Erro", "Entrada inválida. Preencha nome, valor (positivo) e duração (positiva) corretamente.");
-  }
-
-  const servico = { nome, valor, duracao };
+  const nome = prompt("Nome do serviço:");
+  const valor = parseFloat(prompt("Valor (ex: 25.50):"));
+  const duracao = parseInt(prompt("Duração em minutos (ex: 30):"));
+  if (!nome || isNaN(valor) || valor <= 0 || isNaN(duracao) || duracao <= 0) return alert("Entrada inválida.");
   db.collection("usuarios").doc(auth.currentUser.uid).update({
-    listaServicos: firebase.firestore.FieldValue.arrayUnion(servico)
-  }).then(() => {
-    exibirInfoPopup("Sucesso", "Serviço adicionado com sucesso!");
-    fecharModalAtual(); // Fecha o modal de adicionar serviço
-    // A lista de serviços no modal 'modalServicosBarbeiro' será atualizada pelo listener onSnapshot
-  }).catch(e => {
-     exibirInfoPopup("Erro", "Erro ao adicionar serviço: " + e.message);
-  });
+    listaServicos: firebase.firestore.FieldValue.arrayUnion({ nome, valor, duracao })
+  }).then(() => alert("Serviço adicionado!")).catch(e => alert("Erro: " + e.message));
 }
 
 function removerServico(index) {
@@ -4252,122 +3852,35 @@ function removerServico(index) {
   if (!confirm(`Deseja remover "${servicoParaRemover.nome}"?`)) return;
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     listaServicos: firebase.firestore.FieldValue.arrayRemove(servicoParaRemover)
-  }).then(() => exibirInfoPopup("Serviço removido!")).catch(e => exibirInfoPopup("Erro: " + e.message));
+  }).then(() => alert("Serviço removido!")).catch(e => alert("Erro: " + e.message));
 }
 
-async function uploadLogomarca() {
-    const fileInput = document.getElementById('logomarcaFile');
-    const file = fileInput.files[0];
-    if (!file) return exibirInfoPopup("Selecione um arquivo de imagem ou GIF.");
-    if (!auth.currentUser) return;
-
-    const progressBar = document.getElementById('logomarcaProgress');
-    const saveButton = document.querySelector('#modalLogomarca button[onclick="uploadLogomarca()"]');
-    exibirAguarde("Enviando logomarca..."); // Usa o popup de aguarde
-    progressBar.style.display = 'block';
-    progressBar.value = 0;
-    saveButton.disabled = true;
-
-    const storageRef = storage.ref(`logomarcas/${auth.currentUser.uid}/${file.name}`);
-    const uploadTask = storageRef.put(file);
-
-    uploadTask.on('state_changed',
-        (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            progressBar.value = progress;
-            // Atualiza o texto do aguarde se quiser
-            // document.getElementById('popupAguardeTexto').textContent = `Enviando ${Math.round(progress)}%...`;
-        },
-        (error) => {
-            fecharTodosOsModais(); // Fecha o aguarde em caso de erro
-            console.error("Erro no upload da logomarca:", error);
-            exibirInfoPopup("Falha no upload: " + error.code);
-            progressBar.style.display = 'none';
-            saveButton.disabled = false;
-        },
-        async () => {
-            try {
-                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                await db.collection('usuarios').doc(auth.currentUser.uid).update({ logo_url: downloadURL });
-                progressBar.style.display = 'none';
-                saveButton.disabled = false;
-                fecharTodosOsModais(); // Fecha o aguarde
-                exibirInfoPopup('Logomarca salva com sucesso!');
-                fecharModalAtual();
-            } catch (dbError) {
-                fecharTodosOsModais(); // Fecha o aguarde
-                exibirInfoPopup('Erro ao salvar URL no banco de dados: ' + dbError.message);
-                progressBar.style.display = 'none';
-                saveButton.disabled = false;
-            }
-        }
-    );
+function salvarLogomarca() {
+    const url = document.getElementById("logomarcaUrl").value.trim();
+    if (!url) return alert("Por favor, insira um link.");
+    db.collection("usuarios").doc(auth.currentUser.uid).update({ logo_url: url })
+      .then(() => {
+        alert("Logomarca salva com sucesso!");
+        fecharModalAtual();
+      }).catch(e => alert("Erro ao salvar: " + e.message));
 }
 
-function previewImage(input, previewId) {
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById(previewId).src = e.target.result;
-    }
-    if (file) { reader.readAsDataURL(file); }
-}
-
-async function salvarLocalizacaoAtualEndereco() {
+function alterarEnderecoBarbeiro(event) {
     const rua = document.getElementById("novoEnderecoRua").value.trim();
     const numero = document.getElementById("novoEnderecoNumero").value.trim();
-    const btnSalvar = document.getElementById('btnSalvarLocalAtual');
-
-    if (!rua || !numero) {
-        return exibirInfoPopup("Erro", "Por favor, preencha a Rua e o Número.");
-    }
-
-    btnSalvar.textContent = '⏳ Obtendo localização...';
-    btnSalvar.disabled = true;
-
-    try {
-        // Tenta obter a localização atual
-        await new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-               return reject(new Error("Geolocalização não suportada."));
-            }
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    cadastroCoords = { // Salva nas coordenadas globais temporárias
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                    };
-                    resolve();
-                },
-                (error) => {
-                     reject(error); // Rejeita a promise se houver erro
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // Opções para tentar obter localização mais precisa
-            );
-        });
-
-        // Se chegou aqui, a localização foi obtida com sucesso
-        exibirAguarde("Salvando endereço...");
-        await db.collection("usuarios").doc(auth.currentUser.uid).update({
-            rua,
-            numero,
-            latitude: cadastroCoords.latitude,
-            longitude: cadastroCoords.longitude,
-        });
-
-        fecharTodosOsModais();
-        exibirInfoPopup("Sucesso", "Endereço e localização atualizados!");
-        cadastroCoords = null; // Limpa as coordenadas temporárias
-
-    } catch (error) {
-        console.error("Erro ao obter localização ou salvar:", error);
-        exibirInfoPopup("Erro", "Não foi possível obter a localização atual ou salvar. Verifique as permissões do navegador ou tente novamente. (" + error.message + ")");
-    } finally {
-         // Garante que o botão seja reativado e o texto volte ao normal
-         btnSalvar.textContent = '📍 Salvar Localização Atual';
-         btnSalvar.disabled = false;
-         fecharAguarde(); // Garante que o "Aguarde" seja fechado em caso de erro também
-    }
+    if (!rua || !numero) return alert("Por favor, preencha a rua e o número.");
+    if (!cadastroCoords) return alert("Por favor, use o botão para definir a localização no mapa antes de salvar.");
+    
+    db.collection("usuarios").doc(auth.currentUser.uid).update({ 
+        rua, 
+        numero,
+        latitude: cadastroCoords.latitude,
+        longitude: cadastroCoords.longitude,
+    }).then(() => {
+        alert("Endereço alterado com sucesso!");
+        cadastroCoords = null;
+        fecharModalAtual();
+    }).catch(e => alert("Erro ao alterar endereço: " + e.message));
 }
 
 // ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
@@ -4446,35 +3959,16 @@ function abrirAgendamentosBarbeiro() {
                 botoes = `<button onclick="aprovarAgendamentoImediato('${doc.id}','${ag.clienteUid}',${ag.valor})">✅ Aprovar</button><button onclick="recusarAgendamento('${doc.id}','${ag.clienteUid}')">❌ Recusar</button>`;
             }
             painel.innerHTML += `<div class="card"><b>${ag.clienteNome}</b> - ${ag.servico} (R$ ${ag.valor.toFixed(2)})<br>Horário: ${horarioInfo}<br>Status: <b>${statusTexto}</b>${ag.clienteTelefone ? `<br><a href="https://wa.me/55${ag.clienteTelefone}" target="_blank">📞 Contatar</a>` : ''}<div style="margin-top:10px; display:flex; gap: 8px;">${botoes}</div></div>`;
-snap.docChanges().forEach(change => {
-    // --- ADICIONADO AQUI ---
-    // Se um novo agendamento pendente for adicionado E o modal estiver aberto, recarrega
-    if (change.type === "added" && change.doc.data().status === 'pendente') {
-         // Verifica se o modal de agendamentos está visível antes de recarregar
-         const modalAgendamentos = document.getElementById('modalAgendamentosBarbeiro');
-         if (modalAgendamentos && modalAgendamentos.classList.contains('show')) {
-            console.log("Novo agendamento recebido, recarregando a página...");
-            location.reload();
-         }
-         // Se o modal não estiver aberto, apenas a notificação pulsante (já existente) será ativada.
-    }
-    // --- FIM DA ADIÇÃO ---
-
-    // Lógica existente para construir o HTML dos cards...
-    // ... (o código que monta os cards continua aqui) ...
-});
-// Adiciona verificação visual após processar as mudanças, caso não recarregue
-verificarPendenciasVisuaisBarbeiro();
         });
     });
 }
 
 function toggleVagaImediata() {
-    db.collection("usuarios").doc(auth.currentUser.uid).update({ vagaImediata: !perfil.vagaImediata }).catch(e => exibirInfoPopup("Erro: " + e.message));
+    db.collection("usuarios").doc(auth.currentUser.uid).update({ vagaImediata: !perfil.vagaImediata }).catch(e => alert("Erro: " + e.message));
 }
 
 function toggleAgendaManual() {
-  db.collection("usuarios").doc(auth.currentUser.uid).update({ usaAgendaManual: !perfil.usaAgendaManual }).catch(e => exibirInfoPopup("Erro: " + e.message));
+  db.collection("usuarios").doc(auth.currentUser.uid).update({ usaAgendaManual: !perfil.usaAgendaManual }).catch(e => alert("Erro: " + e.message));
 }
 
 function toggleHorario(horario) {
@@ -4495,36 +3989,27 @@ function toggleHorario(horario) {
 
 function salvarAgendaManual() {
     db.collection("usuarios").doc(auth.currentUser.uid).update({ agenda: tempSelectedHorarios })
-      .then(() => exibirInfoPopup("Agenda salva!"))
-      .catch(e => exibirInfoPopup("Erro ao salvar: " + e.message));
+      .then(() => alert("Agenda salva!"))
+      .catch(e => alert("Erro ao salvar: " + e.message));
 }
 
 function toggleDisponibilidade() {
-  db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => exibirInfoPopup("Erro: " + e.message));
+  db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => alert("Erro: " + e.message));
 }
 
-// SUBSTITUA A FUNÇÃO 'aprovarAgendamentoImediato'
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
-    exibirAguarde("Aprovando vaga..."); // <-- MOVIDO PARA ANTES
-
-    // Lógica de cálculo de taxa dinâmica...
-    let taxaAplicada = TAXA;
-    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-        taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
-    }
-    const valorComTaxa = valor * (1 - taxaAplicada);
-    const valorAdmin = valor * taxaAplicada;
-
+    exibirAguarde("Aprovando...");
+    const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
     db.runTransaction(async t => {
         const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
         const clienteRef = db.collection("usuarios").doc(clienteUid);
         const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
         const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
-        if (!agendamentoDoc.exists || agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada ou não encontrada.";
+        if (agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada.";
         if (!clienteDoc.exists) throw "Cliente não encontrado.";
         if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
-        if (!barbeiroDoc.exists || barbeiroDoc.data().vagaImediata === false) throw "Vaga imediata não está mais ativa ou profissional não encontrado.";
+        if (barbeiroDoc.data().vagaImediata === false) throw "Vaga imediata não está mais ativa.";
 
         t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
         t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa), vagaImediata: false });
@@ -4533,62 +4018,48 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
-        fecharTodosOsModais(); // <-- ADICIONADO AQUI
+        fecharTodosOsModais();
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
-        exibirInfoPopup("Agendamento aprovado!");
+        alert("Agendamento aprovado!");
     }).catch(e => {
-        fecharTodosOsModais(); // <-- ADICIONADO AQUI
-        exibirInfoPopup("Erro ao aprovar: " + e);
+        fecharTodosOsModais();
+        alert("Erro ao aprovar: " + e);
     });
 }
 
-// SUBSTITUA A FUNÇÃO 'aprovarAgendamento'
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
   if (!confirm("Aprovar este agendamento?")) return;
-  exibirAguarde("Aprovando agendamento..."); // <-- MOVIDO PARA ANTES
-
-  // Lógica de cálculo de taxa dinâmica
-  let taxaAplicada = TAXA;
-  if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-      taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
-  }
-  const valorComTaxa = valor * (1 - taxaAplicada);
-  const valorAdmin = valor * taxaAplicada;
-
+  exibirAguarde("Aprovando...");
+  const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
   db.runTransaction(async t => {
       const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
       const clienteRef = db.collection("usuarios").doc(clienteUid);
       const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
       const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
-      if (!agendamentoDoc.exists || agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada ou não encontrada.";
+      if (agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada.";
       if (!clienteDoc.exists) throw "Cliente não encontrado.";
-      if (!barbeiroDoc.exists) throw "Profissional não encontrado.";
       if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
 
       t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
       t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
       t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
 
-      if (barbeiroDoc.data().usaAgendaManual && horario && horario !== 'null') {
+      if (barbeiroDoc.data().usaAgendaManual && horario) {
           const agendaAtual = barbeiroDoc.data().agenda || {};
-          // Verifica se o horário existe antes de deletar
-          if (agendaAtual.hasOwnProperty(horario)) {
-              delete agendaAtual[horario];
-              t.update(barbeiroRef, { agenda: agendaAtual });
-          }
+          if (agendaAtual[horario]) { delete agendaAtual[horario]; t.update(barbeiroRef, { agenda: agendaAtual }); }
       }
       const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
   }).then(() => {
-      fecharTodosOsModais(); // <-- ADICIONADO AQUI
+      fecharTodosOsModais();
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
-      exibirInfoPopup("Agendamento aprovado!");
+      alert("Agendamento aprovado!");
   }).catch(e => {
-      fecharTodosOsModais(); // <-- ADICIONADO AQUI
-      exibirInfoPopup("Erro ao aprovar: " + e);
+      fecharTodosOsModais();
+      alert("Erro ao aprovar: " + e);
   });
 }
 
@@ -4603,9 +4074,8 @@ function recusarAgendamento(agendamentoId, clienteUid) {
   }).then(() => {
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} recusou seu agendamento.`);
       notifyUser(clienteUid, "❌ Agendamento Recusado", `O profissional ${perfil.nome} não pôde aceitar seu pedido.`);
-fecharTodosOsModais();
-      exibirInfoPopup("Agendamento recusado.");
-  }).catch(e => exibirInfoPopup("Erro ao recusar: " + e));
+      alert("Agendamento recusado.");
+  }).catch(e => alert("Erro ao recusar: " + e));
 }
 
 async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) {
@@ -4629,58 +4099,50 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
   }).then(() => {
       fecharTodosOsModais();
-criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
+      criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
-      fecharTodosOsModais();
-exibirInfoPopup("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
+      alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
   }).catch(e => {
-      exibirInfoPopup("Erro ao cancelar: " + e);
+      fecharTodosOsModais();
+      alert("Erro ao cancelar: " + e);
   });
 }
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
-  exibirAguarde("Concluindo serviço..."); // <-- MOVIDO PARA ANTES
+  exibirAguarde("Concluindo...");
   try {
     const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
     const clienteRef = db.collection("usuarios").doc(clienteUid);
-
     await db.runTransaction(async t => {
         const agendamentoDoc = await t.get(agendamentoRef);
-        if (!agendamentoDoc.exists || agendamentoDoc.data().status !== "conclusão pendente") throw "Este agendamento não está pendente de conclusão.";
-        // Incrementa contadores para conquistas/rankings
+        if (agendamentoDoc.data().status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
         t.update(barbeiroRef, { cortesSemana: firebase.firestore.FieldValue.increment(1), clientesAtendidos: firebase.firestore.FieldValue.increment(1) });
         t.update(agendamentoRef, { status: "concluido" });
         t.update(clienteRef, { cortesRealizados: firebase.firestore.FieldValue.increment(1) });
     });
-
-    // Verifica conquistas DEPOIS da transação
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    fecharTodosOsModais(); // <-- ADICIONADO AQUI
-    exibirInfoPopup("Serviço concluído!");
+    fecharTodosOsModais();
+    alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
-    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação!`, { link: '#historico' });
-
-    // Lógica de bônus de indicação
+    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
     const clienteDoc = await clienteRef.get();
     const clienteData = clienteDoc.data();
-    if (clienteData.bonusIndicacaoPendente && clienteData.cortesRealizados === 1) { // Garante que é o PRIMEIRO corte
+    if (clienteData.bonusIndicacaoPendente) {
         await clienteRef.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO), bonusIndicacaoPendente: false });
-        notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade pelo seu primeiro agendamento!`);
-        if (clienteData.indicadoPorEmail) {
-            const query = await db.collection("usuarios").where("email", "==", clienteData.indicadoPorEmail).limit(1).get();
-            if (!query.empty) {
-                const indicadorDoc = query.docs[0];
-                await indicadorDoc.ref.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO) });
-                notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o primeiro serviço!`);
-            }
+        notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade!`);
+        const query = await db.collection("usuarios").where("email", "==", clienteData.indicadoPorEmail).limit(1).get();
+        if (!query.empty) {
+            const indicadorDoc = query.docs[0];
+            await indicadorDoc.ref.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO) });
+            notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o serviço!`);
         }
     }
   } catch(e) {
-    fecharTodosOsModais(); // <-- ADICIONADO AQUI
-    exibirInfoPopup("Erro ao concluir serviço: " + e);
+    fecharTodosOsModais();
+    alert("Erro ao concluir serviço: " + e);
   }
 }
 
@@ -4740,10 +4202,10 @@ async function salvarNotaCliente(clienteUid) {
                 [clienteUid]: nota
             }
         }, { merge: true });
-        exibirInfoPopup("Nota salva com sucesso!");
+        alert("Nota salva com sucesso!");
     } catch (e) {
         console.error("Erro ao salvar nota:", e);
-        exibirInfoPopup("Não foi possível salvar a nota.");
+        alert("Não foi possível salvar a nota.");
     }
 }
 
@@ -4778,13 +4240,13 @@ function criarPromocao() {
   const nome = document.getElementById("promocaoNome").value;
   const descricao = document.getElementById("promocaoDescricao").value;
   const desconto = parseInt(document.getElementById("promocaoDesconto").value);
-  if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) return exibirInfoPopup("Preencha os campos corretamente.");
+  if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) return alert("Preencha os campos corretamente.");
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     promocoes: firebase.firestore.FieldValue.arrayUnion({ nome, descricao, desconto })
   }).then(() => {
-    exibirInfoPopup("Promoção criada!");
+    alert("Promoção criada!");
     fecharModalAtual();
-  }).catch(e => exibirInfoPopup("Erro: " + e.message));
+  }).catch(e => alert("Erro: " + e.message));
 }
 
 function removerPromocao(index) {
@@ -4792,7 +4254,7 @@ function removerPromocao(index) {
   if (!confirm(`Remover a promoção "${p.nome}"?`)) return;
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     promocoes: firebase.firestore.FieldValue.arrayRemove(p)
-  }).then(() => exibirInfoPopup("Promoção removida!")).catch(e => exibirInfoPopup("Erro: " + e.message));
+  }).then(() => alert("Promoção removida!")).catch(e => alert("Erro: " + e.message));
 }
 
 function carregarPromocoesAtivas() {
@@ -4858,11 +4320,11 @@ async function salvarNovaPromocao() {
                                        .map(option => option.value);
 
     if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) {
-        return exibirInfoPopup("Preencha nome, descrição e um desconto válido.");
+        return alert("Preencha nome, descrição e um desconto válido.");
     }
 
     if (servicosSelecionados.length === 0) {
-        return exibirInfoPopup("Selecione pelo menos um serviço para aplicar a promoção.");
+        return alert("Selecione pelo menos um serviço para aplicar a promoção.");
     }
 
     const novaPromocao = {
@@ -4879,7 +4341,7 @@ async function salvarNovaPromocao() {
         await db.collection("usuarios").doc(auth.currentUser.uid).update({
             promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
         });
-        exibirInfoPopup("Promoção salva com sucesso!");
+        alert("Promoção salva com sucesso!");
         fecharModalAtual();
         // Atualiza a lista de promoções visível
         const promocoesDoc = await db.collection("usuarios").doc(auth.currentUser.uid).get();
@@ -4887,7 +4349,7 @@ async function salvarNovaPromocao() {
         carregarPromocoesAtivas(); // Adicionaremos esta função
 
     } catch (e) {
-        exibirInfoPopup("Erro ao salvar promoção: " + e.message);
+        alert("Erro ao salvar promoção: " + e.message);
     }
 }
 
@@ -4934,7 +4396,7 @@ async function criarSolicitacaoDeposito() {
     const valor = parseFloat(document.getElementById('depositoValor').value);
 
     if (!primeiroNome || !segundoNome || !cpf || !telefone || isNaN(valor) || valor <= 0) {
-        return exibirInfoPopup("Por favor, preencha todos os campos corretamente, incluindo um valor válido.");
+        return alert("Por favor, preencha todos os campos corretamente, incluindo um valor válido.");
     }
 
     const nomeCompleto = `${primeiroNome} ${segundoNome}`;
@@ -4959,7 +4421,7 @@ async function criarSolicitacaoDeposito() {
 
     } catch (error) {
         console.error("Erro ao criar solicitação de depósito:", error);
-        exibirInfoPopup("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
+        alert("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
     }
     abrirModal('modalDeposito');
 }
@@ -5024,7 +4486,7 @@ function copiarCodigoPixAprimorado(event) {
         }, 2000);
     }).catch(err => {
         console.error('Falha ao copiar: ', err);
-        exibirInfoPopup('Não foi possível copiar o código. Por favor, selecione e copie manualmente.');
+        alert('Não foi possível copiar o código. Por favor, selecione e copie manualmente.');
     });
 }
 
@@ -5039,10 +4501,10 @@ function confirmarSaque() {
     const chaveTipo = document.getElementById('saqueChavePixTipo').value;
     const chave = document.getElementById('saqueChavePix').value.trim();
 
-    if (isNaN(valor) || valor <= 0) return exibirInfoPopup("Valor de saque inválido.");
-    if (!chaveTipo) return exibirInfoPopup("Selecione o tipo da chave PIX.");
-    if (!chave) return exibirInfoPopup("Insira sua chave PIX.");
-    if (perfil.saldo < valor) return exibirInfoPopup("Saldo insuficiente.");
+    if (isNaN(valor) || valor <= 0) return alert("Valor de saque inválido.");
+    if (!chaveTipo) return alert("Selecione o tipo da chave PIX.");
+    if (!chave) return alert("Insira sua chave PIX.");
+    if (perfil.saldo < valor) return alert("Saldo insuficiente.");
 
     db.collection("solicitacoes").add({
         tipo: "saque",
@@ -5056,7 +4518,7 @@ function confirmarSaque() {
     }).then(() => {
         abrirModal('modalSaqueConfirmado');
         notifyAdmins("📤 Novo Pedido de Saque!", `${perfil.nome} solicitou um saque de R$${valor.toFixed(2)}.`, { link: '#solicitacoes' });
-    }).catch(e => exibirInfoPopup("Erro ao criar solicitação: " + e.message));
+    }).catch(e => alert("Erro ao criar solicitação: " + e.message));
 }
 
 function contatarAdminSaque() {
@@ -5073,12 +4535,12 @@ function contatarAdminSaque() {
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
   const conteudo = document.getElementById("blogConteudo").value.trim();
-  if (!titulo || !conteudo) return exibirInfoPopup("Preencha todos os campos.");
+  if (!titulo || !conteudo) return alert("Preencha todos os campos.");
   await db.collection("blog").add({
     titulo, conteudo, autor: perfil.nome, autorUid: auth.currentUser.uid,
     ts: firebase.firestore.FieldValue.serverTimestamp()
   });
-  exibirInfoPopup("Postagem publicada!");
+  alert("Postagem publicada!");
   fecharModalAtual();
 }
 
@@ -5115,7 +4577,7 @@ function carregarAdmin() {
                     const antigoSaldo = adminUserBalances[id] || 0;
                     const novoSaldo = novo.saldo || 0;
                     if (Math.floor(novoSaldo / 100) > Math.floor(antigoSaldo / 100)) {
-                        exibirInfoPopup(`⚠️ Alerta de Saldo! ${novo.nome} ultrapassou R$${Math.floor(novoSaldo / 100) * 100}.`);
+                        alert(`⚠️ Alerta de Saldo! ${novo.nome} ultrapassou R$${Math.floor(novoSaldo / 100) * 100}.`);
                     }
                     adminUserBalances[id] = novoSaldo;
                 }
@@ -5219,73 +4681,28 @@ function abrirModalSolicitacoes() {
     });
 }
 
-// SUBSTITUA TODA A FUNÇÃO 'verDetalhesSolicitacao' POR ESTA
 async function verDetalhesSolicitacao(id) {
   const doc = await db.collection("solicitacoes").doc(id).get();
   const s = doc.data();
-  if (!s || s.status !== 'pendente') return exibirInfoPopup(`Esta solicitação já foi ${s.status}.`);
+  if (!s || s.status !== 'pendente') return alert(`Esta solicitação já foi ${s.status}.`);
 
-  if (s.tipo === 'recuperacao_senha') {
-      const novaSenha = prompt(`RECUPERAÇÃO DE SENHA PARA: ${s.email}\n\nDigite uma nova senha temporária para este usuário:`);
-      if (novaSenha && novaSenha.length >= 6) {
-          try {
-              exibirAguarde("Buscando usuário e redefinindo senha...");
-              const userQuery = await db.collection('usuarios').where('email', '==', s.email).limit(1).get();
-              if (userQuery.empty) {
-                  throw new Error("Nenhum usuário encontrado com este e-mail.");
-              }
-              const userDoc = userQuery.docs[0];
-              const targetUid = userDoc.id;
-              const telefoneUsuario = userDoc.data().telefone;
-              
-              // Chama o backend para redefinir a senha
-              const response = await fetch(`${BACKEND_API_URL}/admin/reset-user-password`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid, newPassword: novaSenha })
-              });
-              const data = await response.json();
-              if (!response.ok) throw new Error(data.message);
+  let detalhes = `Detalhes:\nTipo: ${s.tipo.toUpperCase()}\nUsuário: ${s.usuarioNome}\nValor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}\n`;
 
-              // Marca a solicitação como aprovada
-              await db.collection("solicitacoes").doc(id).update({ status: "aprovado" });
-              
-              fecharTodosOsModais();
-              exibirInfoPopup("Senha redefinida com sucesso!");
-
-              // Abre o WhatsApp para enviar a nova senha para o usuário
-              const mensagem = encodeURIComponent(`Olá! Conforme sua solicitação, sua nova senha de acesso para o app Nova Versão é:\n\n*${novaSenha}*\n\nRecomendamos que você a altere assim que fizer o login.`);
-              // Garante que o telefone não tenha caracteres não numéricos antes de usar
-const telefoneLimpo = telefoneUsuario.replace(/\D/g, '');
-window.open(`https://wa.me/55${telefoneLimpo}?text=${mensagem}`, '_blank');
-              
-          } catch (error) {
-              fecharTodosOsModais();
-              exibirInfoPopup("Erro ao processar recuperação: " + error.message);
-          }
-      } else if (novaSenha) {
-          exibirInfoPopup("A senha deve ter no mínimo 6 caracteres. A operação foi cancelada.");
-      }
+  if(s.tipo === 'saque') {
+    detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
+  } else if (s.tipo === 'deposito') {
+    detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
   } else {
-    // Lógica antiga para outros tipos de solicitação
-    let detalhes = `Detalhes:\nTipo: ${s.tipo.toUpperCase()}\nUsuário: ${s.usuarioNome}\nValor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}\n`;
+    detalhes += `\nAprovar?`;
+  }
 
-    if(s.tipo === 'saque') {
-      detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
-    } else if (s.tipo === 'deposito') {
-      detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
-    } else {
-      detalhes += `\nAprovar?`;
-    }
-
-    const confirmar = confirm(detalhes);
-    if (confirmar) {
-      if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
-      else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
-      else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
-    } else if (confirm("Deseja recusar a solicitação?")) {
-      recusarSolicitacao(id, s.usuarioUid, s.tipo);
-    }
+  const confirmar = confirm(detalhes);
+  if (confirmar) {
+    if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
+    else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
+    else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
+  } else if (confirm("Deseja recusar a solicitação?")) {
+    recusarSolicitacao(id, s.usuarioUid, s.tipo);
   }
 }
 
@@ -5297,9 +4714,9 @@ function aprovarSaque(id, uid, valor) {
     t.update(userRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
   }).then(() => {
-    exibirInfoPopup("Saque aprovado!");
+    alert("Saque aprovado!");
     notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { link: '#carteira' });
-  }).catch(e => exibirInfoPopup("Erro: " + e.message));
+  }).catch(e => alert("Erro: " + e.message));
 }
 
 function aprovarDeposito(id, uid, valor) {
@@ -5322,23 +4739,23 @@ function aprovarDeposito(id, uid, valor) {
     return pontosGanhos;
 
   }).then((pontosGanhos) => {
-    exibirInfoPopup("Depósito aprovado e saldo adicionado!");
+    alert("Depósito aprovado e saldo adicionado!");
     let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`;
     if (pontosGanhos > 0) {
         notificationBody += ` Você ganhou ${pontosGanhos} pontos de fidelidade!`;
     }
     notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
   }).catch(e => {
-    exibirInfoPopup("Erro ao aprovar depósito: " + e.message);
+    alert("Erro ao aprovar depósito: " + e.message);
   });
 }
 
 function recusarSolicitacao(id, uid, tipo) {
   db.collection("solicitacoes").doc(id).update({ status: "recusado" })
     .then(() => {
-      exibirInfoPopup("Solicitação recusada.");
+      alert("Solicitação recusada.");
       notifyUser(uid, `❌ Solicitação Recusada`, `Sua solicitação de ${tipo} foi recusada.`);
-    }).catch(e => exibirInfoPopup("Erro: " + e.message));
+    }).catch(e => alert("Erro: " + e.message));
 }
 
 function abrirModalUsuarios() {
@@ -5378,238 +4795,56 @@ async function verDetalhesDenuncia(id) {
 }
 
 function fecharDenuncia(id) {
-  db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => exibirInfoPopup("Denúncia fechada!"));
+  db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => alert("Denúncia fechada!"));
 }
 
-// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
-// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
 async function abrirModalGerenciarUsuario(uid) {
-  exibirAguarde("Carregando dados do usuário...");
-  try {
-    // 1. CHAMA O BACKEND PARA BUSCAR OS DADOS DE FORMA SEGURA
-    const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            adminUid: auth.currentUser.uid, // Envia o UID do admin para verificação
-            targetUid: uid // Envia o UID do usuário que queremos ver
-        })
-    });
+  const doc = await db.collection("usuarios").doc(uid).get();
+  const u = doc.data();
+  if (!u) return;
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro ${response.status}`);
-    }
-
-    const { auth: userRecord, firestore: u } = await response.json();
-
-    // 2. O RESTANTE DO CÓDIGO MONTA O MODAL, IGUAL ANTES
-    const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
-    const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
-
-    const container = document.getElementById('adminGerenciarConteudo');
-    container.innerHTML = `
-        <h4 style="word-break: break-all;">${u.nome}</h4>
-        <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
-
-<!-- Seção Adicionada para Gerenciar Loja -->
-        <div class="popup-section">
-            <p><strong>Gerenciar Loja do Vendedor:</strong></p>
-            <p><strong>Loja Ativa:</strong> ${u.lojaLiberada ? 'Sim ✅' : 'Não ❌'}</p>
-            <button id="btnToggleLojaAdmin" onclick="toggleLojaAdmin('${uid}', ${!u.lojaLiberada})">
-                ${u.lojaLiberada ? 'Desativar Loja' : 'Ativar Loja'}
-            </button>
-        </div>
-        <!-- Fim da Seção Adicionada -->
-
-        <div class="popup-section">
-            <p><strong>Informações da Conta:</strong></p>
-            <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
-            <p style="font-size: 14px;"><strong>Último Login:</strong> ${lastSignInTime}</p>
-            <p style="font-size: 14px;"><strong>Conta:</strong> <span style="color: ${userRecord.disabled ? '#e74c3c' : '#2ecc71'};">${userRecord.disabled ? 'Desabilitada' : 'Ativa'}</span></p>
-        </div>
-
-        <div class="popup-section">
-            <p><strong>Alterar Dados Cadastrais:</strong></p>
-            <label for="adminNovoNome">Nome de Exibição:</label>
-            <input id="adminNovoNome" type="text" value="${u.nome}">
-            
-            <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
-            <input id="adminNovoTelefone" type="tel" value="${u.telefone}">
-
-            <label for="adminNovoEstado">Estado:</label>
-            <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')"></select>
-            
-            <label for="adminNovoCidade">Cidade:</label>
-            <select id="adminNovoCidade"></select>
-            <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
-        </div>
-
-        <div class="popup-section">
-            <p><strong>Gerenciar Saldo e VIP:</strong></p>
-            <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
-            <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
-            <button onclick="adminModificarSaldo('${uid}')">Modificar Saldo</button>
-            <hr style="border-color: var(--cor-borda); margin: 15px 0;">
-            <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim' : 'Não'}</p>
-            <button onclick="adminToggleVip('${uid}')">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
-        </div>
-        
-        <div class="popup-section">
-            <p><strong>Ações de Segurança:</strong></p>
-            <input id="adminNovaSenha" type="password" placeholder="🔑 Definir Nova Senha para o Usuário">
-            <button onclick="adminDefinirNovaSenha('${uid}')">Definir Nova Senha</button>
-        </div>
-
-        <div class="popup-section">
-            <p><strong>Ações de Conta:</strong></p>
-            <button style="background-color: ${userRecord.disabled ? '#2ecc71' : '#f1c40f'};" onclick="adminToggleUserStatus('${uid}', ${!userRecord.disabled})">${userRecord.disabled ? 'Reativar Conta' : 'Desativar Conta'}</button>
-            <button style="background-color: #c0392b; margin-top: 10px;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
-        </div>
-
-        <button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
-    `;
-    
-    fecharTodosOsModais(); // Fecha o "Aguarde..."
-    
-    carregarEstados('adminNovo');
-    setTimeout(() => {
-        document.getElementById('adminNovoEstado').value = u.estado;
-        carregarCidades('adminNovo');
-        setTimeout(() => {
-            document.getElementById('adminNovoCidade').value = u.cidade;
-        }, 200);
-    }, 200);
-    
-    abrirModal('modalAdminGerenciarUsuario');
-  } catch (error) {
-      fecharTodosOsModais();
-      console.error("Erro ao buscar dados do usuário:", error);
-      exibirInfoPopup("Não foi possível carregar os dados completos do usuário. " + error.message);
-  }
+  const container = document.getElementById('adminGerenciarConteudo');
+  container.innerHTML = `
+      <h4>${u.nome} (${u.email})</h4>
+      <div class="popup-section">
+          <p><strong>Tipo Atual:</strong> ${u.tipo}</p>
+          <select id="adminNovoTipo">
+              <option value="cliente" ${u.tipo === 'cliente' ? 'selected' : ''}>Cliente</option>
+              <option value="barbeiro" ${u.tipo === 'barbeiro' ? 'selected' : ''}>Barbeiro</option>
+              <option value="manicure_pedicure" ${u.tipo === 'manicure_pedicure' ? 'selected' : ''}>Manicure/Pedicure</option>
+              <option value="designer_cilios" ${u.tipo === 'designer_cilios' ? 'selected' : ''}>Designer de Cílios</option>
+              <option value="admin" ${u.tipo === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+          <button onclick="adminMudarTipo('${uid}')">Alterar Tipo</button>
+      </div>
+      <div class="popup-section">
+          <p><strong>Saldo:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
+          <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
+          <button onclick="adminModificarSaldo('${uid}')">Modificar Saldo</button>
+      </div>
+      <div class="popup-section">
+          <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim' : 'Não'}</p>
+          <button onclick="adminToggleVip('${uid}')">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
+      </div>
+      <div class="popup-section">
+          <p><strong>Loja Liberada:</strong> ${u.lojaLiberada ? 'Sim' : 'Não'}</p>
+          <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Desativar Loja' : 'Ativar Loja'}</button>
+      </div>
+       <div class="popup-section">
+           <a href="https://wa.me/55${u.telefone}" target="_blank"><button style="width:100%">Chamar no WhatsApp</button></a>
+      </div>
+      <div class="popup-section">
+          <button style="background-color: #c0392b;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
+      </div>
+  `;
+  abrirModal('modalAdminGerenciarUsuario');
 }
-
-async function toggleLojaAdmin(uid, novoEstado) {
-    const acao = novoEstado ? "ativar" : "desativar";
-    if (!confirm(`Tem certeza que deseja ${acao} a loja para este usuário?`)) {
-        return;
-    }
-    exibirAguarde(`${acao.charAt(0).toUpperCase() + acao.slice(1)}ndo loja...`);
-    try {
-        // Usa a mesma rota do backend, apenas envia o campo 'lojaLiberada'
-        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                adminUid: auth.currentUser.uid,
-                targetUid: uid,
-                updates: { lojaLiberada: novoEstado } // Envia a atualização específica
-            })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
-
-        fecharTodosOsModais();
-        exibirInfoPopup(`Loja ${novoEstado ? 'ativada' : 'desativada'} com sucesso!`);
-        // Reabre o modal para mostrar o status atualizado
-        abrirModalGerenciarUsuario(uid);
-    } catch (error) {
-        fecharTodosOsModais();
-        exibirInfoPopup(`Erro ao ${acao} a loja: ` + error.message);
-    }
-}
-
-// ADICIONE ESTAS NOVAS FUNÇÕES NO INDEX.HTML
-
-async function adminSalvarAlteracoesUsuario(uid) {
-    const updates = {
-        nome: document.getElementById('adminNovoNome').value.trim(),
-        telefone: document.getElementById('adminNovoTelefone').value.trim(),
-        estado: document.getElementById('adminNovoEstado').value,
-        cidade: document.getElementById('adminNovoCidade').value
-    };
-
-    if (!updates.nome || !updates.telefone || !updates.estado || !updates.cidade) {
-        return exibirInfoPopup("Todos os campos devem ser preenchidos.");
-    }
-
-    exibirAguarde("Salvando...");
-    try {
-        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid, updates })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
-        
-        fecharTodosOsModais();
-        exibirInfoPopup("Dados do usuário atualizados com sucesso!");
-        fecharModalAtual(); // Fecha o modal de gerenciamento
-    } catch (error) {
-        fecharTodosOsModais();
-        exibirInfoPopup("Erro ao salvar alterações: " + error.message);
-    }
-}
-
-async function adminDefinirNovaSenha(uid) {
-    const novaSenha = document.getElementById('adminNovaSenha').value;
-    if (novaSenha.length < 6) {
-        return exibirInfoPopup("A nova senha deve ter no mínimo 6 caracteres.");
-    }
-    if (!confirm("Tem certeza que deseja definir esta nova senha para o usuário? Ele perderá o acesso com a senha antiga.")) {
-        return;
-    }
-    
-    exibirAguarde("Redefinindo senha...");
-    try {
-        const response = await fetch(`${BACKEND_API_URL}/admin/reset-user-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid, newPassword: novaSenha })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
-        
-        fecharTodosOsModais();
-        exibirInfoPopup(`Senha redefinida! A nova senha é "${novaSenha}". É recomendado enviar para o usuário via WhatsApp.`);
-    } catch (error) {
-        fecharTodosOsModais();
-        exibirInfoPopup("Erro ao definir nova senha: " + error.message);
-    }
-}
-
-async function adminToggleUserStatus(uid, disable) {
-    const acao = disable ? "desabilitar" : "reativar";
-    if (!confirm(`Tem certeza que deseja ${acao} a conta deste usuário? Ele ${disable ? 'não poderá mais fazer login' : 'poderá voltar a fazer login'}.`)) {
-        return;
-    }
-
-    exibirAguarde(`${acao.charAt(0).toUpperCase() + acao.slice(1)}ndo conta...`);
-    try {
-        const response = await fetch(`${BACKEND_API_URL}/admin/toggle-user-status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid, disable })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
-        
-        fecharTodosOsModais();
-        exibirInfoPopup(`Conta ${disable ? 'desabilitada' : 'reativada'} com sucesso!`);
-        fecharModalAtual(); // Fecha o modal para forçar a reabertura com os dados atualizados
-    } catch (error) {
-        fecharTodosOsModais();
-        exibirInfoPopup(`Erro ao ${acao} conta: ` + error.message);
-    }
-}
-
 
 // Funções de Ação do Modal Admin
 async function adminMudarTipo(uid) {
   const novoTipo = document.getElementById('adminNovoTipo').value;
   await db.collection("usuarios").doc(uid).update({ tipo: novoTipo });
-  exibirInfoPopup("Tipo alterado!");
+  alert("Tipo alterado!");
   fecharModalAtual();
 }
 async function adminModificarSaldo(uid) {
@@ -5617,30 +4852,30 @@ async function adminModificarSaldo(uid) {
   if (!isNaN(valor)) {
     await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
     notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
-    exibirInfoPopup("Saldo alterado!");
+    alert("Saldo alterado!");
     fecharModalAtual();
-  } else exibirInfoPopup("Valor inválido.");
+  } else alert("Valor inválido.");
 }
 async function adminToggleVip(uid) {
   const userDoc = await db.collection("usuarios").doc(uid).get();
   const userData = userDoc.data();
   if (isVipAtivo(userData)) {
       await db.collection("usuarios").doc(uid).update({ vip: false });
-      exibirInfoPopup("VIP Removido!");
+      alert("VIP Removido!");
   } else {
       const expiracao = new Date();
       expiracao.setDate(expiracao.getDate() + 180);
       await db.collection("usuarios").doc(uid).update({ vip: true, vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao) });
-      exibirInfoPopup("VIP concedido por 6 meses!");
+      alert("VIP concedido por 6 meses!");
   }
   fecharModalAtual();
 }
 async function adminDeletarUsuario(uid, nome) {
   if (prompt(`TEM CERTEZA? Para deletar ${nome}, digite "DELETAR":`) === "DELETAR") {
     await db.collection("usuarios").doc(uid).delete();
-    exibirInfoPopup("Usuário deletado!");
+    alert("Usuário deletado!");
     fecharModalAtual();
-  } else exibirInfoPopup("Exclusão cancelada.");
+  } else alert("Exclusão cancelada.");
 }
 
 
@@ -5657,11 +4892,11 @@ async function enviarNotificacaoMarketing() {
         const data = await response.json();
         fecharTodosOsModais();
         if (!response.ok) throw new Error(data.message);
-        exibirInfoPopup(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
+        alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
         fecharModalAtual();
     } catch (error) {
         fecharTodosOsModais();
-        exibirInfoPopup('Falha ao enviar: ' + error.message);
+        alert('Falha ao enviar: ' + error.message);
     }
 }
 
@@ -5874,14 +5109,14 @@ function abrirModalPortfolioBarbeiro() {
         // Cria o HTML para cada item do portfólio
         container.innerHTML += `
             <div class="portfolio-admin-item">
-                <img id="preview-img-${i}"
-                     src="${url || placeholder}"
+                <img id="preview-img-${i}" 
+                     src="${url || placeholder}" 
                      alt="Preview Slot ${i + 1}"
-                     onerror="this.src='${placeholder}'">
-
-                <input type="url"
-                       class="portfolio-url-input"
-                       placeholder="🔗 Cole o link aqui"
+                     onerror="this.src='${placeholder}'"> 
+                     
+                <input type="url" 
+                       class="portfolio-url-input" 
+                       placeholder="🔗 Cole o link aqui" 
                        value="${url}"
                        oninput="document.getElementById('preview-img-${i}').src = this.value || '${placeholder}'">
             </div>
@@ -5889,96 +5124,17 @@ function abrirModalPortfolioBarbeiro() {
     }
 }
 
-async function uploadPortfolio() {
-    const fileInput = document.getElementById('portfolioFiles');
-    const files = fileInput.files;
-    if (!files || files.length === 0) return exibirInfoPopup("Selecione pelo menos uma imagem ou GIF.");
-    if (files.length > 30) return exibirInfoPopup("Você pode selecionar no máximo 30 imagens.");
-    if (!auth.currentUser) return;
-
-    const progressBar = document.getElementById('portfolioProgress');
-    const saveButton = document.querySelector('#modalPortfolioBarbeiro button[onclick="uploadPortfolio()"]');
-    exibirAguarde("Enviando imagens do portfólio...");
-    progressBar.style.display = 'block';
-    progressBar.value = 0;
-    saveButton.disabled = true;
-
-    const uploadPromises = [];
-    const downloadURLs = [];
-    let uploadedCount = 0;
-
-    for (const file of files) {
-        const storageRef = storage.ref(`portfolio/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
-        const uploadTask = storageRef.put(file);
-
-        const promise = new Promise((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = ((uploadedCount + (snapshot.bytesTransferred / snapshot.totalBytes)) / files.length) * 100;
-                    progressBar.value = progress;
-                },
-                (error) => reject(error),
-                async () => {
-                    try {
-                        const url = await uploadTask.snapshot.ref.getDownloadURL();
-                        downloadURLs.push(url); // Salva a URL obtida
-                        uploadedCount++;
-                        progressBar.value = (uploadedCount / files.length) * 100; // Atualiza progresso após completar
-                        resolve();
-                    } catch (getUrlError) {
-                        reject(getUrlError); // Rejeita se não conseguir a URL
-                    }
-                }
-            );
-        });
-        uploadPromises.push(promise);
-    }
-
-    try {
-        await Promise.all(uploadPromises); // Espera todos os uploads
-
-        // Pega portfólio existente e adiciona novas URLs, mantendo no máximo 30
-        const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
-        const portfolioAtual = userDoc.data()?.portfolio || [];
-
-        // Combina e garante que são apenas strings de URL válidas
-        const portfolioCombinado = [...portfolioAtual, ...downloadURLs]
-                                     .filter(url => typeof url === 'string' && url.startsWith('http'));
-
-        // Mantém apenas os últimos 30 itens únicos
-        const portfolioFinal = [...new Set(portfolioCombinado)].slice(-30);
-
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({ portfolio: portfolioFinal });
-
-        progressBar.style.display = 'none';
-        saveButton.disabled = false;
-        fecharTodosOsModais();
-        exibirInfoPopup('Portfólio salvo com sucesso!');
+function salvarPortfolio() {
+    const inputs = document.querySelectorAll('.portfolio-url-input');
+    const novasUrls = Array.from(inputs).map(input => input.value.trim()).filter(url => url);
+    
+    db.collection('usuarios').doc(auth.currentUser.uid).update({
+        portfolio: novasUrls
+    }).then(() => {
+        alert('Portfólio salvo com sucesso!');
         fecharModalAtual();
-    } catch (error) {
-        fecharTodosOsModais();
-        console.error("Erro no upload do portfólio:", error);
-        exibirInfoPopup("Falha no upload de uma ou mais imagens: " + error.code);
-        progressBar.style.display = 'none';
-        saveButton.disabled = false;
-    }
+    }).catch(e => alert('Erro ao salvar portfólio: ' + e.message));
 }
-
-function previewPortfolioImages(input) {
-    const previewsContainer = document.getElementById('portfolioPreviews');
-    previewsContainer.innerHTML = ''; // Limpa previews antigos
-    if (input.files) {
-        const files = Array.from(input.files).slice(0, 30); // Limita a 30 previews
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewsContainer.innerHTML += `<img src="${e.target.result}" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">`;
-            }
-            reader.readAsDataURL(file);
-        });
-    }
-}
-
 
 function abrirModalFidelidade() {
   const pontosDisplay = document.getElementById("pontosFidelidade");
@@ -6044,7 +5200,7 @@ function obterLocalizacaoCadastro() {
     const btn = document.getElementById('btnLocalizacaoCadastro');
     if(btn) btn.textContent = '⏳ Obtendo localização...';
     if (!navigator.geolocation) {
-        exibirInfoPopup("Geolocalização não é suportada pelo seu navegador.");
+        alert("Geolocalização não é suportada pelo seu navegador.");
         if(btn) btn.textContent = '📍 Usar minha localização atual';
         return;
     }
@@ -6058,7 +5214,7 @@ function obterLocalizacaoCadastro() {
             if(btn) btn.textContent = '✅ Localização Obtida!';
         },
         (error) => {
-            exibirInfoPopup("Não foi possível obter a localização. Por favor, verifique as permissões no seu navegador.");
+            alert("Não foi possível obter a localização. Por favor, verifique as permissões no seu navegador.");
             if(btn) btn.textContent = '📍 Usar minha localização atual';
         }
     );
@@ -6076,6 +5232,28 @@ function abrirModalTurbinar(){
     abrirModal('modalTurbinar');
 }
 
+function confirmarTurbinar() {
+    if (perfil.saldo < PRECO_TURBINAR) {
+        return alert(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
+    }
+    if (perfil.ultimoBoostComprado) {
+        const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        if (perfil.ultimoBoostComprado.toDate() > vinteQuatroHorasAtras) {
+            return alert("Você só pode turbinar o perfil uma vez a cada 24 horas.");
+        }
+    }
+    if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
+        const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        db.collection('usuarios').doc(auth.currentUser.uid).update({
+            saldo: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR),
+            boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao),
+            ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            alert('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
+            fecharModalAtual();
+        }).catch(e => alert('Erro ao turbinar perfil: ' + e.message));
+    }
+}
 
 // Funções da Loja
 function abrirModalParaVender() {
@@ -6096,9 +5274,9 @@ function solicitarLiberacaoLoja() {
         status: "pendente",
         ts: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
-        exibirInfoPopup("Sua solicitação foi enviada ao administrador. Você será redirecionado para o WhatsApp para confirmar.");
+        alert("Sua solicitação foi enviada ao administrador. Você será redirecionado para o WhatsApp para confirmar.");
         notifyAdmins("🛍️ Liberação de Loja", `${perfil.nome} quer permissão para vender.`, { link: '#solicitacoes' });
-    }).catch(e => exibirInfoPopup("Erro ao criar solicitação: " + e.message));
+    }).catch(e => alert("Erro ao criar solicitação: " + e.message));
 }
 
 function aprovarLiberacaoLoja(solicitacaoId, uid) {
@@ -6106,9 +5284,9 @@ function aprovarLiberacaoLoja(solicitacaoId, uid) {
         t.update(db.collection("usuarios").doc(uid), { lojaLiberada: true });
         t.update(db.collection("solicitacoes").doc(solicitacaoId), { status: "aprovado" });
     }).then(() => {
-        exibirInfoPopup("Acesso à loja liberado!");
+        alert("Acesso à loja liberado!");
         notifyUser(uid, "🛍️ Acesso à Loja Liberado!", "Parabéns! Você já pode cadastrar seus produtos para vender no app.");
-    }).catch(e => exibirInfoPopup("Erro ao aprovar: " + e.message));
+    }).catch(e => alert("Erro ao aprovar: " + e.message));
 }
 
 async function carregarProdutos() {
@@ -6208,7 +5386,7 @@ async function exibirVersaoApp() {
 }
 
 function recarregarSaldoDoUsuario() {
-    exibirInfoPopup("💰 Seu saldo foi atualizado! A interface irá refletir a mudança em instantes.");
+    alert("💰 Seu saldo foi atualizado! A interface irá refletir a mudança em instantes.");
 }
 
 if (firebase.messaging.isSupported()) {
@@ -6234,33 +5412,7 @@ if (firebase.messaging.isSupported()) {
 // NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
 async function abrirDetalhesProduto(produto) {
     produtoParaCompra = produto;
-    const imgContainer = document.getElementById('detalhesProdutoImgContainer');
-imgContainer.innerHTML = ''; // Limpa imagens antigas do slider
-const urls = produto.imagensUrls || []; // Usa o array de URLs
-
-if (urls && urls.length > 0) {
-    // Cria um slider simples (pode ser aprimorado com bibliotecas como Swiper.js)
-    let sliderHtml = '<div class="product-slider">';
-    urls.forEach((url, index) => {
-        sliderHtml += `<img src="${url}" alt="Imagem ${index + 1} do Produto" style="display: ${index === 0 ? 'block' : 'none'}; width: 100%; height: 250px; object-fit: contain; border-radius: 10px; margin-bottom: 15px;">`;
-    });
-    sliderHtml += '</div>';
-    if (urls.length > 1) {
-        sliderHtml += `<div style="text-align: center; margin-bottom: 10px;">
-                         <button onclick="changeProductSlide(-1)">◀</button>
-                         <span id="slideIndicator">1 / ${urls.length}</span>
-                         <button onclick="changeProductSlide(1)">▶</button>
-                       </div>`;
-    }
-    imgContainer.innerHTML = sliderHtml;
-    currentProductSlide = 0; // Reseta o slide atual
-} else {
-    // Se não houver URLs no array, tenta usar a antiga 'imagemUrl' como fallback
-    if(produto.imagemUrl) {
-         imgContainer.innerHTML = `<img id="detalhesProdutoImg" src="${produto.imagemUrl}" alt="Imagem do Produto" style="display: block; width: 100%; height: 250px; object-fit: contain; border-radius: 10px; margin-bottom: 15px;">`;
-    } else {
-         imgContainer.innerHTML = '<p>Nenhuma imagem disponível.</p>'; // Nenhuma imagem
-    }
+    document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
     document.getElementById('detalhesProdutoNome').textContent = produto.nome;
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
     document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
@@ -6283,25 +5435,10 @@ if (urls && urls.length > 0) {
     abrirModal('modalProdutoDetalhes');
 }
 
-let currentProductSlide = 0;
-
-function changeProductSlide(direction) {
-    const slider = document.querySelector('#detalhesProdutoImgContainer .product-slider');
-    if (!slider) return;
-    const images = slider.querySelectorAll('img');
-    if (images.length <= 1) return;
-
-    images[currentProductSlide].style.display = 'none'; // Esconde a atual
-    currentProductSlide = (currentProductSlide + direction + images.length) % images.length; // Calcula o novo índice
-    images[currentProductSlide].style.display = 'block'; // Mostra a nova
-
-    document.getElementById('slideIndicator').textContent = `${currentProductSlide + 1} / ${images.length}`;
-}
-
 function iniciarCompra(produto) {
     const tamanhoSelecionado = document.querySelector('input[name="tamanho_selecionado"]:checked');
     if ((produto.tamanhos && produto.tamanhos.length > 0) && !tamanhoSelecionado) {
-        return exibirInfoPopup('Por favor, selecione um tamanho.');
+        return alert('Por favor, selecione um tamanho.');
     }
     produtoParaCompra.tamanhoSelecionado = tamanhoSelecionado ? tamanhoSelecionado.value : 'único';
     
@@ -6315,7 +5452,7 @@ function iniciarCompra(produto) {
         const rua = document.getElementById('compraRua').value;
         const numero = document.getElementById('compraNumeroCasa').value;
         if (!nome || !cpf || !telefone || !email || !cep || !rua || !numero) {
-            return exibirInfoPopup('Todos os campos são obrigatórios.');
+            return alert('Todos os campos são obrigatórios.');
         }
         
         const precoFinal = produtoParaCompra.desconto ? produtoParaCompra.preco * (1 - produtoParaCompra.desconto / 100) : produtoParaCompra.preco;
@@ -6334,7 +5471,7 @@ async function confirmarCompraLoja(dadosEntrega) {
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
     if (perfil.saldo < precoFinal) {
         fecharTodosOsModais();
-        return exibirInfoPopup('Saldo insuficiente.');
+        return alert('Saldo insuficiente.');
     }
     
     try {
@@ -6374,13 +5511,13 @@ async function confirmarCompraLoja(dadosEntrega) {
         });
 
         fecharTodosOsModais();
-        exibirInfoPopup("Pedido realizado com sucesso!");
+        alert("Pedido realizado com sucesso!");
         notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`, { link: '#minhascompras' });
         notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`, { link: '#entregas' });
         fecharTodosOsModais();
     } catch (e) {
         fecharTodosOsModais();
-        exibirInfoPopup('Erro ao processar a compra: ' + e.message);
+        alert('Erro ao processar a compra: ' + e.message);
     }
 }
 
@@ -6446,131 +5583,41 @@ async function abrirFormularioProduto(produtoId = null) {
 
 async function salvarProdutoVendedor() {
     const nome = document.getElementById('produtoNome').value.trim();
+    const imagemUrl = document.getElementById('produtoImagemUrl').value.trim();
     const preco = parseFloat(document.getElementById('produtoPreco').value);
     const desconto = parseInt(document.getElementById('produtoDesconto').value) || 0;
     const tempoEntrega = document.getElementById('produtoEntrega').value.trim();
     const descricao = document.getElementById('produtoDescricao').value.trim();
-    const tamanhos = Array.from(document.querySelectorAll('#modalAddEditProduto input[name="tamanhos"]:checked')).map(c => c.value);
+    const tamanhos = Array.from(document.querySelectorAll('input[name="tamanhos"]:checked')).map(c => c.value);
 
-    const fileInput = document.getElementById('produtoImagensFile');
-    const files = fileInput.files;
-
-    // Validações básicas
-    if (!nome || isNaN(preco) || preco <= 0 || !tempoEntrega) {
-        return exibirInfoPopup('Preencha nome, preço válido e tempo de entrega.');
+    if(!nome || !imagemUrl || isNaN(preco) || preco <= 0 || !tempoEntrega) {
+        return alert('Preencha nome, imagem, preço e tempo de entrega.');
     }
 
-    // Validação de imagens: Obrigatório ao adicionar, opcional ao editar
-    if (!produtoEmEdicaoId && (!files || files.length === 0)) {
-        return exibirInfoPopup("Selecione pelo menos uma imagem para adicionar o produto.");
+    const data = {
+        nome, imagemUrl, preco, desconto, tempoEntrega, descricao, tamanhos,
+        vendedorUid: auth.currentUser.uid,
+        vendedorNome: perfil.nome,
+        isOficial: perfil.tipo === 'admin',
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    if (produtoEmEdicaoId) {
+        await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
+    } else {
+        data.vendasRealizadas = 0;
+        await db.collection('loja_produtos').add(data);
     }
-    if (files && files.length > 5) {
-        return exibirInfoPopup("Você pode enviar no máximo 5 imagens.");
-    }
-
-    exibirAguarde("Salvando produto...");
-    const progressBar = document.getElementById('produtoImagensProgress');
-    const saveButton = document.getElementById('btnSalvarProduto');
-    saveButton.disabled = true;
-
-    let imagemUrls = []; // Array para guardar as URLs
-
-    try {
-        // Upload de novas imagens, se houver
-        if (files && files.length > 0) {
-            progressBar.style.display = 'block';
-            progressBar.value = 0;
-            const uploadPromises = [];
-            let uploadedCount = 0;
-
-            for (const file of files) {
-                const storageRef = storage.ref(`loja_produtos/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
-                const uploadTask = storageRef.put(file);
-                const promise = new Promise((resolve, reject) => {
-                    uploadTask.on('state_changed',
-                        (snapshot) => {
-                            const progress = ((uploadedCount + (snapshot.bytesTransferred / snapshot.totalBytes)) / files.length) * 100;
-                            progressBar.value = progress;
-                        },
-                        (error) => reject(error),
-                        async () => {
-                            try {
-                                const url = await uploadTask.snapshot.ref.getDownloadURL();
-                                imagemUrls.push(url); // Adiciona a URL ao array
-                                uploadedCount++;
-                                progressBar.value = (uploadedCount / files.length) * 100;
-                                resolve();
-                            } catch (getUrlError) { reject(getUrlError); }
-                        }
-                    );
-                });
-                uploadPromises.push(promise);
-            }
-            await Promise.all(uploadPromises); // Espera todos os uploads
-            progressBar.style.display = 'none';
-        }
-
-        // Busca URLs antigas se for edição e não houve novo upload
-        if (produtoEmEdicaoId && imagemUrls.length === 0) {
-             const docAtual = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
-             if (docAtual.exists) {
-                 imagemUrls = docAtual.data().imagensUrls || []; // Pega as URLs existentes
-             }
-        }
-
-        // Prepara os dados para salvar no Firestore
-        const data = {
-            nome, preco, desconto, tempoEntrega, descricao, tamanhos,
-            imagensUrls: imagemUrls, // Salva o array de URLs
-            vendedorUid: auth.currentUser.uid,
-            vendedorNome: perfil.nome,
-            isOficial: perfil.tipo === 'admin',
-            ts: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        // Salva ou atualiza
-        if (produtoEmEdicaoId) {
-            await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
-        } else {
-            data.vendasRealizadas = 0; // Inicializa vendas ao criar
-            await db.collection('loja_produtos').add(data);
-        }
-
-        saveButton.disabled = false;
-        fecharTodosOsModais(); // Fecha o aguarde
-        exibirInfoPopup('Produto salvo com sucesso!');
-        produtoEmEdicaoId = null; // Limpa o ID de edição
-        fecharModalAtual(); // Fecha o modal do formulário
-        abrirGerenciarLoja(); // Recarrega a lista no modal de gerenciamento
-
-    } catch (error) {
-        fecharTodosOsModais(); // Fecha o aguarde
-        console.error("Erro ao salvar produto:", error);
-        exibirInfoPopup("Falha ao salvar produto: " + error.code || error.message);
-        progressBar.style.display = 'none';
-        saveButton.disabled = false;
-    }
-}
-
-function previewProductImages(input) {
-    const previewsContainer = document.getElementById('produtoImagensPreviews');
-    previewsContainer.innerHTML = ''; // Limpa previews antigos
-    if (input.files) {
-        const files = Array.from(input.files).slice(0, 5); // Limita a 5 previews
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewsContainer.innerHTML += `<img src="${e.target.result}" alt="Preview" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">`;
-            }
-            reader.readAsDataURL(file);
-        });
-    }
+    
+    alert('Produto salvo com sucesso!');
+    fecharModalAtual();
+    abrirGerenciarLoja(); // Recarrega a lista
 }
 
 async function deletarProdutoVendedor(produtoId) {
     if (confirm('Tem certeza que deseja excluir este produto?')) {
         await db.collection('loja_produtos').doc(produtoId).delete();
-        exibirInfoPopup('Produto excluído.');
+        alert('Produto excluído.');
         abrirGerenciarLoja();
     }
 }
@@ -6619,9 +5666,9 @@ async function marcarComoEntregue(pedidoId, clienteUid) {
     try {
         await db.collection('loja_pedidos').doc(pedidoId).update({ status: 'entregue_pendente_confirmacao' });
         notifyUser(clienteUid, '🚚 Seu Pedido foi Entregue!', 'Por favor, confirme o recebimento do seu produto no app para finalizar a compra.');
-        exibirInfoPopup('Notificação enviada ao comprador.');
+        alert('Notificação enviada ao comprador.');
     } catch (e) {
-        exibirInfoPopup('Erro ao marcar como entregue: ' + e.message);
+        alert('Erro ao marcar como entregue: ' + e.message);
     }
 }
 
@@ -6671,7 +5718,6 @@ function abrirModalConfirmacaoComprador(pedido) {
     document.getElementById('btnAceitarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, true);
     document.getElementById('btnRecusarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, false);
     abrirModal('modalConfirmacaoComprador');
-    }
 }
 
 async function responderConfirmacaoEntrega(pedidoId, aceito) {
@@ -6682,11 +5728,11 @@ async function responderConfirmacaoEntrega(pedidoId, aceito) {
         await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
         const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
         notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { link: '#entregas' });
-        exibirInfoPopup('Resposta enviada com sucesso!');
+        alert('Resposta enviada com sucesso!');
         fecharModalAtual();
         abrirMinhasCompras();
     } catch (e) {
-        exibirInfoPopup('Erro ao enviar resposta: ' + e.message);
+        alert('Erro ao enviar resposta: ' + e.message);
     }
 }
 function toggleFuncoes(containerId) {
@@ -6700,7 +5746,7 @@ function toggleFuncoes(containerId) {
 
 function handleProdutoClick(produto) {
     if (!auth.currentUser) {
-        exibirInfoPopup("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
+        alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
         mostrar('authView');
     } else {
         abrirDetalhesProduto(produto);
@@ -6827,7 +5873,7 @@ function abrirModalAvaliacaoProduto(pedidoId, produtoId, produtoNome) {
     document.getElementById('btnSalvarAvaliacaoProduto').onclick = () => {
         const comentario = document.getElementById('avaliarProdutoComentario').value.trim();
         if (notaSelecionada === 0) {
-            return exibirInfoPopup('Por favor, selecione uma nota de 1 a 5 estrelas.');
+            return alert('Por favor, selecione uma nota de 1 a 5 estrelas.');
         }
         salvarAvaliacaoProduto(pedidoId, produtoId, notaSelecionada, comentario);
     };
@@ -6847,11 +5893,11 @@ async function salvarAvaliacaoProduto(pedidoId, produtoId, nota, comentario) {
         });
         await db.collection('loja_pedidos').doc(pedidoId).update({ avaliado: true });
         
-        exibirInfoPopup('Obrigado pela sua avaliação!');
+        alert('Obrigado pela sua avaliação!');
         fecharModalAtual();
         abrirMinhasCompras();
     } catch (e) {
-        exibirInfoPopup('Erro ao salvar avaliação: ' + e.message);
+        alert('Erro ao salvar avaliação: ' + e.message);
     }
 }
 
@@ -6872,8 +5918,8 @@ function handleDeepLink() {
             if (perfil.tipo !== 'cliente') abrirAgendamentosBarbeiro();
             break;
         case 'solicitacoes':
-            if (perfil.tipo === 'admin') abrirModalSolicitacoes();
-            break;
+    if (perfil.tipo === 'admin') abrirModalSolicitacoes(); // Corrigido
+    break;
         case 'denuncias':
             if (perfil.tipo === 'admin') abrirDenuncias();
             break;
@@ -6980,14 +6026,14 @@ async function ativarModoFerias() {
     const fim = document.getElementById('feriasFim').value;
 
     if (!inicio || !fim) {
-        return exibirInfoPopup("Por favor, selecione a data de início e fim.");
+        return alert("Por favor, selecione a data de início e fim.");
     }
 
     const dataInicio = new Date(inicio);
     const dataFim = new Date(fim);
 
     if (dataFim < dataInicio) {
-        return exibirInfoPopup("A data de fim não pode ser anterior à data de início.");
+        return alert("A data de fim não pode ser anterior à data de início.");
     }
     
     if (!confirm(`Você tem certeza que deseja bloquear sua agenda de ${dataInicio.toLocaleDateString()} até ${dataFim.toLocaleDateString()}? Seus clientes serão notificados.`)) {
@@ -7024,11 +6070,11 @@ async function ativarModoFerias() {
         });
 
         fecharTodosOsModais();
-        exibirInfoPopup("Modo férias ativado com sucesso! Sua agenda está bloqueada para o período e seus clientes foram notificados.");
+        alert("Modo férias ativado com sucesso! Sua agenda está bloqueada para o período e seus clientes foram notificados.");
 
     } catch (e) {
         fecharTodosOsModais();
-        exibirInfoPopup("Ocorreu um erro: " + e.message);
+        alert("Ocorreu um erro: " + e.message);
     }
 }
 
@@ -7058,7 +6104,7 @@ function adicionarServicoOnboarding() {
     const nome = document.getElementById('onboardingServicoNome').value.trim();
     const valor = parseFloat(document.getElementById('onboardingServicoValor').value);
     const tempo = parseInt(document.getElementById('onboardingServicoTempo').value);
-    if (!nome || isNaN(valor) || isNaN(tempo)) return exibirInfoPopup("Preencha todos os campos do serviço.");
+    if (!nome || isNaN(valor) || isNaN(tempo)) return alert("Preencha todos os campos do serviço.");
 
     tempOnboardingServicos.push({ nome, valor, duracao: tempo });
     
@@ -7166,21 +6212,21 @@ function avancarOnboarding(etapa) {
         }).catch(e => {
             // Se der erro, fecha o "Aguarde" e mostra a falha
             fecharTodosOsModais();
-            exibirInfoPopup("Erro ao salvar: " + e.message);
+            alert("Erro ao salvar: " + e.message);
         });
     }
 }
 
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
-    exibirInfoPopup(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
+    alert(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
     abrirModalGerenciarUsuario(uid); // Reabre o modal para refletir a mudança
 }
 
 async function adminDeletarProduto(produtoId, nome) {
     if(confirm(`Tem certeza que deseja deletar o produto "${nome}"?`)) {
         await db.collection('loja_produtos').doc(produtoId).delete();
-        exibirInfoPopup("Produto deletado!");
+        alert("Produto deletado!");
         fecharModalAtual();
     }
 }
@@ -7214,7 +6260,7 @@ async function registrarSincronizacaoDeMensagem(mensagemData) {
     await swRegistration.sync.register('enviar-mensagem-chat');
     console.log('Sincronização para envio de mensagem registrada.');
 }
-}
+
 function setupConfiguracoes() {
     carregarEstados('config');
     setTimeout(() => { // Garante que os estados carregaram
@@ -7238,7 +6284,7 @@ carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ interesse_principal: novoInteresse });
             buttons.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            exibirInfoPopup("Interesse atualizado!");
+            alert("Interesse atualizado!");
             location.reload(); // Recarrega para aplicar as mudanças de filtro
         }
     });
@@ -7246,27 +6292,18 @@ carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
 async function salvarLocalizacaoConfig() {
     const estado = document.getElementById('configEstado').value;
     const cidade = document.getElementById('configCidade').value;
-    if (!estado || !cidade) return exibirInfoPopup("Selecione estado e cidade.");
+    if (!estado || !cidade) return alert("Selecione estado e cidade.");
     await db.collection('usuarios').doc(auth.currentUser.uid).update({ estado, cidade });
-    exibirInfoPopup("Localização salva!");
+    alert("Localização salva!");
     fecharModalAtual();
 }
-}
 
-// Event listener para o botão de Configurações
 document.getElementById('btnConfig').onclick = () => {
     setupConfiguracoes();
     abrirModal('modalConfiguracoes');
 }
-}
-
-// --- FIM DO BLOCO PRINCIPAL DE SCRIPT ---
 </script>
-
 <script>
-// --- INÍCIO DO SEGUNDO BLOCO DE SCRIPT (SERVICE WORKER & LOGIN COM ENTER) ---
-
-    // Lógica do Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(reg) {
@@ -7275,14 +6312,13 @@ document.getElementById('btnConfig').onclick = () => {
           reg.addEventListener('updatefound', () => {
             newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {
-              // Verifica se há um novo worker instalado e se já existe um controlador ativo
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                  const modal = document.getElementById('modalAtualizacao');
                  const btn = document.getElementById('btnAtualizarApp');
                  btn.onclick = () => {
-                   newWorker.postMessage({ type: 'SKIP_WAITING' }); // Envia mensagem para o novo SW pular a espera
+                   newWorker.postMessage({ type: 'SKIP_WAITING' });
                  };
-                 abrirModal('modalAtualizacao'); // Mostra o modal para o usuário atualizar
+                 abrirModal('modalAtualizacao');
               }
             });
           });
@@ -7290,37 +6326,34 @@ document.getElementById('btnConfig').onclick = () => {
           console.error('❌ Falha ao registrar Service Worker:', err);
         });
 
-        // Lógica para recarregar a página após a atualização do Service Worker
         let refreshing;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (refreshing) return; // Evita recarregamentos múltiplos
-          window.location.reload(); // Recarrega a página para usar o novo SW
+          if (refreshing) return;
+          window.location.reload();
           refreshing = true;
         });
       });
     }
 
-    // --- Funcionalidade de login com a tecla Enter ---
-    const loginFields = [document.getElementById('email'), document.getElementById('senha')];
-    loginFields.forEach(field => {
-        // Adiciona um listener para o evento 'keyup' (tecla solta)
-        field.addEventListener('keyup', function(event) {
-            // Verifica se a tecla pressionada foi "Enter"
-            if (event.key === 'Enter') {
-                // Impede a ação padrão do Enter (como submeter um formulário)
-                event.preventDefault();
-                // Encontra o botão de "Entrar" dentro da div de autenticação
-                const entrarButton = Array.from(document.querySelectorAll('#authView button')).find(btn => btn.textContent.includes('Entrar'));
-                // Se o botão for encontrado, simula um clique nele
-                if (entrarButton) {
-                    entrarButton.click();
-                }
+// --- NOVO CÓDIGO: Adiciona a funcionalidade de login com a tecla Enter ---
+const loginFields = [document.getElementById('email'), document.getElementById('senha')];
+loginFields.forEach(field => {
+    field.addEventListener('keyup', function(event) {
+        // Verifica se a tecla pressionada foi "Enter"
+        if (event.key === 'Enter') {
+            // Impede qualquer ação padrão do navegador
+            event.preventDefault();
+            // Pega o botão de entrar pelo texto, pois não tem ID
+            const entrarButton = Array.from(document.querySelectorAll('#authView button')).find(btn => btn.textContent.includes('Entrar'));
+            // Clica no botão
+            if (entrarButton) {
+                entrarButton.click();
             }
-        });
+        }
     });
-    // --- FIM da funcionalidade de login com Enter ---
+});
+// --- FIM DO NOVO CÓDIGO ---
 
-// --- FIM DO SEGUNDO BLOCO DE SCRIPT ---
 </script>
 </body>
 </html>
