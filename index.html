@@ -6575,6 +6575,31 @@ async function salvarProdutoVendedor() {
     abrirGerenciarLoja(); // Recarrega a lista
 }
 
+function habilitarEnterParaFormulario(inputIds, buttonId) {
+    const button = document.getElementById(buttonId);
+    if (!button) {
+        console.warn(`Botão com ID "${buttonId}" não encontrado para habilitar Enter.`);
+        return;
+    }
+
+    inputIds.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('keyup', function(event) {
+                // Verifica se a tecla pressionada foi "Enter" e se não é um textarea (para permitir Shift+Enter)
+                if (event.key === 'Enter' && input.tagName.toLowerCase() !== 'textarea') {
+                    event.preventDefault(); // Impede envio padrão se houver <form>
+                    if (!button.disabled) { // Só clica se o botão não estiver desabilitado
+                       button.click();
+                    }
+                }
+            });
+        } else {
+             console.warn(`Input com ID "${inputId}" não encontrado para habilitar Enter no botão "${buttonId}".`);
+        }
+    });
+}
+
 async function deletarProdutoVendedor(produtoId) {
     if (confirm('Tem certeza que deseja excluir este produto?')) {
         await db.collection('loja_produtos').doc(produtoId).delete();
