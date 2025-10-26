@@ -5869,7 +5869,8 @@ function abrirModalConquistas() {
     for (const id in definicoes) {
         const c = definicoes[id];
         const unlocked = conquistasDoUsuario.includes(id);
-        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
+        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon
+">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
     }
 }
 
