@@ -5005,63 +5005,85 @@ function abrirModalSolicitacoes() {
     });
 }
 
-// SUBSTITUA TODA A FUNÇÃO 'verDetalhesSolicitacao' POR ESTA
 async function verDetalhesSolicitacao(id) {
   const doc = await db.collection("solicitacoes").doc(id).get();
+  if (!doc.exists) return exibirPopup("Erro", "Solicitação não encontrada."); // Usa popup
   const s = doc.data();
-  if (!s || s.status !== 'pendente') return alert(`Esta solicitação já foi ${s.status}.`);
+  if (!s || s.status !== 'pendente') return exibirPopup("Info", `Esta solicitação já foi ${s.status}.`); // Usa popup
+
+  // --- NOVA LÓGICA ---
+  if (s.tipo === 'alteracao_cidade') {
+      abrirModalAdminCidade(id, s); // Abre o modal específico
+      return; // Sai da função aqui para não mostrar o confirm genérico
+  }
+  // --- FIM DA NOVA LÓGICA ---
 
   if (s.tipo === 'recuperacao_senha') {
-      const novaSenha = prompt(`RECUPERAÇÃO DE SENHA PARA: ${s.email}\n\nDigite uma nova senha temporária para este usuário:`);
+      const novaSenha = prompt(`RECUPERAÇÃO DE SENHA PARA: ${s.email}\n\nDigite uma nova senha temporária (mínimo 6 caracteres):`);
       if (novaSenha && novaSenha.length >= 6) {
           try {
               exibirAguarde("Buscando usuário e redefinindo senha...");
+              // Busca o usuário pelo email na coleção 'usuarios' para obter o UID
               const userQuery = await db.collection('usuarios').where('email', '==', s.email).limit(1).get();
               if (userQuery.empty) {
-                  throw new Error("Nenhum usuário encontrado com este e-mail.");
+                  throw new Error("Nenhum usuário encontrado com este e-mail no banco de dados.");
               }
               const userDoc = userQuery.docs[0];
-              const targetUid = userDoc.id;
-              const telefoneUsuario = userDoc.data().telefone;
-              
-              // Chama o backend para redefinir a senha
+              const targetUid = userDoc.id; // UID encontrado
+              const telefoneUsuario = userDoc.data().telefone; // Pega o telefone do Firestore
+
+              // Chama o backend para redefinir a senha via Firebase Auth
               const response = await fetch(`${BACKEND_API_URL}/admin/reset-user-password`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid, newPassword: novaSenha })
+                  body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: targetUid, newPassword: novaSenha })
               });
               const data = await response.json();
-              if (!response.ok) throw new Error(data.message);
+              if (!response.ok) {
+                  console.error("Backend error response:", data); // Log detalhado do erro do backend
+                  throw new Error(data.message || `Erro ${response.status} do backend.`);
+              }
 
-              // Marca a solicitação como aprovada
+              // Marca a solicitação como aprovada no Firestore
               await db.collection("solicitacoes").doc(id).update({ status: "aprovado" });
-              
-              fecharTodosOsModais();
-              alert("Senha redefinida com sucesso!");
+
+              fecharAguarde(null, true);
+              exibirPopup("Sucesso", "Senha redefinida com sucesso!");
 
               // Abre o WhatsApp para enviar a nova senha para o usuário
-              const mensagem = encodeURIComponent(`Olá! Conforme sua solicitação, sua nova senha de acesso para o app Nova Versão é:\n\n*${novaSenha}*\n\nRecomendamos que você a altere assim que fizer o login.`);
-              window.open(`https://wa.me/55${telefoneUsuario}?text=${mensagem}`, '_blank');
-              
+              if (telefoneUsuario) {
+                 const phoneNum = telefoneUsuario.startsWith('55') ? telefoneUsuario : `55${telefoneUsuario.replace(/\D/g, '')}`; // Garante 55 e limpa
+                 const mensagem = encodeURIComponent(`Olá! Conforme sua solicitação, sua nova senha de acesso para o app Nova Versão é:\n\n*${novaSenha}*\n\nRecomendamos que você a altere assim que fizer o login.`);
+                 window.open(`https://wa.me/${phoneNum}?text=${mensagem}`, '_blank');
+              } else {
+                 exibirPopup("Aviso", "Não foi possível encontrar o telefone do usuário para enviar a senha via WhatsApp. Avise-o manualmente.");
+              }
+
           } catch (error) {
-              fecharTodosOsModais();
-              alert("Erro ao processar recuperação: " + error.message);
+              fecharAguarde(null, true);
+              console.error("Erro detalhado ao processar recuperação:", error); // Log detalhado
+              exibirPopup("Erro", "Erro ao processar recuperação: " + error.message);
           }
-      } else if (novaSenha) {
-          alert("A senha deve ter no mínimo 6 caracteres. A operação foi cancelada.");
+      } else if (novaSenha) { // Se digitou algo mas < 6 chars
+          exibirPopup("Aviso", "A senha deve ter no mínimo 6 caracteres. A operação foi cancelada.");
       }
+      // Se cancelou o prompt, não faz nada
   } else {
-    // Lógica antiga para outros tipos de solicitação
+    // Lógica antiga para outros tipos de solicitação (saque, depósito, etc.)
     let detalhes = `Detalhes:\nTipo: ${s.tipo.toUpperCase()}\nUsuário: ${s.usuarioNome}\nValor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}\n`;
 
     if(s.tipo === 'saque') {
       detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
     } else if (s.tipo === 'deposito') {
       detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
-    } else {
+    } else if (s.tipo === "liberacao_loja") {
+        detalhes += `\nAprovar liberação da loja para ${s.usuarioNome}?`;
+    }
+     else {
       detalhes += `\nAprovar?`;
     }
 
+    // Usa confirm por enquanto, pode ser substituído por popup customizado depois
     const confirmar = confirm(detalhes);
     if (confirmar) {
       if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
