@@ -1273,6 +1273,7 @@
 <div class="popup-section">
           <h4>Conta</h4>
           <button onclick="abrirModalAlterarSenha()">🔑 Alterar Senha</button>
+          <button onclick="solicitarAlteracaoCidade()">🏙️ Solicitar Alteração de Cidade</button>
         </div>
 
     <div class="popup-section">
@@ -5514,6 +5515,55 @@ async function adminModificarPontos(uid) {
     } catch (error) {
         fecharTodosOsModais();
         alert("Erro ao modificar pontos: " + error.message);
+    }
+}
+
+async function adminMudarTipoUsuario(uid, novoTipo) {
+    // Verifica se o tipo selecionado é válido (opcional, mas recomendado)
+    const tiposValidos = ['cliente', 'barbeiro', 'manicure_pedicure', 'designer_cilios'];
+    if (!tiposValidos.includes(novoTipo)) {
+         return exibirPopup("Erro", "Tipo de usuário inválido selecionado.");
+    }
+
+    if (!confirm(`Tem certeza que deseja alterar o tipo deste usuário para "${novoTipo}"?`)) return;
+
+    exibirAguarde("Alterando tipo de usuário...");
+    try {
+        // Atualiza o tipo e reseta campos específicos de profissional se virar cliente
+        const updates = { tipo: novoTipo };
+        if (novoTipo === 'cliente') {
+            updates.listaServicos = [];
+            updates.promocoes = [];
+            updates.portfolio = [];
+            updates.logo_url = firebase.firestore.FieldValue.delete(); // Remove logo
+            updates.disponivel = "nao";
+            updates.vagaImediata = false;
+            updates.usaAgendaManual = false;
+            updates.agenda = {};
+            updates.ausente = false;
+            updates.ausenciaInicio = firebase.firestore.FieldValue.delete();
+            updates.ausenciaFim = firebase.firestore.FieldValue.delete();
+            // Manter endereço? Depende da sua regra de negócio. Se não:
+            // updates.rua = firebase.firestore.FieldValue.delete();
+            // updates.numero = firebase.firestore.FieldValue.delete();
+            // updates.latitude = firebase.firestore.FieldValue.delete();
+            // updates.longitude = firebase.firestore.FieldValue.delete();
+        } else {
+            // Se virar profissional, garante que onboarding seja refeito se necessário
+            // (Opcional, talvez não precise resetar se ele já foi profissional antes)
+            // updates.onboarding_profissional_concluido = false;
+        }
+
+
+        await db.collection('usuarios').doc(uid).update(updates);
+        fecharAguarde(null, true);
+        exibirPopup("Sucesso", `Tipo de usuário alterado para "${novoTipo}" com sucesso!`);
+        // Reabre o modal para atualizar a interface
+        abrirModalGerenciarUsuario(uid);
+    } catch (error) {
+        fecharAguarde(null, true);
+        console.error("Erro ao alterar tipo:", error);
+        exibirPopup("Erro", `Erro ao alterar tipo: ${error.message}`);
     }
 }
 
