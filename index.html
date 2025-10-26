@@ -3747,11 +3747,37 @@ function abrirModalVipPro() {
  * Processa a assinatura PRO, descontando do saldo.
  */
 
+// SUBSTITUA a função isVipAtivo existente por esta:
 function isVipAtivo(perfilUsuario) {
     if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
         return false;
     }
-    return perfilUsuario.vipExpirationDate.toDate() > new Date();
+    // Verifica se é um objeto Timestamp antes de chamar toDate()
+    if (perfilUsuario.vipExpirationDate && typeof perfilUsuario.vipExpirationDate.toDate === 'function') {
+        try {
+            return perfilUsuario.vipExpirationDate.toDate() > new Date();
+        } catch (e) {
+            console.error("Erro ao processar vipExpirationDate:", e, perfilUsuario.vipExpirationDate);
+            return false; // Trata como inativo se houver erro
+        }
+    }
+    return false; // Retorna false se não for um timestamp válido
+}
+
+// ADICIONE esta versão segura para isProAtivo também (boa prática)
+function isProAtivo(perfilUsuario) {
+    if (!perfilUsuario || !perfilUsuario.proAtivo || !perfilUsuario.proExpirationDate) {
+        return false;
+    }
+    if (perfilUsuario.proExpirationDate && typeof perfilUsuario.proExpirationDate.toDate === 'function') {
+        try {
+            return perfilUsuario.proExpirationDate.toDate() > new Date();
+        } catch (e) {
+            console.error("Erro ao processar proExpirationDate:", e, perfilUsuario.proExpirationDate);
+            return false;
+        }
+    }
+    return false;
 }
 
 // FUNÇÃO DO CHAT ATUALIZADA
