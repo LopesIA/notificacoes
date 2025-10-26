@@ -66,7 +66,7 @@
       --cor-borda: #ccc;
     }
     body {
-      background-image: url('C:\Users\arlan\Desktop\NavalhadeOuro3.1.9/icone.png'); /* <-- ATUALIZE AQUI */
+      background-image: url('/icone.png'); /* Caminho correto para o Firebase Hosting/Web */
       background-size: cover; /* Garante que a imagem cubra todo o elemento */
       background-position: center; /* Centraliza a imagem */
       background-repeat: no-repeat; /* Evita repetição */
@@ -1926,23 +1926,19 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="detalhesProdutoImagensContainer" style="width: 100%; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; margin-bottom: 15px; background-color: var(--cor-botoes); border-radius: 10px; min-height: 250px; align-items: center;">
     </div>
-<div id="detalhesProdutoImagensIndicadores" style="text-align: center; margin-bottom: 15px;">
-    </div>
+    </div> <h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque);"></h3>
+        
+    <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
+    <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
+        
+    <p><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
+    <p><strong>Descrição:</strong></p>
+    <p id="detalhesProdutoDescricao" style="font-size: 14px; opacity: 0.9;"></p>
+        
+    <div id="detalhesProdutoAvaliacao"></div>
 
-<h3 id="detalhesProdutoNome" style="margin: 0; color: var(--cor-destaque);"></h3>
-        
-        <p style="margin-top: 15px;"><strong>Tamanho:</strong></p>
-        <div id="detalhesProdutoTamanhos" class="tamanho-options"></div>
-        
-        <p><strong>Preço:</strong> <span id="detalhesProdutoPreco" style="font-weight: bold; font-size: 1.2em;"></span></p>
-        <p><strong>Descrição:</strong></p>
-        <p id="detalhesProdutoDescricao" style="font-size: 14px; opacity: 0.9;"></p>
-        
-        <div id="detalhesProdutoAvaliacao"></div>
-
-        <button id="btnComprarAgora">Continuar</button>
-        <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
-    </div>
+    <button id="btnComprarAgora">Continuar</button>
+    <button data-modal-id="modalProdutoDetalhes" onclick="fecharModal(event)">❌ Fechar</button>
 </div>
 
 <div id="modalFormularioCompraLoja" class="modal" onclick="fecharModal(event)">
