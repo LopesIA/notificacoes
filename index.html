@@ -1630,17 +1630,14 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
-            <div id="modalLogomarca" class="modal" onclick="fecharModal(event)">
-              <div class="modal-content" onclick="event.stopPropagation()">
-                <h3>🎨 Adicionar Logomarca (1 Imagem)</h3>
-                <p style="font-size: 12px; opacity: 0.8;">Selecione uma imagem ou GIF do seu dispositivo.</p>
-                <input id="logomarcaFile" type="file" accept="image/*,image/gif">
-                <img id="logomarcaPreview" src="#" alt="Preview" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none; border-radius: 50%;">
-                <progress id="logoUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-top: 10px;"></progress>
-                <button onclick="salvarLogomarca()">💾 Salvar Logomarca</button>
-                <button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
-              </div>
-            </div>
+<div id="modalLogomarca" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🎨 Adicionar Logomarca (1 Imagem)</h3>
+<p style="font-size: 12px; opacity: 0.8;">Selecione uma imagem ou GIF do seu dispositivo.</p>
+<input id="logomarcaFile" type="file" accept="image/*,image/gif"> <progress id="logoUploadProgress" value="0" max="100" style="width: 100%; display: none;"></progress> <button onclick="salvarLogomarca()">💾 Salvar Logomarca</button>
+<button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
 
 <div id="modalAlterarEnderecoBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1978,45 +1975,27 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     </div>
 </div>
 
-            <div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
-                <div class="modal-content" onclick="event.stopPropagation()">
-                    <h3 id="formProdutoTitulo">📦 Adicionar/Editar Produto</h3>
-
-                    <!-- Seção de Imagens -->
-                    <div class="popup-section">
-                        <h4>Imagens (Máx. 5)</h4>
-                        <p style="font-size: 12px; opacity: 0.8;">Selecione até 5 imagens ou GIFs. A primeira será a principal.</p>
-                        <!-- Previews das imagens existentes (para edição) -->
-                        <div id="produtoPreviewsExistentes" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;"></div>
-                        <!-- Input para novas imagens -->
-                        <input id="produtoFiles" type="file" accept="image/*,image/gif" multiple style="margin-bottom: 5px;">
-                        <progress id="produtoUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-bottom: 5px;"></progress>
-                        <!-- Previews das novas imagens selecionadas -->
-                        <div id="produtoPreviewsNovas" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; max-height: 80px; overflow-y: auto;"></div>
-                    </div>
-
-                    <!-- Campos do Produto -->
-                    <input id="produtoNome" type="text" placeholder="Nome do Produto *" required>
-                    <input id="produtoPreco" type="number" step="0.01" placeholder="Preço (Ex: 49.90) *" required>
-                    <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional, 1-99)">
-
-                    <p style="margin-top: 10px; margin-bottom: 5px;">Tamanhos disponíveis *:</p>
-                    <div id="produtoTamanhosGroup" class="checkbox-group" style="margin-bottom: 15px;">
-                        <label><input type="checkbox" name="tamanhos" value="P"> P</label>
-                        <label><input type="checkbox" name="tamanhos" value="M"> M</label>
-                        <label><input type="checkbox" name="tamanhos" value="G"> G</label>
-                        <label><input type="checkbox" name="tamanhos" value="GG"> GG</label>
-                    </div>
-
-                    <textarea id="produtoDescricao" placeholder="Descrição curta do produto *" rows="3" required></textarea>
-                    <!-- Campo Avaliação removido do formulário de adição/edição -->
-
-                    <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
-                    <button data-modal-id="modalAddEditProduto" onclick="fecharModal(event)">❌ Cancelar</button>
-                </div>
-            </div>
-            
-
+<div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 id="formProdutoTitulo">📦 Adicionar/Editar Produto</h3>
+        <p style="font-size: 12px; opacity: 0.8;">Selecione até 5 imagens ou GIFs.</p>
+        <input id="produtoFiles" type="file" accept="image/*,image/gif" multiple> <div id="produtoPreviews"></div> <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
+        <input id="produtoNome" type="text" placeholder="Nome do Produto">
+        <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
+        <p>Tamanhos disponíveis:</p>
+        <div class="checkbox-group">
+            <label><input type="checkbox" name="tamanhos" value="P"> P</label>
+            <label><input type="checkbox" name="tamanhos" value="M"> M</label>
+            <label><input type="checkbox" name="tamanhos" value="G"> G</label>
+            <label><input type="checkbox" name="tamanhos" value="GG"> GG</label>
+        </div>
+        <input id="produtoDesconto" type="number" placeholder="Desconto em % (Opcional)">
+        <input id="produtoEntrega" type="text" placeholder="Tempo de entrega (Ex: 3-5 dias)">
+        <textarea id="produtoDescricao" placeholder="Descrição curta do produto" rows="3"></textarea>
+        <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
+        <button data-modal-id="modalAddEditProduto" onclick="fecharModal(event)">❌ Cancelar</button>
+    </div>
+</div>
 
 <div id="modalEntregasVendedor" class="modal" onclick="fecharModal(event)">
     <div class="modal-content">
@@ -2653,24 +2632,14 @@ const cidadesPorEstado = {
 };
 
 function carregarEstados(prefix = '') {
-              const estadoSelect = document.getElementById(`${prefix}estado`);
-              // Adiciona o select de solicitação do admin também
-              const estadoSelectSolicitacao = document.getElementById(`${prefix}Solicitacao`);
-
-              const selectTarget = estadoSelect || estadoSelectSolicitacao; // Prioriza o select normal
-              if(!selectTarget) {
-                  // Se nenhum dos selects for encontrado com o prefixo, tenta sem prefixo (para cadastro inicial)
-                  const fallbackSelect = document.getElementById('estado');
-                  if(!fallbackSelect) return; // Se nem o de cadastro existe, sai
-                  selectTarget = fallbackSelect;
-              }
-
-              const valorAtual = selectTarget.value;
-              selectTarget.innerHTML = '<option value="">🌎 Selecione o estado</option>';
-              Object.keys(cidadesPorEstado).sort().forEach(sigla => { // Ordena os estados
-                selectTarget.innerHTML += `<option value="${sigla}" ${sigla === valorAtual ? 'selected' : ''}>${sigla}</option>`;
-              });
-            }
+  const estadoSelect = document.getElementById(`${prefix}estado`);
+  if(!estadoSelect) return;
+  const valorAtual = estadoSelect.value;
+  estadoSelect.innerHTML = '<option value="">🌎 Selecione seu estado</option>';
+  Object.keys(cidadesPorEstado).forEach(sigla => {
+    estadoSelect.innerHTML += `<option value="${sigla}" ${sigla === valorAtual ? 'selected' : ''}>${sigla}</option>`;
+  });
+}
 
 function carregarCidades(prefix = '') {
   const estado = document.getElementById(`${prefix}estado`).value;
@@ -4371,27 +4340,6 @@ async function salvarLogomarca() {
     }
 }
 
-        // Listener para preview da logomarca
-        const logoFileInput = document.getElementById('logomarcaFile');
-        const logoPreviewImg = document.getElementById('logomarcaPreview');
-        if (logoFileInput && logoPreviewImg) {
-            logoFileInput.addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        logoPreviewImg.src = e.target.result;
-                        logoPreviewImg.style.display = 'block';
-                    }
-                    reader.readAsDataURL(file);
-                } else {
-                    logoPreviewImg.src = '#';
-                    logoPreviewImg.style.display = 'none';
-                }
-            });
-        }
-        
-
 function alterarEnderecoBarbeiro(event) {
     const rua = document.getElementById("novoEnderecoRua").value.trim();
     const numero = document.getElementById("novoEnderecoNumero").value.trim();
@@ -6043,58 +5991,44 @@ async function abrirModalDashboardBarbeiro() {
     }
 }
 
-            async function abrirModalPortfolioBarbeiro() {
-                abrirModal('modalPortfolioBarbeiro');
-                carregarPortfolioExistente(); // Carrega as imagens atuais
+async function abrirModalPortfolioBarbeiro() {
+    abrirModal('modalPortfolioBarbeiro');
+    carregarPortfolioExistente();
+    // Limpa seleções anteriores
+    document.getElementById('portfolioFiles').value = '';
+    document.getElementById('portfolioPreviews').innerHTML = '';
+    document.getElementById('portfolioUploadProgress').style.display = 'none';
+    document.getElementById('portfolioUploadProgress').value = 0;
 
-                // Limpa seleções anteriores
-                const fileInput = document.getElementById('portfolioFiles');
-                const previewContainer = document.getElementById('portfolioPreviews');
-                const progressBar = document.getElementById('portfolioUploadProgress');
-                const btnSalvar = document.getElementById('btnSalvarPortfolio');
-
-                fileInput.value = '';
-                previewContainer.innerHTML = '';
-                progressBar.style.display = 'none';
-                progressBar.value = 0;
-                btnSalvar.disabled = true; // Desabilita o botão inicialmente
-
-                // Adiciona listener para preview e habilita/desabilita botão
-                fileInput.onchange = () => {
-                    previewContainer.innerHTML = ''; // Limpa previews antigos
-                    const files = fileInput.files;
-                    const portfolioAtual = perfil?.portfolio?.length || 0;
-                    const espacoDisponivel = 30 - portfolioAtual;
-
-                    if (files.length > 0) {
-                        if (files.length > espacoDisponivel) {
-                            exibirPopup('Limite Excedido', `Você pode adicionar no máximo mais ${espacoDisponivel} imagens.`);
-                            fileInput.value = ''; // Limpa a seleção
-                            btnSalvar.disabled = true; // Mantém desabilitado
-                            return;
-                        }
-
-                        Array.from(files).forEach(file => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                const img = document.createElement('img');
-                                img.src = e.target.result;
-                                img.style.width = '60px';
-                                img.style.height = '60px';
-                                img.style.objectFit = 'cover';
-                                img.style.borderRadius = '4px';
-                                previewContainer.appendChild(img);
-                            }
-                            reader.readAsDataURL(file);
-                        });
-                        btnSalvar.disabled = false; // Habilita o botão se houver arquivos válidos
-                    } else {
-                        btnSalvar.disabled = true; // Desabilita se não houver arquivos
-                    }
-                };
-            }
-            
-
+    // Adiciona listener para preview das novas imagens
+    const fileInput = document.getElementById('portfolioFiles');
+    const previewContainer = document.getElementById('portfolioPreviews');
+    fileInput.onchange = () => {
+        previewContainer.innerHTML = ''; // Limpa previews antigos
+        const files = fileInput.files;
+        if (files.length > 0) {
+             const maxNovas = 30 - (perfil.portfolio?.length || 0);
+             if (files.length > maxNovas) {
+                 exibirPopup('Atenção', `Você pode adicionar no máximo mais ${maxNovas} imagens.`);
+                 fileInput.value = ''; // Limpa a seleção
+                 return;
+             }
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '60px';
+                    img.style.height = '60px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '4px';
+                    previewContainer.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+}
 
 async function salvarNovasImagensPortfolio() {
     const fileInput = document.getElementById("portfolioFiles");
@@ -6220,93 +6154,36 @@ async function removerImagemPortfolio(imageUrl) {
     }
 }
 
-            function carregarPortfolioExistente() {
-                const gridContainer = document.getElementById('portfolioExistenteGrid');
-                const contadorElement = document.getElementById('portfolioContador');
-                gridContainer.innerHTML = '<p>Carregando...</p>';
+function carregarPortfolioExistente() {
+    const gridContainer = document.getElementById('portfolioExistenteGrid');
+    gridContainer.innerHTML = '<p>Carregando...</p>'; // Feedback inicial
 
-                // Usa um listener para atualizar em tempo real se o perfil mudar
-                db.collection('usuarios').doc(auth.currentUser.uid)
-                    .onSnapshot(doc => {
-                        if (!doc.exists) return; // Sai se o documento não existe
-                        perfil = doc.data(); // Atualiza o perfil global
-                        const portfolioUrls = perfil?.portfolio || [];
+    const portfolioUrls = perfil?.portfolio || [];
 
-                        // Atualiza o contador
-                        if (contadorElement) {
-                            contadorElement.textContent = portfolioUrls.length;
-                        }
+    if (portfolioUrls.length === 0) {
+        gridContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">Nenhuma imagem no portfólio ainda.</p>';
+        return;
+    }
 
-                        if (portfolioUrls.length === 0) {
-                            gridContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">Nenhuma imagem no portfólio ainda.</p>';
-                            return;
-                        }
+    gridContainer.innerHTML = ''; // Limpa o container
+    portfolioUrls.forEach(url => {
+        const imgElement = document.createElement('img');
+        imgElement.src = url;
+        imgElement.alt = 'Imagem do Portfólio';
+        // Adiciona onerror para caso a imagem não carregue
+        imgElement.onerror = function() {
+             this.src='https://via.placeholder.com/120x100?text=Erro!';
+             this.style.cursor = 'default';
+             this.onclick = null; // Remove o clique se deu erro
+             console.warn("Erro ao carregar imagem do portfólio:", url);
+        };
+        imgElement.style.cursor = 'pointer'; // Indica que é clicável
+        imgElement.title = 'Clique para remover'; // Dica ao passar o mouse
+        imgElement.onclick = () => removerImagemPortfolio(url); // Define a ação de clique
 
-                        gridContainer.innerHTML = ''; // Limpa o container
-                        portfolioUrls.forEach(url => {
-                            const imgContainer = document.createElement('div');
-                            imgContainer.style.position = 'relative'; // Para posicionar o botão de excluir
-
-                            const imgElement = document.createElement('img');
-                            imgElement.src = url;
-                            imgElement.alt = 'Imagem do Portfólio';
-                            imgElement.style.width = '100%';
-                            imgElement.style.height = '100px'; // Altura fixa para consistência
-                            imgElement.style.objectFit = 'cover';
-                            imgElement.style.borderRadius = '4px';
-                            imgElement.style.border = '1px solid var(--cor-borda)';
-                            imgElement.onerror = function() {
-                                this.src='https://via.placeholder.com/120x100?text=Erro!';
-                                console.warn("Erro ao carregar imagem do portfólio:", url);
-                                // Remove o botão de excluir se a imagem não carregar
-                                const deleteBtn = this.nextElementSibling;
-                                if(deleteBtn) deleteBtn.remove();
-                            };
-
-                            const deleteButton = document.createElement('button');
-                            deleteButton.textContent = '❌';
-                            deleteButton.style.position = 'absolute';
-                            deleteButton.style.top = '2px';
-                            deleteButton.style.right = '2px';
-                            deleteButton.style.background = 'rgba(0,0,0,0.6)';
-                            deleteButton.style.color = 'white';
-                            deleteButton.style.border = 'none';
-                            deleteButton.style.borderRadius = '50%';
-                            deleteButton.style.width = '20px';
-                            deleteButton.style.height = '20px';
-                            deleteButton.style.fontSize = '10px';
-                            deleteButton.style.lineHeight = '20px';
-                            deleteButton.style.textAlign = 'center';
-                            deleteButton.style.padding = '0';
-                            deleteButton.style.cursor = 'pointer';
-                            deleteButton.title = 'Remover Imagem';
-                            deleteButton.onclick = (e) => {
-                                e.stopPropagation(); // Impede que o clique se propague para outros elementos
-                                removerImagemPortfolio(url);
-                            };
-
-                            imgContainer.appendChild(imgElement);
-                            imgContainer.appendChild(deleteButton);
-                            gridContainer.appendChild(imgContainer);
-                        });
-
-                        // Atualiza o estado do input de arquivos
-                        const fileInput = document.getElementById('portfolioFiles');
-                        const espacoDisponivel = 30 - portfolioUrls.length;
-                        fileInput.disabled = espacoDisponivel <= 0;
-                        if(espacoDisponivel <= 0) {
-                            fileInput.parentElement.querySelector('label').textContent = "Limite de imagens atingido.";
-                        } else {
-                            fileInput.parentElement.querySelector('label').textContent = "Adicionar Novas Imagens:";
-                        }
-
-                    }, error => {
-                        console.error("Erro ao ouvir updates do portfólio:", error);
-                        gridContainer.innerHTML = '<p style="color: red;">Erro ao carregar portfólio.</p>';
-                    });
-            }
-            
-
+        gridContainer.appendChild(imgElement);
+    });
+}
 
 async function enviarEmailDeContato() {
     const userEmail = perfil ? perfil.email : prompt("Seu email para resposta:");
@@ -6536,43 +6413,33 @@ async function solicitarAlteracaoCidade() {
 let solicitacaoAtualId = null; // Variável global para guardar o ID da solicitação aberta
 let solicitacaoAtualUid = null; // Variável global para guardar o UID do usuário da solicitação
 
-            async function abrirModalAdminCidade(id, s) {
-              solicitacaoAtualId = id;
-              solicitacaoAtualUid = s.usuarioUid;
+async function abrirModalAdminCidade(id, s) {
+    solicitacaoAtualId = id;
+    solicitacaoAtualUid = s.usuarioUid;
 
-              document.getElementById('adminCidadeNomeUsuario').textContent = s.usuarioNome;
-              document.getElementById('adminCidadeAtual').textContent = `${s.cidadeAtual || 'N/A'} - ${s.estadoAtual || 'N/A'}`;
+    document.getElementById('adminCidadeNomeUsuario').textContent = s.usuarioNome;
+    document.getElementById('adminCidadeAtual').textContent = `${s.cidadeAtual} - ${s.estadoAtual}`;
 
-              // Identificadores dos selects no modal de solicitação
-              const estadoSelectId = 'adminNovoEstadoSolicitacao';
-              const cidadeSelectId = 'adminNovoCidadeSolicitacao';
-
-              const estadoSelect = document.getElementById(estadoSelectId);
-              const cidadeSelect = document.getElementById(cidadeSelectId);
-
-              // Limpa opções antigas de cidade
-              cidadeSelect.innerHTML = '<option value="">Selecione o estado</option>';
-
-              // Carrega estados e define o valor atual ou vazio
-              carregarEstados('adminNovo'); // Usa o prefixo correto para carregar os estados
-              estadoSelect.value = s.estadoAtual || ""; // Define o estado atual
-
-              // Carrega as cidades correspondentes ao estado atual
-              carregarCidades('adminNovo'); // Usa o prefixo correto para carregar as cidades
-              // Adiciona um pequeno delay para garantir que as cidades foram carregadas antes de tentar selecionar
-              setTimeout(() => {
-                  // Tenta pré-selecionar a cidade atual SE ela existir na lista carregada
-                  if(cidadeSelect.querySelector(`option[value="${s.cidadeAtual}"]`)) {
-                      cidadeSelect.value = s.cidadeAtual;
-                  } else {
-                      cidadeSelect.value = ""; // Deixa "Selecione a cidade" se a atual não estiver na lista
-                  }
-              }, 150); // Ajuste o delay se necessário
-
-              abrirModal('modalAdminDetalhesCidade');
+    // Carrega estados no select do modal de admin e define o estado atual
+    carregarEstados('adminNovoSolicitacao');
+    setTimeout(() => {
+         document.getElementById('adminNovoEstadoSolicitacao').value = s.estadoAtual || ""; // Pré-seleciona estado atual
+         // Limpa e recarrega cidades baseado no estado atual (ou nenhum se não houver)
+         carregarCidades('adminNovoSolicitacao');
+         setTimeout(() => {
+            // Tenta pré-selecionar a cidade atual se ela existir na lista carregada
+            const cidadeSelect = document.getElementById('adminNovoCidadeSolicitacao');
+            if(cidadeSelect.querySelector(`option[value="${s.cidadeAtual}"]`)) {
+                cidadeSelect.value = s.cidadeAtual;
+            } else {
+                cidadeSelect.value = ""; // Deixa "Selecione a cidade" se a atual não estiver na lista
             }
-            
+         }, 150);
+    }, 150);
 
+
+    abrirModal('modalAdminDetalhesCidade');
+}
 
 /**
  * Faz upload de um arquivo para o Firebase Storage.
@@ -6609,40 +6476,39 @@ function uploadImage(file, path, onProgress) {
     });
 }
 
-            async function aprovarAlteracaoCidade() {
-              // Lê dos selects corretos (com 'Solicitacao' no ID)
-              const novoEstado = document.getElementById('adminNovoEstadoSolicitacao').value;
-              const novaCidade = document.getElementById('adminNovoCidadeSolicitacao').value;
+async function aprovarAlteracaoCidade() {
+    const novoEstado = document.getElementById('adminNovoEstadoSolicitacao').value;
+    const novaCidade = document.getElementById('adminNovoCidadeSolicitacao').value;
 
-              if (!novoEstado || !novaCidade) {
-                  return exibirPopup("Erro", "Selecione o novo estado e cidade.");
-              }
+    if (!novoEstado || !novaCidade) {
+        return exibirPopup("Erro", "Selecione o novo estado e cidade."); // Usa popup
+    }
 
-              if (!confirm(`Confirmar alteração para ${novaCidade} - ${novoEstado}?`)) return;
+    // Usa popup de confirmação customizado se você tiver um, senão usa confirm
+    if (!confirm(`Confirmar alteração para ${novaCidade} - ${novoEstado}?`)) return;
 
-              exibirAguarde("Atualizando cidade...");
-              try {
-                  await db.runTransaction(async t => {
-                      const userRef = db.collection("usuarios").doc(solicitacaoAtualUid);
-                      const solicitacaoRef = db.collection("solicitacoes").doc(solicitacaoAtualId);
+    exibirAguarde("Atualizando cidade..."); // Usa popup de aguarde
+    try {
+        await db.runTransaction(async t => {
+            const userRef = db.collection("usuarios").doc(solicitacaoAtualUid);
+            const solicitacaoRef = db.collection("solicitacoes").doc(solicitacaoAtualId);
 
-                      t.update(userRef, { estado: novoEstado, cidade: novaCidade });
-                      t.update(solicitacaoRef, { status: "aprovado", novoEstado: novoEstado, novaCidade: novaCidade });
-                  });
+            t.update(userRef, { estado: novoEstado, cidade: novaCidade });
+            t.update(solicitacaoRef, { status: "aprovado", novoEstado: novoEstado, novaCidade: novaCidade }); // Salva a nova cidade na solicitação
+        });
 
-                  fecharTodosOsModais(); // Fecha Aguarde e Modal Detalhes
-                  exibirPopup("Sucesso", "Cidade do usuário alterada!");
-                  notifyUser(solicitacaoAtualUid, "✅ Cidade Alterada!", `Sua cidade foi atualizada para ${novaCidade} - ${novoEstado}.`);
-                  abrirModalSolicitacoes(); // Reabre a lista de solicitações
+        fecharAguarde(null, true); // Fecha popup de aguarde
+        exibirPopup("Sucesso", "Cidade do usuário alterada!"); // Usa popup
+        notifyUser(solicitacaoAtualUid, "✅ Cidade Alterada!", `Sua cidade foi atualizada para ${novaCidade} - ${novoEstado}.`);
+        fecharTodosOsModais(); // Fecha o modal de detalhes e o de solicitações
+        abrirModalSolicitacoes(); // Reabre a lista de solicitações atualizada
 
-              } catch (error) {
-                  fecharTodosOsModais();
-                  console.error("Erro ao aprovar alteração de cidade:", error);
-                  exibirPopup("Erro", "Não foi possível aprovar a alteração: " + error.message);
-              }
-            }
-            
-
+    } catch (error) {
+        fecharAguarde(null, true); // Fecha popup de aguarde
+        console.error("Erro ao aprovar alteração de cidade:", error);
+        exibirPopup("Erro", "Não foi possível aprovar a alteração: " + error.message); // Usa popup
+    }
+}
 
 // Função auxiliar para recusar a solicitação aberta no modal de cidade
 function recusarSolicitacaoAtual() {
@@ -6755,25 +6621,20 @@ async function carregarProdutos() {
 }
 
 
-            function renderProdutoCard(p, pJson) {
-                const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
-                const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
-                // Usa a primeira imagem do array 'imageUrls' ou a 'imagemUrl' antiga, ou um placeholder
-                const imageUrlPrincipal = (p.imageUrls && p.imageUrls.length > 0) ? p.imageUrls[0] : p.imagemUrl;
-                const placeholder = 'https://via.placeholder.com/150x150?text=Sem+Imagem';
-
-                return `
-                    <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
-                        <img src="${imageUrlPrincipal || placeholder}" alt="${p.nome}" onerror="this.onerror=null; this.src='${placeholder}';">
-                        <div class="produto-info">
-                            <div class="produto-nome">${p.nome}</div>
-                            <div class="produto-preco">${precoHtml}</div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-
+function renderProdutoCard(p, pJson) {
+    const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
+    const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
+    
+    return `
+        <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
+            <img src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='https://via.placeholder.com/150?text=VersaoPro'">
+            <div class="produto-info">
+                <div class="produto-nome">${p.nome}</div>
+                <div class="produto-preco">${precoHtml}</div>
+            </div>
+        </div>
+    `;
+}
 
 async function exibirVersaoApp() {
     try {
@@ -6815,78 +6676,30 @@ if (firebase.messaging.isSupported()) {
     });
 }
 // NOVAS FUNÇÕES DA LOJA E GERENCIAMENTO
-            async function abrirDetalhesProduto(produto) {
-                produtoParaCompra = { ...produto }; // Copia o produto para evitar modificações indesejadas
-                const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
-
-                // Carrega Imagens no Carrossel
-                const imagensContainer = document.getElementById('detalhesProdutoImagensContainer');
-                const indicadoresContainer = document.getElementById('detalhesProdutoImagensIndicadores');
-                imagensContainer.innerHTML = '';
-                indicadoresContainer.innerHTML = '';
-                const imageUrls = produto.imageUrls || (produto.imagemUrl ? [produto.imagemUrl] : []); // Compatibilidade
-                const placeholder = 'https://via.placeholder.com/250x250?text=Sem+Imagem';
-
-                if (imageUrls.length === 0) {
-                     imagensContainer.innerHTML = `<img src="${placeholder}" alt="Sem Imagem" style="width: 100%; height: 250px; object-fit: contain; scroll-snap-align: start;">`;
-                } else {
-                    imageUrls.forEach((url, index) => {
-                        imagensContainer.innerHTML += `
-                            <img src="${url}" alt="Imagem ${index + 1} do Produto" style="width: 100%; height: 250px; object-fit: contain; scroll-snap-align: start; flex-shrink: 0;" onerror="this.onerror=null; this.src='${placeholder}';">`;
-                        indicadoresContainer.innerHTML += `<span data-index="${index}" style="height: 8px; width: 8px; background-color: #bbb; border-radius: 50%; display: inline-block; margin: 0 3px; cursor: pointer; transition: background-color 0.3s ease;"></span>`;
-                    });
-
-                    // Lógica dos indicadores
-                    const indicadores = indicadoresContainer.querySelectorAll('span');
-                    const updateIndicadores = () => {
-                        const scrollLeft = imagensContainer.scrollLeft;
-                        const imgWidth = imagensContainer.offsetWidth; // Largura do container (geralmente = largura da imagem visível)
-                        const activeIndex = Math.round(scrollLeft / imgWidth);
-                        indicadores.forEach((span, index) => {
-                            span.style.backgroundColor = index === activeIndex ? 'var(--cor-destaque)' : '#bbb';
-                        });
-                    };
-
-                    // Atualiza na rolagem e ao clicar no indicador
-                    imagensContainer.onscroll = updateIndicadores;
-                    indicadores.forEach(span => {
-                        span.onclick = () => {
-                            const index = parseInt(span.dataset.index);
-                            imagensContainer.scrollTo({
-                                left: index * imagensContainer.offsetWidth,
-                                behavior: 'smooth'
-                            });
-                        };
-                    });
-                    updateIndicadores(); // Atualiza na abertura inicial
-                }
-
-
-                // Carrega outros detalhes
-                document.getElementById('detalhesProdutoNome').textContent = produto.nome;
-                document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
-                document.getElementById('detalhesProdutoDescricao').textContent = produto.descricao || 'Sem descrição.';
-
-                // Carrega Tamanhos
-                const tamanhosContainer = document.getElementById('detalhesProdutoTamanhos');
-                tamanhosContainer.innerHTML = '';
-                if (produto.tamanhos && produto.tamanhos.length > 0) {
-                    produto.tamanhos.forEach((t, index) => {
-                        tamanhosContainer.innerHTML += `<input type="radio" name="tamanho_selecionado" value="${t}" id="tamanho_${t}" ${index === 0 ? 'checked' : ''}><label for="tamanho_${t}">${t}</label>`;
-                    });
-                } else {
-                    tamanhosContainer.innerHTML = 'Tamanho único';
-                }
-
-                // Carrega Avaliação
-                const avaliacaoContainer = document.getElementById('detalhesProdutoAvaliacao');
-                await carregarAvaliacaoProduto(produto.id, produto.nome, avaliacaoContainer);
-
-                document.getElementById('btnComprarAgora').onclick = () => iniciarCompra(produto);
-                abrirModal('modalProdutoDetalhes');
-            }
-            
-
+async function abrirDetalhesProduto(produto) {
+    produtoParaCompra = produto;
+    document.getElementById('detalhesProdutoImg').src = produto.imagemUrl;
+    document.getElementById('detalhesProdutoNome').textContent = produto.nome;
+    const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+    document.getElementById('detalhesProdutoPreco').textContent = `R$ ${precoFinal.toFixed(2)}`;
+    document.getElementById('detalhesProdutoDescricao').textContent = produto.descricao;
+    
+    const tamanhosContainer = document.getElementById('detalhesProdutoTamanhos');
+    tamanhosContainer.innerHTML = '';
+    if (produto.tamanhos && produto.tamanhos.length > 0) {
+        produto.tamanhos.forEach((t, index) => {
+            tamanhosContainer.innerHTML += `<input type="radio" name="tamanho_selecionado" value="${t}" id="tamanho_${t}" ${index === 0 ? 'checked' : ''}><label for="tamanho_${t}">${t}</label>`;
+        });
+    } else {
+        tamanhosContainer.innerHTML = 'Tamanho único';
+    }
+    
+    const avaliacaoContainer = document.getElementById('detalhesProdutoAvaliacao');
+    await carregarAvaliacaoProduto(produto.id, produto.nome, avaliacaoContainer);
+    
+    document.getElementById('btnComprarAgora').onclick = () => iniciarCompra(produto);
+    abrirModal('modalProdutoDetalhes');
+}
 
 function iniciarCompra(produto) {
     const tamanhoSelecionado = document.querySelector('input[name="tamanho_selecionado"]:checked');
@@ -7034,48 +6847,6 @@ orm.querySelector('#produtoEntrega').value = '';
     }
     abrirModal('modalAddEditProduto');
 }
-
-        // Função auxiliar para marcar/desmarcar imagem existente para exclusão no formulário
-        function marcarImagemParaExcluir(buttonElement, imageUrl) {
-            const imgContainer = buttonElement.parentElement;
-            const imgElement = imgContainer.querySelector('img');
-            const isMarked = imgContainer.classList.toggle('marcada-para-excluir');
-
-            if (isMarked) {
-                buttonElement.textContent = '↩️'; // Ícone para desfazer
-                buttonElement.title = 'Manter Imagem';
-                imgElement.style.opacity = '0.5';
-                imgElement.style.border = '2px solid red';
-            } else {
-                buttonElement.textContent = 'X';
-                buttonElement.title = 'Excluir Imagem';
-                imgElement.style.opacity = '1';
-                imgElement.style.border = 'none';
-            }
-             // Atualiza a contagem de imagens permitidas no input de novas imagens
-             const fileInput = document.getElementById('produtoFiles');
-             const previewsExistentesContainer = document.getElementById('produtoPreviewsExistentes');
-             const existingImages = previewsExistentesContainer.querySelectorAll('img').length;
-             const imagesToDelete = previewsExistentesContainer.querySelectorAll('.marcada-para-excluir').length;
-             const currentImageCount = existingImages - imagesToDelete;
-             const allowedNew = 5 - currentImageCount;
-
-             if (allowedNew <= 0) {
-                 fileInput.disabled = true;
-                 fileInput.value = ''; // Limpa seleção se não pode adicionar mais
-                 document.getElementById('produtoPreviewsNovas').innerHTML = '';
-             } else {
-                 fileInput.disabled = false;
-                 // Se o número de arquivos selecionados agora excede o limite, limpa
-                 if(fileInput.files.length > allowedNew) {
-                     fileInput.value = '';
-                     document.getElementById('produtoPreviewsNovas').innerHTML = '';
-                     exibirPopup("Atenção", `Você só pode adicionar ${allowedNew} nova(s) imagem(ns). Selecione novamente.`);
-                 }
-             }
-
-        }
-        
 
 async function salvarProdutoVendedor() {
     // ... (pegar outros dados do formulário como antes: nome, preco, etc.)
