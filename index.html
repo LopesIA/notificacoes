@@ -6671,6 +6671,7 @@ function abrirModalConfirmacaoComprador(pedido) {
     document.getElementById('btnAceitarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, true);
     document.getElementById('btnRecusarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, false);
     abrirModal('modalConfirmacaoComprador');
+    }
 }
 
 async function responderConfirmacaoEntrega(pedidoId, aceito) {
