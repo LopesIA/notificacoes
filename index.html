@@ -5874,14 +5874,14 @@ function abrirModalPortfolioBarbeiro() {
         // Cria o HTML para cada item do portfólio
         container.innerHTML += `
             <div class="portfolio-admin-item">
-                <img id="preview-img-${i}" 
-                     src="${url || placeholder}" 
+                <img id="preview-img-${i}"
+                     src="${url || placeholder}"
                      alt="Preview Slot ${i + 1}"
-                     onerror="this.src='${placeholder}'"> 
-                     
-                <input type="url" 
-                       class="portfolio-url-input" 
-                       placeholder="🔗 Cole o link aqui" 
+                     onerror="this.src='${placeholder}'">
+
+                <input type="url"
+                       class="portfolio-url-input"
+                       placeholder="🔗 Cole o link aqui"
                        value="${url}"
                        oninput="document.getElementById('preview-img-${i}').src = this.value || '${placeholder}'">
             </div>
