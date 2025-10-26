@@ -1282,18 +1282,6 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
     
-<div class="popup-section footer-contact" style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
-    <p style="font-size: 12px; margin-bottom: 5px;">
-         <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
-             <span class="animated-gradient-text">📞 (27) 99500-3737</span>
-         </a>
-    </p>
-    <p style="font-size: 12px; margin: 0;">
-         <a href="mailto:suuportenovaversao@gmail.com" class="animated-contact-link">
-             <span class="animated-gradient-text">📧 suportenovaversao@gmail.com</span>
-         </a>
-    </p>
-</div>
 
     <div class="popup-section config-section">
       <h4>❤️ Meu Interesse Principal</h4>
@@ -1325,6 +1313,18 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 <div id="modalTermosUso" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Uso</h3><p class="scrollable-list">Bem-vindo ao Nova Versão! Ao usar nosso aplicativo, você concorda em seguir nossas regras de conduta, respeitar outros usuários e profissionais, e usar a plataforma para os fins a que se destina. Violações podem resultar na suspensão da conta.</p><button data-modal-id="modalTermosUso" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosPrivacidade" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Privacidade</h3><p class="scrollable-list">Sua privacidade é importante. Coletamos dados como nome, e-mail e localização para fornecer e melhorar nossos serviços. Não compartilhamos seus dados pessoais com terceiros sem seu consentimento, exceto quando exigido por lei.</p><button data-modal-id="modalTermosPrivacidade" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o Nova Versão, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies"
+<div class="popup-section footer-contact" style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
+    <p style="font-size: 12px; margin-bottom: 5px;">
+         <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
+             <span class="animated-gradient-text">📞 (27) 99500-3737</span>
+         </a>
+    </p>
+    <p style="font-size: 12px; margin: 0;">
+         <a href="mailto:suportenovaversao@gmail.com" class="animated-contact-link">
+             <span class="animated-gradient-text">📧 suportenovaversao@gmail.com</span>
+         </a>
+    </p>
+</div>
 onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
@@ -2196,7 +2196,7 @@ let pixTimerInterval = null;
 let pendenciasInterval = null; 
 let pedidosVendedorListener = null;
 let comprasClienteListener = null; 
-let aguardeTimeoutId = null;
+
 let userView = {
     originalType: null,
     currentType: null
@@ -2226,31 +2226,12 @@ const BACKEND_API_URL = 'https://navalhabackend.onrender.com';
 
 // --- [LÓGICA DE POPUP DE AGUARDE E MODAIS] ---
 function exibirAguarde(texto = "Aguarde...") {
-    // Limpa qualquer timeout anterior para evitar múltiplos popups de erro
-    if (aguardeTimeoutId) {
-        clearTimeout(aguardeTimeoutId);
-        aguardeTimeoutId = null;
-    }
-
     document.getElementById('popupAguardeTexto').textContent = texto;
     const popup = document.getElementById('popupAguarde');
-    // Garante que está visível antes de adicionar a classe show
     popup.style.display = 'flex';
-    // Adiciona um pequeno delay para a transição CSS funcionar
     setTimeout(() => popup.classList.add('show'), 10);
-    aguardeClickCount = 0; // Reseta a contagem de cliques para fechar
-
-    // Define o timeout de 10 segundos
-    aguardeTimeoutId = setTimeout(() => {
-        // Verifica se o popup ainda está visível (pode já ter sido fechado por sucesso)
-        if (popup.classList.contains('show')) {
-            fecharAguarde(null, true); // Força o fechamento do "Aguarde"
-            exibirPopup('Ops!', 'A operação demorou mais que o esperado. Verifique sua conexão e tente novamente.', 'erro');
-        }
-        aguardeTimeoutId = null; // Limpa o ID do timeout
-    }, 10000); // 10000 milissegundos = 10 segundos
+    aguardeClickCount = 0; // Reseta a contagem de cliques
 }
-    * Procure por (Ctrl+F): `function fecharAguarde(event, force = false)`
 
 /* === Onboarding Tela 2 - Funções de Seleção === */
 function toggleOnboardOption(element) {
@@ -6811,319 +6792,133 @@ async function abrirFormularioProduto(produtoId = null) {
     produtoEmEdicaoId = produtoId;
     const form = document.getElementById('modalAddEditProduto');
     document.getElementById('formProdutoTitulo').textContent = produtoId ? '✏️ Editar Produto' : '📦 Adicionar Novo Produto';
-
+    
     // Reset form
     form.querySelector('#produtoNome').value = '';
+    form.querySelector('#produtoImagemUrl').value = '';
     form.querySelector('#produtoPreco').value = '';
     form.querySelector('#produtoDesconto').value = '';
-    form.querySelector('#produtoEntrega').value = '';
+    f
+orm.querySelector('#produtoEntrega').value = '';
     form.querySelector('#produtoDescricao').value = '';
     form.querySelectorAll('input[name="tamanhos"]').forEach(c => c.checked = false);
-    form.querySelector('#produtoFiles').value = ''; // Limpa seleção de arquivos
-    form.querySelector('#produtoPreviewsMulti').innerHTML = ''; // Limpa previews
-    form.querySelector('#produtoUploadProgressMulti').style.display = 'none'; // Esconde progresso
 
     if (produtoId) {
-        exibirAguarde("Carregando dados do produto...");
-        try {
-            const doc = await db.collection('loja_produtos').doc(produtoId).get();
-            if (!doc.exists) throw new Error("Produto não encontrado");
-            const p = doc.data();
-            form.querySelector('#produtoNome').value = p.nome || '';
-            form.querySelector('#produtoPreco').value = p.preco || '';
-            form.querySelector('#produtoDesconto').value = p.desconto || '';
-            form.querySelector('#produtoEntrega').value = p.tempoEntrega || '';
-            form.querySelector('#produtoDescricao').value = p.descricao || '';
-            if (p.tamanhos) {
-                p.tamanhos.forEach(t => {
-                    const checkbox = form.querySelector(`input[name="tamanhos"][value="${t}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
-            // Carrega previews das imagens existentes
-            const previewContainer = form.querySelector('#produtoPreviewsMulti');
-            const existingImages = p.imageUrls || (p.imagemUrl ? [p.imagemUrl] : []); // Lida com formato antigo e novo
-            existingImages.forEach(url => {
-                 previewContainer.innerHTML += `
-                   <div style="position: relative; margin-right: 5px;">
-                     <img src="${url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Preview">
-                     <button onclick="removerImagemExistenteProduto(event, '${url}')" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; line-height: 20px; padding: 0; cursor: pointer;">X</button>
-                   </div>`;
+        const doc = await db.collection('loja_produtos').doc(produtoId).get();
+        const p = doc.data();
+        form.querySelector('#produtoNome').value = p.nome;
+        form.querySelector('#produtoImagemUrl').value = p.imagemUrl;
+        form.querySelector('#produtoPreco').value = p.preco;
+        form.querySelector('#produtoDesconto').value = p.desconto || '';
+        form.querySelector('#produtoEntrega').value = p.tempoEntrega || '';
+        form.querySelector('#produtoDescricao').value = p.descricao || '';
+        if (p.tamanhos) {
+            p.tamanhos.forEach(t => {
+                const checkbox = form.querySelector(`input[value="${t}"]`);
+                if(checkbox) checkbox.checked = true;
             });
-            fecharAguarde(null, true);
-        } catch (error) {
-             fecharAguarde(null, true);
-             exibirPopup("Erro ao carregar produto:", error.message);
-             return; // Não abre o modal se der erro
         }
     }
-
-     // Adiciona listener para preview das novas imagens selecionadas
-    const fileInput = form.querySelector('#produtoFiles');
-    const previewContainer = form.querySelector('#produtoPreviewsMulti');
-    fileInput.onchange = () => {
-         // Remove apenas os previews de *novos* arquivos, mantém os existentes
-         previewContainer.querySelectorAll('img:not([data-existing])').forEach(img => {
-             // Precisamos diferenciar img existentes das novas, ou refazer a lógica
-             // Mais fácil: Limpar tudo e recarregar os existentes + os novos
-             carregarPreviewsProduto(form, produtoId); // Chama uma função helper
-         });
-         const files = fileInput.files;
-         if (files.length > 0) {
-             const existingImagesCount = previewContainer.querySelectorAll('img[data-existing="true"]').length;
-             const maxNovas = 5 - existingImagesCount;
-              if (files.length > maxNovas) {
-                 exibirPopup('Limite Excedido', `Você pode adicionar no máximo mais ${maxNovas} imagens (total 5).`);
-                 fileInput.value = ''; // Limpa a seleção
-                 return;
-             }
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const imgDiv = document.createElement('div');
-                    imgDiv.style.position = 'relative';
-                    imgDiv.style.marginRight = '5px';
-                    imgDiv.innerHTML = `<img src="${e.target.result}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Nova Imagem Preview">`;
-                    previewContainer.appendChild(imgDiv);
-                }
-                reader.readAsDataURL(file);
-            });
-        }
-    };
-
     abrirModal('modalAddEditProduto');
 }
 
- // --- ADICIONE ESTAS DUAS NOVAS FUNÇÕES ---
-async function carregarPreviewsProduto(formElement, produtoId) {
-    const previewContainer = formElement.querySelector('#produtoPreviewsMulti');
-    previewContainer.innerHTML = ''; // Limpa tudo
-
-    // Carrega imagens existentes se estiver editando
-    if (produtoId) {
-         try {
-             const doc = await db.collection('loja_produtos').doc(produtoId).get();
-             if (doc.exists) {
-                 const p = doc.data();
-                 const existingImages = p.imageUrls || (p.imagemUrl ? [p.imagemUrl] : []);
-                 existingImages.forEach(url => {
-                     previewContainer.innerHTML += `
-                       <div style="position: relative; margin-right: 5px;" data-url="${url}">
-                         <img src="${url}" data-existing="true" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Preview Existente">
-                         <button onclick="removerImagemExistenteProduto(event, '${url}')" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; line-height: 20px; padding: 0; cursor: pointer;">X</button>
-                       </div>`;
-                 });
-             }
-         } catch (e) { console.error("Erro ao recarregar imagens existentes:", e);}
-    }
-
-    // Adiciona previews para novos arquivos selecionados
-    const fileInput = formElement.querySelector('#produtoFiles');
-    const files = fileInput.files;
-     if (files.length > 0) {
-          const existingImagesCount = previewContainer.querySelectorAll('img[data-existing="true"]').length;
-          const maxNovas = 5 - existingImagesCount;
-         Array.from(files).slice(0, maxNovas).forEach(file => { // Limita aos arquivos permitidos
-             const reader = new FileReader();
-             reader.onload = (e) => {
-                 const imgDiv = document.createElement('div');
-                 imgDiv.style.position = 'relative';
-                 imgDiv.style.marginRight = '5px';
-                 imgDiv.innerHTML = `<img src="${e.target.result}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Nova Imagem Preview">`;
-                 previewContainer.appendChild(imgDiv);
-             }
-             reader.readAsDataURL(file);
-         });
-         if (files.length > maxNovas) {
-            exibirPopup('Atenção', `Algumas imagens foram ignoradas devido ao limite de 5.`);
-         }
-     }
-}
-
-async function removerImagemExistenteProduto(event, imageUrl) {
-    event.preventDefault(); // Impede qualquer ação padrão do botão
-    event.stopPropagation(); // Impede que o clique feche o modal, etc.
-
-    if (!produtoEmEdicaoId) return; // Só funciona na edição
-
-    if (!confirm("Remover esta imagem permanentemente?")) return;
-
-    exibirAguarde("Removendo imagem do produto...");
-    try {
-         // Remove a URL do array no Firestore
-         await db.collection('loja_produtos').doc(produtoEmEdicaoId).update({
-             imageUrls: firebase.firestore.FieldValue.arrayRemove(imageUrl),
-             // Opcional: Se 'imagemUrl' ainda existe e é a que está sendo removida, atualize-a
-             // const doc = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
-             // if (doc.data().imagemUrl === imageUrl) {
-             //    const outrasImagens = (doc.data().imageUrls || []).filter(url => url !== imageUrl);
-             //    await db.collection('loja_produtos').doc(produtoEmEdicaoId).update({ imagemUrl: outrasImagens[0] || null });
-             // }
-         });
-
-          // Tenta deletar do Storage
-          try {
-              await storage.refFromURL(imageUrl).delete();
-          } catch (storageError) {
-              console.warn("Não foi possível deletar imagem do produto do Storage:", storageError);
-               notifyAdmins("⚠️ Falha ao deletar img produto", `Erro ao deletar img ${imageUrl} do Storage ao editar produto ${produtoEmEdicaoId}.`);
-          }
-
-         fecharAguarde(null, true);
-         // Remove o elemento do preview
-         const divToRemove = document.querySelector(`#produtoPreviewsMulti div[data-url="${imageUrl}"]`);
-         if (divToRemove) divToRemove.remove();
-         exibirPopup("Imagem removida.");
-
-    } catch (error) {
-         fecharAguarde(null, true);
-         exibirPopup("Erro ao remover imagem:", error.message);
-    }
-}
- // --- FIM DAS NOVAS FUNÇÕES ---
-
-* Procure por (Ctrl+F): `async function salvarProdutoVendedor()`
-* Substitua **toda** a função por esta versão que lida com múltiplas imagens:
-
-```javascript
 async function salvarProdutoVendedor() {
+    // ... (pegar outros dados do formulário como antes: nome, preco, etc.)
     const nome = document.getElementById('produtoNome').value.trim();
     const preco = parseFloat(document.getElementById('produtoPreco').value);
-    const desconto = parseInt(document.getElementById('produtoDesconto').value) || 0;
-    const tempoEntrega = document.getElementById('produtoEntrega').value.trim();
-    const descricao = document.getElementById('produtoDescricao').value.trim();
-    const tamanhos = Array.from(document.querySelectorAll('input[name="tamanhos"]:checked')).map(cb => cb.value);
+    // ... resto dos campos ...
     const fileInput = document.getElementById('produtoFiles');
-    const previewContainer = document.getElementById("produtoPreviewsMulti");
-    const progressBar = document.getElementById('produtoUploadProgressMulti');
-
-    if (!nome || isNaN(preco) || preco <= 0 || (desconto && (isNaN(desconto) || desconto < 0 || desconto > 100)) || !descricao) {
-        return exibirPopup('Preencha os campos obrigatórios (Nome, Preço, Descrição) corretamente.');
-    }
+    const previewContainer = document.getElementById("produtoPreviews");
+    previewContainer.innerHTML = ''; // Limpa prévias
 
     const files = fileInput.files;
-    const imagensExistentesUrls = Array.from(previewContainer.querySelectorAll('div[data-url]')).map(div => div.dataset.url);
-    const totalImagens = imagensExistentesUrls.length + (files ? files.length : 0);
+    let existingImageUrls = []; // Para guardar URLs existentes ao editar
 
-    if (totalImagens === 0) {
-        return exibirPopup('É necessário adicionar pelo menos uma imagem para o produto.');
+     // Se está editando e não selecionou novos arquivos, mantém os antigos?
+    if (produtoEmEdicaoId && (!files || files.length === 0)) {
+         const doc = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
+         if (doc.exists) {
+             existingImageUrls = doc.data().imageUrls || [doc.data().imagemUrl]; // Adapta para array ou string antiga
+         }
+         // Se não há arquivos novos E não há imagens existentes, exige imagem
+         if (existingImageUrls.length === 0) {
+              return exibirPopup('É necessário selecionar pelo menos uma imagem para o produto.');
+         }
+    } else if (!produtoEmEdicaoId && (!files || files.length === 0)) {
+         // Se é um produto NOVO e não selecionou arquivos
+         return exibirPopup('É necessário selecionar pelo menos uma imagem para o produto.');
     }
-    if (totalImagens > 5) {
-         return exibirPopup('O produto pode ter no máximo 5 imagens no total.');
+
+     // Verifica limite apenas se novos arquivos foram selecionados
+     if (files && files.length > 5) {
+         return exibirPopup("Você pode enviar no máximo 5 imagens por produto.");
+     }
+
+    // ... (validação dos outros campos como antes)
+    if(!nome || isNaN(preco) || preco <= 0 /* ... outras validações */) {
+        return exibirPopup('Preencha os campos obrigatórios corretamente.');
     }
+
 
     exibirAguarde("Salvando produto...");
-    progressBar.style.display = 'none'; // Esconde por padrão
-    progressBar.value = 0;
-
     const uploadPromises = [];
-    let novasUrls = [];
+    const newImageUrls = [];
 
     if (files && files.length > 0) {
-         progressBar.style.display = 'block';
-         let totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
-         let totalBytesTransferidosAcumulado = 0; // Para progresso geral
-
+         previewContainer.innerHTML = 'Enviando imagens...';
          Array.from(files).forEach((file, index) => {
-             const filePath = `products/${produtoEmEdicaoId || `new_${Date.now()}`}/${Date.now()}_${index}_${file.name}`;
-             const uploadPromise = new Promise((resolve, reject) => {
-                 const storageRef = storage.ref(filePath);
-                 const uploadTask = storageRef.put(file);
-                 // Anexa o uploadTask à promessa para cálculo de progresso
-                 uploadPromise.uploadTask = uploadTask;
+             const progressId = `produto-progress-${index}`;
+             previewContainer.innerHTML += `<div>${file.name}: <progress id="${progressId}" value="0" max="100"></progress></div>`;
+             const filePath = `products/${produtoEmEdicaoId || `new_${Date.now()}`}/${Date.now()}_${file.name}`; // Caminho único
 
-                 uploadTask.on('state_changed',
-                     (snapshot) => {
-                          // Calcula o progresso GERAL
-                          let bytesAtuais = 0;
-                          uploadPromises.forEach(p => {
-                               // Acessa o snapshot ANEXADO à promessa
-                               if (p.uploadTask && p.uploadTask.snapshot) {
-                                   bytesAtuais += p.uploadTask.snapshot.bytesTransferred;
-                               }
-                          });
-                          // Garante que não conte duas vezes o snapshot atual
-                          bytesAtuais -= (uploadPromise.uploadTask.snapshot?.bytesTransferred || 0);
-                          bytesAtuais += snapshot.bytesTransferred;
-
-                          const progress = totalBytesUpload > 0 ? (bytesAtuais / totalBytesUpload) * 100 : 0;
-                          progressBar.value = progress;
-                     },
-                     (error) => reject(error),
-                     async () => {
-                         try {
-                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                            resolve(downloadURL);
-                         } catch(urlError) { reject(urlError); }
-                     }
-                 );
-             });
-             uploadPromises.push(uploadPromise);
+             uploadPromises.push(
+                 uploadImage(file, filePath, (progress) => {
+                     const progressBar = document.getElementById(progressId);
+                     if (progressBar) progressBar.value = progress;
+                 }).then(url => newImageUrls.push(url))
+             );
          });
-
-         try {
-            novasUrls = await Promise.all(uploadPromises);
-         } catch (uploadError) {
-             fecharTodosOsModais();
-             exibirPopup('Erro durante o upload da imagem: ' + uploadError.message);
-             progressBar.style.display = 'none';
-             return;
-         }
+         await Promise.all(uploadPromises);
+         // TODO: Opcional - Deletar imagens antigas do Storage ao editar
     }
 
-    // Combina URLs existentes com as novas
-    const finalImageUrls = [...imagensExistentesUrls, ...novasUrls];
+    const finalImageUrls = newImageUrls.length > 0 ? newImageUrls : existingImageUrls;
 
     const data = {
         nome,
         preco,
-        desconto: desconto || null, // Salva null se for 0 ou vazio
-        tempoEntrega: tempoEntrega || null,
-        descricao,
-        tamanhos: tamanhos.length > 0 ? tamanhos : null,
+        // ... outros campos ...
         imageUrls: finalImageUrls, // Salva o ARRAY de URLs
-        imagemUrl: finalImageUrls[0] || null, // Mantém a primeira imagem no campo antigo
+        imagemUrl: finalImageUrls[0] || null, // Mantém a primeira imagem no campo antigo por compatibilidade talvez? Ou remova 'imagemUrl'
         vendedorUid: auth.currentUser.uid,
         vendedorNome: perfil.nome,
         isOficial: perfil.tipo === 'admin',
-         // Atualiza timestamp apenas na edição, criação tem abaixo
-         ...(produtoEmEdicaoId && { tsAtualizacao: firebase.firestore.FieldValue.serverTimestamp() })
+        ts: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
         if (produtoEmEdicaoId) {
-            // Remove campos que não devem ser atualizados diretamente
-            delete data.vendedorUid;
-            delete data.vendedorNome;
-            delete data.isOficial;
-             // Não remove ts de criação, adiciona tsAtualizacao
+            // Remove 'ts' e 'vendasRealizadas' ao atualizar para não sobrescrever
+            delete data.ts;
+            delete data.vendasRealizadas;
             await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
         } else {
             data.vendasRealizadas = 0; // Define vendas iniciais para novo produto
-            data.ts = firebase.firestore.FieldValue.serverTimestamp(); // Timestamp de criação
             await db.collection('loja_produtos').add(data);
         }
 
         fecharTodosOsModais();
         exibirPopup('Produto salvo com sucesso!');
         fecharModalAtual();
-        // Verifica se a função existe antes de chamar
-        if (typeof abrirGerenciarLoja === 'function') {
-             abrirGerenciarLoja(); // Recarrega a lista
-        } else if (typeof carregarProdutos === 'function') {
-             carregarProdutos(); // Se estiver na loja principal, recarrega
-        }
-
+        abrirGerenciarLoja(); // Recarrega a lista
     } catch (e) {
         fecharTodosOsModais();
         exibirPopup('Erro ao salvar produto: ' + e.message);
     } finally {
-        fileInput.value = ''; // Limpa input
-        previewContainer.innerHTML = ''; // Limpa prévias
-        progressBar.style.display = 'none'; // Esconde progresso
+         if (fileInput) fileInput.value = ''; // Limpa input
+         previewContainer.innerHTML = ''; // Limpa prévias
     }
 }
-
 
 function habilitarEnterParaFormulario(inputIds, buttonId) {
     const button = document.getElementById(buttonId);
