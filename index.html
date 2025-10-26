@@ -1281,50 +1281,57 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 <div id="modalConfiguracoes" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
-    
 
-    <div class="popup-section config-section">
-      <h4>❤️ Meu Interesse Principal</h4>
-      <div id="configInteresseContainer" style="display:flex; gap:10px;">
-          <button data-interesse="barbeiro">Barbearias</button>
-          <button data-interesse="manicure_pedicure">Unhas</button>
-          <button data-interesse="designer_cilios">Cílios</button>
-      </div>
-    </div>
+    <div class="scrollable-list" style="max-height: 60vh;"> {/* Ajuste max-height conforme necessário */}
 
-<div class="popup-section">
+        <div class="popup-section config-section">
+          <h4>❤️ Meu Interesse Principal</h4>
+          <div id="configInteresseContainer" style="display:flex; gap:10px;">
+              <button data-interesse="barbeiro">Barbearias</button>
+              <button data-interesse="manicure_pedicure">Unhas</button>
+              <button data-interesse="designer_cilios">Cílios</button>
+          </div>
+        </div>
+
+        <div class="popup-section">
           <h4>Conta</h4>
           <button onclick="abrirModalAlterarSenha()">🔑 Alterar Senha</button>
           <button onclick="solicitarAlteracaoCidade()">🏙️ Solicitar Alteração de Cidade</button>
         </div>
 
-    <div class="popup-section">
-      <h4>⚖️ Legal</h4>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <button onclick="abrirModal('modalTermosUso')">Termos de Uso</button>
-        <button onclick="abrirModal('modalTermosPrivacidade')">Termos de Privacidade</button>
-        <button onclick="abrirModal('modalTermosCookies')">Termos de Cookies</button>
-      </div>
-    </div>
-    <button data-modal-id="modalConfiguracoes" onclick="fecharModal(event)">❌ Fechar</button>
+        <div class="popup-section">
+          <h4>⚖️ Legal</h4>
+          {/* Note que os modais de termos abrem separados, não precisam de scroll interno aqui */}
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button onclick="abrirModal('modalTermosUso')">Termos de Uso</button>
+            <button onclick="abrirModal('modalTermosPrivacidade')">Termos de Privacidade</button>
+            <button onclick="abrirModal('modalTermosCookies')">Termos de Cookies</button>
+          </div>
+        </div>
+
+         {/* Seção de Contato MOVIDA PARA CÁ */}
+         <div class="popup-section footer-contact" style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
+            <p style="font-size: 12px; margin-bottom: 8px;">
+                 <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
+                     <span class="animated-gradient-text">📞 (27) 99500-3737</span>
+                 </a>
+            </p>
+            <p style="font-size: 12px; margin: 0;">
+                 <a href="mailto:suportenovaversao@gmail.com" class="animated-contact-link">
+                     <span class="animated-gradient-text">📧 suportenovaversao@gmail.com</span>
+                 </a>
+            </p>
+        </div>
+
+    </div> {/* Fim do scrollable-list */}
+
+    <button data-modal-id="modalConfiguracoes" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
   </div>
 </div>
 
 <div id="modalTermosUso" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Uso</h3><p class="scrollable-list">Bem-vindo ao Nova Versão! Ao usar nosso aplicativo, você concorda em seguir nossas regras de conduta, respeitar outros usuários e profissionais, e usar a plataforma para os fins a que se destina. Violações podem resultar na suspensão da conta.</p><button data-modal-id="modalTermosUso" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosPrivacidade" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Privacidade</h3><p class="scrollable-list">Sua privacidade é importante. Coletamos dados como nome, e-mail e localização para fornecer e melhorar nossos serviços. Não compartilhamos seus dados pessoais com terceiros sem seu consentimento, exceto quando exigido por lei.</p><button data-modal-id="modalTermosPrivacidade" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o Nova Versão, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies"
-<div class="popup-section footer-contact" style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
-    <p style="font-size: 12px; margin-bottom: 5px;">
-         <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
-             <span class="animated-gradient-text">📞 (27) 99500-3737</span>
-         </a>
-    </p>
-    <p style="font-size: 12px; margin: 0;">
-         <a href="mailto:suportenovaversao@gmail.com" class="animated-contact-link">
-             <span class="animated-gradient-text">📧 suportenovaversao@gmail.com</span>
-         </a>
-    </p>
-</div>
 onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
