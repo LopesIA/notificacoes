@@ -5243,10 +5243,10 @@ async function abrirModalGerenciarUsuario(uid) {
         <p>Tipo Atual: <strong>${u.tipo}</strong></p>
         <div style="display: flex; gap: 10px; margin-top: 5px;">
             
-            <button onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>Tornar Cliente</button>
-            <button onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>Tornar Barbeiro</button>
-            <button onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>Tornar Manicure/Pedicure</button>
-            <button onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>Tornar Designer Cílios</button>
+            <button onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>Cliente</button>
+            <button onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>Barbeiro</button>
+            <button onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>Manicure/Pedicure</button>
+            <button onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>Designer Cílios</button>
         </div>
     </div>
 
