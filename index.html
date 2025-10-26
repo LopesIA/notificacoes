@@ -2055,6 +2055,27 @@
   </div>
 </div>
 
+<div id="modalAdminDetalhesCidade" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🏙️ Aprovar Alteração de Cidade</h3>
+    <p>Usuário: <b id="adminCidadeNomeUsuario"></b></p>
+    <p>Cidade Atual: <span id="adminCidadeAtual"></span></p>
+    <label for="adminNovoEstadoSolicitacao">Novo Estado:</label>
+    <select id="adminNovoEstadoSolicitacao" onchange="carregarCidades('adminNovoSolicitacao')">
+        <option value="">Carregando...</option>
+    </select>
+    <label for="adminNovoCidadeSolicitacao">Nova Cidade:</label>
+    <select id="adminNovoCidadeSolicitacao">
+        <option value="">Selecione o estado</option>
+    </select>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="recusarSolicitacaoAtual()" style="background-color: #e74c3c;">❌ Recusar</button>
+        <button id="btnAprovarCidade" onclick="aprovarAlteracaoCidade()">✅ Aprovar Alteração</button>
+    </div>
+     <button data-modal-id="modalAdminDetalhesCidade" onclick="fecharModal(event)" style="margin-top: 10px;">Fechar Janela</button>
+  </div>
+</div>
+
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
