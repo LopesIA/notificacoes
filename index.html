@@ -2219,6 +2219,57 @@ function fecharAguarde(event) {
 
 let modalStack = [];
 
+function exibirPopup(titulo, mensagem, tipo = 'info') { // Adiciona 'tipo' opcional
+    // Fecha qualquer popup de aguarde que possa estar aberto
+    const aguardePopup = document.getElementById('popupAguarde');
+    if (aguardePopup.classList.contains('show')) {
+        fecharAguarde(null, true);
+    }
+
+    const tituloEl = document.getElementById('popupGenericoTitulo');
+    const mensagemEl = document.getElementById('popupGenericoMensagem');
+    const modalContent = document.querySelector('#modalPopupGenerico .modal-content');
+
+    // Define o título e a mensagem
+    tituloEl.textContent = titulo;
+    mensagemEl.textContent = mensagem;
+
+    // Ajusta a cor do título com base no tipo (opcional)
+    let corTitulo = 'var(--cor-destaque)'; // Padrão dourado
+    if (tipo === 'sucesso') corTitulo = '#2ecc71'; // Verde
+    else if (tipo === 'erro') corTitulo = '#e74c3c'; // Vermelho
+    else if (tipo === 'aviso') corTitulo = '#f1c40f'; // Amarelo
+
+    tituloEl.style.color = corTitulo;
+    // Reset border style
+    modalContent.style.border = '1px solid var(--cor-borda)';
+
+
+    // Abre o modal genérico
+    abrirModal('modalPopupGenerico');
+}
+
+// Modificar fecharAguarde para aceitar um segundo argumento para forçar fechamento
+function fecharAguarde(event, force = false) {
+    const popup = document.getElementById('popupAguarde');
+    // Permite fechar com 2 cliques fora OU se force for true
+    if (force || (event && event.target.id === 'popupAguarde')) {
+        if (!force) {
+            aguardeClickCount++;
+        }
+        if (force || aguardeClickCount >= 2) {
+             // Verifica se o modal está na pilha antes de tentar removê-lo
+             const indexNaPilha = modalStack.indexOf(popup);
+             if (indexNaPilha > -1) {
+                 modalStack.splice(indexNaPilha, 1); // Remove da pilha se estiver lá
+             }
+            popup.classList.remove('show');
+            setTimeout(() => popup.style.display = 'none', 300);
+            aguardeClickCount = 0;
+        }
+    }
+}
+
 function abrirModal(modalId) {
     const novoModal = document.getElementById(modalId);
     if (novoModal && !novoModal.classList.contains('show')) {
