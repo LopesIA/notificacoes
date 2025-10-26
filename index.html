@@ -4370,7 +4370,6 @@ function toggleDisponibilidade() {
   db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
-// SUBSTITUA A FUNÇÃO 'aprovarAgendamentoImediato'
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
     exibirAguarde("Aprovando...");
@@ -4403,12 +4402,13 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         exibirPopup("Agendamento aprovado!");
+setTimeout(() => location.reload(), 3000);
     }).catch(e => {
         exibirPopup("Erro ao aprovar: " + e);
+setTimeout(() => location.reload(), 3000);
     });
 }
 
-// SUBSTITUA A FUNÇÃO 'aprovarAgendamento'
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
   if (!confirm("Aprovar este agendamento?")) return;
   exibirAguarde("Aprovando...");
@@ -4445,8 +4445,10 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
       exibirPopup("Agendamento aprovado!");
+setTimeout(() => location.reload(), 3000);
   }).catch(e => {
       exibirPopup("Erro ao aprovar: " + e);
+setTimeout(() => location.reload(), 3000);
   });
 }
 
@@ -4462,6 +4464,7 @@ function recusarAgendamento(agendamentoId, clienteUid) {
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} recusou seu agendamento.`);
       notifyUser(clienteUid, "❌ Agendamento Recusado", `O profissional ${perfil.nome} não pôde aceitar seu pedido.`);
       exibirPopup("Agendamento recusado.");
+setTimeout(() => location.reload(), 3000);
   }).catch(e => exibirPopup("Erro ao recusar: " + e));
 }
 
@@ -4488,8 +4491,10 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
       exibirPopup("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
+setTimeout(() => location.reload(), 3000);
   }).catch(e => {
       exibirPopup("Erro ao cancelar: " + e);
+setTimeout(() => location.reload(), 3000);
   });
 }
 
@@ -4511,6 +4516,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 
     
     exibirPopup("Serviço concluído!");
+setTimeout(() => location.reload(), 3000);
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
     const clienteDoc = await clienteRef.get();
@@ -4527,6 +4533,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     }
   } catch(e) {
     exibirPopup("Erro ao concluir serviço: " + e);
+setTimeout(() => location.reload(), 3000);
   }
 }
 
