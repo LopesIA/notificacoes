@@ -1282,7 +1282,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
 
-    <div class="scrollable-list" style="max-height: 60vh;"> {/* Ajuste max-height conforme necessário */}
+    <div class="scrollable-list" style="max-height: 60vh;"> 
 
         <div class="popup-section config-section">
           <h4>❤️ Meu Interesse Principal</h4>
@@ -1301,7 +1301,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 
         <div class="popup-section">
           <h4>⚖️ Legal</h4>
-          {/* Note que os modais de termos abrem separados, não precisam de scroll interno aqui */}
+          
           <div style="display:flex; flex-direction:column; gap:10px;">
             <button onclick="abrirModal('modalTermosUso')">Termos de Uso</button>
             <button onclick="abrirModal('modalTermosPrivacidade')">Termos de Privacidade</button>
@@ -1309,7 +1309,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
           </div>
         </div>
 
-         {/* Seção de Contato MOVIDA PARA CÁ */}
+         
          <div class="popup-section footer-contact" style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
             <p style="font-size: 12px; margin-bottom: 8px;">
                  <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
@@ -1323,7 +1323,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
             </p>
         </div>
 
-    </div> {/* Fim do scrollable-list */}
+    </div> 
 
     <button data-modal-id="modalConfiguracoes" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
   </div>
@@ -6093,7 +6093,7 @@ async function salvarNovasImagensPortfolio() {
         progressBar.style.display = 'none';
     } catch (error) {
         fecharTodosOsModais(); // Fecha o "Aguarde"
-        exibirPopup('Erro', 'Falha ao salvar portfólio: ' + error.message);
+        exibirPopup('Erro', 'Falha ao salvar portfólio: Tente de novo ');
         progressBar.style.display = 'none';
     }
 }
