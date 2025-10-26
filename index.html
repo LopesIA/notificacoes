@@ -447,8 +447,9 @@
       margin-right: 20%;
     }
     .scrollable-list {
-      max-height: 400px;
-      overflow-y: auto;
+      max-height: 250px; /* Ou outro valor que funcione bem */
+overflow-y: auto;
+padding-right: 10px; /* Espaço para a barra de rolagem */
     }
     .aviso-item {
       text-align: left;
@@ -1281,6 +1282,18 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>⚙️ Configurações</h3>
     
+<div class="popup-section footer-contact" style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
+    <p style="font-size: 12px; margin-bottom: 5px;">
+         <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
+             <span class="animated-gradient-text">📞 (27) 99500-3737</span>
+         </a>
+    </p>
+    <p style="font-size: 12px; margin: 0;">
+         <a href="mailto:suuportenovaversao@gmail.com" class="animated-contact-link">
+             <span class="animated-gradient-text">📧 suportenovaversao@gmail.com</span>
+         </a>
+    </p>
+</div>
 
     <div class="popup-section config-section">
       <h4>❤️ Meu Interesse Principal</h4>
@@ -1312,18 +1325,6 @@
 <div id="modalTermosUso" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Uso</h3><p class="scrollable-list">Bem-vindo ao Nova Versão! Ao usar nosso aplicativo, você concorda em seguir nossas regras de conduta, respeitar outros usuários e profissionais, e usar a plataforma para os fins a que se destina. Violações podem resultar na suspensão da conta.</p><button data-modal-id="modalTermosUso" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosPrivacidade" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Privacidade</h3><p class="scrollable-list">Sua privacidade é importante. Coletamos dados como nome, e-mail e localização para fornecer e melhorar nossos serviços. Não compartilhamos seus dados pessoais com terceiros sem seu consentimento, exceto quando exigido por lei.</p><button data-modal-id="modalTermosPrivacidade" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o Nova Versão, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies"
-<div class="popup-section footer-contact" style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
-    <p style="font-size: 12px; margin-bottom: 5px;">
-         <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
-             <span class="animated-gradient-text">📞 (27) 99500-3737</span>
-         </a>
-    </p>
-    <p style="font-size: 12px; margin: 0;">
-         <a href="mailto:suuportenovaversao@gmail.com" class="animated-contact-link">
-             <span class="animated-gradient-text">📧 suportenovaversao@gmail.com</span>
-         </a>
-    </p>
-</div>
 onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
@@ -1785,10 +1786,21 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalPortfolioBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🖼️ Gerenciar Portfólio (Até 10 Imagens/GIFs)</h3>
-<p style="font-size: 12px; opacity: 0.8;">Selecione até 10 imagens ou GIFs do seu dispositivo.</p>
-<input id="portfolioFiles" type="file" accept="image/*,image/gif" multiple> <div id="portfolioPreviews"></div> <button onclick="salvarPortfolio()">💾 Salvar Portfólio</button>
-<button data-modal-id="modalPortfolioBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
+    <h3>🖼️ Gerenciar Portfólio (Máx. 30 Imagens/GIFs)</h3>
+    <p style="font-size: 12px; opacity: 0.8;">Adicione novas imagens abaixo ou clique em uma imagem existente para removê-la.</p>
+
+    <!-- Grade para exibir imagens existentes -->
+    <div id="portfolioExistenteGrid" class="portfolio-grid" style="margin-bottom: 15px; border: 1px dashed var(--cor-borda); padding: 10px; min-height: 100px;">
+      <!-- Imagens serão carregadas aqui pelo JavaScript -->
+    </div>
+
+    <!-- Input para adicionar novas imagens -->
+    <input id="portfolioFiles" type="file" accept="image/*,image/gif" multiple style="margin-bottom: 10px;">
+    <progress id="portfolioUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-bottom: 10px;"></progress>
+    <div id="portfolioPreviews" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px;"></div>
+
+    <button onclick="salvarNovasImagensPortfolio()">💾 Adicionar Imagens Selecionadas</button>
+    <button data-modal-id="modalPortfolioBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -2184,7 +2196,7 @@ let pixTimerInterval = null;
 let pendenciasInterval = null; 
 let pedidosVendedorListener = null;
 let comprasClienteListener = null; 
-
+let aguardeTimeoutId = null;
 let userView = {
     originalType: null,
     currentType: null
@@ -2214,12 +2226,31 @@ const BACKEND_API_URL = 'https://navalhabackend.onrender.com';
 
 // --- [LÓGICA DE POPUP DE AGUARDE E MODAIS] ---
 function exibirAguarde(texto = "Aguarde...") {
+    // Limpa qualquer timeout anterior para evitar múltiplos popups de erro
+    if (aguardeTimeoutId) {
+        clearTimeout(aguardeTimeoutId);
+        aguardeTimeoutId = null;
+    }
+
     document.getElementById('popupAguardeTexto').textContent = texto;
     const popup = document.getElementById('popupAguarde');
+    // Garante que está visível antes de adicionar a classe show
     popup.style.display = 'flex';
+    // Adiciona um pequeno delay para a transição CSS funcionar
     setTimeout(() => popup.classList.add('show'), 10);
-    aguardeClickCount = 0; // Reseta a contagem de cliques
+    aguardeClickCount = 0; // Reseta a contagem de cliques para fechar
+
+    // Define o timeout de 10 segundos
+    aguardeTimeoutId = setTimeout(() => {
+        // Verifica se o popup ainda está visível (pode já ter sido fechado por sucesso)
+        if (popup.classList.contains('show')) {
+            fecharAguarde(null, true); // Força o fechamento do "Aguarde"
+            exibirPopup('Ops!', 'A operação demorou mais que o esperado. Verifique sua conexão e tente novamente.', 'erro');
+        }
+        aguardeTimeoutId = null; // Limpa o ID do timeout
+    }, 10000); // 10000 milissegundos = 10 segundos
 }
+    * Procure por (Ctrl+F): `function fecharAguarde(event, force = false)`
 
 /* === Onboarding Tela 2 - Funções de Seleção === */
 function toggleOnboardOption(element) {
@@ -2285,26 +2316,44 @@ function exibirPopup(titulo, mensagem, tipo = 'info') { // Adiciona 'tipo' opcio
     abrirModal('modalPopupGenerico');
 }
 
-// Modificar fecharAguarde para aceitar um segundo argumento para forçar fechamento
 function fecharAguarde(event, force = false) {
     const popup = document.getElementById('popupAguarde');
-    // Permite fechar com 2 cliques fora OU se force for true
-    if (force || (event && event.target.id === 'popupAguarde')) {
-        if (!force) {
-            aguardeClickCount++;
+
+    // Função interna para realmente fechar o popup e limpar o timeout
+    const doClose = () => {
+        // Limpa o timeout de erro, se ele ainda existir
+        if (aguardeTimeoutId) {
+            clearTimeout(aguardeTimeoutId);
+            aguardeTimeoutId = null;
         }
-        if (force || aguardeClickCount >= 2) {
-             // Verifica se o modal está na pilha antes de tentar removê-lo
-             const indexNaPilha = modalStack.indexOf(popup);
-             if (indexNaPilha > -1) {
-                 modalStack.splice(indexNaPilha, 1); // Remove da pilha se estiver lá
-             }
-            popup.classList.remove('show');
-            setTimeout(() => popup.style.display = 'none', 300);
-            aguardeClickCount = 0;
+        // Fecha o modal visualmente
+        popup.classList.remove('show');
+        setTimeout(() => popup.style.display = 'none', 300); // Delay para transição CSS
+        aguardeClickCount = 0; // Reseta contador de cliques
+
+         // Remove da pilha de modais se estiver lá
+         const indexNaPilha = modalStack.indexOf(popup);
+         if (indexNaPilha > -1) {
+             modalStack.splice(indexNaPilha, 1);
+         }
+    };
+
+    // Se forçar fechamento (sucesso da operação ou timeout), fecha direto
+    if (force) {
+        doClose();
+        return;
+    }
+
+    // Se for clique no fundo, verifica contagem
+    if (event && event.target.id === 'popupAguarde') {
+        aguardeClickCount++;
+        if (aguardeClickCount >= 2) {
+            doClose();
         }
     }
+    // Se for um clique normal ou não atingiu 2 cliques, não faz nada
 }
+    * **Importante:** Procure por **todas** as chamadas de `fecharAguarde()` no seu código que ocorrem quando uma operação termina com **sucesso**. Altere essas chamadas para `fecharAguarde(null, true);`. Isso garantirá que o timeout de erro seja cancelado corretamente. Exemplo: dentro de `.then()` ou após um `await` bem-sucedido. Deixe as chamadas dentro de `.catch()` ou blocos de erro como estão, ou pode removê-las se `exibirPopup` já estiver sendo chamado, pois `exibirPopup` agora fecha o `Aguarde`.
 
 function abrirModal(modalId) {
     const novoModal = document.getElementById(modalId);
@@ -3467,23 +3516,25 @@ function abrirHistoricoCliente() {
 // ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
 function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   const nota = parseInt(prompt("Avalie o serviço de 1 a 10:"));
-  if (isNaN(nota) || nota < 1 || nota > 10) return exibirPopup("Avaliação inválida. Use um número de 1 a 10.");
-  
-  const comentario = prompt("Deixe um comentário sobre o serviço:");
-
-  const querEnviarFoto = confirm("Gostaria de enviar uma foto do resultado? (Opcional)\n\nSua foto ficará visível no perfil do profissional por 24 horas.");
-  let fotoUrl = null;
-
-  if (querEnviarFoto) {
-      fotoUrl = prompt("Ótimo! Siga os passos:\n1. Acesse postimages.org\n2. Envie sua foto.\n3. Copie o 'Link Direto' e cole aqui:");
-      if (fotoUrl && !fotoUrl.startsWith("http")) {
-          exibirPopup("Link inválido. Certifique-se de copiar o 'Link Direto'.");
-          fotoUrl = null;
-      }
+  if (isNaN(nota) || nota < 1 || nota > 10) {
+       // Adiciona um retorno aqui para evitar o prompt de comentário se a nota for inválida
+       exibirPopup("Avaliação inválida.", "Por favor, use um número inteiro entre 1 e 10.");
+       return;
   }
 
-  avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl);
+  // Pergunta o comentário APÓS validar a nota
+  const comentario = prompt("Deixe um comentário sobre o serviço (opcional):");
+
+  // Chama a função avaliarServico sem o parâmetro fotoUrl
+  avaliarServico(agendamentoId, barbeiroUid, nota, comentario); // Removido fotoUrl daqui
 }
+    * Procure por (Ctrl+F): `async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = null)`
+* Altere a **assinatura** (a primeira linha) da função para remover `fotoUrl`:
+    ```javascript
+    async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario) {
+    // O restante do código da função permanece o mesmo,
+    // mas você pode remover a lógica interna que tratava o fotoUrl, como:
+    // if (fotoUrl) { ... }
 
 async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = null) {
   const reputacaoGanho = nota >= 7 ? 10 : (nota <= 4 ? -10 : 0);
@@ -5953,121 +6004,198 @@ async function abrirModalDashboardBarbeiro() {
     }
 }
 
-// Funções de Portfólio
-function abrirModalPortfolioBarbeiro() {
+async function abrirModalPortfolioBarbeiro() {
     abrirModal('modalPortfolioBarbeiro');
-    const container = document.getElementById('portfolioInputsContainer');
-    container.innerHTML = ''; // Limpa o container
-    
-    // Atualiza o texto de ajuda
-    const p = document.querySelector('#modalPortfolioBarbeiro .modal-content p');
-    if (p) p.innerHTML = 'Gerencie suas 30 imagens de portfólio. Cole o link direto (que termina com .png ou .jpg) e a imagem aparecerá instantaneamente.';
+    carregarPortfolioExistente();
+    // Limpa seleções anteriores
+    document.getElementById('portfolioFiles').value = '';
+    document.getElementById('portfolioPreviews').innerHTML = '';
+    document.getElementById('portfolioUploadProgress').style.display = 'none';
+    document.getElementById('portfolioUploadProgress').value = 0;
 
-    // Pega o portfólio atual (que é um array de strings)
-    const portfolioAtual = perfil.portfolio || [];
-    
-    // Loop para criar os 30 slots
-    for (let i = 0; i < 30; i++) {
-        const url = portfolioAtual[i] || ''; // Pega a URL existente ou uma string vazia
-        const placeholder = `https://via.placeholder.com/120x100?text=Slot+${i + 1}`;
-        
-        // Cria o HTML para cada item do portfólio
-        container.innerHTML += `
-            <div class="portfolio-admin-item">
-                <img id="preview-img-${i}" 
-                     src="${url || placeholder}" 
-                     alt="Preview Slot ${i + 1}"
-                     onerror="this.src='${placeholder}'"> 
-                     
-                <input type="url" 
-                       class="portfolio-url-input" 
-                       placeholder="🔗 Cole o link aqui" 
-                       value="${url}"
-                       oninput="document.getElementById('preview-img-${i}').src = this.value || '${placeholder}'">
-            </div>
-        `;
-    }
+    // Adiciona listener para preview das novas imagens
+    const fileInput = document.getElementById('portfolioFiles');
+    const previewContainer = document.getElementById('portfolioPreviews');
+    fileInput.onchange = () => {
+        previewContainer.innerHTML = ''; // Limpa previews antigos
+        const files = fileInput.files;
+        if (files.length > 0) {
+             const maxNovas = 30 - (perfil.portfolio?.length || 0);
+             if (files.length > maxNovas) {
+                 exibirPopup('Atenção', `Você pode adicionar no máximo mais ${maxNovas} imagens.`);
+                 fileInput.value = ''; // Limpa a seleção
+                 return;
+             }
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '60px';
+                    img.style.height = '60px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '4px';
+                    previewContainer.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+    };
 }
 
-async function salvarPortfolio() {
+async function salvarNovasImagensPortfolio() {
     const fileInput = document.getElementById("portfolioFiles");
+    const progressBar = document.getElementById('portfolioUploadProgress');
+    const previewContainer = document.getElementById('portfolioPreviews');
     const userId = auth.currentUser.uid;
-    const previewContainer = document.getElementById("portfolioPreviews");
-    previewContainer.innerHTML = 'Enviando...'; // Limpa prévias antigas
-
     const files = fileInput.files;
+    const portfolioAtual = perfil.portfolio || [];
+    const espacoDisponivel = 30 - portfolioAtual.length;
 
     if (!files || files.length === 0) {
-        // Se nenhum arquivo foi selecionado, verifica se o usuário quer APAGAR tudo
-         if (perfil.portfolio && perfil.portfolio.length > 0) {
-             if (confirm("Nenhum arquivo selecionado. Deseja remover todas as imagens do portfólio atual?")) {
-                  exibirAguarde("Removendo imagens...");
-                  try {
-                      // REMOVER IMAGENS ANTIGAS DO STORAGE (Opcional, mas recomendado)
-                      // Esta parte é mais complexa, pode ser feita depois ou via Cloud Function
-                      // for (const url of perfil.portfolio) {
-                      //    try { await storage.refFromURL(url).delete(); } catch(e) { console.warn("Falha ao deletar imagem antiga:", e);}
-                      // }
-
-                      await db.collection('usuarios').doc(userId).update({ portfolio: [] });
-                      fecharTodosOsModais();
-                      exibirPopup('Portfólio limpo com sucesso!');
-                      fecharModalAtual();
-                  } catch (e) {
-                      fecharTodosOsModais();
-                      exibirPopup('Erro ao limpar portfólio: ' + e.message);
-                  }
-             } else {
-                 previewContainer.innerHTML = ''; // Limpa "Enviando..."
-             }
-         } else {
-            exibirPopup("Selecione pelo menos um arquivo.");
-            previewContainer.innerHTML = '';
-         }
-        return;
+        return exibirPopup("Nenhuma nova imagem selecionada.");
     }
 
-    if (files.length > 10) {
-         previewContainer.innerHTML = '';
-        return exibirPopup("Você pode enviar no máximo 10 imagens para o seu portfólio.");
+    if (files.length > espacoDisponivel) {
+         return exibirPopup('Limite Excedido', `Você só pode adicionar mais ${espacoDisponivel} imagens.`);
     }
 
     exibirAguarde(`Enviando ${files.length} imagem(ns)...`);
+    progressBar.style.display = 'block';
+    progressBar.value = 0;
+
     const uploadPromises = [];
-    const newUrls = [];
+    let totalBytesTransferidos = 0;
+    let totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
 
-     // Cria elementos de progresso para cada arquivo
-     Array.from(files).forEach((file, index) => {
-         const progressId = `portfolio-progress-${index}`;
-         previewContainer.innerHTML += `<div>${file.name}: <progress id="${progressId}" value="0" max="100"></progress></div>`;
-         const filePath = `portfolio/${userId}/${Date.now()}_${file.name}`;
+    // Cria promessas de upload para cada arquivo
+    Array.from(files).forEach((file, index) => {
+        const filePath = `portfolio/${userId}/${Date.now()}_${index}_${file.name}`;
+        uploadPromises.push(
+             // Usaremos uma versão modificada do uploadImage que retorna o uploadTask
+             new Promise((resolve, reject) => {
+                 const storageRef = storage.ref(filePath);
+                 const uploadTask = storageRef.put(file);
 
-         uploadPromises.push(
-             uploadImage(file, filePath, (progress) => {
-                 const progressBar = document.getElementById(progressId);
-                 if (progressBar) progressBar.value = progress;
-             }).then(url => newUrls.push({ url: url, source: 'barber' })) // Adiciona como objeto
-         );
-     });
+                 uploadTask.on('state_changed',
+                     (snapshot) => {
+                         // Atualiza o progresso GERAL
+                         let bytesAtuais = 0;
+                         uploadPromises.forEach(p => bytesAtuais += p.snapshot ? p.snapshot.bytesTransferred : 0); // Soma bytes já enviados
+                         bytesAtuais += snapshot.bytesTransferred; // Adiciona bytes do upload atual
+
+                         const progress = (bytesAtuais / totalBytesUpload) * 100;
+                         progressBar.value = progress;
+                     },
+                     (error) => {
+                         console.error("Erro no upload: ", error);
+                         reject(error); // Rejeita a promessa específica
+                     },
+                     async () => {
+                         // Upload concluído, pega a URL
+                         try {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            resolve(downloadURL); // Resolve com a URL
+                         } catch(urlError) {
+                            reject(urlError);
+                         }
+                     }
+                 );
+                 // Anexa o uploadTask à promessa para acessar o snapshot no cálculo do progresso
+                 uploadPromises[uploadPromises.length-1].uploadTask = uploadTask;
+             })
+        );
+    });
 
     try {
-        await Promise.all(uploadPromises);
+        // Espera todas as URLs serem obtidas
+        const novasUrls = await Promise.all(uploadPromises);
 
-        // REMOVER IMAGENS ANTIGAS DO STORAGE (Opcional) - Mesma lógica de apagar tudo
+        // Adiciona as novas URLs ao array existente no Firestore
+        await db.collection('usuarios').doc(userId).update({
+            portfolio: firebase.firestore.FieldValue.arrayUnion(...novasUrls)
+        });
 
-        // Salva o NOVO array de URLs (objetos) no Firestore
-        await db.collection('usuarios').doc(userId).update({ portfolio: newUrls });
+        fecharTodosOsModais(); // Fecha o "Aguarde"
+        exibirPopup(`Sucesso!`, `${novasUrls.length} imagem(ns) adicionada(s) ao portfólio!`);
+        carregarPortfolioExistente(); // Atualiza a grid
+        // Limpa o input e previews
+        fileInput.value = '';
+        previewContainer.innerHTML = '';
+        progressBar.style.display = 'none';
+    } catch (error) {
+        fecharTodosOsModais(); // Fecha o "Aguarde"
+        exibirPopup('Erro', 'Falha ao salvar portfólio: ' + error.message);
+        progressBar.style.display = 'none';
+    }
+}
+
+async function removerImagemPortfolio(imageUrl) {
+    if (!confirm("Tem certeza que deseja remover esta imagem do portfólio?")) {
+        return;
+    }
+
+    exibirAguarde("Removendo imagem...");
+    const userId = auth.currentUser.uid;
+
+    try {
+        // 1. Remove a URL do array no Firestore
+        await db.collection('usuarios').doc(userId).update({
+            portfolio: firebase.firestore.FieldValue.arrayRemove(imageUrl)
+        });
+
+        // 2. Tenta deletar o arquivo do Storage
+        try {
+            const imageRef = storage.refFromURL(imageUrl);
+            await imageRef.delete();
+            console.log("Imagem deletada do Storage:", imageUrl);
+        } catch (storageError) {
+            // Se der erro ao deletar do Storage (ex: permissão, arquivo não existe mais),
+            // apenas loga o erro mas continua, pois a URL já foi removida do Firestore.
+            console.warn("Não foi possível deletar a imagem do Storage:", storageError.message, imageUrl);
+            // Você pode querer notificar o admin aqui se isso acontecer frequentemente.
+             notifyAdmins("⚠️ Falha ao deletar do Storage", `O profissional ${perfil.nome} removeu uma imagem do portfólio, mas houve erro ao deletar do Storage. URL: ${imageUrl}`);
+        }
 
         fecharTodosOsModais();
-        exibirPopup(`Portfólio salvo com ${newUrls.length} imagem(ns)!`);
-        fecharModalAtual();
+        exibirPopup("Sucesso!", "Imagem removida do portfólio.");
+        carregarPortfolioExistente(); // Atualiza a grid
+
     } catch (error) {
         fecharTodosOsModais();
-        exibirPopup('Erro ao salvar portfólio: ' + error.message);
-    } finally {
-        fileInput.value = ''; // Limpa o input
-        previewContainer.innerHTML = ''; // Limpa prévias/progresso
+        exibirPopup("Erro", "Falha ao remover imagem: " + error.message);
     }
+}
+
+function carregarPortfolioExistente() {
+    const gridContainer = document.getElementById('portfolioExistenteGrid');
+    gridContainer.innerHTML = '<p>Carregando...</p>'; // Feedback inicial
+
+    const portfolioUrls = perfil?.portfolio || [];
+
+    if (portfolioUrls.length === 0) {
+        gridContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">Nenhuma imagem no portfólio ainda.</p>';
+        return;
+    }
+
+    gridContainer.innerHTML = ''; // Limpa o container
+    portfolioUrls.forEach(url => {
+        const imgElement = document.createElement('img');
+        imgElement.src = url;
+        imgElement.alt = 'Imagem do Portfólio';
+        // Adiciona onerror para caso a imagem não carregue
+        imgElement.onerror = function() {
+             this.src='https://via.placeholder.com/120x100?text=Erro!';
+             this.style.cursor = 'default';
+             this.onclick = null; // Remove o clique se deu erro
+             console.warn("Erro ao carregar imagem do portfólio:", url);
+        };
+        imgElement.style.cursor = 'pointer'; // Indica que é clicável
+        imgElement.title = 'Clique para remover'; // Dica ao passar o mouse
+        imgElement.onclick = () => removerImagemPortfolio(url); // Define a ação de clique
+
+        gridContainer.appendChild(imgElement);
+    });
 }
 
 async function enviarEmailDeContato() {
@@ -6703,133 +6831,319 @@ async function abrirFormularioProduto(produtoId = null) {
     produtoEmEdicaoId = produtoId;
     const form = document.getElementById('modalAddEditProduto');
     document.getElementById('formProdutoTitulo').textContent = produtoId ? '✏️ Editar Produto' : '📦 Adicionar Novo Produto';
-    
+
     // Reset form
     form.querySelector('#produtoNome').value = '';
-    form.querySelector('#produtoImagemUrl').value = '';
     form.querySelector('#produtoPreco').value = '';
     form.querySelector('#produtoDesconto').value = '';
-    f
-orm.querySelector('#produtoEntrega').value = '';
+    form.querySelector('#produtoEntrega').value = '';
     form.querySelector('#produtoDescricao').value = '';
     form.querySelectorAll('input[name="tamanhos"]').forEach(c => c.checked = false);
+    form.querySelector('#produtoFiles').value = ''; // Limpa seleção de arquivos
+    form.querySelector('#produtoPreviewsMulti').innerHTML = ''; // Limpa previews
+    form.querySelector('#produtoUploadProgressMulti').style.display = 'none'; // Esconde progresso
 
     if (produtoId) {
-        const doc = await db.collection('loja_produtos').doc(produtoId).get();
-        const p = doc.data();
-        form.querySelector('#produtoNome').value = p.nome;
-        form.querySelector('#produtoImagemUrl').value = p.imagemUrl;
-        form.querySelector('#produtoPreco').value = p.preco;
-        form.querySelector('#produtoDesconto').value = p.desconto || '';
-        form.querySelector('#produtoEntrega').value = p.tempoEntrega || '';
-        form.querySelector('#produtoDescricao').value = p.descricao || '';
-        if (p.tamanhos) {
-            p.tamanhos.forEach(t => {
-                const checkbox = form.querySelector(`input[value="${t}"]`);
-                if(checkbox) checkbox.checked = true;
+        exibirAguarde("Carregando dados do produto...");
+        try {
+            const doc = await db.collection('loja_produtos').doc(produtoId).get();
+            if (!doc.exists) throw new Error("Produto não encontrado");
+            const p = doc.data();
+            form.querySelector('#produtoNome').value = p.nome || '';
+            form.querySelector('#produtoPreco').value = p.preco || '';
+            form.querySelector('#produtoDesconto').value = p.desconto || '';
+            form.querySelector('#produtoEntrega').value = p.tempoEntrega || '';
+            form.querySelector('#produtoDescricao').value = p.descricao || '';
+            if (p.tamanhos) {
+                p.tamanhos.forEach(t => {
+                    const checkbox = form.querySelector(`input[name="tamanhos"][value="${t}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+            // Carrega previews das imagens existentes
+            const previewContainer = form.querySelector('#produtoPreviewsMulti');
+            const existingImages = p.imageUrls || (p.imagemUrl ? [p.imagemUrl] : []); // Lida com formato antigo e novo
+            existingImages.forEach(url => {
+                 previewContainer.innerHTML += `
+                   <div style="position: relative; margin-right: 5px;">
+                     <img src="${url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Preview">
+                     <button onclick="removerImagemExistenteProduto(event, '${url}')" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; line-height: 20px; padding: 0; cursor: pointer;">X</button>
+                   </div>`;
             });
+            fecharAguarde(null, true);
+        } catch (error) {
+             fecharAguarde(null, true);
+             exibirPopup("Erro ao carregar produto:", error.message);
+             return; // Não abre o modal se der erro
         }
     }
+
+     // Adiciona listener para preview das novas imagens selecionadas
+    const fileInput = form.querySelector('#produtoFiles');
+    const previewContainer = form.querySelector('#produtoPreviewsMulti');
+    fileInput.onchange = () => {
+         // Remove apenas os previews de *novos* arquivos, mantém os existentes
+         previewContainer.querySelectorAll('img:not([data-existing])').forEach(img => {
+             // Precisamos diferenciar img existentes das novas, ou refazer a lógica
+             // Mais fácil: Limpar tudo e recarregar os existentes + os novos
+             carregarPreviewsProduto(form, produtoId); // Chama uma função helper
+         });
+         const files = fileInput.files;
+         if (files.length > 0) {
+             const existingImagesCount = previewContainer.querySelectorAll('img[data-existing="true"]').length;
+             const maxNovas = 5 - existingImagesCount;
+              if (files.length > maxNovas) {
+                 exibirPopup('Limite Excedido', `Você pode adicionar no máximo mais ${maxNovas} imagens (total 5).`);
+                 fileInput.value = ''; // Limpa a seleção
+                 return;
+             }
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imgDiv = document.createElement('div');
+                    imgDiv.style.position = 'relative';
+                    imgDiv.style.marginRight = '5px';
+                    imgDiv.innerHTML = `<img src="${e.target.result}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Nova Imagem Preview">`;
+                    previewContainer.appendChild(imgDiv);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+
     abrirModal('modalAddEditProduto');
 }
 
+ // --- ADICIONE ESTAS DUAS NOVAS FUNÇÕES ---
+async function carregarPreviewsProduto(formElement, produtoId) {
+    const previewContainer = formElement.querySelector('#produtoPreviewsMulti');
+    previewContainer.innerHTML = ''; // Limpa tudo
+
+    // Carrega imagens existentes se estiver editando
+    if (produtoId) {
+         try {
+             const doc = await db.collection('loja_produtos').doc(produtoId).get();
+             if (doc.exists) {
+                 const p = doc.data();
+                 const existingImages = p.imageUrls || (p.imagemUrl ? [p.imagemUrl] : []);
+                 existingImages.forEach(url => {
+                     previewContainer.innerHTML += `
+                       <div style="position: relative; margin-right: 5px;" data-url="${url}">
+                         <img src="${url}" data-existing="true" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Preview Existente">
+                         <button onclick="removerImagemExistenteProduto(event, '${url}')" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; line-height: 20px; padding: 0; cursor: pointer;">X</button>
+                       </div>`;
+                 });
+             }
+         } catch (e) { console.error("Erro ao recarregar imagens existentes:", e);}
+    }
+
+    // Adiciona previews para novos arquivos selecionados
+    const fileInput = formElement.querySelector('#produtoFiles');
+    const files = fileInput.files;
+     if (files.length > 0) {
+          const existingImagesCount = previewContainer.querySelectorAll('img[data-existing="true"]').length;
+          const maxNovas = 5 - existingImagesCount;
+         Array.from(files).slice(0, maxNovas).forEach(file => { // Limita aos arquivos permitidos
+             const reader = new FileReader();
+             reader.onload = (e) => {
+                 const imgDiv = document.createElement('div');
+                 imgDiv.style.position = 'relative';
+                 imgDiv.style.marginRight = '5px';
+                 imgDiv.innerHTML = `<img src="${e.target.result}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Nova Imagem Preview">`;
+                 previewContainer.appendChild(imgDiv);
+             }
+             reader.readAsDataURL(file);
+         });
+         if (files.length > maxNovas) {
+            exibirPopup('Atenção', `Algumas imagens foram ignoradas devido ao limite de 5.`);
+         }
+     }
+}
+
+async function removerImagemExistenteProduto(event, imageUrl) {
+    event.preventDefault(); // Impede qualquer ação padrão do botão
+    event.stopPropagation(); // Impede que o clique feche o modal, etc.
+
+    if (!produtoEmEdicaoId) return; // Só funciona na edição
+
+    if (!confirm("Remover esta imagem permanentemente?")) return;
+
+    exibirAguarde("Removendo imagem do produto...");
+    try {
+         // Remove a URL do array no Firestore
+         await db.collection('loja_produtos').doc(produtoEmEdicaoId).update({
+             imageUrls: firebase.firestore.FieldValue.arrayRemove(imageUrl),
+             // Opcional: Se 'imagemUrl' ainda existe e é a que está sendo removida, atualize-a
+             // const doc = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
+             // if (doc.data().imagemUrl === imageUrl) {
+             //    const outrasImagens = (doc.data().imageUrls || []).filter(url => url !== imageUrl);
+             //    await db.collection('loja_produtos').doc(produtoEmEdicaoId).update({ imagemUrl: outrasImagens[0] || null });
+             // }
+         });
+
+          // Tenta deletar do Storage
+          try {
+              await storage.refFromURL(imageUrl).delete();
+          } catch (storageError) {
+              console.warn("Não foi possível deletar imagem do produto do Storage:", storageError);
+               notifyAdmins("⚠️ Falha ao deletar img produto", `Erro ao deletar img ${imageUrl} do Storage ao editar produto ${produtoEmEdicaoId}.`);
+          }
+
+         fecharAguarde(null, true);
+         // Remove o elemento do preview
+         const divToRemove = document.querySelector(`#produtoPreviewsMulti div[data-url="${imageUrl}"]`);
+         if (divToRemove) divToRemove.remove();
+         exibirPopup("Imagem removida.");
+
+    } catch (error) {
+         fecharAguarde(null, true);
+         exibirPopup("Erro ao remover imagem:", error.message);
+    }
+}
+ // --- FIM DAS NOVAS FUNÇÕES ---
+
+* Procure por (Ctrl+F): `async function salvarProdutoVendedor()`
+* Substitua **toda** a função por esta versão que lida com múltiplas imagens:
+
+```javascript
 async function salvarProdutoVendedor() {
-    // ... (pegar outros dados do formulário como antes: nome, preco, etc.)
     const nome = document.getElementById('produtoNome').value.trim();
     const preco = parseFloat(document.getElementById('produtoPreco').value);
-    // ... resto dos campos ...
+    const desconto = parseInt(document.getElementById('produtoDesconto').value) || 0;
+    const tempoEntrega = document.getElementById('produtoEntrega').value.trim();
+    const descricao = document.getElementById('produtoDescricao').value.trim();
+    const tamanhos = Array.from(document.querySelectorAll('input[name="tamanhos"]:checked')).map(cb => cb.value);
     const fileInput = document.getElementById('produtoFiles');
-    const previewContainer = document.getElementById("produtoPreviews");
-    previewContainer.innerHTML = ''; // Limpa prévias
+    const previewContainer = document.getElementById("produtoPreviewsMulti");
+    const progressBar = document.getElementById('produtoUploadProgressMulti');
+
+    if (!nome || isNaN(preco) || preco <= 0 || (desconto && (isNaN(desconto) || desconto < 0 || desconto > 100)) || !descricao) {
+        return exibirPopup('Preencha os campos obrigatórios (Nome, Preço, Descrição) corretamente.');
+    }
 
     const files = fileInput.files;
-    let existingImageUrls = []; // Para guardar URLs existentes ao editar
+    const imagensExistentesUrls = Array.from(previewContainer.querySelectorAll('div[data-url]')).map(div => div.dataset.url);
+    const totalImagens = imagensExistentesUrls.length + (files ? files.length : 0);
 
-     // Se está editando e não selecionou novos arquivos, mantém os antigos?
-    if (produtoEmEdicaoId && (!files || files.length === 0)) {
-         const doc = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
-         if (doc.exists) {
-             existingImageUrls = doc.data().imageUrls || [doc.data().imagemUrl]; // Adapta para array ou string antiga
-         }
-         // Se não há arquivos novos E não há imagens existentes, exige imagem
-         if (existingImageUrls.length === 0) {
-              return exibirPopup('É necessário selecionar pelo menos uma imagem para o produto.');
-         }
-    } else if (!produtoEmEdicaoId && (!files || files.length === 0)) {
-         // Se é um produto NOVO e não selecionou arquivos
-         return exibirPopup('É necessário selecionar pelo menos uma imagem para o produto.');
+    if (totalImagens === 0) {
+        return exibirPopup('É necessário adicionar pelo menos uma imagem para o produto.');
     }
-
-     // Verifica limite apenas se novos arquivos foram selecionados
-     if (files && files.length > 5) {
-         return exibirPopup("Você pode enviar no máximo 5 imagens por produto.");
-     }
-
-    // ... (validação dos outros campos como antes)
-    if(!nome || isNaN(preco) || preco <= 0 /* ... outras validações */) {
-        return exibirPopup('Preencha os campos obrigatórios corretamente.');
+    if (totalImagens > 5) {
+         return exibirPopup('O produto pode ter no máximo 5 imagens no total.');
     }
-
 
     exibirAguarde("Salvando produto...");
+    progressBar.style.display = 'none'; // Esconde por padrão
+    progressBar.value = 0;
+
     const uploadPromises = [];
-    const newImageUrls = [];
+    let novasUrls = [];
 
     if (files && files.length > 0) {
-         previewContainer.innerHTML = 'Enviando imagens...';
-         Array.from(files).forEach((file, index) => {
-             const progressId = `produto-progress-${index}`;
-             previewContainer.innerHTML += `<div>${file.name}: <progress id="${progressId}" value="0" max="100"></progress></div>`;
-             const filePath = `products/${produtoEmEdicaoId || `new_${Date.now()}`}/${Date.now()}_${file.name}`; // Caminho único
+         progressBar.style.display = 'block';
+         let totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+         let totalBytesTransferidosAcumulado = 0; // Para progresso geral
 
-             uploadPromises.push(
-                 uploadImage(file, filePath, (progress) => {
-                     const progressBar = document.getElementById(progressId);
-                     if (progressBar) progressBar.value = progress;
-                 }).then(url => newImageUrls.push(url))
-             );
+         Array.from(files).forEach((file, index) => {
+             const filePath = `products/${produtoEmEdicaoId || `new_${Date.now()}`}/${Date.now()}_${index}_${file.name}`;
+             const uploadPromise = new Promise((resolve, reject) => {
+                 const storageRef = storage.ref(filePath);
+                 const uploadTask = storageRef.put(file);
+                 // Anexa o uploadTask à promessa para cálculo de progresso
+                 uploadPromise.uploadTask = uploadTask;
+
+                 uploadTask.on('state_changed',
+                     (snapshot) => {
+                          // Calcula o progresso GERAL
+                          let bytesAtuais = 0;
+                          uploadPromises.forEach(p => {
+                               // Acessa o snapshot ANEXADO à promessa
+                               if (p.uploadTask && p.uploadTask.snapshot) {
+                                   bytesAtuais += p.uploadTask.snapshot.bytesTransferred;
+                               }
+                          });
+                          // Garante que não conte duas vezes o snapshot atual
+                          bytesAtuais -= (uploadPromise.uploadTask.snapshot?.bytesTransferred || 0);
+                          bytesAtuais += snapshot.bytesTransferred;
+
+                          const progress = totalBytesUpload > 0 ? (bytesAtuais / totalBytesUpload) * 100 : 0;
+                          progressBar.value = progress;
+                     },
+                     (error) => reject(error),
+                     async () => {
+                         try {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            resolve(downloadURL);
+                         } catch(urlError) { reject(urlError); }
+                     }
+                 );
+             });
+             uploadPromises.push(uploadPromise);
          });
-         await Promise.all(uploadPromises);
-         // TODO: Opcional - Deletar imagens antigas do Storage ao editar
+
+         try {
+            novasUrls = await Promise.all(uploadPromises);
+         } catch (uploadError) {
+             fecharTodosOsModais();
+             exibirPopup('Erro durante o upload da imagem: ' + uploadError.message);
+             progressBar.style.display = 'none';
+             return;
+         }
     }
 
-    const finalImageUrls = newImageUrls.length > 0 ? newImageUrls : existingImageUrls;
+    // Combina URLs existentes com as novas
+    const finalImageUrls = [...imagensExistentesUrls, ...novasUrls];
 
     const data = {
         nome,
         preco,
-        // ... outros campos ...
+        desconto: desconto || null, // Salva null se for 0 ou vazio
+        tempoEntrega: tempoEntrega || null,
+        descricao,
+        tamanhos: tamanhos.length > 0 ? tamanhos : null,
         imageUrls: finalImageUrls, // Salva o ARRAY de URLs
-        imagemUrl: finalImageUrls[0] || null, // Mantém a primeira imagem no campo antigo por compatibilidade talvez? Ou remova 'imagemUrl'
+        imagemUrl: finalImageUrls[0] || null, // Mantém a primeira imagem no campo antigo
         vendedorUid: auth.currentUser.uid,
         vendedorNome: perfil.nome,
         isOficial: perfil.tipo === 'admin',
-        ts: firebase.firestore.FieldValue.serverTimestamp()
+         // Atualiza timestamp apenas na edição, criação tem abaixo
+         ...(produtoEmEdicaoId && { tsAtualizacao: firebase.firestore.FieldValue.serverTimestamp() })
     };
 
     try {
         if (produtoEmEdicaoId) {
-            // Remove 'ts' e 'vendasRealizadas' ao atualizar para não sobrescrever
-            delete data.ts;
-            delete data.vendasRealizadas;
+            // Remove campos que não devem ser atualizados diretamente
+            delete data.vendedorUid;
+            delete data.vendedorNome;
+            delete data.isOficial;
+             // Não remove ts de criação, adiciona tsAtualizacao
             await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
         } else {
             data.vendasRealizadas = 0; // Define vendas iniciais para novo produto
+            data.ts = firebase.firestore.FieldValue.serverTimestamp(); // Timestamp de criação
             await db.collection('loja_produtos').add(data);
         }
 
         fecharTodosOsModais();
         exibirPopup('Produto salvo com sucesso!');
         fecharModalAtual();
-        abrirGerenciarLoja(); // Recarrega a lista
+        // Verifica se a função existe antes de chamar
+        if (typeof abrirGerenciarLoja === 'function') {
+             abrirGerenciarLoja(); // Recarrega a lista
+        } else if (typeof carregarProdutos === 'function') {
+             carregarProdutos(); // Se estiver na loja principal, recarrega
+        }
+
     } catch (e) {
         fecharTodosOsModais();
         exibirPopup('Erro ao salvar produto: ' + e.message);
     } finally {
-         if (fileInput) fileInput.value = ''; // Limpa input
-         previewContainer.innerHTML = ''; // Limpa prévias
+        fileInput.value = ''; // Limpa input
+        previewContainer.innerHTML = ''; // Limpa prévias
+        progressBar.style.display = 'none'; // Esconde progresso
     }
 }
+
 
 function habilitarEnterParaFormulario(inputIds, buttonId) {
     const button = document.getElementById(buttonId);
