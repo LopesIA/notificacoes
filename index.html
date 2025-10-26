@@ -2379,7 +2379,7 @@ function configurarBotoesGuest() {
         
         // Para todos os outros botões, exibe um alerta para o usuário se logar
         btn.onclick = () => {
-            alert("Para acessar esta função, por favor, crie uma conta ou faça login.");
+            exibirPopup("Para acessar esta função, por favor, crie uma conta ou faça login.");
             mostrar('authView'); // Direciona para a tela de login
         };
     });
@@ -2595,7 +2595,7 @@ function entrar() {
   const senha = document.getElementById("senha").value.trim();
   if (!email || !senha) {
     fecharTodosOsModais();
-    return alert("Preencha os campos corretamente.");
+    return exibirPopup("Preencha os campos corretamente.");
   }
   auth.signInWithEmailAndPassword(email, senha)
     .then(() => {
@@ -2604,7 +2604,7 @@ function entrar() {
     })
     .catch(e => {
         fecharTodosOsModais();
-        alert("Erro ao entrar: " + e.message);
+        exibirPopup("Erro ao entrar: " + e.message);
     });
 }
 
@@ -2661,7 +2661,7 @@ async function enviarSolicitacaoRecuperacaoSenha() {
     const telefone = document.getElementById('recuperaTelefone').value.trim();
 
     if (!email || !telefone) {
-        return alert("Por favor, preencha seu email e telefone.");
+        return exibirPopup("Por favor, preencha seu email e telefone.");
     }
 
     exibirAguarde("Enviando solicitação...");
@@ -2680,10 +2680,10 @@ async function enviarSolicitacaoRecuperacaoSenha() {
         window.open(`https://wa.me/5527995003737?text=${mensagem}`, '_blank');
         
         fecharTodosOsModais();
-        alert("✅ Solicitação enviada! Você foi redirecionado para o WhatsApp para agilizar o atendimento. O administrador entrará em contato em breve.");
+        exibirPopup("✅ Solicitação enviada! Você foi redirecionado para o WhatsApp para agilizar o atendimento. O administrador entrará em contato em breve.");
     } catch (error) {
         fecharTodosOsModais();
-        alert("Erro ao enviar solicitação: " + error.message);
+        exibirPopup("Erro ao enviar solicitação: " + error.message);
     }
 }
 
@@ -2704,9 +2704,9 @@ function criarConta() {
     rua = document.getElementById("rua").value.trim();
     numero = document.getElementById("numero").value.trim();
   }
-  if (senha !== senhaConfirm) { fecharTodosOsModais(); return alert("As senhas não coincidem."); }
-  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return alert("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
-  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return alert("Preencha todos os campos obrigatórios"); }
+  if (senha !== senhaConfirm) { fecharTodosOsModais(); return exibirPopup("As senhas não coincidem."); }
+  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
+  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return exibirPopup("Preencha todos os campos obrigatórios"); }
 
 
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
@@ -2742,7 +2742,7 @@ function criarConta() {
     })
     .catch(e => {
         fecharTodosOsModais();
-        alert("Erro ao criar conta: " + e.message);
+        exibirPopup("Erro ao criar conta: " + e.message);
     });
 }
 
@@ -2813,7 +2813,7 @@ const btnVipPro = document.getElementById('btnVipPro');
 
   const config = await db.collection("config").doc("sistema").get();
   if (config.exists && config.data().ativo === false && perfil.tipo !== "admin") {
-    alert("🚧 Sistema em manutenção");
+    exibirPopup("🚧 Sistema em manutenção");
     auth.signOut();
     return;
   }
@@ -2842,7 +2842,7 @@ const btnVipPro = document.getElementById('btnVipPro');
                 if (aviso.tipo === 'vaga-aprovada' && aviso.agendamentoId) {
                     abrirModalVagaAprovada(aviso.agendamentoId);
                 } else {
-                    alert(`🔔 Novo Aviso: ${aviso.mensagem}`);
+                    exibirPopup(`🔔 Novo Aviso: ${aviso.mensagem}`);
                 }
                 change.doc.ref.update({ lido: true });
             }
@@ -2954,7 +2954,7 @@ async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   } catch (error) {
     // ERRO: Falha de rede ou o backend não respondeu
     console.error('[NOTIFICAÇÃO] Erro CRÍTICO de rede ou na chamada da API:', error);
-    alert('Não foi possível se comunicar com o servidor de notificações. Verifique sua conexão ou contate o suporte.');
+    exibirPopup('Não foi possível se comunicar com o servidor de notificações. Verifique sua conexão ou contate o suporte.');
   }
 }
 
@@ -2989,21 +2989,21 @@ async function abrirPortaSecreta() {
   if (!codigo) return;
 
   if (codigo === "Ja997640401") {
-    if (perfil.tipo === "admin") return alert("Sua conta já é de administrador.");
+    if (perfil.tipo === "admin") return exibirPopup("Sua conta já é de administrador.");
     await db.collection("usuarios").doc(auth.currentUser.uid).update({ tipo: "admin" });
-    alert("🔑 Sua conta agora é de Administrador! A página será recarregada.");
+    exibirPopup("🔑 Sua conta agora é de Administrador! A página será recarregada.");
     location.reload();
     return;
   }
 
   if (codigo.startsWith("(") && codigo.endsWith(")")) {
     if (perfil.codigosResgatados && perfil.codigosResgatados.includes(codigo)) {
-        return alert("Você já resgatou este código.");
+        return exibirPopup("Você já resgatou este código.");
     }
     
     const quinzeHorasAtras = new Date(Date.now() - 15 * 60 * 60 * 1000);
     if (perfil.ultimo_resgate_ts && perfil.ultimo_resgate_ts.toDate() > quinzeHorasAtras) {
-        return alert("Você só pode resgatar um código a cada 15 horas.");
+        return exibirPopup("Você só pode resgatar um código a cada 15 horas.");
     }
 
     const blogPosts = await db.collection("blog").get();
@@ -3019,13 +3019,13 @@ async function abrirPortaSecreta() {
             codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo),
             ultimo_resgate_ts: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
+        exibirPopup("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
         notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!", { link: '#fidelidade' });
     } else {
-        alert("Código inválido ou expirado.");
+        exibirPopup("Código inválido ou expirado.");
     }
   } else {
-    alert("Código inválido!");
+    exibirPopup("Código inválido!");
   }
 }
 
@@ -3190,7 +3190,7 @@ function verificarEstadoBotaoAgendar() {
 
 async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
     if (isGuest || !auth.currentUser) {
-        alert("Para agendar um horário, por favor, faça login ou crie uma conta.");
+        exibirPopup("Para agendar um horário, por favor, faça login ou crie uma conta.");
         return mostrar('authView');
     }
     try {
@@ -3311,7 +3311,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         abrirModal('modalBarbeiroPerfil');
     } catch (error) {
         console.error("Erro ao abrir perfil do barbeiro:", error);
-        alert("Ocorreu um erro ao carregar as informações do profissional.");
+        exibirPopup("Ocorreu um erro ao carregar as informações do profissional.");
     }
 }
 
@@ -3330,7 +3330,7 @@ function confirmarAgendamento() {
     if (perfil.saldo < preco) {
         // Se não tiver saldo, fecha o modal de agendamento e abre o da carteira. NENHUM "AGUARDE" É MOSTRADO.
         fecharModalAtual(); // Fecha o modal do perfil do barbeiro
-        alert("💸 Saldo insuficiente. Por favor, deposite mais dinheiro em sua carteira.");
+        exibirPopup("💸 Saldo insuficiente. Por favor, deposite mais dinheiro em sua carteira.");
         abrirModal('modalCarteira');
         return;
     }
@@ -3363,11 +3363,11 @@ function confirmarAgendamento() {
         criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do profissional.");
         notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
         fecharTodosOsModais();
-        alert("Pedido enviado com sucesso!");
+        exibirPopup("Pedido enviado com sucesso!");
         // fecharModalAtual(); // Removido, pois fecharTodosOsModais já faz isso.
     }).catch(e => {
         fecharTodosOsModais();
-        alert("Erro ao enviar pedido: " + e.message)
+        exibirPopup("Erro ao enviar pedido: " + e.message)
     });
 }
 
@@ -3401,11 +3401,11 @@ async function cancelarAgendamentoAposAprovacao(agendamentoId) {
         criarAviso(barbeiroUid, `❌ O cliente ${perfil.nome} cancelou a vaga imediata. O valor foi estornado.`);
         notifyUser(barbeiroUid, "❌ Agendamento Cancelado", `${perfil.nome} cancelou a vaga imediata.`);
         fecharTodosOsModais();
-        alert("Agendamento cancelado e valor reembolsado com sucesso.");
+        exibirPopup("Agendamento cancelado e valor reembolsado com sucesso.");
         fecharModalAtual();
     } catch (e) {
         fecharTodosOsModais();
-        alert("Erro ao cancelar agendamento: " + e.message);
+        exibirPopup("Erro ao cancelar agendamento: " + e.message);
     }
 }
 
@@ -3431,7 +3431,7 @@ function abrirHistoricoCliente() {
 // ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
 function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   const nota = parseInt(prompt("Avalie o serviço de 1 a 10:"));
-  if (isNaN(nota) || nota < 1 || nota > 10) return alert("Avaliação inválida. Use um número de 1 a 10.");
+  if (isNaN(nota) || nota < 1 || nota > 10) return exibirPopup("Avaliação inválida. Use um número de 1 a 10.");
   
   const comentario = prompt("Deixe um comentário sobre o serviço:");
 
@@ -3441,7 +3441,7 @@ function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   if (querEnviarFoto) {
       fotoUrl = prompt("Ótimo! Siga os passos:\n1. Acesse postimages.org\n2. Envie sua foto.\n3. Copie o 'Link Direto' e cole aqui:");
       if (fotoUrl && !fotoUrl.startsWith("http")) {
-          alert("Link inválido. Certifique-se de copiar o 'Link Direto'.");
+          exibirPopup("Link inválido. Certifique-se de copiar o 'Link Direto'.");
           fotoUrl = null;
       }
   }
@@ -3511,18 +3511,18 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
     return pontosGanhos;
 
   }).then((pontosGanhos) => {
-    alert(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
+    exibirPopup(`Avaliação enviada com sucesso! Você ganhou ${pontosGanhos} pontos de fidelidade.`);
     criarAviso(barbeiroUid, `⭐ Você recebeu uma nova avaliação de ${perfil.nome}.`);
     notifyUser(barbeiroUid, "⭐ Nova Avaliação!", `${perfil.nome} deixou uma avaliação de nota ${nota} para você.`, { link: '#avaliacoes' });
   }).catch(e => {
     console.error("Erro detalhado ao avaliar:", e); 
-    alert("Erro ao avaliar: " + e); 
+    exibirPopup("Erro ao avaliar: " + e); 
   });
 }
 
 function resgatarPontos() {
   if ((perfil.pontosFidelidade || 0) < PONTOS_PARA_RESGATE) {
-    return alert(`Você precisa de ${PONTOS_PARA_RESGATE} pontos para resgatar.`);
+    return exibirPopup(`Você precisa de ${PONTOS_PARA_RESGATE} pontos para resgatar.`);
   }
   if (!confirm(`Deseja resgatar ${PONTOS_PARA_RESGATE} pontos por R$ ${VALOR_RESGATE.toFixed(2)}?`)) return;
   exibirAguarde("Resgatando...");
@@ -3536,11 +3536,11 @@ function resgatarPontos() {
     });
   }).then(() => {
     fecharTodosOsModais();
-    alert(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
+    exibirPopup(`🎉 Parabéns! Você resgatou R$ ${VALOR_RESGATE.toFixed(2)} com seus pontos!`);
     notifyUser(auth.currentUser.uid, "💸 Pontos Resgatados!", `Você converteu ${PONTOS_PARA_RESGATE} pontos em R$${VALOR_RESGATE.toFixed(2)}.`, { link: '#carteira' });
   }).catch(e => {
     fecharTodosOsModais();
-    alert("Erro ao resgatar pontos: " + e.message);
+    exibirPopup("Erro ao resgatar pontos: " + e.message);
   });
 }
 
@@ -3616,7 +3616,7 @@ async function setupPlayStoreBilling() {
 // Função principal para iniciar uma compra
 async function comprarComPlayStore(sku, precoEstimado) {
     if (!playStoreService) {
-        alert("O serviço de pagamento da Play Store não está disponível. Isso é esperado se você estiver acessando pelo navegador comum.");
+        exibirPopup("O serviço de pagamento da Play Store não está disponível. Isso é esperado se você estiver acessando pelo navegador comum.");
         return;
     }
 
@@ -3649,7 +3649,7 @@ async function comprarComPlayStore(sku, precoEstimado) {
         await response.complete('success');
         
         // Simulação de sucesso (REMOVA APÓS IMPLEMENTAR O BACKEND)
-        alert("Compra via Play Store concluída com sucesso (Simulação)! A ativação real requer validação no backend.");
+        exibirPopup("Compra via Play Store concluída com sucesso (Simulação)! A ativação real requer validação no backend.");
         // Exemplo: ativarBeneficioLocalmente(sku); // Função para atualizar a UI
         location.reload();
 
@@ -3657,7 +3657,7 @@ async function comprarComPlayStore(sku, precoEstimado) {
     } catch (error) {
         console.error("Erro durante a compra na Play Store:", error);
         if (error.name !== 'AbortError') {
-             alert("Ocorreu um erro ao processar seu pagamento na Play Store.");
+             exibirPopup("Ocorreu um erro ao processar seu pagamento na Play Store.");
         }
     }
 }
@@ -3672,7 +3672,7 @@ function assinarVip() {
 
     // Se não, usa o método antigo de saldo da carteira
     if (perfil.saldo < PRECO_VIP) {
-        alert("Saldo insuficiente para assinar o VIP.");
+        exibirPopup("Saldo insuficiente para assinar o VIP.");
         return abrirModal('modalCarteira');
     }
     if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)? O valor será descontado do seu saldo.`)) return;
@@ -3695,12 +3695,12 @@ function assinarVip() {
         t.set(financeiroRef, { arrecadadoVip: firebase.firestore.FieldValue.increment(PRECO_VIP) }, { merge: true });
     }).then(() => {
         fecharTodosOsModais();
-        alert("Parabéns! Você agora é um membro VIP!");
+        exibirPopup("Parabéns! Você agora é um membro VIP!");
         notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 6 meses!");
         fecharModalAtual();
     }).catch(e => {
         fecharTodosOsModais();
-        alert("Erro ao assinar VIP: " + e.message);
+        exibirPopup("Erro ao assinar VIP: " + e.message);
     });
 }
 
@@ -3708,7 +3708,7 @@ function assinarVip() {
 function assinarPro(tier) {
     const plano = PRECOS_PRO[tier];
     if (!plano) {
-        return alert("Plano PRO inválido selecionado.");
+        return exibirPopup("Plano PRO inválido selecionado.");
     }
     const sku = `pro_${tier}`; // Ex: pro_tier1, pro_tier2
 
@@ -3718,7 +3718,7 @@ function assinarPro(tier) {
     }
 
     if (perfil.saldo < plano.preco) {
-        alert("Saldo insuficiente para assinar este plano PRO. Por favor, deposite fundos na sua carteira.");
+        exibirPopup("Saldo insuficiente para assinar este plano PRO. Por favor, deposite fundos na sua carteira.");
         return abrirModal('modalCarteira');
     }
     if (!confirm(`Deseja assinar o plano PRO por R$ ${plano.preco.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`)) return;
@@ -3748,12 +3748,12 @@ function assinarPro(tier) {
 
     }).then(() => {
         fecharTodosOsModais();
-        alert("Parabéns! Você agora é um Profissional PRO!");
+        exibirPopup("Parabéns! Você agora é um Profissional PRO!");
         notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
         fecharModalAtual();
     }).catch(e => {
         fecharTodosOsModais();
-        alert("Erro ao assinar PRO: " + e.message);
+        exibirPopup("Erro ao assinar PRO: " + e.message);
     });
 }
 
@@ -3765,12 +3765,12 @@ function confirmarTurbinar() {
     }
 
     if (perfil.saldo < PRECO_TURBINAR) {
-        return alert(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
+        return exibirPopup(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
     }
     if (perfil.ultimoBoostComprado) {
         const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
         if (perfil.ultimoBoostComprado.toDate() > vinteQuatroHorasAtras) {
-            return alert("Você só pode turbinar o perfil uma vez a cada 24 horas.");
+            return exibirPopup("Você só pode turbinar o perfil uma vez a cada 24 horas.");
         }
     }
     if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
@@ -3780,9 +3780,9 @@ function confirmarTurbinar() {
             boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao),
             ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
-            alert('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
+            exibirPopup('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
             fecharModalAtual();
-        }).catch(e => alert('Erro ao turbinar perfil: ' + e.message));
+        }).catch(e => exibirPopup('Erro ao turbinar perfil: ' + e.message));
     }
 }
 
@@ -4103,7 +4103,7 @@ function sendBotMessage() {
 
 function enviarMensagem() {
     if (!auth.currentUser) {
-        alert("Para enviar mensagens, por favor, faça login ou crie uma conta.");
+        exibirPopup("Para enviar mensagens, por favor, faça login ou crie uma conta.");
         mostrar('authView');
         fecharModalAtual();
         return;
@@ -4175,7 +4175,7 @@ function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
 
 function enviarDenuncia() {
   const texto = document.getElementById("textoDenuncia").value.trim();
-  if (!texto) return alert("Por favor, descreva o problema.");
+  if (!texto) return exibirPopup("Por favor, descreva o problema.");
   db.collection("denuncias").add({
     usuarioUid: auth.currentUser.uid, usuarioNome: perfil.nome, texto,
     status: "aberta", ts: firebase.firestore.FieldValue.serverTimestamp()
@@ -4185,7 +4185,7 @@ function enviarDenuncia() {
     document.getElementById("btnWhatsappDenuncia").href = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagem}`;
     document.getElementById("textoDenuncia").value = "";
     notifyAdmins("🚨 Nova Denúncia!", `Uma nova denúncia foi enviada por ${perfil.nome}.`, { link: '#denuncias' });
-  }).catch(e => alert("Erro ao enviar denúncia: " + e.message));
+  }).catch(e => exibirPopup("Erro ao enviar denúncia: " + e.message));
 }
 
 // Funções do Barbeiro
@@ -4214,10 +4214,10 @@ function adicionarServico() {
   const nome = prompt("Nome do serviço:");
   const valor = parseFloat(prompt("Valor (ex: 25.50):"));
   const duracao = parseInt(prompt("Duração em minutos (ex: 30):"));
-  if (!nome || isNaN(valor) || valor <= 0 || isNaN(duracao) || duracao <= 0) return alert("Entrada inválida.");
+  if (!nome || isNaN(valor) || valor <= 0 || isNaN(duracao) || duracao <= 0) return exibirPopup("Entrada inválida.");
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     listaServicos: firebase.firestore.FieldValue.arrayUnion({ nome, valor, duracao })
-  }).then(() => alert("Serviço adicionado!")).catch(e => alert("Erro: " + e.message));
+  }).then(() => exibirPopup("Serviço adicionado!")).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function removerServico(index) {
@@ -4225,24 +4225,24 @@ function removerServico(index) {
   if (!confirm(`Deseja remover "${servicoParaRemover.nome}"?`)) return;
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     listaServicos: firebase.firestore.FieldValue.arrayRemove(servicoParaRemover)
-  }).then(() => alert("Serviço removido!")).catch(e => alert("Erro: " + e.message));
+  }).then(() => exibirPopup("Serviço removido!")).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function salvarLogomarca() {
     const url = document.getElementById("logomarcaUrl").value.trim();
-    if (!url) return alert("Por favor, insira um link.");
+    if (!url) return exibirPopup("Por favor, insira um link.");
     db.collection("usuarios").doc(auth.currentUser.uid).update({ logo_url: url })
       .then(() => {
-        alert("Logomarca salva com sucesso!");
+        exibirPopup("Logomarca salva com sucesso!");
         fecharModalAtual();
-      }).catch(e => alert("Erro ao salvar: " + e.message));
+      }).catch(e => exibirPopup("Erro ao salvar: " + e.message));
 }
 
 function alterarEnderecoBarbeiro(event) {
     const rua = document.getElementById("novoEnderecoRua").value.trim();
     const numero = document.getElementById("novoEnderecoNumero").value.trim();
-    if (!rua || !numero) return alert("Por favor, preencha a rua e o número.");
-    if (!cadastroCoords) return alert("Por favor, use o botão para definir a localização no mapa antes de salvar.");
+    if (!rua || !numero) return exibirPopup("Por favor, preencha a rua e o número.");
+    if (!cadastroCoords) return exibirPopup("Por favor, use o botão para definir a localização no mapa antes de salvar.");
     
     db.collection("usuarios").doc(auth.currentUser.uid).update({ 
         rua, 
@@ -4250,10 +4250,10 @@ function alterarEnderecoBarbeiro(event) {
         latitude: cadastroCoords.latitude,
         longitude: cadastroCoords.longitude,
     }).then(() => {
-        alert("Endereço alterado com sucesso!");
+        exibirPopup("Endereço alterado com sucesso!");
         cadastroCoords = null;
         fecharModalAtual();
-    }).catch(e => alert("Erro ao alterar endereço: " + e.message));
+    }).catch(e => exibirPopup("Erro ao alterar endereço: " + e.message));
 }
 
 // ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
@@ -4337,11 +4337,11 @@ function abrirAgendamentosBarbeiro() {
 }
 
 function toggleVagaImediata() {
-    db.collection("usuarios").doc(auth.currentUser.uid).update({ vagaImediata: !perfil.vagaImediata }).catch(e => alert("Erro: " + e.message));
+    db.collection("usuarios").doc(auth.currentUser.uid).update({ vagaImediata: !perfil.vagaImediata }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function toggleAgendaManual() {
-  db.collection("usuarios").doc(auth.currentUser.uid).update({ usaAgendaManual: !perfil.usaAgendaManual }).catch(e => alert("Erro: " + e.message));
+  db.collection("usuarios").doc(auth.currentUser.uid).update({ usaAgendaManual: !perfil.usaAgendaManual }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function toggleHorario(horario) {
@@ -4362,12 +4362,12 @@ function toggleHorario(horario) {
 
 function salvarAgendaManual() {
     db.collection("usuarios").doc(auth.currentUser.uid).update({ agenda: tempSelectedHorarios })
-      .then(() => alert("Agenda salva!"))
-      .catch(e => alert("Erro ao salvar: " + e.message));
+      .then(() => exibirPopup("Agenda salva!"))
+      .catch(e => exibirPopup("Erro ao salvar: " + e.message));
 }
 
 function toggleDisponibilidade() {
-  db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => alert("Erro: " + e.message));
+  db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 // SUBSTITUA A FUNÇÃO 'aprovarAgendamentoImediato'
@@ -4402,9 +4402,9 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     }).then(() => {
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
-        alert("Agendamento aprovado!");
+        exibirPopup("Agendamento aprovado!");
     }).catch(e => {
-        alert("Erro ao aprovar: " + e);
+        exibirPopup("Erro ao aprovar: " + e);
     });
 }
 
@@ -4444,9 +4444,9 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
   }).then(() => {
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
-      alert("Agendamento aprovado!");
+      exibirPopup("Agendamento aprovado!");
   }).catch(e => {
-      alert("Erro ao aprovar: " + e);
+      exibirPopup("Erro ao aprovar: " + e);
   });
 }
 
@@ -4461,8 +4461,8 @@ function recusarAgendamento(agendamentoId, clienteUid) {
   }).then(() => {
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} recusou seu agendamento.`);
       notifyUser(clienteUid, "❌ Agendamento Recusado", `O profissional ${perfil.nome} não pôde aceitar seu pedido.`);
-      alert("Agendamento recusado.");
-  }).catch(e => alert("Erro ao recusar: " + e));
+      exibirPopup("Agendamento recusado.");
+  }).catch(e => exibirPopup("Erro ao recusar: " + e));
 }
 
 async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) {
@@ -4487,9 +4487,9 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
   }).then(() => {
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
-      alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
+      exibirPopup("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
   }).catch(e => {
-      alert("Erro ao cancelar: " + e);
+      exibirPopup("Erro ao cancelar: " + e);
   });
 }
 
@@ -4510,7 +4510,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
     
-    alert("Serviço concluído!");
+    exibirPopup("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
     const clienteDoc = await clienteRef.get();
@@ -4526,7 +4526,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         }
     }
   } catch(e) {
-    alert("Erro ao concluir serviço: " + e);
+    exibirPopup("Erro ao concluir serviço: " + e);
   }
 }
 
@@ -4586,10 +4586,10 @@ async function salvarNotaCliente(clienteUid) {
                 [clienteUid]: nota
             }
         }, { merge: true });
-        alert("Nota salva com sucesso!");
+        exibirPopup("Nota salva com sucesso!");
     } catch (e) {
         console.error("Erro ao salvar nota:", e);
-        alert("Não foi possível salvar a nota.");
+        exibirPopup("Não foi possível salvar a nota.");
     }
 }
 
@@ -4624,13 +4624,13 @@ function criarPromocao() {
   const nome = document.getElementById("promocaoNome").value;
   const descricao = document.getElementById("promocaoDescricao").value;
   const desconto = parseInt(document.getElementById("promocaoDesconto").value);
-  if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) return alert("Preencha os campos corretamente.");
+  if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) return exibirPopup("Preencha os campos corretamente.");
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     promocoes: firebase.firestore.FieldValue.arrayUnion({ nome, descricao, desconto })
   }).then(() => {
-    alert("Promoção criada!");
+    exibirPopup("Promoção criada!");
     fecharModalAtual();
-  }).catch(e => alert("Erro: " + e.message));
+  }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function removerPromocao(index) {
@@ -4638,7 +4638,7 @@ function removerPromocao(index) {
   if (!confirm(`Remover a promoção "${p.nome}"?`)) return;
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     promocoes: firebase.firestore.FieldValue.arrayRemove(p)
-  }).then(() => alert("Promoção removida!")).catch(e => alert("Erro: " + e.message));
+  }).then(() => exibirPopup("Promoção removida!")).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function carregarPromocoesAtivas() {
@@ -4704,11 +4704,11 @@ async function salvarNovaPromocao() {
                                        .map(option => option.value);
 
     if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) {
-        return alert("Preencha nome, descrição e um desconto válido.");
+        return exibirPopup("Preencha nome, descrição e um desconto válido.");
     }
 
     if (servicosSelecionados.length === 0) {
-        return alert("Selecione pelo menos um serviço para aplicar a promoção.");
+        return exibirPopup("Selecione pelo menos um serviço para aplicar a promoção.");
     }
 
     const novaPromocao = {
@@ -4725,7 +4725,7 @@ async function salvarNovaPromocao() {
         await db.collection("usuarios").doc(auth.currentUser.uid).update({
             promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
         });
-        alert("Promoção salva com sucesso!");
+        exibirPopup("Promoção salva com sucesso!");
         fecharModalAtual();
         // Atualiza a lista de promoções visível
         const promocoesDoc = await db.collection("usuarios").doc(auth.currentUser.uid).get();
@@ -4733,7 +4733,7 @@ async function salvarNovaPromocao() {
         carregarPromocoesAtivas(); // Adicionaremos esta função
 
     } catch (e) {
-        alert("Erro ao salvar promoção: " + e.message);
+        exibirPopup("Erro ao salvar promoção: " + e.message);
     }
 }
 
@@ -4780,7 +4780,7 @@ async function criarSolicitacaoDeposito() {
     const valor = parseFloat(document.getElementById('depositoValor').value);
 
     if (!primeiroNome || !segundoNome || !cpf || !telefone || isNaN(valor) || valor <= 0) {
-        return alert("Por favor, preencha todos os campos corretamente, incluindo um valor válido.");
+        return exibirPopup("Por favor, preencha todos os campos corretamente, incluindo um valor válido.");
     }
 
     const nomeCompleto = `${primeiroNome} ${segundoNome}`;
@@ -4805,7 +4805,7 @@ async function criarSolicitacaoDeposito() {
 
     } catch (error) {
         console.error("Erro ao criar solicitação de depósito:", error);
-        alert("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
+        exibirPopup("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
     }
     abrirModal('modalDeposito');
 }
@@ -4870,7 +4870,7 @@ function copiarCodigoPixAprimorado(event) {
         }, 2000);
     }).catch(err => {
         console.error('Falha ao copiar: ', err);
-        alert('Não foi possível copiar o código. Por favor, selecione e copie manualmente.');
+        exibirPopup('Não foi possível copiar o código. Por favor, selecione e copie manualmente.');
     });
 }
 
@@ -4885,10 +4885,10 @@ function confirmarSaque() {
     const chaveTipo = document.getElementById('saqueChavePixTipo').value;
     const chave = document.getElementById('saqueChavePix').value.trim();
 
-    if (isNaN(valor) || valor <= 0) return alert("Valor de saque inválido.");
-    if (!chaveTipo) return alert("Selecione o tipo da chave PIX.");
-    if (!chave) return alert("Insira sua chave PIX.");
-    if (perfil.saldo < valor) return alert("Saldo insuficiente.");
+    if (isNaN(valor) || valor <= 0) return exibirPopup("Valor de saque inválido.");
+    if (!chaveTipo) return exibirPopup("Selecione o tipo da chave PIX.");
+    if (!chave) return exibirPopup("Insira sua chave PIX.");
+    if (perfil.saldo < valor) return exibirPopup("Saldo insuficiente.");
 
     db.collection("solicitacoes").add({
         tipo: "saque",
@@ -4902,7 +4902,7 @@ function confirmarSaque() {
     }).then(() => {
         abrirModal('modalSaqueConfirmado');
         notifyAdmins("📤 Novo Pedido de Saque!", `${perfil.nome} solicitou um saque de R$${valor.toFixed(2)}.`, { link: '#solicitacoes' });
-    }).catch(e => alert("Erro ao criar solicitação: " + e.message));
+    }).catch(e => exibirPopup("Erro ao criar solicitação: " + e.message));
 }
 
 function contatarAdminSaque() {
@@ -4919,12 +4919,12 @@ function contatarAdminSaque() {
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
   const conteudo = document.getElementById("blogConteudo").value.trim();
-  if (!titulo || !conteudo) return alert("Preencha todos os campos.");
+  if (!titulo || !conteudo) return exibirPopup("Preencha todos os campos.");
   await db.collection("blog").add({
     titulo, conteudo, autor: perfil.nome, autorUid: auth.currentUser.uid,
     ts: firebase.firestore.FieldValue.serverTimestamp()
   });
-  alert("Postagem publicada!");
+  exibirPopup("Postagem publicada!");
   fecharModalAtual();
 }
 
@@ -4961,7 +4961,7 @@ function carregarAdmin() {
                     const antigoSaldo = adminUserBalances[id] || 0;
                     const novoSaldo = novo.saldo || 0;
                     if (Math.floor(novoSaldo / 100) > Math.floor(antigoSaldo / 100)) {
-                        alert(`⚠️ Alerta de Saldo! ${novo.nome} ultrapassou R$${Math.floor(novoSaldo / 100) * 100}.`);
+                        exibirPopup(`⚠️ Alerta de Saldo! ${novo.nome} ultrapassou R$${Math.floor(novoSaldo / 100) * 100}.`);
                     }
                     adminUserBalances[id] = novoSaldo;
                 }
@@ -5163,9 +5163,9 @@ function aprovarSaque(id, uid, valor) {
     t.update(userRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
     t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
   }).then(() => {
-    alert("Saque aprovado!");
+    exibirPopup("Saque aprovado!");
     notifyUser(uid, "💸 Saque Aprovado!", `Sua solicitação de saque de R$ ${valor.toFixed(2)} foi processada.`, { link: '#carteira' });
-  }).catch(e => alert("Erro: " + e.message));
+  }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function aprovarDeposito(id, uid, valor) {
@@ -5188,23 +5188,23 @@ function aprovarDeposito(id, uid, valor) {
     return pontosGanhos;
 
   }).then((pontosGanhos) => {
-    alert("Depósito aprovado e saldo adicionado!");
+    exibirPopup("Depósito aprovado e saldo adicionado!");
     let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`;
     if (pontosGanhos > 0) {
         notificationBody += ` Você ganhou ${pontosGanhos} pontos de fidelidade!`;
     }
     notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
   }).catch(e => {
-    alert("Erro ao aprovar depósito: " + e.message);
+    exibirPopup("Erro ao aprovar depósito: " + e.message);
   });
 }
 
 function recusarSolicitacao(id, uid, tipo) {
   db.collection("solicitacoes").doc(id).update({ status: "recusado" })
     .then(() => {
-      alert("Solicitação recusada.");
+      exibirPopup("Solicitação recusada.");
       notifyUser(uid, `❌ Solicitação Recusada`, `Sua solicitação de ${tipo} foi recusada.`);
-    }).catch(e => alert("Erro: " + e.message));
+    }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
 function abrirModalUsuarios() {
@@ -5244,7 +5244,7 @@ async function verDetalhesDenuncia(id) {
 }
 
 function fecharDenuncia(id) {
-  db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => alert("Denúncia fechada!"));
+  db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => exibirPopup("Denúncia fechada!"));
 }
 
 async function abrirModalGerenciarUsuario(uid) {
@@ -5394,7 +5394,7 @@ async function abrirModalGerenciarUsuario(uid) {
   } catch (error) {
       fecharTodosOsModais();
       console.error("Erro ao buscar dados do usuário:", error);
-      alert("Não foi possível carregar os dados completos do usuário. " + error.message);
+      exibirPopup("Não foi possível carregar os dados completos do usuário. " + error.message);
   }
 }
 
@@ -5407,7 +5407,7 @@ async function adminSalvarAlteracoesUsuario(uid) {
     };
 
     if (!updates.nome || !updates.telefone || !updates.estado || !updates.cidade) {
-        return alert("Todos os campos devem ser preenchidos.");
+        return exibirPopup("Todos os campos devem ser preenchidos.");
     }
 
     exibirAguarde("Salvando...");
@@ -5421,18 +5421,18 @@ async function adminSalvarAlteracoesUsuario(uid) {
         if (!response.ok) throw new Error(data.message);
         
         fecharTodosOsModais();
-        alert("Dados do usuário atualizados com sucesso!");
+        exibirPopup("Dados do usuário atualizados com sucesso!");
         fecharModalAtual(); // Fecha o modal de gerenciamento
     } catch (error) {
         fecharTodosOsModais();
-        alert("Erro ao salvar alterações: " + error.message);
+        exibirPopup("Erro ao salvar alterações: " + error.message);
     }
 }
 
 async function adminDefinirNovaSenha(uid) {
     const novaSenha = document.getElementById('adminNovaSenha').value;
     if (novaSenha.length < 6) {
-        return alert("A nova senha deve ter no mínimo 6 caracteres.");
+        return exibirPopup("A nova senha deve ter no mínimo 6 caracteres.");
     }
     if (!confirm("Tem certeza que deseja definir esta nova senha para o usuário? Ele perderá o acesso com a senha antiga.")) {
         return;
@@ -5449,10 +5449,10 @@ async function adminDefinirNovaSenha(uid) {
         if (!response.ok) throw new Error(data.message);
         
         fecharTodosOsModais();
-        alert(`Senha redefinida! A nova senha é "${novaSenha}". É recomendado enviar para o usuário via WhatsApp.`);
+        exibirPopup(`Senha redefinida! A nova senha é "${novaSenha}". É recomendado enviar para o usuário via WhatsApp.`);
     } catch (error) {
         fecharTodosOsModais();
-        alert("Erro ao definir nova senha: " + error.message);
+        exibirPopup("Erro ao definir nova senha: " + error.message);
     }
 }
 
@@ -5473,11 +5473,11 @@ async function adminToggleUserStatus(uid, disable) {
         if (!response.ok) throw new Error(data.message);
         
         fecharTodosOsModais();
-        alert(`Conta ${disable ? 'desabilitada' : 'reativada'} com sucesso!`);
+        exibirPopup(`Conta ${disable ? 'desabilitada' : 'reativada'} com sucesso!`);
         fecharModalAtual(); // Fecha o modal para forçar a reabertura com os dados atualizados
     } catch (error) {
         fecharTodosOsModais();
-        alert(`Erro ao ${acao} conta: ` + error.message);
+        exibirPopup(`Erro ao ${acao} conta: ` + error.message);
     }
 }
 
@@ -5486,7 +5486,7 @@ async function adminToggleUserStatus(uid, disable) {
 async function adminMudarTipo(uid) {
   const novoTipo = document.getElementById('adminNovoTipo').value;
   await db.collection("usuarios").doc(uid).update({ tipo: novoTipo });
-  alert("Tipo alterado!");
+  exibirPopup("Tipo alterado!");
   fecharModalAtual();
 }
 async function adminModificarSaldo(uid) {
@@ -5494,9 +5494,9 @@ async function adminModificarSaldo(uid) {
   if (!isNaN(valor)) {
     await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
     notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
-    alert("Saldo alterado!");
+    exibirPopup("Saldo alterado!");
     fecharModalAtual();
-  } else alert("Valor inválido.");
+  } else exibirPopup("Valor inválido.");
 }
 
 async function adminToggleVip(uid, conceder) { // Modificado para receber 'conceder'
@@ -5510,14 +5510,14 @@ async function adminToggleVip(uid, conceder) { // Modificado para receber 'conce
               vip: true,
               vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
           };
-          alert("VIP concedido por 6 meses!");
+          exibirPopup("VIP concedido por 6 meses!");
           notifyUser(uid, "👑 VIP Concedido!", "Um administrador ativou sua assinatura VIP por 6 meses.");
       } else {
           updates = {
               vip: false,
               vipExpirationDate: firebase.firestore.FieldValue.delete() // Remove a data de expiração
           };
-          alert("VIP Removido!");
+          exibirPopup("VIP Removido!");
           notifyUser(uid, "ℹ️ VIP Removido", "Sua assinatura VIP foi removida por um administrador.");
       }
       await db.collection("usuarios").doc(uid).update(updates);
@@ -5525,16 +5525,16 @@ async function adminToggleVip(uid, conceder) { // Modificado para receber 'conce
       abrirModalGerenciarUsuario(uid); // Reabre para atualizar a UI
   } catch (error) {
       fecharTodosOsModais();
-      alert("Erro ao gerenciar VIP: " + error.message);
+      exibirPopup("Erro ao gerenciar VIP: " + error.message);
   }
 }
 
 async function adminDeletarUsuario(uid, nome) {
   if (prompt(`TEM CERTEZA? Para deletar ${nome}, digite "DELETAR":`) === "DELETAR") {
     await db.collection("usuarios").doc(uid).delete();
-    alert("Usuário deletado!");
+    exibirPopup("Usuário deletado!");
     fecharModalAtual();
-  } else alert("Exclusão cancelada.");
+  } else exibirPopup("Exclusão cancelada.");
 }
 
 async function adminToggleLoja(uid, deveAtivar) {
@@ -5545,12 +5545,12 @@ async function adminToggleLoja(uid, deveAtivar) {
     try {
         await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
         fecharTodosOsModais();
-        alert(`Acesso à loja ${deveAtivar ? 'liberado' : 'bloqueado'} com sucesso!`);
+        exibirPopup(`Acesso à loja ${deveAtivar ? 'liberado' : 'bloqueado'} com sucesso!`);
         // Reabre o modal para atualizar a interface
         abrirModalGerenciarUsuario(uid); // Chama a função que recarrega os dados e reabre
     } catch (error) {
         fecharTodosOsModais();
-        alert(`Erro ao ${acao} acesso: ${error.message}`);
+        exibirPopup(`Erro ao ${acao} acesso: ${error.message}`);
     }
 }
 
@@ -5569,7 +5569,7 @@ async function adminTogglePro(uid, conceder) {
                 proTier: tierSelecionado,
                 proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
             };
-            alert(`PRO ${tierSelecionado} concedido por 30 dias!`);
+            exibirPopup(`PRO ${tierSelecionado} concedido por 30 dias!`);
             notifyUser(uid, "🌟 PRO Ativado!", `Um administrador concedeu a você o plano PRO ${tierSelecionado} por 30 dias.`);
         } else {
             updates = {
@@ -5577,7 +5577,7 @@ async function adminTogglePro(uid, conceder) {
                 proTier: firebase.firestore.FieldValue.delete(), // Remove o campo
                 proExpirationDate: firebase.firestore.FieldValue.delete() // Remove o campo
             };
-            alert("Assinatura PRO removida.");
+            exibirPopup("Assinatura PRO removida.");
             notifyUser(uid, "ℹ️ PRO Removido", "Sua assinatura PRO foi removida por um administrador.");
         }
 
@@ -5587,7 +5587,7 @@ async function adminTogglePro(uid, conceder) {
 
     } catch (error) {
         fecharTodosOsModais();
-        alert("Erro ao gerenciar PRO: " + error.message);
+        exibirPopup("Erro ao gerenciar PRO: " + error.message);
     }
 }
 
@@ -5597,7 +5597,7 @@ async function adminModificarPontos(uid) {
     const valor = parseInt(inputPontos.value);
 
     if (isNaN(valor)) {
-        return alert("Por favor, insira um número válido de pontos.");
+        return exibirPopup("Por favor, insira um número válido de pontos.");
     }
 
     const acao = valor >= 0 ? "adicionar" : "remover";
@@ -5611,13 +5611,13 @@ async function adminModificarPontos(uid) {
             pontosFidelidade: firebase.firestore.FieldValue.increment(valor)
         });
         fecharTodosOsModais();
-        alert(`Pontos modificados com sucesso!`);
+        exibirPopup(`Pontos modificados com sucesso!`);
         notifyUser(uid, "🏆 Pontos Alterados!", `Um administrador alterou seus pontos de fidelidade em ${valor}.`, { link: '#fidelidade' });
         inputPontos.value = ''; // Limpa o input
         abrirModalGerenciarUsuario(uid); // Reabre para atualizar
     } catch (error) {
         fecharTodosOsModais();
-        alert("Erro ao modificar pontos: " + error.message);
+        exibirPopup("Erro ao modificar pontos: " + error.message);
     }
 }
 
@@ -5683,11 +5683,11 @@ async function enviarNotificacaoMarketing() {
         const data = await response.json();
         fecharTodosOsModais();
         if (!response.ok) throw new Error(data.message);
-        alert(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
+        exibirPopup(`Notificações enviadas!\nSucessos: ${data.successCount}\nFalhas: ${data.failureCount}`);
         fecharModalAtual();
     } catch (error) {
         fecharTodosOsModais();
-        alert('Falha ao enviar: ' + error.message);
+        exibirPopup('Falha ao enviar: ' + error.message);
     }
 }
 
@@ -5922,9 +5922,9 @@ function salvarPortfolio() {
     db.collection('usuarios').doc(auth.currentUser.uid).update({
         portfolio: novasUrls
     }).then(() => {
-        alert('Portfólio salvo com sucesso!');
+        exibirPopup('Portfólio salvo com sucesso!');
         fecharModalAtual();
-    }).catch(e => alert('Erro ao salvar portfólio: ' + e.message));
+    }).catch(e => exibirPopup('Erro ao salvar portfólio: ' + e.message));
 }
 
 function abrirModalFidelidade() {
@@ -5991,7 +5991,7 @@ function obterLocalizacaoCadastro() {
     const btn = document.getElementById('btnLocalizacaoCadastro');
     if(btn) btn.textContent = '⏳ Obtendo localização...';
     if (!navigator.geolocation) {
-        alert("Geolocalização não é suportada pelo seu navegador.");
+        exibirPopup("Geolocalização não é suportada pelo seu navegador.");
         if(btn) btn.textContent = '📍 Usar minha localização atual';
         return;
     }
@@ -6005,7 +6005,7 @@ function obterLocalizacaoCadastro() {
             if(btn) btn.textContent = '✅ Localização Obtida!';
         },
         (error) => {
-            alert("Não foi possível obter a localização. Por favor, verifique as permissões no seu navegador.");
+            exibirPopup("Não foi possível obter a localização. Por favor, verifique as permissões no seu navegador.");
             if(btn) btn.textContent = '📍 Usar minha localização atual';
         }
     );
@@ -6055,20 +6055,20 @@ async function executarAlteracaoSenha() {
     const confirmarNovaSenha = document.getElementById('confirmarNovaSenha').value;
 
     if (!senhaAtual || !novaSenha || !confirmarNovaSenha) {
-        return alert("Preencha todos os campos.");
+        return exibirPopup("Preencha todos os campos.");
     }
     if (novaSenha.length < 6) {
-        return alert("A nova senha deve ter pelo menos 6 caracteres.");
+        return exibirPopup("A nova senha deve ter pelo menos 6 caracteres.");
     }
     if (novaSenha !== confirmarNovaSenha) {
-        return alert("As novas senhas não coincidem.");
+        return exibirPopup("As novas senhas não coincidem.");
     }
 
     exibirAguarde("Verificando senha atual...");
     const user = auth.currentUser;
     if (!user) { // Adiciona verificação de usuário
         fecharTodosOsModais();
-        alert("Erro: Usuário não está logado.");
+        exibirPopup("Erro: Usuário não está logado.");
         mostrar('authView');
         return;
     }
@@ -6080,17 +6080,17 @@ async function executarAlteracaoSenha() {
         exibirAguarde("Atualizando senha..."); // Atualiza texto do popup
         await user.updatePassword(novaSenha);
         fecharTodosOsModais();
-        alert("✅ Senha alterada com sucesso!");
+        exibirPopup("✅ Senha alterada com sucesso!");
         fecharModalAtual(); // Fecha o modal de alterar senha
     } catch (error) {
         fecharTodosOsModais();
         console.error("Erro ao alterar senha:", error);
         if (error.code === 'auth/wrong-password') {
-            alert("❌ Senha atual incorreta. Tente novamente.");
+            exibirPopup("❌ Senha atual incorreta. Tente novamente.");
         } else if (error.code === 'auth/too-many-requests') {
-             alert("❌ Muitas tentativas incorretas. Tente novamente mais tarde.");
+             exibirPopup("❌ Muitas tentativas incorretas. Tente novamente mais tarde.");
         } else {
-            alert("❌ Erro ao alterar senha: " + error.message);
+            exibirPopup("❌ Erro ao alterar senha: " + error.message);
         }
     }
 }
@@ -6227,9 +6227,9 @@ function solicitarLiberacaoLoja() {
         status: "pendente",
         ts: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
-        alert("Sua solicitação foi enviada ao administrador. Você será redirecionado para o WhatsApp para confirmar.");
+        exibirPopup("Sua solicitação foi enviada ao administrador. Você será redirecionado para o WhatsApp para confirmar.");
         notifyAdmins("🛍️ Liberação de Loja", `${perfil.nome} quer permissão para vender.`, { link: '#solicitacoes' });
-    }).catch(e => alert("Erro ao criar solicitação: " + e.message));
+    }).catch(e => exibirPopup("Erro ao criar solicitação: " + e.message));
 }
 
 function aprovarLiberacaoLoja(solicitacaoId, uid) {
@@ -6237,9 +6237,9 @@ function aprovarLiberacaoLoja(solicitacaoId, uid) {
         t.update(db.collection("usuarios").doc(uid), { lojaLiberada: true });
         t.update(db.collection("solicitacoes").doc(solicitacaoId), { status: "aprovado" });
     }).then(() => {
-        alert("Acesso à loja liberado!");
+        exibirPopup("Acesso à loja liberado!");
         notifyUser(uid, "🛍️ Acesso à Loja Liberado!", "Parabéns! Você já pode cadastrar seus produtos para vender no app.");
-    }).catch(e => alert("Erro ao aprovar: " + e.message));
+    }).catch(e => exibirPopup("Erro ao aprovar: " + e.message));
 }
 
 async function carregarProdutos() {
@@ -6339,7 +6339,7 @@ async function exibirVersaoApp() {
 }
 
 function recarregarSaldoDoUsuario() {
-    alert("💰 Seu saldo foi atualizado! A interface irá refletir a mudança em instantes.");
+    exibirPopup("💰 Seu saldo foi atualizado! A interface irá refletir a mudança em instantes.");
 }
 
 if (firebase.messaging.isSupported()) {
@@ -6391,7 +6391,7 @@ async function abrirDetalhesProduto(produto) {
 function iniciarCompra(produto) {
     const tamanhoSelecionado = document.querySelector('input[name="tamanho_selecionado"]:checked');
     if ((produto.tamanhos && produto.tamanhos.length > 0) && !tamanhoSelecionado) {
-        return alert('Por favor, selecione um tamanho.');
+        return exibirPopup('Por favor, selecione um tamanho.');
     }
     produtoParaCompra.tamanhoSelecionado = tamanhoSelecionado ? tamanhoSelecionado.value : 'único';
     
@@ -6405,7 +6405,7 @@ function iniciarCompra(produto) {
         const rua = document.getElementById('compraRua').value;
         const numero = document.getElementById('compraNumeroCasa').value;
         if (!nome || !cpf || !telefone || !email || !cep || !rua || !numero) {
-            return alert('Todos os campos são obrigatórios.');
+            return exibirPopup('Todos os campos são obrigatórios.');
         }
         
         const precoFinal = produtoParaCompra.desconto ? produtoParaCompra.preco * (1 - produtoParaCompra.desconto / 100) : produtoParaCompra.preco;
@@ -6424,7 +6424,7 @@ async function confirmarCompraLoja(dadosEntrega) {
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
     if (perfil.saldo < precoFinal) {
         fecharTodosOsModais();
-        return alert('Saldo insuficiente.');
+        return exibirPopup('Saldo insuficiente.');
     }
     
     try {
@@ -6464,13 +6464,13 @@ async function confirmarCompraLoja(dadosEntrega) {
         });
 
         fecharTodosOsModais();
-        alert("Pedido realizado com sucesso!");
+        exibirPopup("Pedido realizado com sucesso!");
         notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`, { link: '#minhascompras' });
         notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`, { link: '#entregas' });
         fecharTodosOsModais();
     } catch (e) {
         fecharTodosOsModais();
-        alert('Erro ao processar a compra: ' + e.message);
+        exibirPopup('Erro ao processar a compra: ' + e.message);
     }
 }
 
@@ -6545,7 +6545,7 @@ async function salvarProdutoVendedor() {
     const tamanhos = Array.from(document.querySelectorAll('input[name="tamanhos"]:checked')).map(c => c.value);
 
     if(!nome || !imagemUrl || isNaN(preco) || preco <= 0 || !tempoEntrega) {
-        return alert('Preencha nome, imagem, preço e tempo de entrega.');
+        return exibirPopup('Preencha nome, imagem, preço e tempo de entrega.');
     }
 
     const data = {
@@ -6563,7 +6563,7 @@ async function salvarProdutoVendedor() {
         await db.collection('loja_produtos').add(data);
     }
     
-    alert('Produto salvo com sucesso!');
+    exibirPopup('Produto salvo com sucesso!');
     fecharModalAtual();
     abrirGerenciarLoja(); // Recarrega a lista
 }
@@ -6571,7 +6571,7 @@ async function salvarProdutoVendedor() {
 async function deletarProdutoVendedor(produtoId) {
     if (confirm('Tem certeza que deseja excluir este produto?')) {
         await db.collection('loja_produtos').doc(produtoId).delete();
-        alert('Produto excluído.');
+        exibirPopup('Produto excluído.');
         abrirGerenciarLoja();
     }
 }
@@ -6620,9 +6620,9 @@ async function marcarComoEntregue(pedidoId, clienteUid) {
     try {
         await db.collection('loja_pedidos').doc(pedidoId).update({ status: 'entregue_pendente_confirmacao' });
         notifyUser(clienteUid, '🚚 Seu Pedido foi Entregue!', 'Por favor, confirme o recebimento do seu produto no app para finalizar a compra.');
-        alert('Notificação enviada ao comprador.');
+        exibirPopup('Notificação enviada ao comprador.');
     } catch (e) {
-        alert('Erro ao marcar como entregue: ' + e.message);
+        exibirPopup('Erro ao marcar como entregue: ' + e.message);
     }
 }
 
@@ -6682,11 +6682,11 @@ async function responderConfirmacaoEntrega(pedidoId, aceito) {
         await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
         const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
         notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { link: '#entregas' });
-        alert('Resposta enviada com sucesso!');
+        exibirPopup('Resposta enviada com sucesso!');
         fecharModalAtual();
         abrirMinhasCompras();
     } catch (e) {
-        alert('Erro ao enviar resposta: ' + e.message);
+        exibirPopup('Erro ao enviar resposta: ' + e.message);
     }
 }
 function toggleFuncoes(containerId) {
@@ -6700,7 +6700,7 @@ function toggleFuncoes(containerId) {
 
 function handleProdutoClick(produto) {
     if (!auth.currentUser) {
-        alert("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
+        exibirPopup("Para ver detalhes e comprar produtos, por favor, faça login ou crie uma conta.");
         mostrar('authView');
     } else {
         abrirDetalhesProduto(produto);
@@ -6827,7 +6827,7 @@ function abrirModalAvaliacaoProduto(pedidoId, produtoId, produtoNome) {
     document.getElementById('btnSalvarAvaliacaoProduto').onclick = () => {
         const comentario = document.getElementById('avaliarProdutoComentario').value.trim();
         if (notaSelecionada === 0) {
-            return alert('Por favor, selecione uma nota de 1 a 5 estrelas.');
+            return exibirPopup('Por favor, selecione uma nota de 1 a 5 estrelas.');
         }
         salvarAvaliacaoProduto(pedidoId, produtoId, notaSelecionada, comentario);
     };
@@ -6847,11 +6847,11 @@ async function salvarAvaliacaoProduto(pedidoId, produtoId, nota, comentario) {
         });
         await db.collection('loja_pedidos').doc(pedidoId).update({ avaliado: true });
         
-        alert('Obrigado pela sua avaliação!');
+        exibirPopup('Obrigado pela sua avaliação!');
         fecharModalAtual();
         abrirMinhasCompras();
     } catch (e) {
-        alert('Erro ao salvar avaliação: ' + e.message);
+        exibirPopup('Erro ao salvar avaliação: ' + e.message);
     }
 }
 
@@ -6980,14 +6980,14 @@ async function ativarModoFerias() {
     const fim = document.getElementById('feriasFim').value;
 
     if (!inicio || !fim) {
-        return alert("Por favor, selecione a data de início e fim.");
+        return exibirPopup("Por favor, selecione a data de início e fim.");
     }
 
     const dataInicio = new Date(inicio);
     const dataFim = new Date(fim);
 
     if (dataFim < dataInicio) {
-        return alert("A data de fim não pode ser anterior à data de início.");
+        return exibirPopup("A data de fim não pode ser anterior à data de início.");
     }
     
     if (!confirm(`Você tem certeza que deseja bloquear sua agenda de ${dataInicio.toLocaleDateString()} até ${dataFim.toLocaleDateString()}? Seus clientes serão notificados.`)) {
@@ -7024,11 +7024,11 @@ async function ativarModoFerias() {
         });
 
         fecharTodosOsModais();
-        alert("Modo férias ativado com sucesso! Sua agenda está bloqueada para o período e seus clientes foram notificados.");
+        exibirPopup("Modo férias ativado com sucesso! Sua agenda está bloqueada para o período e seus clientes foram notificados.");
 
     } catch (e) {
         fecharTodosOsModais();
-        alert("Ocorreu um erro: " + e.message);
+        exibirPopup("Ocorreu um erro: " + e.message);
     }
 }
 
@@ -7058,7 +7058,7 @@ function adicionarServicoOnboarding() {
     const nome = document.getElementById('onboardingServicoNome').value.trim();
     const valor = parseFloat(document.getElementById('onboardingServicoValor').value);
     const tempo = parseInt(document.getElementById('onboardingServicoTempo').value);
-    if (!nome || isNaN(valor) || isNaN(tempo)) return alert("Preencha todos os campos do serviço.");
+    if (!nome || isNaN(valor) || isNaN(tempo)) return exibirPopup("Preencha todos os campos do serviço.");
 
     tempOnboardingServicos.push({ nome, valor, duracao: tempo });
     
@@ -7166,21 +7166,21 @@ function avancarOnboarding(etapa) {
         }).catch(e => {
             // Se der erro, fecha o "Aguarde" e mostra a falha
             fecharTodosOsModais();
-            alert("Erro ao salvar: " + e.message);
+            exibirPopup("Erro ao salvar: " + e.message);
         });
     }
 }
 
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
-    alert(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
+    exibirPopup(`Loja ${deveAtivar ? 'ativada' : 'desativada'} para o usuário.`);
     abrirModalGerenciarUsuario(uid); // Reabre o modal para refletir a mudança
 }
 
 async function adminDeletarProduto(produtoId, nome) {
     if(confirm(`Tem certeza que deseja deletar o produto "${nome}"?`)) {
         await db.collection('loja_produtos').doc(produtoId).delete();
-        alert("Produto deletado!");
+        exibirPopup("Produto deletado!");
         fecharModalAtual();
     }
 }
@@ -7238,7 +7238,7 @@ carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ interesse_principal: novoInteresse });
             buttons.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            alert("Interesse atualizado!");
+            exibirPopup("Interesse atualizado!");
             location.reload(); // Recarrega para aplicar as mudanças de filtro
         }
     });
@@ -7246,9 +7246,9 @@ carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
 async function salvarLocalizacaoConfig() {
     const estado = document.getElementById('configEstado').value;
     const cidade = document.getElementById('configCidade').value;
-    if (!estado || !cidade) return alert("Selecione estado e cidade.");
+    if (!estado || !cidade) return exibirPopup("Selecione estado e cidade.");
     await db.collection('usuarios').doc(auth.currentUser.uid).update({ estado, cidade });
-    alert("Localização salva!");
+    exibirPopup("Localização salva!");
     fecharModalAtual();
 }
 
