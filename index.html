@@ -6013,6 +6013,119 @@ async function executarAlteracaoSenha() {
     }
 }
 
+async function solicitarAlteracaoCidade() {
+    if (!perfil) return exibirPopup("Erro", "Não foi possível carregar seu perfil."); // Usa popup
+
+    // Usa popup de confirmação customizado se você tiver um, senão usa confirm
+    if (!confirm("Isso criará uma solicitação para o administrador alterar sua cidade e abrirá o WhatsApp para agilizar. Continuar?")) return;
+
+    exibirAguarde("Criando solicitação..."); // Usa popup de aguarde
+    try {
+        // Adiciona ID único para fácil referência
+        const solicitacaoRef = db.collection("solicitacoes").doc(); // Gera ID antes
+        await solicitacaoRef.set({
+            id: solicitacaoRef.id, // Salva o próprio ID
+            tipo: "alteracao_cidade",
+            usuarioUid: auth.currentUser.uid,
+            usuarioNome: perfil.nome,
+            cidadeAtual: perfil.cidade,
+            estadoAtual: perfil.estado,
+            status: "pendente",
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        const mensagem = encodeURIComponent(`Olá! Gostaria de solicitar a alteração da minha cidade no app Nova Versão.\n\nUsuário: ${perfil.nome}\nCidade Atual: ${perfil.cidade} - ${perfil.estado}\n\nID da Solicitação (para referência do admin): ${solicitacaoRef.id}`);
+        const phoneNum = WHATSAPP_ADM_PHONE.startsWith('55') ? WHATSAPP_ADM_PHONE : `55${WHATSAPP_ADM_PHONE}`;
+        window.open(`https://wa.me/${phoneNum}?text=${mensagem}`, '_blank');
+
+        fecharAguarde(null, true); // Fecha popup de aguarde
+        exibirPopup("Sucesso", "Solicitação enviada! Você foi redirecionado para o WhatsApp."); // Usa popup
+        notifyAdmins("🏙️ Alteração de Cidade", `${perfil.nome} solicitou alteração de cidade (ID: ${solicitacaoRef.id}).`, { link: '#solicitacoes' });
+        fecharModalAtual(); // Fecha modal de configurações
+
+    } catch (error) {
+        fecharAguarde(null, true); // Fecha popup de aguarde
+        console.error("Erro ao solicitar alteração de cidade:", error);
+        exibirPopup("Erro", "Não foi possível criar a solicitação: " + error.message); // Usa popup
+    }
+}
+
+let solicitacaoAtualId = null; // Variável global para guardar o ID da solicitação aberta
+let solicitacaoAtualUid = null; // Variável global para guardar o UID do usuário da solicitação
+
+async function abrirModalAdminCidade(id, s) {
+    solicitacaoAtualId = id;
+    solicitacaoAtualUid = s.usuarioUid;
+
+    document.getElementById('adminCidadeNomeUsuario').textContent = s.usuarioNome;
+    document.getElementById('adminCidadeAtual').textContent = `${s.cidadeAtual} - ${s.estadoAtual}`;
+
+    // Carrega estados no select do modal de admin e define o estado atual
+    carregarEstados('adminNovoSolicitacao');
+    setTimeout(() => {
+         document.getElementById('adminNovoEstadoSolicitacao').value = s.estadoAtual || ""; // Pré-seleciona estado atual
+         // Limpa e recarrega cidades baseado no estado atual (ou nenhum se não houver)
+         carregarCidades('adminNovoSolicitacao');
+         setTimeout(() => {
+            // Tenta pré-selecionar a cidade atual se ela existir na lista carregada
+            const cidadeSelect = document.getElementById('adminNovoCidadeSolicitacao');
+            if(cidadeSelect.querySelector(`option[value="${s.cidadeAtual}"]`)) {
+                cidadeSelect.value = s.cidadeAtual;
+            } else {
+                cidadeSelect.value = ""; // Deixa "Selecione a cidade" se a atual não estiver na lista
+            }
+         }, 150);
+    }, 150);
+
+
+    abrirModal('modalAdminDetalhesCidade');
+}
+
+async function aprovarAlteracaoCidade() {
+    const novoEstado = document.getElementById('adminNovoEstadoSolicitacao').value;
+    const novaCidade = document.getElementById('adminNovoCidadeSolicitacao').value;
+
+    if (!novoEstado || !novaCidade) {
+        return exibirPopup("Erro", "Selecione o novo estado e cidade."); // Usa popup
+    }
+
+    // Usa popup de confirmação customizado se você tiver um, senão usa confirm
+    if (!confirm(`Confirmar alteração para ${novaCidade} - ${novoEstado}?`)) return;
+
+    exibirAguarde("Atualizando cidade..."); // Usa popup de aguarde
+    try {
+        await db.runTransaction(async t => {
+            const userRef = db.collection("usuarios").doc(solicitacaoAtualUid);
+            const solicitacaoRef = db.collection("solicitacoes").doc(solicitacaoAtualId);
+
+            t.update(userRef, { estado: novoEstado, cidade: novaCidade });
+            t.update(solicitacaoRef, { status: "aprovado", novoEstado: novoEstado, novaCidade: novaCidade }); // Salva a nova cidade na solicitação
+        });
+
+        fecharAguarde(null, true); // Fecha popup de aguarde
+        exibirPopup("Sucesso", "Cidade do usuário alterada!"); // Usa popup
+        notifyUser(solicitacaoAtualUid, "✅ Cidade Alterada!", `Sua cidade foi atualizada para ${novaCidade} - ${novoEstado}.`);
+        fecharTodosOsModais(); // Fecha o modal de detalhes e o de solicitações
+        abrirModalSolicitacoes(); // Reabre a lista de solicitações atualizada
+
+    } catch (error) {
+        fecharAguarde(null, true); // Fecha popup de aguarde
+        console.error("Erro ao aprovar alteração de cidade:", error);
+        exibirPopup("Erro", "Não foi possível aprovar a alteração: " + error.message); // Usa popup
+    }
+}
+
+// Função auxiliar para recusar a solicitação aberta no modal de cidade
+function recusarSolicitacaoAtual() {
+    if (solicitacaoAtualId && solicitacaoAtualUid) {
+         // Usa popup de confirmação customizado se você tiver um, senão usa confirm
+        if (confirm("Tem certeza que deseja recusar esta solicitação?")) {
+            recusarSolicitacao(solicitacaoAtualId, solicitacaoAtualUid, 'alteracao_cidade');
+            fecharModalAtual(); // Fecha o modal de detalhes da cidade
+        }
+    }
+}
+
 // Funções da Loja
 function abrirModalParaVender() {
     if (perfil.lojaLiberada || perfil.tipo === 'admin') {
