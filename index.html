@@ -5207,7 +5207,7 @@ async function abrirModalGerenciarUsuario(uid) {
             <hr style="border-color: var(--cor-borda); margin: 15px 0;">
 
             <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim ✅' : 'Não ❌'}</p>
-            {/* Alterado o segundo parâmetro da função adminToggleVip para boolean */}
+            
             <button onclick="adminToggleVip('${uid}', ${!isVipAtivo(u)})">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
             <hr style="border-color: var(--cor-borda); margin: 15px 0;">
 
