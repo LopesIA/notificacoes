@@ -1080,6 +1080,27 @@
         background-color: var(--cor-destaque);
         color: var(--cor-fundo);
     }
+.footer-contact a {
+    color: inherit; /* Herda a cor do texto padrão */
+    text-decoration: none;
+    display: inline-block; /* Necessário para aplicar gradiente corretamente */
+}
+
+.animated-gradient-text {
+    background: linear-gradient(90deg, var(--cor-destaque-prata), var(--cor-destaque-ouro), var(--cor-destaque-prata));
+    background-size: 200% auto; /* Tamanho do gradiente para animação */
+    color: transparent; /* Torna o texto transparente */
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: gradient-animation 4s linear infinite;
+    font-weight: 500; /* Um pouco mais de destaque */
+}
+
+@keyframes gradient-animation {
+    0% { background-position: 200% center; }
+    100% { background-position: 0% center; }
+}
+
   </style>
 </head>
 <body>
@@ -1290,7 +1311,21 @@
 
 <div id="modalTermosUso" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Uso</h3><p class="scrollable-list">Bem-vindo ao Nova Versão! Ao usar nosso aplicativo, você concorda em seguir nossas regras de conduta, respeitar outros usuários e profissionais, e usar a plataforma para os fins a que se destina. Violações podem resultar na suspensão da conta.</p><button data-modal-id="modalTermosUso" onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalTermosPrivacidade" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Privacidade</h3><p class="scrollable-list">Sua privacidade é importante. Coletamos dados como nome, e-mail e localização para fornecer e melhorar nossos serviços. Não compartilhamos seus dados pessoais com terceiros sem seu consentimento, exceto quando exigido por lei.</p><button data-modal-id="modalTermosPrivacidade" onclick="fecharModal(event)">Fechar</button></div></div>
-<div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o Nova Versão, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies" onclick="fecharModal(event)">Fechar</button></div></div>
+<div id="modalTermosCookies" class="modal" onclick="fecharModal(event)"><div class="modal-content" onclick="event.stopPropagation()"><h3>Termos de Cookies</h3><p class="scrollable-list">Utilizamos cookies e tecnologias semelhantes para manter sua sessão ativa, lembrar suas preferências e garantir o funcionamento do aplicativo. Ao continuar usando o Nova Versão, você concorda com nosso uso de cookies.</p><button data-modal-id="modalTermosCookies"
+
+<div class="popup-section footer-contact" style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
+    <p style="font-size: 12px; margin-bottom: 5px;">
+         <a href="https://wa.me/5527995003737" target="_blank" class="animated-contact-link">
+             <span class="animated-gradient-text">📞 (27) 99500-3737</span>
+         </a>
+    </p>
+    <p style="font-size: 12px; margin: 0;">
+         <a href="mailto:suuportenovaversao@gmail.com" class="animated-contact-link">
+             <span class="animated-gradient-text">📧 suuportenovaversao@gmail.com</span>
+         </a>
+    </p>
+</div>
+onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -1590,11 +1625,10 @@
 
 <div id="modalLogomarca" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🎨 Adicionar Logomarca</h3>
-    <p style="font-size: 12px; opacity: 0.8;">Use o site <a href="https://postimages.org/" target="_blank">Postimages.org</a> para hospedar sua imagem gratuitamente e cole o "Link Direto" abaixo.</p>
-    <input id="logomarcaUrl" type="url" placeholder="🔗 Cole o Link Direto aqui">
-    <button onclick="salvarLogomarca()">💾 Salvar Logomarca</button>
-    <button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
+    <h3>🎨 Adicionar Logomarca (1 Imagem)</h3>
+<p style="font-size: 12px; opacity: 0.8;">Selecione uma imagem ou GIF do seu dispositivo.</p>
+<input id="logomarcaFile" type="file" accept="image/*,image/gif"> <progress id="logoUploadProgress" value="0" max="100" style="width: 100%; display: none;"></progress> <button onclick="salvarLogomarca()">💾 Salvar Logomarca</button>
+<button data-modal-id="modalLogomarca" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -1752,11 +1786,10 @@
 
 <div id="modalPortfolioBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🖼️ Gerenciar Portfólio</h3>
-    <p style="font-size: 12px; opacity: 0.8;">Cole os links das suas imagens. Use serviços como <a href="https://postimages.org/" target="_blank">Postimages</a> para hospedar suas fotos gratuitamente. Máximo de 10 imagens.</p>
-    <div id="portfolioInputsContainer" class="scrollable-list" style="max-height: 250px;"></div>
-    <button onclick="salvarPortfolio()">💾 Salvar Portfólio</button>
-    <button data-modal-id="modalPortfolioBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
+    <h3>🖼️ Gerenciar Portfólio (Até 10 Imagens/GIFs)</h3>
+<p style="font-size: 12px; opacity: 0.8;">Selecione até 10 imagens ou GIFs do seu dispositivo.</p>
+<input id="portfolioFiles" type="file" accept="image/*,image/gif" multiple> <div id="portfolioPreviews"></div> <button onclick="salvarPortfolio()">💾 Salvar Portfólio</button>
+<button data-modal-id="modalPortfolioBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -1926,8 +1959,9 @@
 
 <div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="formProdutoTitulo">📦 Adicionar Novo Produto</h3>
-        <input id="produtoImagemUrl" type="url" placeholder="🔗 Link direto da imagem (.png, .jpg)">
+        <h3 id="formProdutoTitulo">📦 Adicionar/Editar Produto</h3>
+        <p style="font-size: 12px; opacity: 0.8;">Selecione até 5 imagens ou GIFs.</p>
+        <input id="produtoFiles" type="file" accept="image/*,image/gif" multiple> <div id="produtoPreviews"></div> <button id="btnSalvarProduto" onclick="salvarProdutoVendedor()">💾 Salvar Produto</button>
         <input id="produtoNome" type="text" placeholder="Nome do Produto">
         <input id="produtoPreco" type="number" placeholder="Preço (Ex: 49.90)">
         <p>Tamanhos disponíveis:</p>
@@ -2092,6 +2126,7 @@
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-storage-compat.js"></script>
 
 <script>
 // Firebase e variáveis globais
@@ -2113,6 +2148,8 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .catch((error) => {
     console.error("Erro ao definir a persistência de autenticação:", error);
   });
+const storage = firebase.storage();
+
 const messaging = firebase.messaging(); 
 const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.05, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
 const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
@@ -4228,14 +4265,42 @@ function removerServico(index) {
   }).then(() => exibirPopup("Serviço removido!")).catch(e => exibirPopup("Erro: " + e.message));
 }
 
-function salvarLogomarca() {
-    const url = document.getElementById("logomarcaUrl").value.trim();
-    if (!url) return exibirPopup("Por favor, insira um link.");
-    db.collection("usuarios").doc(auth.currentUser.uid).update({ logo_url: url })
-      .then(() => {
+async function salvarLogomarca() {
+    const fileInput = document.getElementById("logomarcaFile");
+    const progressBar = document.getElementById('logoUploadProgress'); // Pega a barra de progresso
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        return exibirPopup("Por favor, selecione um arquivo.");
+    }
+    const file = fileInput.files[0];
+    const userId = auth.currentUser.uid;
+    const filePath = `logos/${userId}_${Date.now()}_${file.name}`; // Caminho único
+
+    exibirAguarde("Enviando logomarca...");
+    progressBar.style.display = 'block'; // Mostra a barra
+
+    try {
+        // Chama uploadImage com o callback de progresso
+        const downloadURL = await uploadImage(file, filePath, (progress) => {
+            progressBar.value = progress; // Atualiza a barra
+        });
+
+        // Salva a URL no Firestore
+        await db.collection("usuarios").doc(userId).update({ logo_url: downloadURL });
+
+        progressBar.style.display = 'none'; // Esconde a barra
+        progressBar.value = 0; // Reseta a barra
+        fecharTodosOsModais();
         exibirPopup("Logomarca salva com sucesso!");
         fecharModalAtual();
-      }).catch(e => exibirPopup("Erro ao salvar: " + e.message));
+    } catch (error) {
+        progressBar.style.display = 'none';
+        progressBar.value = 0;
+        fecharTodosOsModais();
+        exibirPopup("Erro ao salvar logomarca: " + error.message);
+    } finally {
+         fileInput.value = ''; // Limpa o input de arquivo
+    }
 }
 
 function alterarEnderecoBarbeiro(event) {
@@ -5349,16 +5414,19 @@ async function abrirModalGerenciarUsuario(uid) {
         </div>
 
 <div class="popup-section">
-        <p><strong>Alterar Tipo de Conta:</strong></p>
-        <p>Tipo Atual: <strong>${u.tipo}</strong></p>
-        <div style="display: flex; gap: 10px; margin-top: 5px;">
-            
-            <button onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>Cliente</button>
-            <button onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>Barbeiro</button>
-            <button onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>Manicure/Pedicure</button>
-            <button onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>Designer Cílios</button>
-        </div>
+    <p><strong>Alterar Tipo de Conta:</strong></p>
+    <p>Tipo Atual: <strong>${u.tipo}</strong></p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; justify-content: center;">
+        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'admin')" ${u.tipo === 'admin' ? 'disabled' : ''}>🧠 Admin</button>
+        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>🙋 Cliente</button>
+
+        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>💈 Barbeiro</button>
+        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>💅 Manicure/Pedicure</button>
+
+        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>👁️ Designer Cílios</button>
+        {/* Adicione um botão vazio ou ajuste o flex-basis se precisar alinhar o último */}
     </div>
+</div>
 
         <div class="popup-section">
             <p><strong>Ações de Segurança:</strong></p>
@@ -5922,17 +5990,106 @@ function abrirModalPortfolioBarbeiro() {
     }
 }
 
-function salvarPortfolio() {
-    const inputs = document.querySelectorAll('.portfolio-url-input');
-    const novasUrls = Array.from(inputs).map(input => input.value.trim()).filter(url => url);
-    
-    db.collection('usuarios').doc(auth.currentUser.uid).update({
-        portfolio: novasUrls
-    }).then(() => {
-        exibirPopup('Portfólio salvo com sucesso!');
+async function salvarPortfolio() {
+    const fileInput = document.getElementById("portfolioFiles");
+    const userId = auth.currentUser.uid;
+    const previewContainer = document.getElementById("portfolioPreviews");
+    previewContainer.innerHTML = 'Enviando...'; // Limpa prévias antigas
+
+    const files = fileInput.files;
+
+    if (!files || files.length === 0) {
+        // Se nenhum arquivo foi selecionado, verifica se o usuário quer APAGAR tudo
+         if (perfil.portfolio && perfil.portfolio.length > 0) {
+             if (confirm("Nenhum arquivo selecionado. Deseja remover todas as imagens do portfólio atual?")) {
+                  exibirAguarde("Removendo imagens...");
+                  try {
+                      // REMOVER IMAGENS ANTIGAS DO STORAGE (Opcional, mas recomendado)
+                      // Esta parte é mais complexa, pode ser feita depois ou via Cloud Function
+                      // for (const url of perfil.portfolio) {
+                      //    try { await storage.refFromURL(url).delete(); } catch(e) { console.warn("Falha ao deletar imagem antiga:", e);}
+                      // }
+
+                      await db.collection('usuarios').doc(userId).update({ portfolio: [] });
+                      fecharTodosOsModais();
+                      exibirPopup('Portfólio limpo com sucesso!');
+                      fecharModalAtual();
+                  } catch (e) {
+                      fecharTodosOsModais();
+                      exibirPopup('Erro ao limpar portfólio: ' + e.message);
+                  }
+             } else {
+                 previewContainer.innerHTML = ''; // Limpa "Enviando..."
+             }
+         } else {
+            exibirPopup("Selecione pelo menos um arquivo.");
+            previewContainer.innerHTML = '';
+         }
+        return;
+    }
+
+    if (files.length > 10) {
+         previewContainer.innerHTML = '';
+        return exibirPopup("Você pode enviar no máximo 10 imagens para o seu portfólio.");
+    }
+
+    exibirAguarde(`Enviando ${files.length} imagem(ns)...`);
+    const uploadPromises = [];
+    const newUrls = [];
+
+     // Cria elementos de progresso para cada arquivo
+     Array.from(files).forEach((file, index) => {
+         const progressId = `portfolio-progress-${index}`;
+         previewContainer.innerHTML += `<div>${file.name}: <progress id="${progressId}" value="0" max="100"></progress></div>`;
+         const filePath = `portfolio/${userId}/${Date.now()}_${file.name}`;
+
+         uploadPromises.push(
+             uploadImage(file, filePath, (progress) => {
+                 const progressBar = document.getElementById(progressId);
+                 if (progressBar) progressBar.value = progress;
+             }).then(url => newUrls.push({ url: url, source: 'barber' })) // Adiciona como objeto
+         );
+     });
+
+    try {
+        await Promise.all(uploadPromises);
+
+        // REMOVER IMAGENS ANTIGAS DO STORAGE (Opcional) - Mesma lógica de apagar tudo
+
+        // Salva o NOVO array de URLs (objetos) no Firestore
+        await db.collection('usuarios').doc(userId).update({ portfolio: newUrls });
+
+        fecharTodosOsModais();
+        exibirPopup(`Portfólio salvo com ${newUrls.length} imagem(ns)!`);
         fecharModalAtual();
-    }).catch(e => exibirPopup('Erro ao salvar portfólio: ' + e.message));
+    } catch (error) {
+        fecharTodosOsModais();
+        exibirPopup('Erro ao salvar portfólio: ' + error.message);
+    } finally {
+        fileInput.value = ''; // Limpa o input
+        previewContainer.innerHTML = ''; // Limpa prévias/progresso
+    }
 }
+
+async function enviarEmailDeContato() {
+    const userEmail = perfil ? perfil.email : prompt("Seu email para resposta:");
+    const message = prompt("Sua mensagem:");
+    if (!userEmail || !message) return;
+
+    exibirAguarde("Enviando mensagem...");
+    try {
+        const sendEmailFunction = firebase.functions().httpsCallable('sendContactEmail');
+        const result = await sendEmailFunction({ email: userEmail, message: message });
+        fecharTodosOsModais();
+        exibirPopup("Sucesso", result.data.message);
+    } catch (error) {
+        fecharTodosOsModais();
+        console.error("Erro ao chamar função de email:", error);
+        exibirPopup("Erro", error.message);
+    }
+}
+// No HTML, o link do email chamaria essa função:
+// <a href="#" onclick="enviarEmailDeContato()">...</a>
 
 function abrirModalFidelidade() {
   const pontosDisplay = document.getElementById("pontosFidelidade");
@@ -6168,6 +6325,41 @@ async function abrirModalAdminCidade(id, s) {
 
 
     abrirModal('modalAdminDetalhesCidade');
+}
+
+/**
+ * Faz upload de um arquivo para o Firebase Storage.
+ * @param {File} file O arquivo a ser enviado.
+ * @param {string} path O caminho no Storage (ex: 'logos/userId.jpg').
+ * @param {function} [onProgress] Callback para progresso (opcional).
+ * @returns {Promise<string>} A URL de download do arquivo.
+ */
+function uploadImage(file, path, onProgress) {
+    return new Promise((resolve, reject) => {
+        const storageRef = storage.ref(path);
+        const uploadTask = storageRef.put(file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log('Upload está ' + progress + '% concluído');
+                if (onProgress) {
+                    onProgress(progress); // Chama o callback de progresso
+                }
+            },
+            (error) => {
+                console.error("Erro no upload: ", error);
+                reject(error);
+            },
+            () => {
+                // Upload concluído com sucesso, pega a URL de download
+                uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                    console.log('Arquivo disponível em', downloadURL);
+                    resolve(downloadURL); // Retorna a URL
+                }).catch(reject);
+            }
+        );
+    });
 }
 
 async function aprovarAlteracaoCidade() {
@@ -6543,36 +6735,101 @@ orm.querySelector('#produtoEntrega').value = '';
 }
 
 async function salvarProdutoVendedor() {
+    // ... (pegar outros dados do formulário como antes: nome, preco, etc.)
     const nome = document.getElementById('produtoNome').value.trim();
-    const imagemUrl = document.getElementById('produtoImagemUrl').value.trim();
     const preco = parseFloat(document.getElementById('produtoPreco').value);
-    const desconto = parseInt(document.getElementById('produtoDesconto').value) || 0;
-    const tempoEntrega = document.getElementById('produtoEntrega').value.trim();
-    const descricao = document.getElementById('produtoDescricao').value.trim();
-    const tamanhos = Array.from(document.querySelectorAll('input[name="tamanhos"]:checked')).map(c => c.value);
+    // ... resto dos campos ...
+    const fileInput = document.getElementById('produtoFiles');
+    const previewContainer = document.getElementById("produtoPreviews");
+    previewContainer.innerHTML = ''; // Limpa prévias
 
-    if(!nome || !imagemUrl || isNaN(preco) || preco <= 0 || !tempoEntrega) {
-        return exibirPopup('Preencha nome, imagem, preço e tempo de entrega.');
+    const files = fileInput.files;
+    let existingImageUrls = []; // Para guardar URLs existentes ao editar
+
+     // Se está editando e não selecionou novos arquivos, mantém os antigos?
+    if (produtoEmEdicaoId && (!files || files.length === 0)) {
+         const doc = await db.collection('loja_produtos').doc(produtoEmEdicaoId).get();
+         if (doc.exists) {
+             existingImageUrls = doc.data().imageUrls || [doc.data().imagemUrl]; // Adapta para array ou string antiga
+         }
+         // Se não há arquivos novos E não há imagens existentes, exige imagem
+         if (existingImageUrls.length === 0) {
+              return exibirPopup('É necessário selecionar pelo menos uma imagem para o produto.');
+         }
+    } else if (!produtoEmEdicaoId && (!files || files.length === 0)) {
+         // Se é um produto NOVO e não selecionou arquivos
+         return exibirPopup('É necessário selecionar pelo menos uma imagem para o produto.');
     }
 
+     // Verifica limite apenas se novos arquivos foram selecionados
+     if (files && files.length > 5) {
+         return exibirPopup("Você pode enviar no máximo 5 imagens por produto.");
+     }
+
+    // ... (validação dos outros campos como antes)
+    if(!nome || isNaN(preco) || preco <= 0 /* ... outras validações */) {
+        return exibirPopup('Preencha os campos obrigatórios corretamente.');
+    }
+
+
+    exibirAguarde("Salvando produto...");
+    const uploadPromises = [];
+    const newImageUrls = [];
+
+    if (files && files.length > 0) {
+         previewContainer.innerHTML = 'Enviando imagens...';
+         Array.from(files).forEach((file, index) => {
+             const progressId = `produto-progress-${index}`;
+             previewContainer.innerHTML += `<div>${file.name}: <progress id="${progressId}" value="0" max="100"></progress></div>`;
+             const filePath = `products/${produtoEmEdicaoId || `new_${Date.now()}`}/${Date.now()}_${file.name}`; // Caminho único
+
+             uploadPromises.push(
+                 uploadImage(file, filePath, (progress) => {
+                     const progressBar = document.getElementById(progressId);
+                     if (progressBar) progressBar.value = progress;
+                 }).then(url => newImageUrls.push(url))
+             );
+         });
+         await Promise.all(uploadPromises);
+         // TODO: Opcional - Deletar imagens antigas do Storage ao editar
+    }
+
+    const finalImageUrls = newImageUrls.length > 0 ? newImageUrls : existingImageUrls;
+
     const data = {
-        nome, imagemUrl, preco, desconto, tempoEntrega, descricao, tamanhos,
+        nome,
+        preco,
+        // ... outros campos ...
+        imageUrls: finalImageUrls, // Salva o ARRAY de URLs
+        imagemUrl: finalImageUrls[0] || null, // Mantém a primeira imagem no campo antigo por compatibilidade talvez? Ou remova 'imagemUrl'
         vendedorUid: auth.currentUser.uid,
         vendedorNome: perfil.nome,
         isOficial: perfil.tipo === 'admin',
         ts: firebase.firestore.FieldValue.serverTimestamp()
     };
-    
-    if (produtoEmEdicaoId) {
-        await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
-    } else {
-        data.vendasRealizadas = 0;
-        await db.collection('loja_produtos').add(data);
+
+    try {
+        if (produtoEmEdicaoId) {
+            // Remove 'ts' e 'vendasRealizadas' ao atualizar para não sobrescrever
+            delete data.ts;
+            delete data.vendasRealizadas;
+            await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(data);
+        } else {
+            data.vendasRealizadas = 0; // Define vendas iniciais para novo produto
+            await db.collection('loja_produtos').add(data);
+        }
+
+        fecharTodosOsModais();
+        exibirPopup('Produto salvo com sucesso!');
+        fecharModalAtual();
+        abrirGerenciarLoja(); // Recarrega a lista
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup('Erro ao salvar produto: ' + e.message);
+    } finally {
+         if (fileInput) fileInput.value = ''; // Limpa input
+         previewContainer.innerHTML = ''; // Limpa prévias
     }
-    
-    exibirPopup('Produto salvo com sucesso!');
-    fecharModalAtual();
-    abrirGerenciarLoja(); // Recarrega a lista
 }
 
 function habilitarEnterParaFormulario(inputIds, buttonId) {
