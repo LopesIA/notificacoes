@@ -1,19 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="manifest" href="/manifest.json">
   <meta charset="UTF-8">
   <title>Nova Versão</title>
+  <link rel="manifest" href="/manifest.json">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-<link rel="manifest" href="/manifest.json">
-  <meta charset="UTF-8">
-  
   <link rel="icon" href="/icone.png" type="image/png">
   <link rel="apple-touch-icon" href="/icone.png">
-  <title>Nova Versão</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
@@ -1151,6 +1144,7 @@
     <button onclick="entrar()">➡️ Entrar</button>
     <button id="btnCriarConta" onclick="prepararCriarConta()">🆕 Criar conta</button>
     <button id="btnVoltar" class="hidden" onclick="voltarParaLogin()">⬅️ Voltar</button>
+    <button onclick="abrirModal('modalEsqueciSenha')" style="background: none; border: none; color: var(--cor-destaque); margin-top: 10px; width: 100%;">Esqueci minha senha</button>
   </div>
   
   <div id="guestView" class="card">
@@ -1707,7 +1701,7 @@
   </div>
 </div>
 
-<div id="modalAdminGerenciarUsuario" class="modal"><div class="modal-content"><h3>Gerenciar Usuário</h3><div id="adminGerenciarConteudo"></div><button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)">Fechar</button></div></div>
+<div id="modalAdminGerenciarUsuario" class="modal"><div class="modal-content"><h3>Gerenciar Usuário</h3><div id="adminGerenciarConteudo"></div></div></div>
 
 <div id="modalGerenciarLojaAdmin" class="modal"><div class="modal-content"><h3>Gerenciar Loja</h3><div class="popup-section"><h4>Deletar Produto</h4><div id="adminDeletarProdutoList" class="scrollable-list"></div></div><div class="popup-section"><h4>Ativar/Desativar Loja de Vendedor</h4><div id="adminToggleLojaList" class="scrollable-list"></div></div><button data-modal-id="modalGerenciarLojaAdmin" onclick="fecharModal(event)">Fechar</button></div></div>
 
@@ -1969,6 +1963,13 @@
 .rating-stars span.selected {
     color: var(--cor-destaque);
 }
+
+/* ADICIONE ESTE CÓDIGO DENTRO DA TAG <style> */
+#modalAdminGerenciarUsuario .modal-content {
+    max-height: 80vh; /* Limita a altura máxima do modal */
+    overflow-y: auto;   /* Adiciona a barra de rolagem vertical quando necessário */
+}
+
 </style>
 
 
@@ -2002,6 +2003,17 @@
     <input type="date" id="feriasFim">
     <button onclick="ativarModoFerias()">✅ Ativar e Notificar Clientes</button>
     <button data-modal-id="modalModoFerias" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<div id="modalEsqueciSenha" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🔑 Recuperar Acesso</h3>
+    <p style="font-size: 14px;">Preencha seus dados para solicitar uma nova senha ao administrador.</p>
+    <input id="recuperaEmail" type="email" placeholder="📧 Seu email de cadastro">
+    <input id="recuperaTelefone" type="tel" placeholder="📞 Seu telefone com DDD">
+    <button onclick="enviarSolicitacaoRecuperacaoSenha()">➡️ Enviar Solicitação</button>
+    <button data-modal-id="modalEsqueciSenha" onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
 </div>
 
@@ -2039,7 +2051,12 @@ const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
 const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
-const PRECO_PRO = 30;
+// SUBSTITUA AS CONSTANTES DE PREÇO POR ESTAS
+const PRECOS_PRO = { // Nossos 3 novos níveis
+    tier1: { preco: 29.90, taxa: 0.04 }, // 4%
+    tier2: { preco: 59.90, taxa: 0.02 }, // 2%
+    tier3: { preco: 99.90, taxa: 0.00 }  // 0%
+};
 
 let fcmSetupDone = false;
 let isSending = false;
@@ -2234,11 +2251,18 @@ function configurarBotoesGuest() {
     const guestView = document.getElementById('guestView');
     const buttons = guestView.querySelectorAll('#guestFuncoesContainer button');
     buttons.forEach(btn => {
-        const originalOnclick = btn.onclick;
-        if(btn.textContent.trim() === 'Loja') return; // Mantém a funcionalidade do botão Loja
+        const originalText = btn.textContent.trim();
+        // Mantém a funcionalidade original do botão "Loja"
+        if (originalText === 'Loja') {
+            btn.onclick = () => { mostrar('lojaView'); carregarProdutos(); };
+            return;
+        }
+        
+        // Para todos os outros botões, exibe um alerta para o usuário se logar
         btn.onclick = () => {
-    iniciarOnboarding(); // NOVO: Chama a primeira tela de boas-vindas
-};
+            alert("Para acessar esta função, por favor, crie uma conta ou faça login.");
+            mostrar('authView'); // Direciona para a tela de login
+        };
     });
 }
 
@@ -2512,6 +2536,38 @@ function voltarParaLogin() {
     cadastroCoords = null;
 }
 
+// ADICIONE ESTA FUNÇÃO NO INDEX.HTML
+async function enviarSolicitacaoRecuperacaoSenha() {
+    const email = document.getElementById('recuperaEmail').value.trim();
+    const telefone = document.getElementById('recuperaTelefone').value.trim();
+
+    if (!email || !telefone) {
+        return alert("Por favor, preencha seu email e telefone.");
+    }
+
+    exibirAguarde("Enviando solicitação...");
+
+    try {
+        await db.collection("solicitacoes").add({
+            tipo: "recuperacao_senha",
+            email: email,
+            telefone: telefone,
+            usuarioNome: `(Solicitante: ${email})`, // Nome temporário
+            status: "pendente",
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        const mensagem = encodeURIComponent(`Olá, esqueci minha senha no app Nova Versão.\n\nEmail: ${email}\nTelefone: ${telefone}\n\nAguardo o contato para redefinir.`);
+        window.open(`https://wa.me/5527995003737?text=${mensagem}`, '_blank');
+        
+        fecharTodosOsModais();
+        alert("✅ Solicitação enviada! Você foi redirecionado para o WhatsApp para agilizar o atendimento. O administrador entrará em contato em breve.");
+    } catch (error) {
+        fecharTodosOsModais();
+        alert("Erro ao enviar solicitação: " + error.message);
+    }
+}
+
 function criarConta() {
   exibirAguarde("Criando sua conta...");
   const email = document.getElementById("email").value.trim();
@@ -2597,7 +2653,7 @@ auth.onAuthStateChanged(async user => {
     if (comprasClienteListener) comprasClienteListener();
     return;
   }
-  
+  setupPlayStoreBilling();
   solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
   handleDeepLink();
@@ -3408,20 +3464,107 @@ function abrirModalVip() {
     abrirModal('modalVip');
 }
 
+// ADICIONE ESTE BLOCO NO INDEX.HTML
 
+// --- LÓGICA DE PAGAMENTO GOOGLE PLAY STORE (DIGITAL GOODS API) ---
+
+const SKUS = {
+    VIP: 'adesao_vip_6_meses',
+    PRO: 'assinatura_pro_mensal',
+    TURBINAR: 'turbinar_perfil_24h'
+};
+
+let playStoreService = null;
+
+// Função para iniciar o serviço de pagamento da Play Store
+async function setupPlayStoreBilling() {
+    if ('getDigitalGoodsService' in window) {
+        try {
+            playStoreService = await window.getDigitalGoodsService("https://play.google.com/billing");
+            if (playStoreService) {
+                console.log("✅ Serviço de cobrança da Google Play conectado com sucesso!");
+            }
+        } catch (error) {
+            console.error("Falha ao conectar com o serviço da Play Store:", error);
+            playStoreService = null;
+        }
+    }
+}
+
+// Chama a configuração assim que o perfil do usuário é carregado
+// (Você pode adicionar essa chamada dentro do 'auth.onAuthStateChanged')
+
+// Função principal para iniciar uma compra
+async function comprarComPlayStore(sku, precoEstimado) {
+    if (!playStoreService) {
+        alert("O serviço de pagamento da Play Store não está disponível. Isso é esperado se você estiver acessando pelo navegador comum.");
+        return;
+    }
+
+    try {
+        console.log(`Iniciando compra para SKU: ${sku}`);
+        const paymentMethodData = [{
+            supportedMethods: "https://play.google.com/billing",
+            data: { sku: sku }
+        }];
+
+        // Detalhes do pagamento (informativo)
+        const paymentDetails = {
+            total: {
+                label: `Total`,
+                amount: { currency: "BRL", value: precoEstimado.toString() }
+            }
+        };
+
+        const request = new PaymentRequest(paymentMethodData, paymentDetails);
+        const response = await request.show();
+        
+        const { purchaseToken } = response.details;
+        
+        // **MUITO IMPORTANTE:** AQUI VOCÊ DEVE ENVIAR O 'purchaseToken' PARA O SEU BACKEND
+        // PARA VALIDAÇÃO E ATIVAÇÃO DO PRODUTO.
+        
+        // Exemplo de como seria a chamada para o backend:
+        // await validarCompraNoBackend(purchaseToken, sku);
+
+        await response.complete('success');
+        
+        // Simulação de sucesso (REMOVA APÓS IMPLEMENTAR O BACKEND)
+        alert("Compra via Play Store concluída com sucesso (Simulação)! A ativação real requer validação no backend.");
+        // Exemplo: ativarBeneficioLocalmente(sku); // Função para atualizar a UI
+        location.reload();
+
+
+    } catch (error) {
+        console.error("Erro durante a compra na Play Store:", error);
+        if (error.name !== 'AbortError') {
+             alert("Ocorreu um erro ao processar seu pagamento na Play Store.");
+        }
+    }
+}
+
+// 1. SUBSTITUA A SUA FUNÇÃO 'assinarVip' ANTIGA POR ESTA COMPLETA
 function assinarVip() {
+    // Se o serviço da Play Store estiver ativo, usa ele como prioridade
+    if (playStoreService) {
+        comprarComPlayStore(SKUS.VIP, PRECO_VIP);
+        return;
+    }
+
+    // Se não, usa o método antigo de saldo da carteira
     if (perfil.saldo < PRECO_VIP) {
         alert("Saldo insuficiente para assinar o VIP.");
         return abrirModal('modalCarteira');
     }
-    if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)?`)) return;
+    if (!confirm(`Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)? O valor será descontado do seu saldo.`)) return;
+
     exibirAguarde("Ativando VIP...");
     db.runTransaction(async t => {
         const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
         const financeiroRef = db.collection("config").doc("financeiro");
         const clienteDoc = await t.get(clienteRef);
         if (isVipAtivo(clienteDoc.data())) throw "Você já é um membro VIP ativo.";
-        
+
         const expiracao = new Date();
         expiracao.setDate(expiracao.getDate() + 180); // Adiciona 180 dias
 
@@ -3442,6 +3585,88 @@ function assinarVip() {
     });
 }
 
+// 2. ADICIONE (ou SUBSTITUA) A FUNÇÃO 'assinarPro' POR ESTA NOVA VERSÃO
+function assinarPro(tier) {
+    const plano = PRECOS_PRO[tier];
+    if (!plano) {
+        return alert("Plano PRO inválido selecionado.");
+    }
+    const sku = `pro_${tier}`; // Ex: pro_tier1, pro_tier2
+
+    if (playStoreService) {
+        comprarComPlayStore(sku, plano.preco);
+        return;
+    }
+
+    if (perfil.saldo < plano.preco) {
+        alert("Saldo insuficiente para assinar este plano PRO. Por favor, deposite fundos na sua carteira.");
+        return abrirModal('modalCarteira');
+    }
+    if (!confirm(`Deseja assinar o plano PRO por R$ ${plano.preco.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`)) return;
+
+    exibirAguarde("Ativando PRO...");
+
+    db.runTransaction(async t => {
+        const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        const financeiroRef = db.collection("config").doc("financeiro");
+        const proDoc = await t.get(proRef);
+
+        if (isProAtivo(proDoc.data())) {
+            throw "Você já é um membro PRO ativo.";
+        }
+
+        const expiracao = new Date();
+        expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
+
+        t.update(proRef, {
+            saldo: firebase.firestore.FieldValue.increment(-plano.preco),
+            proAtivo: true,
+            proTier: tier, // Salva o nível do plano
+            proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+        });
+
+        t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(plano.preco) }, { merge: true });
+
+    }).then(() => {
+        fecharTodosOsModais();
+        alert("Parabéns! Você agora é um Profissional PRO!");
+        notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
+        fecharModalAtual();
+    }).catch(e => {
+        fecharTodosOsModais();
+        alert("Erro ao assinar PRO: " + e.message);
+    });
+}
+
+// 3. SUBSTITUA A SUA FUNÇÃO 'confirmarTurbinar' ANTIGA POR ESTA COMPLETA
+function confirmarTurbinar() {
+    if (playStoreService) {
+        comprarComPlayStore(SKUS.TURBINAR, PRECO_TURBINAR);
+        return;
+    }
+
+    if (perfil.saldo < PRECO_TURBINAR) {
+        return alert(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
+    }
+    if (perfil.ultimoBoostComprado) {
+        const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        if (perfil.ultimoBoostComprado.toDate() > vinteQuatroHorasAtras) {
+            return alert("Você só pode turbinar o perfil uma vez a cada 24 horas.");
+        }
+    }
+    if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
+        const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        db.collection('usuarios').doc(auth.currentUser.uid).update({
+            saldo: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR),
+            boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao),
+            ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            alert('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
+            fecharModalAtual();
+        }).catch(e => alert('Erro ao turbinar perfil: ' + e.message));
+    }
+}
+
 /**
  * Verifica se a assinatura PRO do profissional está ativa.
  */
@@ -3457,41 +3682,61 @@ function isProAtivo(perfilUsuario) {
  * Abre o modal para o profissional assinar ou ver o status do PRO.
  */
 // CÓDIGO ATUALIZADO (COPIE E COLE SUBSTITUINDO A FUNÇÃO INTEIRA)
+// SUBSTITUA TODA A FUNÇÃO 'abrirModalVipPro' POR ESTA
 function abrirModalVipPro() {
     const container = document.getElementById('vipProContentContainer');
+    const proAtivo = isProAtivo(perfil);
 
-    // Verifica se o perfil atual (carregado) é PRO
-    if (isProAtivo(perfil)) {
+    if (proAtivo) {
         const dataExpiracao = perfil.proExpirationDate.toDate().toLocaleDateString('pt-BR');
+        let taxaAtual = (TAXA * 100); // Taxa padrão
+        if(perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+            taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
+        }
+
         container.innerHTML = `
             <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-azul);">🌟 Você é um Profissional PRO!</h3>
                 <p>Sua assinatura mensal é válida até: <strong>${dataExpiracao}</strong>.</p>
+                <p>Sua taxa de serviço atual é de apenas: <strong>${taxaAtual.toFixed(1)}%</strong>.</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Seus Benefícios Atuais:</h4>
                     <ul>
                         <li>Selo 🌟 PRO de destaque no perfil e no chat.</li>
-                        <li><strong>Taxa de serviço reduzida para apenas 2,5%.</strong></li>
-                        <li>Acesso ao Dashboard de Desempenho com métricas avançadas.</li>
+                        <li><strong>Taxa de serviço reduzida.</strong></li>
+                        <li>Acesso ao Dashboard de Desempenho.</li>
                     </ul>
                 </div>
             </div>
         `;
     } else {
         container.innerHTML = `
-            <div style="padding: 20px; border-radius: 15px; text-align: center;">
+            <div style="text-align: center;">
                 <h3 style="color: var(--cor-destaque-azul);">🌟 Torne-se um Profissional PRO!</h3>
-                <p>Aumente seus lucros e destaque-se da concorrência com benefícios exclusivos.</p>
-                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Assinatura: R$ ${PRECO_PRO.toFixed(2)} / mês</p>
-                <div class="vantagens" style="text-align: left; margin-top: 20px;">
-                    <h4>Vantagens Exclusivas:</h4>
-                    <ul>
-                        <li><strong>✅ Taxa de Serviço Reduzida (2,5%):</strong> Aumente seu lucro em cada agendamento.</li>
-                        <li><strong>📊 Dashboard Avançado:</strong> Tenha insights sobre seus ganhos, clientes e serviços mais populares.</li>
-                        <li><strong>🌟 Selo PRO:</strong> Ganhe mais destaque e confiança no seu perfil e no chat.</li>
-                    </ul>
+                <p>Aumente seus lucros reduzindo a taxa de serviço do aplicativo.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                    <div class="card" style="border: 1px solid #cd7f32;">
+                        <h4>Plano Bronze</h4>
+                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}<small>/mês</small></p>
+                        <p>Reduz a taxa de serviço para <strong>4%</strong>.</p>
+                        <button onclick="assinarPro('tier1')" style="background-color: #cd7f32;">Assinar Bronze</button>
+                    </div>
+
+                    <div class="card" style="border: 1px solid #c0c0c0;">
+                        <h4>Plano Prata</h4>
+                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}<small>/mês</small></p>
+                        <p>Reduz a taxa de serviço para <strong>2%</strong>.</p>
+                        <button onclick="assinarPro('tier2')" style="background-color: #c0c0c0; color: #333;">Assinar Prata</button>
+                    </div>
+
+                    <div class="card vip-glow">
+                        <h4>Plano Ouro</h4>
+                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}<small>/mês</small></p>
+                        <p><strong>ZERE</strong> a taxa de serviço (<strong>0%</strong>).</p>
+                        <button onclick="assinarPro('tier3')">Assinar Ouro</button>
+                    </div>
                 </div>
-                <button onclick="assinarPro()" style="margin-top: 15px;">🌟 Assinar Agora (R$ ${PRECO_PRO.toFixed(2)})</button>
             </div>
         `;
     }
@@ -3501,48 +3746,6 @@ function abrirModalVipPro() {
 /**
  * Processa a assinatura PRO, descontando do saldo.
  */
-function assinarPro() {
-    if (perfil.saldo < PRECO_PRO) {
-        alert("Saldo insuficiente para assinar o PRO. Por favor, deposite fundos na sua carteira.");
-        return abrirModal('modalCarteira');
-    }
-    if (!confirm(`Deseja assinar o plano PRO por R$ ${PRECO_PRO.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`)) return;
-
-    exibirAguarde("Ativando PRO...");
-
-    db.runTransaction(async t => {
-        const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        const financeiroRef = db.collection("config").doc("financeiro");
-        const proDoc = await t.get(proRef);
-
-        // Verifica se já é PRO para evitar cobrança dupla
-        if (isProAtivo(proDoc.data())) {
-            throw "Você já é um membro PRO ativo.";
-        }
-        
-        const expiracao = new Date();
-        expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
-
-        t.update(proRef, {
-            saldo: firebase.firestore.FieldValue.increment(-PRECO_PRO),
-            proAtivo: true,
-            proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
-        });
-        
-        // Cria um novo campo para rastrear essa receita
-        t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(PRECO_PRO) }, { merge: true });
-
-    }).then(() => {
-        fecharTodosOsModais();
-        alert("Parabéns! Você agora é um Profissional PRO!");
-        notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
-        fecharModalAtual(); // Fecha o modal PRO
-    }).catch(e => {
-        fecharTodosOsModais();
-        alert("Erro ao assinar PRO: " + e.message);
-    });
-}
-// --- FIM DAS NOVAS FUNÇÕES ---
 
 function isVipAtivo(perfilUsuario) {
     if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
@@ -3563,51 +3766,38 @@ function abrirChatGlobal() {
     alternarChat('global'); // Começa sempre no global
 }
 
+// SUBSTITUA TODA A FUNÇÃO 'alternarChat' POR ESTA
 function alternarChat(tipo) {
     chatAtual = tipo;
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
     document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
 
+    // Remove permanentemente o seletor de cidade do admin da tela
     const adminSelector = document.getElementById('adminChatSelectorContainer');
+    adminSelector.classList.add('hidden'); 
+
     const chatContainer = document.getElementById("chatMessages");
     chatContainer.innerHTML = ""; // Limpa antes de carregar
     if (chatListener) chatListener();
 
-    let cidadeParaVisualizar = perfil.cidade; // Padrão para cliente
-
-    if (tipo === 'local' && perfil.tipo === 'admin') {
-        adminSelector.classList.remove('hidden');
-        const estadoSelect = document.getElementById('adminChatEstado');
-
-        // Popula os estados apenas uma vez para não perder a seleção
-        if (estadoSelect.options.length <= 1) {
-            estadoSelect.innerHTML = '<option value="">Selecione o estado</option>';
-            Object.keys(cidadesPorEstado).forEach(sigla => {
-                estadoSelect.innerHTML += `<option value="${sigla}">${sigla}</option>`;
-            });
-            estadoSelect.value = perfil.estado; // Padrão para o estado do admin
-            adminCarregarCidadesChat(); // Carrega as cidades do estado padrão
-        }
-
-        cidadeParaVisualizar = document.getElementById('adminChatCidade').value;
-        document.getElementById("chatTitle").textContent = `📍 Chat Local (${cidadeParaVisualizar || 'Selecione uma cidade'})`;
-
-    } else {
-        adminSelector.classList.add('hidden');
-        document.getElementById("chatTitle").textContent = tipo === 'global' ? '💬 Chat Global' : `📍 Chat Local (${perfil.cidade})`;
-    }
-
-    const agora = new Date();
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+    const agora = new Date();
 
     if (tipo === 'local') {
-        if (!cidadeParaVisualizar) {
-            chatContainer.innerHTML = `<p>👑 Administrador, por favor, selecione um estado e cidade para visualizar o chat.</p>`;
-            return; // Impede a query de rodar sem cidade selecionada
+        if (perfil.tipo === 'admin') {
+            // Admin vê todas as mensagens locais, sem filtro de cidade
+            document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
+        } else {
+            // Usuário comum vê apenas o chat da sua cidade
+            query = query.where("cidade", "==", perfil.cidade);
+            document.getElementById("chatTitle").textContent = `📍 Chat Local (${perfil.cidade})`;
         }
-        query = query.where("cidade", "==", cidadeParaVisualizar);
+    } else {
+        // Lógica para o chat global
+        document.getElementById("chatTitle").textContent = '💬 Chat Global';
     }
 
+    // A ordenação e o limite continuam os mesmos
     query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(15);
 
     chatListener = query.onSnapshot(async snapshot => {
@@ -3664,6 +3854,7 @@ async function carregarMensagensAnteriores() {
     btn.disabled = false;
 }
 
+// SUBSTITUA TODA A FUNÇÃO 'createMessageDiv' POR ESTA
 async function createMessageDiv(msg) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
     let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = "";
@@ -3693,7 +3884,6 @@ async function createMessageDiv(msg) {
                 } else {
                     iconeBase = `💼`; // Icone profissional normal
                 }
-
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'profissional');
             } else if (isVipAtivo(remetenteData)) {
                 classeCSS = `cliente-chat`; iconeBase = `👑`;
@@ -3702,7 +3892,14 @@ async function createMessageDiv(msg) {
                 classeCSS = `cliente-chat`; iconeBase = `👤`;
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
             }
-            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+            
+            // LÓGICA PRINCIPAL ADICIONADA AQUI
+            let cidadeLabel = '';
+            if (perfil.tipo === 'admin' && chatAtual === 'local' && msg.cidade) {
+                cidadeLabel = ` <small style="opacity: 0.7; font-weight: normal;">(${msg.cidade})</small>`;
+            }
+
+            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}${cidadeLabel}</span>`;
         }
     }
     
@@ -3997,10 +4194,19 @@ function toggleDisponibilidade() {
   db.collection("usuarios").doc(auth.currentUser.uid).update({ disponivel: perfil.disponivel === "sim" ? "nao" : "sim" }).catch(e => alert("Erro: " + e.message));
 }
 
+// SUBSTITUA A FUNÇÃO 'aprovarAgendamentoImediato'
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
     if (!confirm("Aprovar esta vaga imediata?")) return;
     exibirAguarde("Aprovando...");
-    const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
+    
+    // Lógica de cálculo de taxa dinâmica
+    let taxaAplicada = TAXA;
+    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+        taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
+    }
+    const valorComTaxa = valor * (1 - taxaAplicada);
+    const valorAdmin = valor * taxaAplicada;
+
     db.runTransaction(async t => {
         const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
         const clienteRef = db.collection("usuarios").doc(clienteUid);
@@ -4018,20 +4224,27 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
-        fecharTodosOsModais();
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         alert("Agendamento aprovado!");
     }).catch(e => {
-        fecharTodosOsModais();
         alert("Erro ao aprovar: " + e);
     });
 }
 
+// SUBSTITUA A FUNÇÃO 'aprovarAgendamento'
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
   if (!confirm("Aprovar este agendamento?")) return;
   exibirAguarde("Aprovando...");
-  const valorComTaxa = valor * (1 - TAXA), valorAdmin = valor * TAXA;
+  
+  // Lógica de cálculo de taxa dinâmica
+  let taxaAplicada = TAXA;
+  if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+      taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
+  }
+  const valorComTaxa = valor * (1 - taxaAplicada);
+  const valorAdmin = valor * taxaAplicada;
+
   db.runTransaction(async t => {
       const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
       const clienteRef = db.collection("usuarios").doc(clienteUid);
@@ -4053,12 +4266,10 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
   }).then(() => {
-      fecharTodosOsModais();
       criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
       alert("Agendamento aprovado!");
   }).catch(e => {
-      fecharTodosOsModais();
       alert("Erro ao aprovar: " + e);
   });
 }
@@ -4098,12 +4309,10 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
       if (!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(-valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
   }).then(() => {
-      fecharTodosOsModais();
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
       alert("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
   }).catch(e => {
-      fecharTodosOsModais();
       alert("Erro ao cancelar: " + e);
   });
 }
@@ -4124,7 +4333,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    fecharTodosOsModais();
+    
     alert("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
@@ -4141,7 +4350,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         }
     }
   } catch(e) {
-    fecharTodosOsModais();
     alert("Erro ao concluir serviço: " + e);
   }
 }
@@ -4681,28 +4889,71 @@ function abrirModalSolicitacoes() {
     });
 }
 
+// SUBSTITUA TODA A FUNÇÃO 'verDetalhesSolicitacao' POR ESTA
 async function verDetalhesSolicitacao(id) {
   const doc = await db.collection("solicitacoes").doc(id).get();
   const s = doc.data();
   if (!s || s.status !== 'pendente') return alert(`Esta solicitação já foi ${s.status}.`);
 
-  let detalhes = `Detalhes:\nTipo: ${s.tipo.toUpperCase()}\nUsuário: ${s.usuarioNome}\nValor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}\n`;
+  if (s.tipo === 'recuperacao_senha') {
+      const novaSenha = prompt(`RECUPERAÇÃO DE SENHA PARA: ${s.email}\n\nDigite uma nova senha temporária para este usuário:`);
+      if (novaSenha && novaSenha.length >= 6) {
+          try {
+              exibirAguarde("Buscando usuário e redefinindo senha...");
+              const userQuery = await db.collection('usuarios').where('email', '==', s.email).limit(1).get();
+              if (userQuery.empty) {
+                  throw new Error("Nenhum usuário encontrado com este e-mail.");
+              }
+              const userDoc = userQuery.docs[0];
+              const targetUid = userDoc.id;
+              const telefoneUsuario = userDoc.data().telefone;
+              
+              // Chama o backend para redefinir a senha
+              const response = await fetch(`${BACKEND_API_URL}/admin/reset-user-password`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid, newPassword: novaSenha })
+              });
+              const data = await response.json();
+              if (!response.ok) throw new Error(data.message);
 
-  if(s.tipo === 'saque') {
-    detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
-  } else if (s.tipo === 'deposito') {
-    detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
+              // Marca a solicitação como aprovada
+              await db.collection("solicitacoes").doc(id).update({ status: "aprovado" });
+              
+              fecharTodosOsModais();
+              alert("Senha redefinida com sucesso!");
+
+              // Abre o WhatsApp para enviar a nova senha para o usuário
+              const mensagem = encodeURIComponent(`Olá! Conforme sua solicitação, sua nova senha de acesso para o app Nova Versão é:\n\n*${novaSenha}*\n\nRecomendamos que você a altere assim que fizer o login.`);
+              window.open(`https://wa.me/55${telefoneUsuario}?text=${mensagem}`, '_blank');
+              
+          } catch (error) {
+              fecharTodosOsModais();
+              alert("Erro ao processar recuperação: " + error.message);
+          }
+      } else if (novaSenha) {
+          alert("A senha deve ter no mínimo 6 caracteres. A operação foi cancelada.");
+      }
   } else {
-    detalhes += `\nAprovar?`;
-  }
+    // Lógica antiga para outros tipos de solicitação
+    let detalhes = `Detalhes:\nTipo: ${s.tipo.toUpperCase()}\nUsuário: ${s.usuarioNome}\nValor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}\n`;
 
-  const confirmar = confirm(detalhes);
-  if (confirmar) {
-    if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
-    else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
-    else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
-  } else if (confirm("Deseja recusar a solicitação?")) {
-    recusarSolicitacao(id, s.usuarioUid, s.tipo);
+    if(s.tipo === 'saque') {
+      detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
+    } else if (s.tipo === 'deposito') {
+      detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
+    } else {
+      detalhes += `\nAprovar?`;
+    }
+
+    const confirmar = confirm(detalhes);
+    if (confirmar) {
+      if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
+      else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
+      else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
+    } else if (confirm("Deseja recusar a solicitação?")) {
+      recusarSolicitacao(id, s.usuarioUid, s.tipo);
+    }
   }
 }
 
@@ -4798,47 +5049,189 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => alert("Denúncia fechada!"));
 }
 
+// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
+// SUBSTITUA TODA A FUNÇÃO 'abrirModalGerenciarUsuario' POR ESTA
 async function abrirModalGerenciarUsuario(uid) {
-  const doc = await db.collection("usuarios").doc(uid).get();
-  const u = doc.data();
-  if (!u) return;
+  exibirAguarde("Carregando dados do usuário...");
+  try {
+    // 1. CHAMA O BACKEND PARA BUSCAR OS DADOS DE FORMA SEGURA
+    const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            adminUid: auth.currentUser.uid, // Envia o UID do admin para verificação
+            targetUid: uid // Envia o UID do usuário que queremos ver
+        })
+    });
 
-  const container = document.getElementById('adminGerenciarConteudo');
-  container.innerHTML = `
-      <h4>${u.nome} (${u.email})</h4>
-      <div class="popup-section">
-          <p><strong>Tipo Atual:</strong> ${u.tipo}</p>
-          <select id="adminNovoTipo">
-              <option value="cliente" ${u.tipo === 'cliente' ? 'selected' : ''}>Cliente</option>
-              <option value="barbeiro" ${u.tipo === 'barbeiro' ? 'selected' : ''}>Barbeiro</option>
-              <option value="manicure_pedicure" ${u.tipo === 'manicure_pedicure' ? 'selected' : ''}>Manicure/Pedicure</option>
-              <option value="designer_cilios" ${u.tipo === 'designer_cilios' ? 'selected' : ''}>Designer de Cílios</option>
-              <option value="admin" ${u.tipo === 'admin' ? 'selected' : ''}>Admin</option>
-          </select>
-          <button onclick="adminMudarTipo('${uid}')">Alterar Tipo</button>
-      </div>
-      <div class="popup-section">
-          <p><strong>Saldo:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
-          <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
-          <button onclick="adminModificarSaldo('${uid}')">Modificar Saldo</button>
-      </div>
-      <div class="popup-section">
-          <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim' : 'Não'}</p>
-          <button onclick="adminToggleVip('${uid}')">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
-      </div>
-      <div class="popup-section">
-          <p><strong>Loja Liberada:</strong> ${u.lojaLiberada ? 'Sim' : 'Não'}</p>
-          <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Desativar Loja' : 'Ativar Loja'}</button>
-      </div>
-       <div class="popup-section">
-           <a href="https://wa.me/55${u.telefone}" target="_blank"><button style="width:100%">Chamar no WhatsApp</button></a>
-      </div>
-      <div class="popup-section">
-          <button style="background-color: #c0392b;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
-      </div>
-  `;
-  abrirModal('modalAdminGerenciarUsuario');
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status}`);
+    }
+
+    const { auth: userRecord, firestore: u } = await response.json();
+
+    // 2. O RESTANTE DO CÓDIGO MONTA O MODAL, IGUAL ANTES
+    const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
+    const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
+
+    const container = document.getElementById('adminGerenciarConteudo');
+    container.innerHTML = `
+        <h4 style="word-break: break-all;">${u.nome}</h4>
+        <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
+
+        <div class="popup-section">
+            <p><strong>Informações da Conta:</strong></p>
+            <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
+            <p style="font-size: 14px;"><strong>Último Login:</strong> ${lastSignInTime}</p>
+            <p style="font-size: 14px;"><strong>Conta:</strong> <span style="color: ${userRecord.disabled ? '#e74c3c' : '#2ecc71'};">${userRecord.disabled ? 'Desabilitada' : 'Ativa'}</span></p>
+        </div>
+
+        <div class="popup-section">
+            <p><strong>Alterar Dados Cadastrais:</strong></p>
+            <label for="adminNovoNome">Nome de Exibição:</label>
+            <input id="adminNovoNome" type="text" value="${u.nome}">
+            
+            <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
+            <input id="adminNovoTelefone" type="tel" value="${u.telefone}">
+
+            <label for="adminNovoEstado">Estado:</label>
+            <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')"></select>
+            
+            <label for="adminNovoCidade">Cidade:</label>
+            <select id="adminNovoCidade"></select>
+            <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
+        </div>
+
+        <div class="popup-section">
+            <p><strong>Gerenciar Saldo e VIP:</strong></p>
+            <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
+            <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
+            <button onclick="adminModificarSaldo('${uid}')">Modificar Saldo</button>
+            <hr style="border-color: var(--cor-borda); margin: 15px 0;">
+            <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim' : 'Não'}</p>
+            <button onclick="adminToggleVip('${uid}')">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
+        </div>
+        
+        <div class="popup-section">
+            <p><strong>Ações de Segurança:</strong></p>
+            <input id="adminNovaSenha" type="password" placeholder="🔑 Definir Nova Senha para o Usuário">
+            <button onclick="adminDefinirNovaSenha('${uid}')">Definir Nova Senha</button>
+        </div>
+
+        <div class="popup-section">
+            <p><strong>Ações de Conta:</strong></p>
+            <button style="background-color: ${userRecord.disabled ? '#2ecc71' : '#f1c40f'};" onclick="adminToggleUserStatus('${uid}', ${!userRecord.disabled})">${userRecord.disabled ? 'Reativar Conta' : 'Desativar Conta'}</button>
+            <button style="background-color: #c0392b; margin-top: 10px;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
+        </div>
+
+        <button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
+    `;
+    
+    fecharTodosOsModais(); // Fecha o "Aguarde..."
+    
+    carregarEstados('adminNovo');
+    setTimeout(() => {
+        document.getElementById('adminNovoEstado').value = u.estado;
+        carregarCidades('adminNovo');
+        setTimeout(() => {
+            document.getElementById('adminNovoCidade').value = u.cidade;
+        }, 200);
+    }, 200);
+    
+    abrirModal('modalAdminGerenciarUsuario');
+  } catch (error) {
+      fecharTodosOsModais();
+      console.error("Erro ao buscar dados do usuário:", error);
+      alert("Não foi possível carregar os dados completos do usuário. " + error.message);
+  }
 }
+
+// ADICIONE ESTAS NOVAS FUNÇÕES NO INDEX.HTML
+
+async function adminSalvarAlteracoesUsuario(uid) {
+    const updates = {
+        nome: document.getElementById('adminNovoNome').value.trim(),
+        telefone: document.getElementById('adminNovoTelefone').value.trim(),
+        estado: document.getElementById('adminNovoEstado').value,
+        cidade: document.getElementById('adminNovoCidade').value
+    };
+
+    if (!updates.nome || !updates.telefone || !updates.estado || !updates.cidade) {
+        return alert("Todos os campos devem ser preenchidos.");
+    }
+
+    exibirAguarde("Salvando...");
+    try {
+        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid, updates })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        fecharTodosOsModais();
+        alert("Dados do usuário atualizados com sucesso!");
+        fecharModalAtual(); // Fecha o modal de gerenciamento
+    } catch (error) {
+        fecharTodosOsModais();
+        alert("Erro ao salvar alterações: " + error.message);
+    }
+}
+
+async function adminDefinirNovaSenha(uid) {
+    const novaSenha = document.getElementById('adminNovaSenha').value;
+    if (novaSenha.length < 6) {
+        return alert("A nova senha deve ter no mínimo 6 caracteres.");
+    }
+    if (!confirm("Tem certeza que deseja definir esta nova senha para o usuário? Ele perderá o acesso com a senha antiga.")) {
+        return;
+    }
+    
+    exibirAguarde("Redefinindo senha...");
+    try {
+        const response = await fetch(`${BACKEND_API_URL}/admin/reset-user-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid, newPassword: novaSenha })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        fecharTodosOsModais();
+        alert(`Senha redefinida! A nova senha é "${novaSenha}". É recomendado enviar para o usuário via WhatsApp.`);
+    } catch (error) {
+        fecharTodosOsModais();
+        alert("Erro ao definir nova senha: " + error.message);
+    }
+}
+
+async function adminToggleUserStatus(uid, disable) {
+    const acao = disable ? "desabilitar" : "reativar";
+    if (!confirm(`Tem certeza que deseja ${acao} a conta deste usuário? Ele ${disable ? 'não poderá mais fazer login' : 'poderá voltar a fazer login'}.`)) {
+        return;
+    }
+
+    exibirAguarde(`${acao.charAt(0).toUpperCase() + acao.slice(1)}ndo conta...`);
+    try {
+        const response = await fetch(`${BACKEND_API_URL}/admin/toggle-user-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid, disable })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        fecharTodosOsModais();
+        alert(`Conta ${disable ? 'desabilitada' : 'reativada'} com sucesso!`);
+        fecharModalAtual(); // Fecha o modal para forçar a reabertura com os dados atualizados
+    } catch (error) {
+        fecharTodosOsModais();
+        alert(`Erro ao ${acao} conta: ` + error.message);
+    }
+}
+
 
 // Funções de Ação do Modal Admin
 async function adminMudarTipo(uid) {
@@ -5232,28 +5625,6 @@ function abrirModalTurbinar(){
     abrirModal('modalTurbinar');
 }
 
-function confirmarTurbinar() {
-    if (perfil.saldo < PRECO_TURBINAR) {
-        return alert(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
-    }
-    if (perfil.ultimoBoostComprado) {
-        const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        if (perfil.ultimoBoostComprado.toDate() > vinteQuatroHorasAtras) {
-            return alert("Você só pode turbinar o perfil uma vez a cada 24 horas.");
-        }
-    }
-    if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
-        const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        db.collection('usuarios').doc(auth.currentUser.uid).update({
-            saldo: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR),
-            boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao),
-            ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-            alert('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
-            fecharModalAtual();
-        }).catch(e => alert('Erro ao turbinar perfil: ' + e.message));
-    }
-}
 
 // Funções da Loja
 function abrirModalParaVender() {
@@ -5558,7 +5929,8 @@ async function abrirFormularioProduto(produtoId = null) {
     form.querySelector('#produtoImagemUrl').value = '';
     form.querySelector('#produtoPreco').value = '';
     form.querySelector('#produtoDesconto').value = '';
-    form.querySelector('#produtoEntrega').value = '';
+    f
+orm.querySelector('#produtoEntrega').value = '';
     form.querySelector('#produtoDescricao').value = '';
     form.querySelectorAll('input[name="tamanhos"]').forEach(c => c.checked = false);
 
@@ -5918,8 +6290,8 @@ function handleDeepLink() {
             if (perfil.tipo !== 'cliente') abrirAgendamentosBarbeiro();
             break;
         case 'solicitacoes':
-    if (perfil.tipo === 'admin') abrirModalSolicitacoes(); // Corrigido
-    break;
+            if (perfil.tipo === 'admin') abrirModalSolicitacoes();
+            break;
         case 'denuncias':
             if (perfil.tipo === 'admin') abrirDenuncias();
             break;
