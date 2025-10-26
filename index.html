@@ -1973,6 +1973,15 @@
         <button data-modal-id="modalAvaliarProduto" onclick="fecharModal(event)">❌ Cancelar</button>
     </div>
 </div>
+
+<div id="modalPopupGenerico" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()" style="text-align: center;">
+    <h3 id="popupGenericoTitulo" style="margin-top: 0;"></h3>
+    <p id="popupGenericoMensagem" style="margin-bottom: 20px;"></p>
+    <button data-modal-id="modalPopupGenerico" onclick="fecharModal(event)">OK</button>
+  </div>
+</div>
+
 <style>
 .rating-stars {
     text-align: center;
