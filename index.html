@@ -2395,6 +2395,23 @@ function abrirModal(modalId) {
     }
 }
 
+function toggleFuncoes(containerId) {
+    const container = document.getElementById(containerId);
+    const button = document.querySelector(`[onclick*="toggleFuncoes('${containerId}')"]`);
+    
+    // 1. Alterna a classe 'hidden' para mostrar/esconder o contêiner
+    container.classList.toggle('hidden');
+    
+    // 2. Opcional: Atualiza o texto do botão para indicar a ação
+    if (button) {
+        if (container.classList.contains('hidden')) {
+            button.textContent = '⚙️ Funções do Cliente'; // Está escondido
+        } else {
+            button.textContent = '⚙️ Esconder Funções'; // Está visível
+        }
+    }
+}
+
 function fecharModal(event) {
     // Permite fechar clicando no fundo (classe .modal) ou em um botão com data-modal-id
     if (event && event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id')) {
