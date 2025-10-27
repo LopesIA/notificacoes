@@ -2147,14 +2147,19 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <h3>🏙️ Aprovar Alteração de Cidade</h3>
     <p>Usuário: <b id="adminCidadeNomeUsuario"></b></p>
     <p>Cidade Atual: <span id="adminCidadeAtual"></span></p>
+
+    {/* --- MODIFICATION START --- */}
     <label for="adminNovoEstadoSolicitacao">Novo Estado:</label>
-    <select id="adminNovoEstadoSolicitacao" onchange="carregarCidades('adminNovoSolicitacao')">
+    <select id="adminNovoEstadoSolicitacao" onchange="carregarCidades('adminNovoSolicitacao')"> {/* Use unique ID and correct prefix in onchange */}
         <option value="">Carregando...</option>
     </select>
+
     <label for="adminNovoCidadeSolicitacao">Nova Cidade:</label>
-    <select id="adminNovoCidadeSolicitacao">
+    <select id="adminNovoCidadeSolicitacao"> {/* Use unique ID */}
         <option value="">Selecione o estado</option>
     </select>
+    {/* --- MODIFICATION END --- */}
+
     <div style="display: flex; gap: 10px; margin-top: 15px;">
         <button onclick="recusarSolicitacaoAtual()" style="background-color: #e74c3c;">❌ Recusar</button>
         <button id="btnAprovarCidade" onclick="aprovarAlteracaoCidade()">✅ Aprovar Alteração</button>
@@ -6715,30 +6720,37 @@ async function abrirModalAdminCidade(id, s) {
   document.getElementById('adminCidadeNomeUsuario').textContent = s.usuarioNome;
   document.getElementById('adminCidadeAtual').textContent = `${s.cidadeAtual || 'N/A'} - ${s.estadoAtual || 'N/A'}`;
 
-  // Identificadores dos selects no modal de solicitação
-  const estadoSelectId = 'adminNovoEstadoSolicitacao'; // Corrigido
-  const cidadeSelectId = 'adminNovoCidadeSolicitacao'; // Corrigido
+  // --- MODIFICATION START ---
+  // Use the NEW unique IDs and prefix
+  const estadoSelectId = 'adminNovoEstadoSolicitacao';
+  const cidadeSelectId = 'adminNovoCidadeSolicitacao';
+  const prefix = 'adminNovoSolicitacao'; // Define the correct prefix
 
   const estadoSelect = document.getElementById(estadoSelectId);
   const cidadeSelect = document.getElementById(cidadeSelectId);
 
-  // Limpa opções antigas de cidade
+  // Clear old city options
   cidadeSelect.innerHTML = '<option value="">Selecione o estado</option>';
 
-  // Carrega estados usando o prefixo correto
-  carregarEstados('adminNovo'); // O prefixo 'adminNovo' é usado nos IDs dos selects
-  estadoSelect.value = s.estadoAtual || ""; // Define o estado atual
-
-  // Carrega as cidades correspondentes ao estado atual
-  carregarCidades('adminNovo'); // O prefixo 'adminNovo' é usado nos IDs dos selects
-  // Adiciona um pequeno delay
+  // Load states using the correct prefix
+  carregarEstados(prefix);
+  // Add a slight delay to ensure states are populated before setting value/loading cities
   setTimeout(() => {
-      if(cidadeSelect.querySelector(`option[value="${s.cidadeAtual}"]`)) {
-          cidadeSelect.value = s.cidadeAtual;
-      } else {
-          cidadeSelect.value = "";
-      }
-  }, 150);
+    estadoSelect.value = s.estadoAtual || ""; // Set current state
+
+    // Load cities for the selected state, using the correct prefix
+    carregarCidades(prefix);
+    // Add another delay to ensure cities are loaded before setting the value
+    setTimeout(() => {
+        // Set the current city if it exists in the loaded options
+        if(cidadeSelect.querySelector(`option[value="${s.cidadeAtual}"]`)) {
+            cidadeSelect.value = s.cidadeAtual;
+        } else {
+            cidadeSelect.value = ""; // Otherwise, default to "Select city"
+        }
+    }, 150); // Delay for city options loading
+  }, 100); // Delay for state options loading
+  // --- MODIFICATION END ---
 
   abrirModal('modalAdminDetalhesCidade');
 }
@@ -6779,14 +6791,17 @@ function uploadImage(file, path, onProgress) {
 }
 
 async function aprovarAlteracaoCidade() {
-  // Lê dos selects corretos (com 'Solicitacao' no ID)
-  const novoEstado = document.getElementById('adminNovoEstadoSolicitacao').value; // Corrigido
-  const novaCidade = document.getElementById('adminNovoCidadeSolicitacao').value; // Corrigido
+  // --- MODIFICATION START ---
+  // Read from the CORRECT select elements using their unique IDs
+  const novoEstado = document.getElementById('adminNovoEstadoSolicitacao').value;
+  const novaCidade = document.getElementById('adminNovoCidadeSolicitacao').value;
+  // --- MODIFICATION END ---
 
   if (!novoEstado || !novaCidade) {
       return exibirPopup("Erro", "Selecione o novo estado e cidade.");
   }
 
+  // --- No changes needed below this line in this function ---
   if (!confirm(`Confirmar alteração para ${novaCidade} - ${novoEstado}?`)) return;
 
   exibirAguarde("Atualizando cidade...");
@@ -6802,8 +6817,6 @@ async function aprovarAlteracaoCidade() {
       fecharTodosOsModais(); // Fecha Aguarde e Modal Detalhes
       exibirPopup("Sucesso", "Cidade do usuário alterada!");
       notifyUser(solicitacaoAtualUid, "✅ Cidade Alterada!", `Sua cidade foi atualizada para ${novaCidade} - ${novoEstado}.`);
-      // Não precisa reabrir modal de solicitações aqui, o admin pode fechar e abrir se quiser
-      // fecharModalAtual(); // Garante que o modal de detalhes da cidade seja fechado
 
   } catch (error) {
       fecharTodosOsModais();
@@ -7102,31 +7115,36 @@ async function confirmarCompraLoja(dadosEntrega) {
     exibirAguarde("Processando seu pedido...");
     const produto = produtoParaCompra;
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+
+    // --- MODIFICATION START ---
+    // Check balance first
     if (perfil.saldo < precoFinal) {
-        fecharTodosOsModais();
-        return exibirPopup('Saldo insuficiente.');
+        fecharTodosOsModais(); // Close "Aguarde..." and the form modal
+        exibirPopup('Saldo insuficiente. Por favor, deposite fundos na sua carteira.'); // Show popup
+        abrirModal('modalCarteira'); // <<<--- ADDED: Open wallet modal
+        return; // Stop the purchase process
     }
-    
+    // --- MODIFICATION END ---
+
     try {
+        // Transaction only debits buyer now
         await db.runTransaction(async t => {
             const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
-            const vendedorRef = db.collection("usuarios").doc(produto.vendedorUid);
-            const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
-            const adminRef = db.collection("usuarios").doc(adminSnap.docs[0].id);
             const produtoRef = db.collection("loja_produtos").doc(produto.id);
 
-            const valorVendedor = precoFinal * (1 - TAXA);
-            const valorAdmin = precoFinal * TAXA;
-
+            // --- MODIFICATION START ---
+            // Only debit the client at this stage
             t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-precoFinal) });
-            t.update(vendedorRef, { saldo: firebase.firestore.FieldValue.increment(valorVendedor) });
-            t.update(adminRef, { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+            // Seller and Admin balance updates REMOVED from here
+            // --- MODIFICATION END ---
+
             t.update(produtoRef, { vendasRealizadas: firebase.firestore.FieldValue.increment(1) });
-            
+
+            // Create the order document
             t.set(db.collection("loja_pedidos").doc(), {
                 produtoId: produto.id,
                 produtoNome: produto.nome,
-                valor: precoFinal,
+                valor: precoFinal, // Store the final price paid
                 tamanho: produto.tamanhoSelecionado,
                 clienteUid: auth.currentUser.uid,
                 clienteNome: perfil.nome,
@@ -7136,8 +7154,8 @@ async function confirmarCompraLoja(dadosEntrega) {
                 email: dadosEntrega.email,
                 cep: dadosEntrega.cep,
                 vendedorUid: produto.vendedorUid,
-                vendedorNotificado: false,
-                status: "pendente",
+                vendedorNotificado: false, // For the initial sale notification popup
+                status: "pendente", // Initial status: waiting for seller to deliver
                 avaliado: false,
                 ts: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -7146,8 +7164,9 @@ async function confirmarCompraLoja(dadosEntrega) {
         fecharTodosOsModais();
         exibirPopup("Pedido realizado com sucesso!");
         notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`, { link: '#minhascompras' });
-        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}.`, { link: '#entregas' });
-        fecharTodosOsModais();
+        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}. Verifique suas entregas.`, { link: '#entregas' });
+        // No longer closing specific modals, fecharTodosOsModais handles it.
+
     } catch (e) {
         fecharTodosOsModais();
         exibirPopup('Erro ao processar a compra: ' + e.message);
@@ -7534,39 +7553,59 @@ async function abrirEntregasVendedor() {
     abrirModal('modalEntregasVendedor');
     const container = document.getElementById('listaEntregas');
     container.innerHTML = '<p>Carregando entregas...</p>';
-    
+
     if (pedidosVendedorListener) pedidosVendedorListener();
+
+    // --- MODIFICATION: Query now includes 'entregue_pendente_confirmacao' ---
     pedidosVendedorListener = db.collection('loja_pedidos')
       .where('vendedorUid', '==', auth.currentUser.uid)
-      .where('status', 'in', ['pendente', 'disputa'])
+      .where('status', 'in', ['pendente', 'entregue_pendente_confirmacao', 'disputa']) // Added confirmation status
+      .orderBy('ts', 'desc') // Order by most recent
       .onSnapshot(snap => {
         if(snap.empty) {
-            container.innerHTML = '<p>Nenhuma entrega pendente.</p>';
+            container.innerHTML = '<p>Nenhuma entrega pendente ou aguardando confirmação.</p>';
             return;
         }
         container.innerHTML = '';
         snap.forEach(doc => {
             const pedido = doc.data();
             let statusHtml = '';
-            let acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Marcar como Entregue</button>`;
-            
+            let acaoHtml = ''; // Clear action html
+
+             // --- MODIFICATION: Status logic updated ---
             if (pedido.status === 'pendente') {
-                statusHtml = '<p style="color: #f1c40f;">Status: Aguardando Entrega</p>';
+                statusHtml = '<p style="color: #f1c40f;">Status: Aguardando Envio/Entrega</p>';
+                acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Marcar como Entregue</button>`;
+            } else if (pedido.status === 'entregue_pendente_confirmacao') {
+                statusHtml = '<p style="color: #3498db;">Status: Aguardando Confirmação do Cliente</p>';
+                // Add button to notify/remind the client
+                acaoHtml = `<button onclick="notificarCompradorEntrega('${doc.id}', '${pedido.clienteUid}')" style="background-color: #3498db;">Notificar Cliente (Lembrete)</button>`;
             } else if (pedido.status === 'disputa') {
-                statusHtml = '<p style="color: #e74c3c;">Status: Cliente Negou Recebimento. Tente Novamente.</p>';
+                statusHtml = '<p style="color: #e74c3c;">Status: Cliente Negou Recebimento.</p>';
+                // Allow seller to mark again
+                acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Tentar Marcar Entregue Novamente</button>`;
             }
+            // --- MODIFICATION END ---
 
             container.innerHTML += `
                 <div class="card">
                     <b>Comprador: ${pedido.clienteNome}</b>
-                    <p>Produto: ${pedido.produtoNome} (T: ${pedido.tamanho})</p>
+                    <p>Produto: ${pedido.produtoNome} (T: ${pedido.tamanho}) - R$ ${pedido.valor.toFixed(2)}</p>
                     <p>Endereço: ${pedido.endereco} - CEP: ${pedido.cep}</p>
-                    <p>WhatsApp: <a href="https://wa.me/55${pedido.telefone}" target="_blank">${pedido.telefone}</a></p>
+                    <p>WhatsApp: <a href="https://wa.me/55${pedido.telefone.replace(/\D/g,'')}" target="_blank">${pedido.telefone}</a></p>
                     ${statusHtml}
-                    ${acaoHtml}
+                    <div style="margin-top: 10px;">${acaoHtml}</div>
                 </div>`;
         });
     });
+}
+
+function notificarCompradorEntrega(pedidoId, clienteUid) {
+    // Optional: Add logic here to prevent spamming the buyer (e.g., check last notification time)
+    if (confirm("Enviar um lembrete para o comprador confirmar o recebimento?")) {
+        notifyUser(clienteUid, '🚚 Confirme o Recebimento!', 'Lembrete: Seu pedido foi marcado como entregue. Por favor, confirme o recebimento no app para liberar o pagamento ao vendedor.');
+        exibirPopup('Lembrete enviado ao comprador.');
+    }
 }
 
 async function marcarComoEntregue(pedidoId, clienteUid) {
@@ -7631,18 +7670,74 @@ function abrirModalConfirmacaoComprador(pedido) {
 async function responderConfirmacaoEntrega(pedidoId, aceito) {
     const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
     try {
-        const pedidoDoc = await db.collection('loja_pedidos').doc(pedidoId).get();
-        const vendedorUid = pedidoDoc.data().vendedorUid;
-        await db.collection('loja_pedidos').doc(pedidoId).update({ status: novoStatus });
-        const msg = aceito ? '✅ O comprador confirmou o recebimento!' : '❌ O comprador recusou o recebimento. Entre em contato.';
-        notifyUser(vendedorUid, '📦 Atualização de Entrega', msg, { link: '#entregas' });
+        const pedidoRef = db.collection('loja_pedidos').doc(pedidoId);
+        const pedidoDoc = await pedidoRef.get();
+        if (!pedidoDoc.exists) throw new Error("Pedido não encontrado.");
+
+        const { vendedorUid, valor, produtoNome } = pedidoDoc.data(); // Get value and sellerUid from order
+
+        // --- MODIFICATION START ---
+        if (aceito) {
+            exibirAguarde("Confirmando recebimento e liberando pagamento..."); // Show wait popup for transaction
+
+            // Transaction to release funds to seller and admin
+            await db.runTransaction(async t => {
+                const vendedorRef = db.collection("usuarios").doc(vendedorUid);
+                const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+                if (adminSnap.empty) throw new Error("Conta de administrador não encontrada para taxas.");
+                const adminRef = db.collection("usuarios").doc(adminSnap.docs[0].id);
+                const financeiroRef = db.collection("config").doc("financeiro");
+
+                // Get seller profile to check PRO status and calculate correct fee
+                const vendedorDoc = await t.get(vendedorRef);
+                if (!vendedorDoc.exists) throw new Error("Vendedor não encontrado.");
+                const vendedorData = vendedorDoc.data();
+
+                let taxaAplicada = TAXA; // Default fee
+                if (isProAtivo(vendedorData) && vendedorData.proTier && PRECOS_PRO[vendedorData.proTier]) {
+                    taxaAplicada = PRECOS_PRO[vendedorData.proTier].taxa;
+                    console.log(`Taxa PRO ${vendedorData.proTier} aplicada: ${taxaAplicada * 100}%`);
+                } else {
+                    console.log(`Taxa padrão aplicada: ${taxaAplicada * 100}%`);
+                }
+
+                const valorVendedor = valor * (1 - taxaAplicada);
+                const valorAdmin = valor * taxaAplicada;
+
+                // Update balances
+                t.update(vendedorRef, { saldo: firebase.firestore.FieldValue.increment(valorVendedor) });
+                t.update(adminRef, { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+
+                // Update financial stats
+                t.set(financeiroRef, { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
+
+                // Update order status within the same transaction
+                t.update(pedidoRef, { status: novoStatus });
+            });
+
+            fecharTodosOsModais(); // Close wait popup
+
+            // Notify seller about payment
+            notifyUser(vendedorUid, '💰 Pagamento Recebido!', `O comprador confirmou o recebimento de "${produtoNome}"! O valor (menos taxas) foi adicionado ao seu saldo.`);
+
+        } else {
+            // Just update status if denied, no transaction needed
+            await pedidoRef.update({ status: novoStatus });
+            notifyUser(vendedorUid, '❌ Entrega Recusada', `O comprador recusou o recebimento de "${produtoNome}". Verifique a entrega e entre em contato.`, { link: '#entregas' });
+        }
+        // --- MODIFICATION END ---
+
         exibirPopup('Resposta enviada com sucesso!');
-        fecharModalAtual();
-        abrirMinhasCompras();
+        fecharModalAtual(); // Close confirmation modal
+        abrirMinhasCompras(); // Refresh buyer's purchase list
+
     } catch (e) {
+        fecharTodosOsModais(); // Ensure wait popup closes on error
         exibirPopup('Erro ao enviar resposta: ' + e.message);
+        console.error("Error in responderConfirmacaoEntrega:", e);
     }
 }
+
 function toggleFuncoes(containerId) {
     const container = document.getElementById(containerId);
     const button = container.previousElementSibling;
