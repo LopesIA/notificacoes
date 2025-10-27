@@ -2682,61 +2682,103 @@ const cidadesPorEstado = {
 };
 
 function carregarEstados(prefix = '') {
-  const estadoSelect = document.getElementById(`${prefix}estado`);
-  // Adiciona o select de solicitação do admin também
-  const estadoSelectSolicitacao = document.getElementById(`${prefix}EstadoSolicitacao`); // Corrigido ID
+  // Constrói o ID específico para o select de estado baseado no prefixo
+  const estadoSelectId = prefix ? `${prefix}Estado` : 'estado';
+  const estadoSelect = document.getElementById(estadoSelectId);
 
-  // Determina qual select usar
-  let selectTarget = null;
-  if (estadoSelect) {
-      selectTarget = estadoSelect;
-  } else if (estadoSelectSolicitacao) {
-      selectTarget = estadoSelectSolicitacao;
-  } else {
-      // Fallback para o select de cadastro se não encontrar com prefixo
-      const fallbackSelect = document.getElementById('estado');
-      if(!fallbackSelect) return; // Se nem o de cadastro existe, sai
-      selectTarget = fallbackSelect;
+  // Se o elemento select específico não for encontrado, loga um erro e sai
+  if (!estadoSelect) {
+      console.error(`Erro em carregarEstados: Elemento select com ID "${estadoSelectId}" não encontrado.`);
+      // Tenta um fallback apenas se o prefixo falhou
+      const fallbackSelect = prefix ? document.getElementById('estado') : null;
+      if (fallbackSelect) {
+           console.warn(`Usando fallback para o select de estado ID "estado" pois "${estadoSelectId}" não foi encontrado.`);
+           // Poderia continuar com o fallbackSelect aqui, mas vamos retornar para focar no problema do prefixo
+           return;
+      } else {
+           return; // Sai se nenhum select for encontrado
+      }
   }
 
-  const valorAtual = selectTarget.value;
-  selectTarget.innerHTML = '<option value="">🌎 Selecione o estado</option>';
-  Object.keys(cidadesPorEstado).sort().forEach(sigla => { // Ordena os estados
-    selectTarget.innerHTML += `<option value="${sigla}" ${sigla === valorAtual ? 'selected' : ''}>${sigla}</option>`;
+  console.log(`[Debug] Carregando estados para o select ID: "${estadoSelectId}"`); // Log de depuração
+
+  const valorAtual = estadoSelect.value; // Guarda o valor atual antes de limpar
+  estadoSelect.innerHTML = '<option value="">🌎 Selecione o estado</option>'; // Limpa opções existentes
+
+  // Preenche com os estados
+  Object.keys(cidadesPorEstado).sort().forEach(sigla => {
+    const option = document.createElement('option');
+    option.value = sigla;
+    option.textContent = sigla;
+    if (sigla === valorAtual) {
+      option.selected = true; // Tenta re-selecionar o valor anterior
+    }
+    estadoSelect.appendChild(option);
   });
+  console.log(`[Debug] Estados carregados para "${estadoSelectId}". Opções:`, estadoSelect.options.length); // Log de depuração
 }
 
 function carregarCidades(prefix = '') {
-  const estadoSelect = document.getElementById(`${prefix}estado`);
-  const cidadeSelect = document.getElementById(`${prefix}cidade`);
-  // Adiciona os selects de solicitação do admin também
-  const estadoSelectSolicitacao = document.getElementById(`${prefix}EstadoSolicitacao`); // Corrigido ID
-  const cidadeSelectSolicitacao = document.getElementById(`${prefix}CidadeSolicitacao`); // Corrigido ID
+  // Constrói os IDs específicos baseados no prefixo
+  const estadoSelectId = prefix ? `${prefix}Estado` : 'estado';
+  const cidadeSelectId = prefix ? `${prefix}Cidade` : 'cidade';
 
-  let selectEstado = estadoSelect || estadoSelectSolicitacao;
-  let selectCidade = cidadeSelect || cidadeSelectSolicitacao;
+  const estadoSelect = document.getElementById(estadoSelectId);
+  const cidadeSelect = document.getElementById(cidadeSelectId);
 
-  if(!selectEstado || !selectCidade) {
-      // Fallback para os selects de cadastro se não encontrar com prefixo
-      selectEstado = document.getElementById('estado');
-      selectCidade = document.getElementById('cidade');
-      if(!selectEstado || !selectCidade) return; // Sai se não encontrar nem os de cadastro
+  // Se os elementos não forem encontrados, loga um erro e sai
+  if (!estadoSelect) {
+      console.error(`Erro em carregarCidades: Elemento select de estado com ID "${estadoSelectId}" não encontrado.`);
+      return;
+  }
+  if (!cidadeSelect) {
+      console.error(`Erro em carregarCidades: Elemento select de cidade com ID "${cidadeSelectId}" não encontrado.`);
+      return;
   }
 
-  const estado = selectEstado.value;
-  const valorAtual = selectCidade.value; // Guarda o valor atual para tentar pré-selecionar
-  selectCidade.innerHTML = '<option value="">🏙️ Selecione a cidade</option>';
+  console.log(`[Debug] Carregando cidades para "${cidadeSelectId}" baseado no estado de "${estadoSelectId}"`); // Log de depuração
+
+  const estado = estadoSelect.value;
+  const valorAtual = cidadeSelect.value; // Guarda o valor atual da cidade
+
+  // Limpa opções da cidade e desabilita
+  cidadeSelect.innerHTML = '<option value="">🏙️ Selecione a cidade</option>';
+  cidadeSelect.disabled = true;
+
+  if (!estado) {
+    console.log(`[Debug] Nenhum estado selecionado em "${estadoSelectId}", cidades não carregadas.`);
+    return; // Nenhum estado selecionado, não faz mais nada
+  }
+
   const cidades = cidadesPorEstado[estado] || [];
-  cidades.sort().forEach(c => { // Ordena as cidades
-    selectCidade.innerHTML += `<option value="${c}" ${c === valorAtual ? 'selected' : ''}>${c}</option>`;
-  });
-  // Tenta re-selecionar o valor que estava selecionado antes, se ele ainda existir na lista
-  if (valorAtual && selectCidade.querySelector(`option[value="${valorAtual}"]`)) {
-      selectCidade.value = valorAtual;
+
+  if (cidades.length > 0) {
+      cidades.sort().forEach(c => {
+        const option = document.createElement('option');
+        option.value = c;
+        option.textContent = c;
+        // Não precisa setar 'selected' aqui, faremos isso depois se necessário
+        cidadeSelect.appendChild(option);
+      });
+      cidadeSelect.disabled = false; // Habilita o select de cidade
+      console.log(`[Debug] ${cidades.length} cidades carregadas para "${cidadeSelectId}".`); // Log de depuração
+  } else {
+       console.log(`[Debug] Nenhuma cidade encontrada para o estado "${estado}"`);
+       // Mantém o select de cidade desabilitado
+  }
+
+  // Tenta re-selecionar o valor original da cidade DEPOIS de popular as opções
+  // Isso é importante caso o valorAtual fosse de um estado diferente
+  if (valorAtual && cidadeSelect.querySelector(`option[value="${valorAtual}"]`)) {
+      cidadeSelect.value = valorAtual;
+      console.log(`[Debug] Cidade "${valorAtual}" re-selecionada em "${cidadeSelectId}".`)
+  } else if (cidades.length > 0) {
+      // Se não conseguiu re-selecionar o valor antigo (ou não tinha um), e há cidades,
+      // seleciona a primeira opção (que é "Selecione a cidade")
+      cidadeSelect.value = "";
   }
 }
 
-carregarEstados();
 
 function entrar() {
   // VERIFICA SE O FORMULÁRIO DE CADASTRO ESTÁ VISÍVEL
@@ -5544,13 +5586,13 @@ function fecharDenuncia(id) {
 async function abrirModalGerenciarUsuario(uid) {
   exibirAguarde("Carregando dados do usuário...");
   try {
-    // 1. CHAMA O BACKEND PARA BUSCAR OS DADOS DE FORMA SEGURA
+    // 1. Busca dados do backend (sem alterações aqui)
     const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            adminUid: auth.currentUser.uid, // Envia o UID do admin para verificação
-            targetUid: uid // Envia o UID do usuário que queremos ver
+            adminUid: auth.currentUser.uid,
+            targetUid: uid
         })
     });
 
@@ -5561,7 +5603,7 @@ async function abrirModalGerenciarUsuario(uid) {
 
     const { auth: userRecord, firestore: u } = await response.json();
 
-    // 2. MONTA O HTML DO MODAL COM OS DADOS E OPÇÕES
+    // 2. Monta o HTML do modal (sem alterações na estrutura, apenas IDs corretos)
     const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
     const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
 
@@ -5570,12 +5612,14 @@ async function abrirModalGerenciarUsuario(uid) {
         <h4 style="word-break: break-all;">${u.nome}</h4>
         <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
 
-        <div class="popup-section">
+        {/* ... (Seção Informações da Conta) ... */}
+         <div class="popup-section">
             <p><strong>Informações da Conta:</strong></p>
             <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
             <p style="font-size: 14px;"><strong>Último Login:</strong> ${lastSignInTime}</p>
             <p style="font-size: 14px;"><strong>Conta:</strong> <span style="color: ${userRecord.disabled ? '#e74c3c' : '#2ecc71'};">${userRecord.disabled ? 'Desabilitada' : 'Ativa'}</span></p>
         </div>
+
 
         <div class="popup-section">
             <p><strong>Alterar Dados Cadastrais:</strong></p>
@@ -5585,9 +5629,10 @@ async function abrirModalGerenciarUsuario(uid) {
             <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
             <input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
 
-            {/* --- IDs CORRETOS AQUI --- */}
+            {/* --- IDs CORRETOS --- */}
             <label for="adminNovoEstado">Estado:</label>
             <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')">
+                {/* Será preenchido pelo JS */}
                 <option value="">Carregando...</option>
             </select>
 
@@ -5595,12 +5640,12 @@ async function abrirModalGerenciarUsuario(uid) {
             <select id="adminNovoCidade">
                 <option value="">Selecione o estado</option>
             </select>
-            {/* --- FIM DOS IDs CORRETOS --- */}
+            {/* --- FIM IDs CORRETOS --- */}
 
             <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
         </div>
 
-        {/* ... (Restante do HTML do modal que você já tem - Saldo, VIP, PRO, Pontos, Loja, Tipo, Senha, Ações) ... */}
+        {/* ... (Restante do HTML do modal: Saldo, VIP, PRO, Pontos, Loja, Tipo, Senha, Ações) ... */}
          <div class="popup-section">
             <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
             <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
@@ -5644,10 +5689,8 @@ async function abrirModalGerenciarUsuario(uid) {
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; justify-content: center;">
                  <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'admin')" ${u.tipo === 'admin' ? 'disabled' : ''}>🧠 Admin</button>
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>🙋 Cliente</button>
-
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>💈 Barbeiro</button>
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>💅 Manicure/Pedicure</button>
-
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>👁️ Designer Cílios</button>
             </div>
         </div>
@@ -5670,49 +5713,50 @@ async function abrirModalGerenciarUsuario(uid) {
 
     fecharTodosOsModais(); // Fecha o "Aguarde..."
 
-    // --- CORREÇÃO E GARANTIA DE TIMING ---
-    // Adiciona um pequeno delay para garantir que o HTML foi inserido no DOM
-    setTimeout(() => {
-        const estadoSelectGerenciar = document.getElementById('adminNovoEstado');
-        const cidadeSelectGerenciar = document.getElementById('adminNovoCidade');
+    // --- LÓGICA REVISADA: Chamadas diretas ---
+    const estadoSelectGerenciar = document.getElementById('adminNovoEstado');
+    const cidadeSelectGerenciar = document.getElementById('adminNovoCidade');
 
-        if (!estadoSelectGerenciar || !cidadeSelectGerenciar) {
-            console.error("Erro: Selects de estado/cidade não encontrados no modal do admin após delay.");
-            exibirPopup("Erro", "Erro interno ao carregar opções de localização.");
-            return;
-        }
+    if (!estadoSelectGerenciar || !cidadeSelectGerenciar) {
+        // Isso não deveria acontecer se o HTML foi definido corretamente acima
+        console.error("Erro Crítico: Selects de estado/cidade não existem no DOM imediatamente após innerHTML.");
+        exibirPopup("Erro", "Falha ao renderizar o formulário. Tente novamente.");
+        return;
+    }
 
-        // Limpa cidade antes de carregar estados
-        cidadeSelectGerenciar.innerHTML = '<option value="">Selecione o estado</option>';
+    // Chama carregarEstados imediatamente. A função agora deve encontrar o elemento.
+    carregarEstados('adminNovo');
 
-        // Carrega estados usando o prefixo correto ('adminNovo')
-        carregarEstados('adminNovo');
+    // VERIFICA se carregarEstados realmente preencheu as opções
+    if (estadoSelectGerenciar.options.length > 1) { // Mais que o placeholder "Carregando..."
+        estadoSelectGerenciar.value = u.estado || ""; // Define o estado do usuário
 
-        // Mais um delay antes de definir o valor e carregar cidades
+        // Chama carregarCidades imediatamente. Ela usará o estado recém-definido.
+        carregarCidades('adminNovo');
+
+        // Tenta definir a cidade do usuário. Usa um timeout mínimo (0ms)
+        // para dar chance ao navegador de atualizar as opções do select de cidade
+        // antes de tentarmos definir o valor.
         setTimeout(() => {
-            if (estadoSelectGerenciar.options.length > 1) { // Verifica se os estados foram carregados
-                estadoSelectGerenciar.value = u.estado || ""; // Define o estado atual do usuário
-                carregarCidades('adminNovo'); // Dispara o carregamento das cidades
-
-                // E mais um delay para as cidades carregarem antes de setar o valor
-                setTimeout(() => {
-                    // Define a cidade atual do usuário SE ela existir nas opções carregadas
-                    if (cidadeSelectGerenciar.querySelector(`option[value="${u.cidade}"]`)) {
-                         cidadeSelectGerenciar.value = u.cidade;
-                    } else {
-                         cidadeSelectGerenciar.value = ""; // Caso contrário, deixa "Selecione a cidade"
-                    }
-                }, 100); // Delay para cidades
+            if (cidadeSelectGerenciar.querySelector(`option[value="${u.cidade}"]`)) {
+                cidadeSelectGerenciar.value = u.cidade;
             } else {
-                 console.error("Erro: Estados não foram carregados no select.");
-                 estadoSelectGerenciar.innerHTML = '<option value="">Erro ao carregar</option>';
+                cidadeSelectGerenciar.value = ""; // Deixa "Selecione a cidade" se não encontrar
             }
-        }, 50); // Delay para estados
+            console.log(`[Debug] Tentativa de definir cidade para: ${cidadeSelectGerenciar.value}`);
+        }, 0); // Delay mínimo
 
-    }, 50); // Delay inicial após inserir o HTML
-    // --- FIM DA CORREÇÃO ---
+    } else {
+        // Se carregarEstados falhou (ver console), mostra erro no select
+        console.error("Erro: carregarEstados('adminNovo') não preencheu as opções de estado.");
+        estadoSelectGerenciar.innerHTML = '<option value="">Erro!</option>';
+        cidadeSelectGerenciar.innerHTML = '<option value="">Selecione o estado</option>';
+        cidadeSelectGerenciar.disabled = true;
+    }
+    // --- FIM DA LÓGICA REVISADA ---
 
-    abrirModal('modalAdminGerenciarUsuario'); // Abre o modal *depois* de montar o HTML
+    abrirModal('modalAdminGerenciarUsuario'); // Abre o modal
+
   } catch (error) {
       fecharTodosOsModais();
       console.error("Erro ao buscar dados do usuário:", error);
