@@ -2156,7 +2156,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <p>Usuário: <b id="adminCidadeNomeUsuario"></b></p>
     <p>Cidade Atual: <span id="adminCidadeAtual"></span></p>
 
-    {/* --- MODIFICATION START --- */}
+    
     <label for="adminNovoEstadoSolicitacao">Novo Estado:</label>
     <select id="adminNovoEstadoSolicitacao" onchange="carregarCidades('adminNovoSolicitacao')"> {/* Use unique ID and correct prefix in onchange */}
         <option value="">Carregando...</option>
@@ -2166,7 +2166,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <select id="adminNovoCidadeSolicitacao"> {/* Use unique ID */}
         <option value="">Selecione o estado</option>
     </select>
-    {/* --- MODIFICATION END --- */}
+    
 
     <div style="display: flex; gap: 10px; margin-top: 15px;">
         <button onclick="recusarSolicitacaoAtual()" style="background-color: #e74c3c;">❌ Recusar</button>
@@ -5561,7 +5561,7 @@ async function abrirModalGerenciarUsuario(uid) {
 
     const { auth: userRecord, firestore: u } = await response.json();
 
-    // 2. MONTA O MODAL COM OS DADOS E NOVAS OPÇÕES
+    // 2. MONTA O HTML DO MODAL COM OS DADOS E OPÇÕES
     const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
     const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
 
@@ -5585,8 +5585,9 @@ async function abrirModalGerenciarUsuario(uid) {
             <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
             <input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
 
+            {/* --- IDs CORRETOS AQUI --- */}
             <label for="adminNovoEstado">Estado:</label>
-            <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')"> {/* Corrigido onchange */}
+            <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')">
                 <option value="">Carregando...</option>
             </select>
 
@@ -5594,10 +5595,13 @@ async function abrirModalGerenciarUsuario(uid) {
             <select id="adminNovoCidade">
                 <option value="">Selecione o estado</option>
             </select>
+            {/* --- FIM DOS IDs CORRETOS --- */}
+
             <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
         </div>
 
-        <div class="popup-section">
+        {/* ... (Restante do HTML do modal que você já tem - Saldo, VIP, PRO, Pontos, Loja, Tipo, Senha, Ações) ... */}
+         <div class="popup-section">
             <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
             <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
             <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
@@ -5605,7 +5609,6 @@ async function abrirModalGerenciarUsuario(uid) {
             <hr style="border-color: var(--cor-borda); margin: 15px 0;">
 
             <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim ✅' : 'Não ❌'}</p>
-            
             <button onclick="adminToggleVip('${uid}', ${!isVipAtivo(u)})">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
             <hr style="border-color: var(--cor-borda); margin: 15px 0;">
 
@@ -5635,20 +5638,19 @@ async function abrirModalGerenciarUsuario(uid) {
             </button>
         </div>
 
-<div class="popup-section">
-    <p><strong>Alterar Tipo de Conta:</strong></p>
-    <p>Tipo Atual: <strong>${u.tipo}</strong></p>
-    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; justify-content: center;">
-        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'admin')" ${u.tipo === 'admin' ? 'disabled' : ''}>🧠 Admin</button>
-        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>🙋 Cliente</button>
+        <div class="popup-section">
+            <p><strong>Alterar Tipo de Conta:</strong></p>
+            <p>Tipo Atual: <strong>${u.tipo}</strong></p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; justify-content: center;">
+                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'admin')" ${u.tipo === 'admin' ? 'disabled' : ''}>🧠 Admin</button>
+                <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>🙋 Cliente</button>
 
-        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>💈 Barbeiro</button>
-        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>💅 Manicure/Pedicure</button>
+                <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>💈 Barbeiro</button>
+                <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>💅 Manicure/Pedicure</button>
 
-        <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>👁️ Designer Cílios</button>
-        
-    </div>
-</div>
+                <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>👁️ Designer Cílios</button>
+            </div>
+        </div>
 
         <div class="popup-section">
             <p><strong>Ações de Segurança:</strong></p>
@@ -5662,33 +5664,55 @@ async function abrirModalGerenciarUsuario(uid) {
             <button style="background-color: #c0392b; margin-top: 10px;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
         </div>
 
+
         <button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
     `;
 
     fecharTodosOsModais(); // Fecha o "Aguarde..."
 
-    // --- CORREÇÃO CARREGAMENTO ESTADO/CIDADE ---
-const estadoSelectGerenciar = document.getElementById('adminNovoEstado');
-const cidadeSelectGerenciar = document.getElementById('adminNovoCidade');
+    // --- CORREÇÃO E GARANTIA DE TIMING ---
+    // Adiciona um pequeno delay para garantir que o HTML foi inserido no DOM
+    setTimeout(() => {
+        const estadoSelectGerenciar = document.getElementById('adminNovoEstado');
+        const cidadeSelectGerenciar = document.getElementById('adminNovoCidade');
 
-// Limpa cidade antes de carregar estados
-cidadeSelectGerenciar.innerHTML = '<option value="">Selecione o estado</option>';
+        if (!estadoSelectGerenciar || !cidadeSelectGerenciar) {
+            console.error("Erro: Selects de estado/cidade não encontrados no modal do admin após delay.");
+            exibirPopup("Erro", "Erro interno ao carregar opções de localização.");
+            return;
+        }
 
-carregarEstados('adminNovo'); // Carrega estados usando o prefixo 'adminNovo'
-estadoSelectGerenciar.value = u.estado || ""; // Define o estado atual do usuário
+        // Limpa cidade antes de carregar estados
+        cidadeSelectGerenciar.innerHTML = '<option value="">Selecione o estado</option>';
 
-carregarCidades('adminNovo'); // Carrega cidades para o estado selecionado
-// Adiciona um delay para garantir que as cidades carregaram
-setTimeout(() => {
-    // Define a cidade atual do usuário SE ela existir nas opções carregadas
-    if (cidadeSelectGerenciar.querySelector(`option[value="${u.cidade}"]`)) {
-         cidadeSelectGerenciar.value = u.cidade;
-    } else {
-         cidadeSelectGerenciar.value = ""; // Caso contrário, deixa "Selecione a cidade"
-    }
-}, 150); // Pequeno delay
+        // Carrega estados usando o prefixo correto ('adminNovo')
+        carregarEstados('adminNovo');
 
-abrirModal('modalAdminGerenciarUsuario');
+        // Mais um delay antes de definir o valor e carregar cidades
+        setTimeout(() => {
+            if (estadoSelectGerenciar.options.length > 1) { // Verifica se os estados foram carregados
+                estadoSelectGerenciar.value = u.estado || ""; // Define o estado atual do usuário
+                carregarCidades('adminNovo'); // Dispara o carregamento das cidades
+
+                // E mais um delay para as cidades carregarem antes de setar o valor
+                setTimeout(() => {
+                    // Define a cidade atual do usuário SE ela existir nas opções carregadas
+                    if (cidadeSelectGerenciar.querySelector(`option[value="${u.cidade}"]`)) {
+                         cidadeSelectGerenciar.value = u.cidade;
+                    } else {
+                         cidadeSelectGerenciar.value = ""; // Caso contrário, deixa "Selecione a cidade"
+                    }
+                }, 100); // Delay para cidades
+            } else {
+                 console.error("Erro: Estados não foram carregados no select.");
+                 estadoSelectGerenciar.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }, 50); // Delay para estados
+
+    }, 50); // Delay inicial após inserir o HTML
+    // --- FIM DA CORREÇÃO ---
+
+    abrirModal('modalAdminGerenciarUsuario'); // Abre o modal *depois* de montar o HTML
   } catch (error) {
       fecharTodosOsModais();
       console.error("Erro ao buscar dados do usuário:", error);
