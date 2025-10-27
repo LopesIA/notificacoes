@@ -5612,7 +5612,7 @@ async function abrirModalGerenciarUsuario(uid) {
         <h4 style="word-break: break-all;">${u.nome}</h4>
         <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
 
-        {/* ... (Seção Informações da Conta) ... */}
+        
          <div class="popup-section">
             <p><strong>Informações da Conta:</strong></p>
             <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
@@ -5629,7 +5629,7 @@ async function abrirModalGerenciarUsuario(uid) {
             <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
             <input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
 
-            {/* --- IDs CORRETOS --- */}
+            
             <label for="adminNovoEstado">Estado:</label>
             <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')">
                 {/* Será preenchido pelo JS */}
@@ -5640,12 +5640,12 @@ async function abrirModalGerenciarUsuario(uid) {
             <select id="adminNovoCidade">
                 <option value="">Selecione o estado</option>
             </select>
-            {/* --- FIM IDs CORRETOS --- */}
+            
 
             <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
         </div>
 
-        {/* ... (Restante do HTML do modal: Saldo, VIP, PRO, Pontos, Loja, Tipo, Senha, Ações) ... */}
+        
          <div class="popup-section">
             <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
             <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
