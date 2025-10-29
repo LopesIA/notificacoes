@@ -2330,6 +2330,7 @@ let imagensMarcadasParaExcluir = []; // Array global temporário para guardar UR
 let modalOriginalIdParaConfirmar = null;
 let fluxoPosCadastroAtivo = false;
 let lastReloadTimestamp = null; // Variável para controlar o reload forçado
+let previousTipo = null;
 
 let userView = {
     originalType: null,
@@ -3069,6 +3070,7 @@ auth.onAuthStateChanged(async user => {
     if (chatListener) { chatListener(); chatListener = null; }
     if (portfolioListener) { portfolioListener(); portfolioListener = null; }
     lastReloadTimestamp = null; // Reseta o timestamp de reload ao deslogar
+    previousTipo = null; // Reseta o tipo anterior ao deslogar
 
     if (localStorage.getItem('onboarding_concluido') === 'true') {
         mostrar('authView');
@@ -3104,7 +3106,6 @@ auth.onAuthStateChanged(async user => {
     }
     const perfilAtual = s.data();
     const isInitialLoad = !perfil; // Verifica se é o primeiro carregamento de dados
-    perfil = perfilAtual; // Atualiza o perfil global
 
     // --- LÓGICA DE RELOAD FORÇADO ---
     const newReloadTimestamp = perfilAtual.forceReloadTimestamp;
@@ -3121,14 +3122,54 @@ auth.onAuthStateChanged(async user => {
     }
     // --- FIM DA LÓGICA DE RELOAD ---
 
+    // <<<--- START: NEW RELOAD LOGIC FOR TYPE CHANGE --->>>
+    const currentTipo = perfilAtual.tipo; // Pega o tipo atual do snapshot
+
+    // Atualiza o perfil global *APÓS* a verificação do timestamp, *ANTES* da verificação de tipo
+    perfil = perfilAtual; // Atualiza o perfil global *AGORA*
+
+    // Verifica a mudança de tipo *depois* de atualizar 'perfil', mas *antes* de usar para UI
+    if (!isInitialLoad && previousTipo !== null && currentTipo !== previousTipo) {
+        console.log(`Tipo de conta alterado de "${previousTipo}" para "${currentTipo}". Recarregando em 3 segundos...`);
+        exibirPopup("Seu tipo de conta foi alterado!", "O aplicativo será reiniciado em 3 segundos para aplicar as mudanças.", "aviso"); // Informa o usuário
+
+        // Cancela o listener do perfil ANTES de recarregar
+        if (perfilListenerUnsubscribe) {
+            console.log("Cancelando listener do perfil antes de recarregar.");
+            perfilListenerUnsubscribe();
+            perfilListenerUnsubscribe = null; // Limpa a referência
+        }
+        // Limpa outros listeners também, se necessário
+        if (updateLastSeenInterval) clearInterval(updateLastSeenInterval); updateLastSeenInterval = null;
+        if (onlineUsersListener) onlineUsersListener(); onlineUsersListener = null;
+        if (globalChatListener) globalChatListener(); globalChatListener = null;
+        if (vendaListener) vendaListener(); vendaListener = null;
+        if (comprasClienteListener) comprasClienteListener(); comprasClienteListener = null;
+        if (pedidosVendedorListener) pedidosVendedorListener(); pedidosVendedorListener = null;
+        if (barbeirosListener) barbeirosListener(); barbeirosListener = null;
+        if (agendamentoListener) agendamentoListener(); agendamentoListener = null;
+        if (chatListener) chatListener(); chatListener = null;
+        if (portfolioListener) portfolioListener(); portfolioListener = null;
+
+        setTimeout(() => {
+            console.log("Recarregando a página agora...");
+            location.reload();
+        }, 3000);
+        return; // IMPORTANTE: Para a execução deste snapshot
+    }
+    // Atualiza o tipo anterior para a próxima verificação, apenas se não for recarregar
+    previousTipo = currentTipo;
+    // <<<--- END: NEW RELOAD LOGIC FOR TYPE CHANGE --->>>
+
+
     // Atualiza a UI com os dados do perfil (saldo, VIP, PRO, etc.)
-    const saldo = (perfilAtual.saldo || 0).toFixed(2);
+    const saldo = (perfil.saldo || 0).toFixed(2); // Usa o 'perfil' global já atualizado
     document.getElementById("saldoHeader").textContent = saldo;
     document.getElementById("saldoModal").textContent = saldo;
 
     const btnVip = document.getElementById('btnVip');
     if (btnVip) { // Verifica se o botão existe
-      if (isVipAtivo(perfilAtual)) {
+      if (isVipAtivo(perfil)) { // Usa o 'perfil' global
           btnVip.textContent = '👑 Sou VIP'; btnVip.classList.add('vip-glow');
       } else {
           btnVip.textContent = '💎 VIP'; btnVip.classList.remove('vip-glow');
@@ -3137,23 +3178,22 @@ auth.onAuthStateChanged(async user => {
 
     const btnVipPro = document.getElementById('btnVipPro');
     if (btnVipPro) { // Verifica se o botão existe (só na tela de profissional)
-        if (isProAtivo(perfilAtual)) {
+        if (isProAtivo(perfil)) { // Usa o 'perfil' global
             btnVipPro.textContent = '🌟 Sou PRO'; btnVipPro.classList.add('pro-glow');
         } else {
-            // Define o texto padrão para quando não é PRO
-            btnVipPro.textContent = '🌟 Seja PRO'; // Remove o preço daqui
+            btnVipPro.textContent = '🌟 Seja PRO';
             btnVipPro.classList.remove('pro-glow');
         }
     }
 
     // Aplica tema baseado no interesse principal
-    aplicarTemaPorProfissao(perfilAtual.interesse_principal);
+    aplicarTemaPorProfissao(perfil.interesse_principal); // Usa o 'perfil' global
 
     // Mostra/Esconde botão de solicitar loja nas configurações
     const btnSolicitarLoja = document.getElementById('btnSolicitarAcessoLoja');
     const msgLojaLiberada = document.getElementById('msgLojaJaLiberada');
     if (btnSolicitarLoja && msgLojaLiberada) {
-       const mostrarBotao = !perfilAtual.lojaLiberada && perfilAtual.tipo !== 'admin';
+       const mostrarBotao = !perfil.lojaLiberada && perfil.tipo !== 'admin'; // Usa o 'perfil' global
        btnSolicitarLoja.classList.toggle('hidden', !mostrarBotao);
        msgLojaLiberada.classList.toggle('hidden', mostrarBotao);
     }
@@ -3161,6 +3201,7 @@ auth.onAuthStateChanged(async user => {
     // --- LÓGICA EXECUTADA APENAS NO PRIMEIRO CARREGAMENTO DO LISTENER ---
     if (isInitialLoad) {
         console.log("Carregamento inicial do perfil via listener concluído.");
+        previousTipo = perfil.tipo; // Define o tipo inicial para a próxima comparação
 
         // Define a view inicial
         if (!userView.originalType) {
@@ -3299,10 +3340,8 @@ auth.onAuthStateChanged(async user => {
   // --- Fim do Listener Principal ---
 
   // --- Bloco try/catch para verificação inicial de manutenção ---
-  // (Este bloco roda antes do listener principal ter certeza dos dados)
   try {
       const config = await db.collection("config").doc("sistema").get();
-      // Lê o perfil *novamente* aqui só para a verificação inicial
       const initialProfileSnap = await ref.get();
       if (!initialProfileSnap.exists) throw new Error("Perfil não encontrado na verificação inicial.");
 
@@ -3314,11 +3353,7 @@ auth.onAuthStateChanged(async user => {
       }
   } catch (configError) {
       console.error("Erro ao verificar status de manutenção:", configError);
-      // Decide se quer continuar ou deslogar em caso de erro aqui
-      // Por segurança, pode ser melhor deslogar:
-      // exibirPopup("Erro", "Não foi possível verificar o status do sistema.");
-      // auth.signOut();
-      // return;
+      // Você pode decidir deslogar aqui por segurança, se preferir
   }
   // --- Fim da verificação inicial de manutenção ---
 
@@ -6032,16 +6067,12 @@ async function abrirModalGerenciarUsuario(uid) {
             <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
             <input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
 
-            <!-- Inputs para Estado e Cidade -->
             <label for="adminNovoEstado">Estado:</label>
             <input id="adminNovoEstado" type="text" value="${u.estado || ''}" placeholder="Digite o estado" oninput="this.value = formatarNomeProprio(this.value)">
             <label for="adminNovoCidade">Cidade:</label>
             <input id="adminNovoCidade" type="text" value="${u.cidade || ''}" placeholder="Digite a cidade" oninput="this.value = formatarNomeProprio(this.value)">
-            <!-- Fim Inputs -->
-
             <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
         </div>
-        <!-- ... (Restante do HTML do modal: Saldo, VIP, PRO, Pontos, Loja, Tipo, Segurança, Ações) ... continua igual -->
          <div class="popup-section">
             <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
             <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
@@ -6083,7 +6114,8 @@ async function abrirModalGerenciarUsuario(uid) {
             <p><strong>Alterar Tipo de Conta:</strong></p>
             <p>Tipo Atual: <strong>${u.tipo}</strong></p>
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; justify-content: center;">
-                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'admin')" ${u.tipo === 'admin' ? 'disabled' : ''}>🧠 Admin</button>
+                 >>
+                <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'admin')">🧠 Admin</button>
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>🙋 Cliente</button>
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>💈 Barbeiro</button>
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>💅 Manicure/Pedicure</button>
@@ -6102,7 +6134,6 @@ async function abrirModalGerenciarUsuario(uid) {
             <button style="background-color: ${userRecord.disabled ? '#2ecc71' : '#f1c40f'};" onclick="adminToggleUserStatus('${uid}', ${!userRecord.disabled})">${userRecord.disabled ? 'Reativar Conta' : 'Desativar Conta'}</button>
             <button style="background-color: #c0392b; margin-top: 10px;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
         </div>
-        <!-- Fim do restante do HTML -->
         <button data-modal-id="modalGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
     `;
 
