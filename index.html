@@ -6318,19 +6318,20 @@ async function adminModificarPontos(uid) {
 }
 
 async function adminMudarTipoUsuario(uid, novoTipo) {
-    // REMOVIDA A VALIDAÇÃO 'tiposValidos' PARA PERMITIR MUDAR PARA ADMIN
+    // Validação removida para permitir 'admin'
+    if (!confirm(`Tem certeza que deseja alterar o tipo deste usuário para "${novoTipo}"? O aplicativo dele será reiniciado.`)) return;
 
-    if (!confirm(`Tem certeza que deseja alterar o tipo deste usuário para "${novoTipo}"?`)) return;
-
+    // 1. Mostrar "Aguarde" IMEDIATAMENTE
     exibirAguarde("Alterando tipo de usuário...");
+
     try {
-        // Atualiza o tipo e reseta campos específicos de profissional se virar cliente
+        // Atualiza o tipo e reseta campos específicos se necessário
         const updates = { tipo: novoTipo };
         if (novoTipo === 'cliente') {
             updates.listaServicos = [];
             updates.promocoes = [];
             updates.portfolio = [];
-            updates.logo_url = firebase.firestore.FieldValue.delete(); // Remove logo
+            updates.logo_url = firebase.firestore.FieldValue.delete();
             updates.disponivel = "nao";
             updates.vagaImediata = false;
             updates.usaAgendaManual = false;
@@ -6338,25 +6339,36 @@ async function adminMudarTipoUsuario(uid, novoTipo) {
             updates.ausente = false;
             updates.ausenciaInicio = firebase.firestore.FieldValue.delete();
             updates.ausenciaFim = firebase.firestore.FieldValue.delete();
-            // Manter endereço? Depende da sua regra de negócio. Se não:
-            // updates.rua = firebase.firestore.FieldValue.delete();
-            // updates.numero = firebase.firestore.FieldValue.delete();
-            // updates.latitude = firebase.firestore.FieldValue.delete();
-            // updates.longitude = firebase.firestore.FieldValue.delete();
         } else {
-            // Se virar profissional ou admin, garante que onboarding não seja necessário
-            // (a menos que você queira forçar de novo)
-             updates.onboarding_profissional_concluido = true; // Marca como concluído se vira profissional/admin
+             updates.onboarding_profissional_concluido = true;
         }
 
+        // Adiciona o timestamp para forçar reload no *outro* cliente, se ele estiver online
+        updates.forceReloadTimestamp = firebase.firestore.FieldValue.serverTimestamp();
 
+        // Salva as alterações no Firestore
         await db.collection('usuarios').doc(uid).update(updates);
-        fecharAguarde(null, true);
-        exibirPopup("Sucesso", `Tipo de usuário alterado para "${novoTipo}" com sucesso!`);
-        // Reabre o modal para atualizar a interface
-        abrirModalGerenciarUsuario(uid);
+
+        // 2. Fechar "Aguarde" e Mostrar "Sucesso"
+        fecharAguarde(null, true); // Força o fechamento do Aguarde
+        exibirPopup("Sucesso", `Tipo de usuário alterado para "${novoTipo}" com sucesso! O aplicativo do usuário será reiniciado.`);
+
+        // 3. Agendar o redirecionamento FORÇADO após 3 segundos
+        //    (Isso afeta APENAS a tela do ADMIN que fez a ação, o usuário afetado
+        //     será reiniciado pela lógica no onAuthStateChanged que já implementamos)
+        //    Não precisamos reiniciar a tela do admin aqui, apenas reabrir o modal.
+        // setTimeout(() => {
+        //     console.log("Forçando reinicialização da *sua* tela (admin)...");
+        //     window.location.href = '/?force_reload=' + Date.now(); // Adiciona timestamp para garantir que não use cache
+        // }, 3000);
+
+        // Em vez de reiniciar a tela do admin, apenas reabrimos o modal para ver a mudança
+         abrirModalGerenciarUsuario(uid); // Reabre o modal do usuário gerenciado
+
+
     } catch (error) {
-        fecharAguarde(null, true);
+        // Em caso de erro
+        fecharAguarde(null, true); // Garante que o Aguarde feche
         console.error("Erro ao alterar tipo:", error);
         exibirPopup("Erro", `Erro ao alterar tipo: ${error.message}`);
     }
