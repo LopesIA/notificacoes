@@ -2153,10 +2153,10 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     color: var(--cor-destaque);
 }
 
-/* ADICIONE ESTE CÓDIGO DENTRO DA TAG <style> */
-#modalAdminUsuario .modal-content {
-    max-height: 80vh; /* Limita a altura máxima do modal */
-    overflow-y: auto;   /* Adiciona a barra de rolagem vertical quando necessário */
+#modalGerenciarUsuario .modal-content {
+    max-height: 80vh; /* Limita a altura máxima a 80% da altura da tela */
+    overflow-y: auto;   /* Adiciona a barra de rolagem vertical APENAS quando necessário */
+    /* Você pode ajustar o valor de max-height (ex: 75vh, 85vh) se preferir */
 }
 
 #modalVipPro .modal-content {
@@ -2981,7 +2981,7 @@ function criarConta() {
     // if (!rua || !numero) { fecharTodosOsModais(); return exibirPopup("Profissionais devem informar Rua e Número."); }
   }
 
-  const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
+  
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
   const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
 
