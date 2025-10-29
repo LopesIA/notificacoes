@@ -3217,94 +3217,62 @@ auth.onAuthStateChanged(async user => {
 
     // --- LÓGICA EXECUTADA APENAS NO PRIMEIRO CARREGAMENTO DO LISTENER ---
     if (isInitialLoad) {
-    console.log("Carregamento inicial do perfil via listener concluído.");
-    previousTipo = perfil.tipo; // Define o tipo inicial para a próxima comparação
+        console.log("Carregamento inicial do perfil via listener concluído.");
+        previousTipo = perfil.tipo; // Define o tipo inicial para a próxima comparação
 
-    // --- LÓGICA DE ONBOARDING/FLUXO INICIAL (Prioridade Máxima) ---
-    // Se for profissional E precisar de configuração inicial, iniciamos o fluxo E SAÍMOS (return).
-    if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
-        console.log("Profissional recém-criado detectado. Iniciando fluxo de configuração inicial...");
-        
-        // Define a view de profissional por baixo
-        userView.originalType = perfil.tipo;
-        userView.currentType = perfil.tipo; 
-        renderCurrentView(); // Renderiza a view base de profissional
-        
-        // Chama a função que inicia o fluxo de modais
-        iniciarFluxoPosCadastroProfissional(); 
-        
-        // **IMPORTANTE**: Interrompe as outras inicializações (lastSeen, Listeners, etc.)
-        console.log("Onboarding iniciado. Execução do isInitialLoad interrompida pelo return.");
-        return; // <<<--- CORREÇÃO CRÍTICA: IMPEDE O RESTO DA INICIALIZAÇÃO
-    } 
-    // --- FIM DA LÓGICA DE ONBOARDING/FLUXO INICIAL ---
-    
-    // ----------------------------------------------------------------------
-    // --- LÓGICA DE INICIALIZAÇÃO NORMAL (Só é executada se o 'return' acima NÃO rodar) ---
-    // ----------------------------------------------------------------------
-    console.log("Inicialização normal: Onboarding não necessário ou já concluído.");
+        // Define a view inicial
+        if (!userView.originalType) {
+            userView.originalType = perfil.tipo;
+            userView.currentType = perfil.tipo;
+        }
+        renderCurrentView(); // Renderiza a view correta
 
-    // Define a view inicial normal
-    if (!userView.originalType) {
-        userView.originalType = perfil.tipo;
-        userView.currentType = perfil.tipo;
-    }
-    renderCurrentView(); // Renderiza a view correta
-
-    // --- Demais inicializações ---
-
-    // Lógica do lastSeen (incluindo o conteúdo da função de atualização)
-    if (!updateLastSeenInterval) { 
-        const updateFn = () => { 
-            if (auth.currentUser) {
-                db.collection('usuarios').doc(auth.currentUser.uid).update({
-                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(err => console.warn("Erro ao atualizar lastSeen:", err.message));
-            } else if(updateLastSeenInterval) {
-                 clearInterval(updateLastSeenInterval);
-                 updateLastSeenInterval = null;
+        // Inicia Onboarding do Profissional se necessário
+        if (perfil.tipo !== 'cliente' && !perfil.onboarding_profissional_concluido) {
+            if (!fluxoPosCadastroAtivo && !document.getElementById('modalOnboardingProfissionalServicos')?.classList.contains('show')) {
+               iniciarFluxoPosCadastroProfissional();
             }
-        }; 
-        updateFn(); 
-        updateLastSeenInterval = setInterval(updateFn, 60 * 1000);
+        }
+
+        // --- Demais inicializações ---
+        if (!updateLastSeenInterval) { /* ... (lógica do lastSeen) ... */
+            const updateFn = () => { /* ... */ }; updateFn(); updateLastSeenInterval = setInterval(updateFn, 60 * 1000);
+        }
+        setupFCM(user.uid);
+        exibirVersaoApp();
+        iniciarVerificacaoDePendencias(user.uid);
+        setTimeout(() => { document.getElementById("btnSair")?.classList.remove("hidden"); }, 15000); // Adicionado '?' para segurança
+
+        // --- Listeners adicionais ---
+        // Listener de Avisos
+        db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
+            .onSnapshot(snapshot => { /* ... (lógica dos avisos) ... */ });
+
+        // Listener do Chat Global
+        if (globalChatListener) globalChatListener();
+        globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
+            .orderBy("ts", "desc").limit(1)
+            .onSnapshot(snapshot => { /* ... (lógica do chat global preview) ... */ });
+
+        // Listener de Vendas para Vendedores
+        if (vendaListener) vendaListener();
+        if (perfil && (perfil.lojaLiberada || perfil.tipo === 'admin')) {
+            vendaListener = db.collection("loja_pedidos")
+                .where("vendedorUid", "==", user.uid)
+                .where("vendedorNotificado", "==", false)
+                .onSnapshot(snapshot => { /* ... (lógica popup nova venda) ... */ });
+        }
+
+        // Listener de Confirmação para Compradores
+        if (comprasClienteListener) comprasClienteListener();
+        comprasClienteListener = db.collection('loja_pedidos')
+            .where('clienteUid', '==', user.uid)
+            .where('status', '==', 'entregue_pendente_confirmacao')
+            .onSnapshot(snapshot => { /* ... (lógica modal confirmação comprador) ... */ });
+        // --- Fim dos Listeners Adicionais ---
+        console.log("Inicialização no primeiro load concluída.");
     }
-    
-    setupFCM(user.uid);
-    exibirVersaoApp();
-    iniciarVerificacaoDePendencias(user.uid);
-    setTimeout(() => { document.getElementById("btnSair")?.classList.remove("hidden"); }, 15000);
-
-    // --- Listeners adicionais ---
-    // Listener de Avisos
-    db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
-        .onSnapshot(snapshot => { /* ... (lógica dos avisos) ... */ });
-
-    // Listener do Chat Global
-    if (globalChatListener) globalChatListener();
-    globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-        .orderBy("ts", "desc").limit(1)
-        .onSnapshot(snapshot => { /* ... (lógica do chat global preview) ... */ });
-
-    // Listener de Vendas para Vendedores
-    if (vendaListener) vendaListener();
-    if (perfil && (perfil.lojaLiberada || perfil.tipo === 'admin')) {
-        vendaListener = db.collection("loja_pedidos")
-            .where("vendedorUid", "==", user.uid)
-            .where("vendedorNotificado", "==", false)
-            .onSnapshot(snapshot => { /* ... (lógica popup nova venda) ... */ });
-    }
-
-    // Listener de Confirmação para Compradores
-    if (comprasClienteListener) comprasClienteListener();
-    comprasClienteListener = db.collection('loja_pedidos')
-        .where('clienteUid', '==', user.uid)
-        .where('status', '==', 'entregue_pendente_confirmacao')
-        .onSnapshot(snapshot => { /* ... (lógica modal confirmação comprador) ... */ });
-    // --- Fim dos Listeners Adicionais ---
-    
-    console.log("Inicialização no primeiro load concluída.");
-}
-// --- FIM DA LÓGICA DO PRIMEIRO CARREGAMENTO ---
+    // --- FIM DA LÓGICA DO PRIMEIRO CARREGAMENTO ---
 
   }, error => { // Tratamento de erro para o listener principal
       console.error("Erro CRÍTICO no listener do perfil:", error);
@@ -4762,18 +4730,10 @@ function listarServicos() {
   });
 }
 
-// SUBSTITUA A FUNÇÃO iniciarFluxoPosCadastroProfissional() INTEIRA POR ESTA VERSÃO:
 function iniciarFluxoPosCadastroProfissional() {
-    fluxoPosCadastroAtivo = true; // Garante que a flag está ativa
-    tempOnboardingServicos = []; // Reseta os serviços temporários
-    // Abre o PRIMEIRO modal (Serviços) sem confirmação de fechamento
-    document.getElementById('onboardingServicoNome').value = '';
-    document.getElementById('onboardingServicoValor').value = '';
-    document.getElementById('onboardingServicoTempo').value = '';
-    document.getElementById('onboardingServicosList').innerHTML = '';
-    document.getElementById('btnOnboardingNextServicos').disabled = true;
-    abrirModal('modalOnboardingProfissionalServicos');
-    // REMOVEMOS a chamada para abrirModalComConfirmacao daqui
+    fluxoPosCadastroAtivo = true;
+    // Abre o primeiro modal (Logomarca) com a opção de confirmação ao fechar
+    abrirModalComConfirmacao('modalLogomarca', '🎨 Adicionar Logomarca');
 }
 
 function adicionarServico() {
@@ -4816,15 +4776,17 @@ async function salvarLogomarca() {
         await db.collection("usuarios").doc(userId).update({ logo_url: downloadURL });
 
         progressBar.style.display = 'none'; progressBar.value = 0; previewImg.style.opacity = '1';
-        // Dentro de salvarLogomarca(), após o sucesso do upload e update:
-fecharTodosOsModais(); // Fecha Aguarde e Logo
-exibirPopup("Logomarca salva com sucesso!");
+        fecharTodosOsModais();
+        exibirPopup("Logomarca salva com sucesso!");
 
-if (fluxoPosCadastroAtivo) {
-    // AVANÇA PARA O PRÓXIMO: PORTFÓLIO
-    abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio', 'Adicione pelo menos uma imagem ao seu portfólio para aparecer para os clientes.');
-}
-// Não precisa de 'else' aqui, o comportamento normal é só fechar.
+        // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
+        // ... (código de sucesso)
+ if (fluxoPosCadastroAtivo) {
+     fecharModalAtual(); // Fecha o modal da logo
+     abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Abre o próximo
+ } else {
+      fecharModalAtual(); // Fecha o modal da logo (comportamento normal)
+ }
         // --- FIM DA ADIÇÃO ---
 
     } catch (error) { /* ... (bloco catch original) ... */
@@ -4856,17 +4818,12 @@ if (logoFileInput && logoPreviewImg && logoSaveBtn) {
     });
 }
 
-// SUBSTITUA A FUNÇÃO finalizarFluxoPosCadastro() INTEIRA POR ESTA VERSÃO:
 async function finalizarFluxoPosCadastro() {
     if (!fluxoPosCadastroAtivo) return;
     fluxoPosCadastroAtivo = false; // Desativa o fluxo
     try {
-        // ATUALIZA AMBAS AS FLAGS
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({
-             onboarding_profissional_concluido: true,
-             precisaConfiguracaoInicial: false // <-- ADICIONADO AQUI
-        });
-        console.log("Onboarding do profissional marcado como concluído e flag 'precisaConfiguracaoInicial' definida como false.");
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({ onboarding_profissional_concluido: true });
+        console.log("Onboarding do profissional marcado como concluído.");
         exibirPopup("Configuração concluída!", "Você já pode usar todas as funções do painel do profissional."); // Feedback final
     } catch (error) {
         console.error("Erro ao marcar onboarding como concluído:", error);
@@ -4972,34 +4929,6 @@ function abrirAgendamentosBarbeiro() {
             painel.innerHTML += `<div class="card"><b>${ag.clienteNome}</b> - ${ag.servico} (R$ ${ag.valor.toFixed(2)})<br>Horário: ${horarioInfo}<br>Status: <b>${statusTexto}</b>${ag.clienteTelefone ? `<br><a href="https://wa.me/55${ag.clienteTelefone}" target="_blank">📞 Contatar</a>` : ''}<div style="margin-top:10px; display:flex; gap: 8px;">${botoes}</div></div>`;
         });
     });
-}
-
-// --- FUNÇÃO PARA CONTROLAR A VISIBILIDADE DE SEÇÕES/MENUS ---
-function toggleFuncoes(id, buttonElement) {
-    const elemento = document.getElementById(id);
-    if (!elemento) {
-        console.error(`Elemento com ID '${id}' não encontrado.`);
-        return;
-    }
-
-    // Alterna a classe 'hidden' no elemento principal
-    const isHidden = elemento.classList.toggle('hidden');
-
-    // Opcional: Altera o texto ou ícone do botão para indicar o estado
-    if (buttonElement) {
-        const textElement = buttonElement.querySelector('.toggle-text');
-        const iconElement = buttonElement.querySelector('.toggle-icon');
-
-        if (textElement) {
-            textElement.textContent = isHidden ? 'Mostrar Funções' : 'Ocultar Funções';
-        }
-        
-        if (iconElement) {
-             // Exemplo de mudança de ícone (assumindo que você usa classes de ícones como 'fa-chevron-down')
-             iconElement.classList.toggle('fa-chevron-down', isHidden);
-             iconElement.classList.toggle('fa-chevron-up', !isHidden);
-        }
-    }
 }
 
 function formatarNomeProprio(texto) {
@@ -5624,26 +5553,16 @@ function confirmarFechamentoPopup() {
         }
 
         // --- LÓGICA DE AVANÇO NO FLUXO PÓS-CADASTRO ---
-        // Dentro da função confirmarFechamentoPopup():
-if (fluxoPosCadastroAtivo) {
-    if (modalOriginalIdParaConfirmar === 'modalLogomarca') {
-        // Pulou Logo -> Vai para Portfólio
-        abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio', 'Adicione pelo menos uma imagem ao seu portfólio para aparecer para os clientes.');
-    } else if (modalOriginalIdParaConfirmar === 'modalPortfolioBarbeiro') {
-        // Pulou Portfólio -> **FINALIZA O FLUXO** (já que promoção foi removida da sequência obrigatória)
-        // Verifica se tem ao menos uma imagem antes de finalizar
-         const perfilAtualCheck = await db.collection('usuarios').doc(auth.currentUser.uid).get();
-         if (perfilAtualCheck.exists() && perfilAtualCheck.data().portfolio && perfilAtualCheck.data().portfolio.length > 0) {
-             finalizarFluxoPosCadastro();
-         } else {
-              exibirPopup("Portfólio Obrigatório", "Você precisa adicionar pelo menos uma imagem para finalizar a configuração.");
-              // Reabre o modal de portfólio
-              abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio', 'Adicione pelo menos uma imagem ao seu portfólio para aparecer para os clientes.');
-         }
-    }
-    // Não há mais etapa de promoção obrigatória no fluxo principal
-}
-// --- FIM DA LÓGICA DE AVANÇO ---
+        if (fluxoPosCadastroAtivo) {
+            if (modalOriginalIdParaConfirmar === 'modalLogomarca') {
+                abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Próximo: Portfólio
+            } else if (modalOriginalIdParaConfirmar === 'modalPortfolioBarbeiro') {
+                abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Próximo: Promoção (Opcional)
+            } else if (modalOriginalIdParaConfirmar === 'modalAddPromocao') {
+                finalizarFluxoPosCadastro(); // Finaliza o fluxo se pular a promoção
+            }
+        }
+        // --- FIM DA LÓGICA DE AVANÇO ---
 
         modalOriginalIdParaConfirmar = null; // Limpa a referência
     }
@@ -6774,25 +6693,8 @@ async function salvarNovasImagensPortfolio() {
           abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Reabre portfólio
      }
  } else {
-      // Dentro de salvarNovasImagensPortfolio(), após o sucesso do upload e update:
-fecharTodosOsModais(); // Fecha Aguarde e Portfólio
-exibirPopup(`Sucesso!`, `${novasUrls.length} imagem(ns) adicionada(s) ao portfólio!`);
-
-fileInput.value = ''; previewContainer.innerHTML = ''; progressBar.style.display = 'none';
-
-if (fluxoPosCadastroAtivo) {
-    // Verifica se realmente adicionou imagens
-    const perfilAtualizado = (await db.collection('usuarios').doc(userId).get()).data();
-    if (perfilAtualizado.portfolio && perfilAtualizado.portfolio.length > 0) {
-        // **FINALIZA O FLUXO AQUI**
-        finalizarFluxoPosCadastro();
-    } else {
-        // Se não adicionou (ex: cancelou o upload), reabre o modal de portfólio
-        exibirPopup("Portfólio Obrigatório", "Você precisa adicionar pelo menos uma imagem ao seu portfólio para continuar.");
-        abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio', 'Adicione pelo menos uma imagem ao seu portfólio para aparecer para os clientes.');
-    }
-}
-// Não precisa de 'else' aqui, o comportamento normal é só fechar.
+      fecharModalAtual(); // Comportamento normal
+ }
         // --- FIM DA ADIÇÃO ---
 
     } catch (error) { /* ... (bloco catch original) ... */
@@ -6847,17 +6749,14 @@ async function removerImagemPortfolio(imageUrl) {
     }
 }
 
-// SUBSTITUA A FUNÇÃO carregarPortfolioExistente() INTEIRA POR ESTA VERSÃO:
 function carregarPortfolioExistente() {
     const gridContainer = document.getElementById('portfolioExistenteGrid');
     const contadorElement = document.getElementById('portfolioContador');
     const fileInput = document.getElementById('portfolioFiles');
     const labelFileInput = document.getElementById('labelPortfolioFiles');
-    const btnSalvarPortfolio = document.getElementById('btnSalvarPortfolio'); // Pega referência do botão Salvar
-
     gridContainer.innerHTML = '<p>Carregando...</p>'; // Feedback inicial
 
-    // Cancela o listener anterior, se existir
+    // Cancela o listener anterior, se existir, para evitar múltiplos listeners
     if (portfolioListener) {
         portfolioListener();
         portfolioListener = null;
@@ -6866,9 +6765,10 @@ function carregarPortfolioExistente() {
     // Cria um novo listener para o documento do usuário
     portfolioListener = db.collection('usuarios').doc(auth.currentUser.uid)
         .onSnapshot(doc => {
+            // Verifica se o modal ainda está aberto antes de atualizar a UI
             const modalPortfolio = document.getElementById('modalPortfolioBarbeiro');
             if (!doc.exists || !modalPortfolio || !modalPortfolio.classList.contains('show')) {
-                if (portfolioListener) portfolioListener();
+                if (portfolioListener) portfolioListener(); // Cancela listener se modal fechou ou doc não existe
                 return;
             }
             perfil = doc.data(); // Atualiza o perfil global
@@ -6882,62 +6782,81 @@ function carregarPortfolioExistente() {
             // Atualiza o estado do input de arquivos e label
             const espacoDisponivel = 30 - portfolioUrls.length;
             if (fileInput && labelFileInput) {
-                const limiteAtingido = espacoDisponivel <= 0;
-                fileInput.disabled = limiteAtingido; // Desabilita SE o limite foi atingido
-                labelFileInput.textContent = limiteAtingido
+                fileInput.disabled = espacoDisponivel <= 0;
+                labelFileInput.textContent = espacoDisponivel <= 0
                     ? "Limite de 30 imagens atingido."
                     : `Adicionar Novas Imagens (${espacoDisponivel} restantes):`;
-                if (limiteAtingido) fileInput.value = ''; // Limpa seleção se não há espaço
+                // Limpa seleção se não há espaço (caso tenha sido selecionado antes do limite ser atingido)
+                if (espacoDisponivel <= 0) fileInput.value = '';
             }
+             // Desabilita botão de salvar se input está desabilitado ou sem arquivos
+             const btnSalvarPortfolio = document.getElementById('btnSalvarPortfolio');
+             if(btnSalvarPortfolio) {
+                 btnSalvarPortfolio.disabled = fileInput.disabled || !fileInput.files || fileInput.files.length === 0;
+             }
 
-            // --- LÓGICA DE HABILITAÇÃO DO BOTÃO SALVAR ---
-            // O botão Salvar (btnSalvarPortfolio) só deve estar habilitado se:
-            // 1. O input de arquivo NÃO estiver desabilitado (ou seja, há espaço)
-            // 2. Houver arquivos selecionados no input
-            if(btnSalvarPortfolio) {
-                 const temArquivosSelecionados = fileInput && fileInput.files && fileInput.files.length > 0;
-                 btnSalvarPortfolio.disabled = fileInput.disabled || !temArquivosSelecionados;
-            }
-            // ---------------------------------------------
 
-            // Atualiza a grid de imagens existentes (código igual ao anterior)
+            // Atualiza a grid de imagens existentes
             if (portfolioUrls.length === 0) {
                 gridContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">Nenhuma imagem no portfólio ainda.</p>';
-            } else {
-                gridContainer.innerHTML = '';
-                portfolioUrls.forEach(url => {
-                    const imgContainer = document.createElement('div');
-                    imgContainer.style.position = 'relative';
-                    imgContainer.style.display = 'inline-block'; // Garante que fiquem lado a lado
-                    imgContainer.style.margin = '5px'; // Espaçamento
-                    imgContainer.style.verticalAlign = 'top'; // Alinha pelo topo
-
-                    const imgElement = document.createElement('img');
-                    imgElement.src = url;
-                    imgElement.alt = 'Imagem do Portfólio';
-                    imgElement.style.width = '100px'; // Tamanho fixo para consistência
-                    imgElement.style.height = '100px';
-                    imgElement.style.objectFit = 'cover';
-                    imgElement.style.borderRadius = '4px';
-                    imgElement.style.border = '1px solid var(--cor-borda)';
-                    imgElement.onerror = function() { /* ... (onerror igual) ... */ };
-
-                    const deleteButton = document.createElement('button');
-                    // ... (estilos do botão delete iguais) ...
-                    deleteButton.onclick = (e) => { e.stopPropagation(); removerImagemPortfolio(url); };
-
-                    imgContainer.appendChild(imgElement);
-                    imgContainer.appendChild(deleteButton);
-                    gridContainer.appendChild(imgContainer);
-                });
+                return;
             }
+
+            gridContainer.innerHTML = ''; // Limpa o container
+            portfolioUrls.forEach(url => {
+                const imgContainer = document.createElement('div');
+                imgContainer.style.position = 'relative';
+                imgContainer.style.width = 'calc(33.33% - 10px)'; // Exemplo para 3 colunas com gap
+                imgContainer.style.marginBottom = '10px';
+
+                const imgElement = document.createElement('img');
+                imgElement.src = url;
+                imgElement.alt = 'Imagem do Portfólio';
+                imgElement.style.width = '100%';
+                imgElement.style.height = '100px';
+                imgElement.style.objectFit = 'cover';
+                imgElement.style.borderRadius = '4px';
+                imgElement.style.border = '1px solid var(--cor-borda)';
+                imgElement.onerror = function() {
+                    this.src='https://via.placeholder.com/100x100?text=Erro!';
+                    console.warn("Erro ao carregar imagem do portfólio:", url);
+                    const deleteBtn = this.nextElementSibling;
+                    if(deleteBtn) deleteBtn.remove();
+                };
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '❌';
+                deleteButton.style.position = 'absolute';
+                deleteButton.style.top = '2px';
+                deleteButton.style.right = '2px';
+                deleteButton.style.background = 'rgba(0,0,0,0.7)';
+                deleteButton.style.color = 'white';
+                deleteButton.style.border = 'none';
+                deleteButton.style.borderRadius = '50%';
+                deleteButton.style.width = '20px';
+                deleteButton.style.height = '20px';
+                deleteButton.style.fontSize = '10px';
+                deleteButton.style.lineHeight = '20px'; // Centraliza o X
+                deleteButton.style.textAlign = 'center';
+                deleteButton.style.padding = '0';
+                deleteButton.style.cursor = 'pointer';
+                deleteButton.title = 'Remover Imagem';
+                deleteButton.onclick = (e) => {
+                    e.stopPropagation();
+                    removerImagemPortfolio(url);
+                };
+
+                imgContainer.appendChild(imgElement);
+                imgContainer.appendChild(deleteButton);
+                gridContainer.appendChild(imgContainer);
+            });
 
         }, error => {
             console.error("Erro ao ouvir updates do portfólio:", error);
             gridContainer.innerHTML = '<p style="color: red;">Erro ao carregar portfólio.</p>';
+            // Desabilita input em caso de erro grave
             if(fileInput) fileInput.disabled = true;
             if(labelFileInput) labelFileInput.textContent = "Erro ao carregar.";
-            if(btnSalvarPortfolio) btnSalvarPortfolio.disabled = true; // Desabilita salvar em caso de erro
         });
 }
 
@@ -8627,78 +8546,104 @@ function adicionarServicoOnboarding() {
     document.getElementById('btnOnboardingNextServicos').disabled = false;
 }
 
-// SUBSTITUA A FUNÇÃO avancarOnboarding(etapa) INTEIRA POR ESTA VERSÃO:
-// SUBSTITUA A FUNÇÃO avancarOnboarding(etapa) INTEIRA POR ESTA VERSÃO:
 function avancarOnboarding(etapa) {
-    if (etapa === 2) { // Saindo da tela de Serviços, indo para Agenda
-        fecharModalAtual(); // Fecha Serviços
-        // Configura e abre o modal da Agenda (código igual ao anterior)
+    if (etapa === 2) {
+        fecharModalAtual();
         abrirModal('modalOnboardingProfissionalAgenda');
+        
+        // Pega os elementos dos botões
         const btnVaga = document.getElementById('onboardingBtnVagaImediata');
         const btnManual = document.getElementById('onboardingBtnAgendaManual');
         const painelManual = document.getElementById('onboardingAgendaManualPainel');
+
+        // Reseta o estado inicial
         onboardingState.vagaImediata = false;
         onboardingState.usaAgendaManual = false;
         btnVaga.textContent = '⚡ Ativar Vaga Imediata';
         btnVaga.classList.remove('selected');
         btnManual.classList.remove('selected');
         painelManual.classList.add('hidden');
+        
         const horariosContainer = document.getElementById("onboardingHorariosContainer");
-        horariosContainer.innerHTML = '';
+        horariosContainer.innerHTML = ''; // Limpa para evitar duplicatas
         for (let i = 7; i <= 18; i++) {
             const horario = `${i}:00`;
             horariosContainer.innerHTML += `<button class="horario-btn" onclick="this.classList.toggle('selecionado')">${horario}</button>`;
         }
-        btnVaga.onclick = () => { /* ... (lógica interna igual) ... */
-             onboardingState.vagaImediata = !onboardingState.vagaImediata;
-             if (onboardingState.vagaImediata) {
-                 btnVaga.textContent = '⚡ Vaga Imediata Ativa ✅'; btnVaga.classList.add('selected');
-                 onboardingState.usaAgendaManual = false; btnManual.classList.remove('selected'); painelManual.classList.add('hidden');
-             } else {
-                 btnVaga.textContent = '⚡ Ativar Vaga Imediata'; btnVaga.classList.remove('selected');
-             }
+        
+        // --- LÓGICA APRIMORADA PARA O BOTÃO DE VAGA IMEDIATA ---
+        btnVaga.onclick = () => {
+            // Inverte o estado atual
+            onboardingState.vagaImediata = !onboardingState.vagaImediata;
+            
+            if (onboardingState.vagaImediata) {
+                // Se ativou a Vaga Imediata
+                btnVaga.textContent = '⚡ Vaga Imediata Ativa ✅';
+                btnVaga.classList.add('selected');
+                
+                // Garante que a outra opção seja desativada
+                onboardingState.usaAgendaManual = false;
+                btnManual.classList.remove('selected');
+                painelManual.classList.add('hidden');
+            } else {
+                // Se desativou a Vaga Imediata
+                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
+                btnVaga.classList.remove('selected');
+            }
         };
-        btnManual.onclick = () => { /* ... (lógica interna igual) ... */
-             onboardingState.usaAgendaManual = !onboardingState.usaAgendaManual;
-             if (onboardingState.usaAgendaManual) {
-                 btnManual.classList.add('selected'); painelManual.classList.remove('hidden');
-                 onboardingState.vagaImediata = false; btnVaga.textContent = '⚡ Ativar Vaga Imediata'; btnVaga.classList.remove('selected');
-             } else {
-                 btnManual.classList.remove('selected'); painelManual.classList.add('hidden');
-             }
+        
+        // --- LÓGICA APRIMORADA PARA O BOTÃO DE AGENDA MANUAL ---
+        btnManual.onclick = () => {
+            onboardingState.usaAgendaManual = !onboardingState.usaAgendaManual;
+            
+            if (onboardingState.usaAgendaManual) {
+                btnManual.classList.add('selected');
+                painelManual.classList.remove('hidden');
+
+                // Garante que a outra opção seja desativada
+                onboardingState.vagaImediata = false;
+                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
+                btnVaga.classList.remove('selected');
+            } else {
+                btnManual.classList.remove('selected');
+                painelManual.classList.add('hidden');
+            }
         };
 
-    } else if (etapa === 3) { // Saindo da tela de Agenda, indo para Logo
-        // Salva os dados da agenda e serviços no Firestore
-        exibirAguarde("Salvando configurações iniciais...");
+    } else if (etapa === 3) {
+        // NÃO mostra o aguarde ainda, salva primeiro
         const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
         const updates = {
             listaServicos: tempOnboardingServicos,
-            // Não mexe nas flags de onboarding aqui ainda
+            onboarding_profissional_concluido: false // AINDA NÃO CONCLUIU, faltam os popups
         };
+
+        // Pega a configuração da agenda escolhida
         if (onboardingState.usaAgendaManual) {
-            updates.usaAgendaManual = true; updates.vagaImediata = false;
+            updates.usaAgendaManual = true;
+            updates.vagaImediata = false; // Garante que vaga imediata está desligada
             const agenda = {};
-            document.querySelectorAll('#onboardingHorariosContainer .selecionado').forEach(btn => { agenda[btn.textContent] = true; });
+            document.querySelectorAll('#onboardingHorariosContainer .selecionado').forEach(btn => {
+                agenda[btn.textContent] = true;
+            });
             updates.agenda = agenda;
         } else {
-            updates.vagaImediata = onboardingState.vagaImediata || false; updates.usaAgendaManual = false;
+            // Se não usou manual, salva o estado da vaga imediata (pode ser true ou false)
+            updates.vagaImediata = onboardingState.vagaImediata || false; // Usa o estado salvo ou false como padrão
+            updates.usaAgendaManual = false;
         }
 
+        exibirAguarde("Salvando configurações iniciais..."); // Mostra o aguarde AGORA
+
         userRef.update(updates).then(() => {
-            fecharAguarde(null, true);
-            fecharModalAtual(); // Fecha Agenda
-
-            // **AVANÇA PARA O PRÓXIMO MODAL: LOGOMARCA**
-            // Abre com confirmação de fechamento
-            abrirModalComConfirmacao('modalLogomarca', '🎨 Adicionar Logomarca', 'Adicione uma logo para seu perfil. Você pode pular e fazer isso depois.');
-
+            fecharAguarde(null, true); // Fecha o aguarde
+            fecharModalAtual(); // Fecha o modal da agenda ('modalOnboardingProfissionalAgenda')
+            iniciarFluxoPosCadastroProfissional(); // <-- CHAMA A FUNÇÃO QUE INICIA OS POPUPS DE LOGO/PORTFOLIO/PROMO
         }).catch(e => {
-            fecharTodosOsModais();
+            fecharTodosOsModais(); // Fecha aguarde e modal agenda em caso de erro
             exibirPopup("Erro ao salvar configurações da agenda: " + e.message);
         });
     }
-    // A etapa 4 (ir do Portfolio para o final) será tratada pela função salvarNovasImagensPortfolio e pedirConfirmacaoFecharPopup
  }
 
 async function adminToggleLoja(uid, deveAtivar) {
