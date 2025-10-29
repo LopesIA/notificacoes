@@ -3217,71 +3217,94 @@ auth.onAuthStateChanged(async user => {
 
     // --- LÓGICA EXECUTADA APENAS NO PRIMEIRO CARREGAMENTO DO LISTENER ---
     if (isInitialLoad) {
-        console.log("Carregamento inicial do perfil via listener concluído.");
-        previousTipo = perfil.tipo; // Define o tipo inicial para a próxima comparação
+    console.log("Carregamento inicial do perfil via listener concluído.");
+    previousTipo = perfil.tipo; // Define o tipo inicial para a próxima comparação
 
-        // Define a view inicial
-        if (!userView.originalType) {
-            userView.originalType = perfil.tipo;
-            userView.currentType = perfil.tipo;
-        }
-        renderCurrentView(); // Renderiza a view correta
+    // --- LÓGICA DE ONBOARDING/FLUXO INICIAL (Prioridade Máxima) ---
+    // Se for profissional E precisar de configuração inicial, iniciamos o fluxo E SAÍMOS (return).
+    if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
+        console.log("Profissional recém-criado detectado. Iniciando fluxo de configuração inicial...");
+        
+        // Define a view de profissional por baixo
+        userView.originalType = perfil.tipo;
+        userView.currentType = perfil.tipo; 
+        renderCurrentView(); // Renderiza a view base de profissional
+        
+        // Chama a função que inicia o fluxo de modais
+        iniciarFluxoPosCadastroProfissional(); 
+        
+        // **IMPORTANTE**: Interrompe as outras inicializações (lastSeen, Listeners, etc.)
+        console.log("Onboarding iniciado. Execução do isInitialLoad interrompida pelo return.");
+        return; // <<<--- CORREÇÃO CRÍTICA: IMPEDE O RESTO DA INICIALIZAÇÃO
+    } 
+    // --- FIM DA LÓGICA DE ONBOARDING/FLUXO INICIAL ---
+    
+    // ----------------------------------------------------------------------
+    // --- LÓGICA DE INICIALIZAÇÃO NORMAL (Só é executada se o 'return' acima NÃO rodar) ---
+    // ----------------------------------------------------------------------
+    console.log("Inicialização normal: Onboarding não necessário ou já concluído.");
 
-        // --- NOVA LÓGICA PARA INICIAR O ONBOARDING DO PROFISSIONAL ---
-        // Verifica a NOVA flag 'precisaConfiguracaoInicial'
-        if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
-            console.log("Profissional recém-criado detectado. Iniciando fluxo de configuração inicial...");
-            // Verifica se nenhum modal do fluxo já está aberto para evitar duplicação
-            if (!fluxoPosCadastroAtivo &&
-                !document.getElementById('modalOnboardingProfissionalServicos')?.classList.contains('show') &&
-                !document.getElementById('modalOnboardingProfissionalAgenda')?.classList.contains('show') &&
-                !document.getElementById('modalLogomarca')?.classList.contains('show') &&
-                !document.getElementById('modalPortfolioBarbeiro')?.classList.contains('show') &&
-                !document.getElementById('modalAddPromocao')?.classList.contains('show'))
-            {
-               iniciarFluxoPosCadastroProfissional(); // Inicia o fluxo
-            }
-        }
-
-
-        if (!updateLastSeenInterval) { /* ... (lógica do lastSeen) ... */
-            const updateFn = () => { /* ... */ }; updateFn(); updateLastSeenInterval = setInterval(updateFn, 60 * 1000);
-        }
-        setupFCM(user.uid);
-        exibirVersaoApp();
-        iniciarVerificacaoDePendencias(user.uid);
-        setTimeout(() => { document.getElementById("btnSair")?.classList.remove("hidden"); }, 15000); // Adicionado '?' para segurança
-
-        // --- Listeners adicionais ---
-        // Listener de Avisos
-        db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
-            .onSnapshot(snapshot => { /* ... (lógica dos avisos) ... */ });
-
-        // Listener do Chat Global
-        if (globalChatListener) globalChatListener();
-        globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-            .orderBy("ts", "desc").limit(1)
-            .onSnapshot(snapshot => { /* ... (lógica do chat global preview) ... */ });
-
-        // Listener de Vendas para Vendedores
-        if (vendaListener) vendaListener();
-        if (perfil && (perfil.lojaLiberada || perfil.tipo === 'admin')) {
-            vendaListener = db.collection("loja_pedidos")
-                .where("vendedorUid", "==", user.uid)
-                .where("vendedorNotificado", "==", false)
-                .onSnapshot(snapshot => { /* ... (lógica popup nova venda) ... */ });
-        }
-
-        // Listener de Confirmação para Compradores
-        if (comprasClienteListener) comprasClienteListener();
-        comprasClienteListener = db.collection('loja_pedidos')
-            .where('clienteUid', '==', user.uid)
-            .where('status', '==', 'entregue_pendente_confirmacao')
-            .onSnapshot(snapshot => { /* ... (lógica modal confirmação comprador) ... */ });
-        // --- Fim dos Listeners Adicionais ---
-        console.log("Inicialização no primeiro load concluída.");
+    // Define a view inicial normal
+    if (!userView.originalType) {
+        userView.originalType = perfil.tipo;
+        userView.currentType = perfil.tipo;
     }
-    // --- FIM DA LÓGICA DO PRIMEIRO CARREGAMENTO ---
+    renderCurrentView(); // Renderiza a view correta
+
+    // --- Demais inicializações ---
+
+    // Lógica do lastSeen (incluindo o conteúdo da função de atualização)
+    if (!updateLastSeenInterval) { 
+        const updateFn = () => { 
+            if (auth.currentUser) {
+                db.collection('usuarios').doc(auth.currentUser.uid).update({
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(err => console.warn("Erro ao atualizar lastSeen:", err.message));
+            } else if(updateLastSeenInterval) {
+                 clearInterval(updateLastSeenInterval);
+                 updateLastSeenInterval = null;
+            }
+        }; 
+        updateFn(); 
+        updateLastSeenInterval = setInterval(updateFn, 60 * 1000);
+    }
+    
+    setupFCM(user.uid);
+    exibirVersaoApp();
+    iniciarVerificacaoDePendencias(user.uid);
+    setTimeout(() => { document.getElementById("btnSair")?.classList.remove("hidden"); }, 15000);
+
+    // --- Listeners adicionais ---
+    // Listener de Avisos
+    db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
+        .onSnapshot(snapshot => { /* ... (lógica dos avisos) ... */ });
+
+    // Listener do Chat Global
+    if (globalChatListener) globalChatListener();
+    globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
+        .orderBy("ts", "desc").limit(1)
+        .onSnapshot(snapshot => { /* ... (lógica do chat global preview) ... */ });
+
+    // Listener de Vendas para Vendedores
+    if (vendaListener) vendaListener();
+    if (perfil && (perfil.lojaLiberada || perfil.tipo === 'admin')) {
+        vendaListener = db.collection("loja_pedidos")
+            .where("vendedorUid", "==", user.uid)
+            .where("vendedorNotificado", "==", false)
+            .onSnapshot(snapshot => { /* ... (lógica popup nova venda) ... */ });
+    }
+
+    // Listener de Confirmação para Compradores
+    if (comprasClienteListener) comprasClienteListener();
+    comprasClienteListener = db.collection('loja_pedidos')
+        .where('clienteUid', '==', user.uid)
+        .where('status', '==', 'entregue_pendente_confirmacao')
+        .onSnapshot(snapshot => { /* ... (lógica modal confirmação comprador) ... */ });
+    // --- Fim dos Listeners Adicionais ---
+    
+    console.log("Inicialização no primeiro load concluída.");
+}
+// --- FIM DA LÓGICA DO PRIMEIRO CARREGAMENTO ---
 
   }, error => { // Tratamento de erro para o listener principal
       console.error("Erro CRÍTICO no listener do perfil:", error);
