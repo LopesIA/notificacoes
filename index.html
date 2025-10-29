@@ -43,6 +43,42 @@
     }
 }
 
+/* Estilos para Desktop - Agendamentos do Profissional */
+@media (min-width: 768px) { /* Aplica a partir de telas médias (tablets e desktops) */
+  #modalAgendamentosBarbeiro .modal-content {
+    max-width: 800px; /* Modal um pouco mais largo */
+  }
+
+  #agendamentosPainel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Cria colunas */
+    gap: 15px; /* Espaçamento entre os cards */
+    max-height: 70vh; /* Ajusta a altura máxima se necessário */
+  }
+
+  #agendamentosPainel .card {
+    width: auto; /* Deixa o card ocupar o espaço da coluna */
+    margin: 0; /* Remove margem padrão do card */
+  }
+
+  /* Opcional: Ajustar tamanho da fonte ou padding nos cards se necessário */
+  #agendamentosPainel .card p,
+  #agendamentosPainel .card button {
+    font-size: 0.9em; /* Levemente menor para caber mais info */
+  }
+   #agendamentosPainel .card button {
+      padding: 8px 10px;
+   }
+
+   /* Ajustes gerais para telas maiores */
+   .content-container {
+      max-width: 900px; /* Container principal mais largo */
+   }
+   .card {
+     max-width: none; /* Remove limitação de largura dos cards */
+   }
+}
+
 /* CLASSE QUE APLICA A ANIMAÇÃO QUANDO SELECIONADO */
 .onboard-option.selected {
     border: 2px solid var(--cor-tema-forte) !important; /* Adiciona uma borda dourada sólida */
@@ -1155,12 +1191,8 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
       <input id="telefone" type="tel" placeholder="📞 Telefone com DDD (ex: 27999999999)">
       <input id="rua" type="text" placeholder="Endereço (Rua)" class="hidden">
       <input id="numero" type="text" placeholder="Endereço (Número)" class="hidden">
-      <select id="estado" onchange="carregarCidades()">
-        <option value="">🌎 Selecione seu estado</option>
-      </select>
-      <select id="cidade">
-        <option value="">🏙️ Selecione sua cidade</option>
-      </select>
+      <input id="estado" type="text" placeholder="🌎 Digite seu estado (Ex: São Paulo)" oninput="this.value = formatarNomeProprio(this.value)">
+      <input id="cidade" type="text" placeholder="🏙️ Digite sua cidade (Ex: São Paulo)" oninput="this.value = formatarNomeProprio(this.value)">
       <input id="indicador" type="text" placeholder="📨 Email de quem te indicou? (opcional)">
       <button onclick="obterLocalizacaoCadastro()" id="btnLocalizacaoCadastro">📍 Usar minha localização atual</button>
     </div>
@@ -1916,6 +1948,17 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 	
+<div id="modalConfirmarFecharPopup" class="modal" style="z-index: 30;" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3 id="confirmarFecharTitulo">🤔 Tem certeza?</h3>
+    <p id="confirmarFecharMensagem">Você pode completar esta etapa mais tarde pelas configurações.</p>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button onclick="cancelarFechamentoPopup()" style="background-color: #555;">Não, continuar</button>
+      <button onclick="confirmarFechamentoPopup()">Sim, fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="modalLoja" class="modal">
   <div class="modal-content">
     <h3>🛒 Produtos da Loja</h3>
@@ -2158,14 +2201,10 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 
     
     <label for="adminNovoEstadoSolicitacao">Novo Estado:</label>
-    <select id="adminNovoEstadoSolicitacao" onchange="carregarCidades('adminNovoSolicitacao')"> {/* Use unique ID and correct prefix in onchange */}
-        <option value="">Carregando...</option>
-    </select>
+    <input id="adminNovoEstadoSolicitacao" type="text" placeholder="Digite o novo estado" oninput="this.value = formatarNomeProprio(this.value)">
 
     <label for="adminNovoCidadeSolicitacao">Nova Cidade:</label>
-    <select id="adminNovoCidadeSolicitacao"> {/* Use unique ID */}
-        <option value="">Selecione o estado</option>
-    </select>
+    <input id="adminNovoCidadeSolicitacao" type="text" placeholder="Digite a nova cidade" oninput="this.value = formatarNomeProprio(this.value)">
     
 
     <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -2245,6 +2284,8 @@ let comprasClienteListener = null;
 let aguardeTimeoutId = null;
 let portfolioListener = null; // Guarda a referência do listener
 let imagensMarcadasParaExcluir = []; // Array global temporário para guardar URLs a excluir
+let modalOriginalIdParaConfirmar = null;
+let fluxoPosCadastroAtivo = false;
 
 let userView = {
     originalType: null,
@@ -2893,25 +2934,32 @@ function criarConta() {
   const senhaConfirm = document.getElementById("senha-confirm").value;
   const tipo = document.getElementById("tipo").value;
   const telefone = document.getElementById("telefone").value.trim();
-  const estado = document.getElementById("estado").value;
-  const cidade = document.getElementById("cidade").value;
+  // Lê dos inputs e formata
+  const estadoInput = document.getElementById("estado").value.trim();
+  const cidadeInput = document.getElementById("cidade").value.trim();
+  const estado = formatarNomeProprio(estadoInput); // Formata
+  const cidade = formatarNomeProprio(cidadeInput); // Formata
   const nome = document.getElementById("nomeExibido").value.trim();
   const indicadorEmail = document.getElementById("indicador").value.trim();
   let rua, numero;
 
-  if (tipo !== 'cliente') {
-    rua = document.getElementById("rua").value.trim();
-    numero = document.getElementById("numero").value.trim();
-  }
   if (senha !== senhaConfirm) { fecharTodosOsModais(); return exibirPopup("As senhas não coincidem."); }
-  if (!telefone || telefone.length < 11 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD (mínimo 11 dígitos)."); }
+  if (!telefone || telefone.length < 10 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD (mínimo 10 dígitos)."); }
+  // Verifica se estado e cidade foram preenchidos (após formatação)
   if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return exibirPopup("Preencha todos os campos obrigatórios"); }
 
+  const isProfissional = tipo !== 'cliente';
+  if (isProfissional) {
+    rua = document.getElementById("rua").value.trim();
+    numero = document.getElementById("numero").value.trim();
+    // Validação de endereço para profissional (opcional, mas recomendado)
+    // if (!rua || !numero) { fecharTodosOsModais(); return exibirPopup("Profissionais devem informar Rua e Número."); }
+  }
 
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
   const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
-  
+
   auth.createUserWithEmailAndPassword(email, senha)
     .then(async cred => {
       const data = {
@@ -2919,29 +2967,42 @@ function criarConta() {
         saldo: 0, reputacao: 100, cortesSemana: 0,
         disponivel: "nao", listaServicos: [], promocoes: [], portfolio: [],
         chatAtivo: true, vip: false, lojaLiberada: false,
-        rua: rua || null, numero: numero || null, 
-        latitude: cadastroCoords ? cadastroCoords.latitude : null, 
+        rua: rua || null, numero: numero || null,
+        latitude: cadastroCoords ? cadastroCoords.latitude : null,
         longitude: cadastroCoords ? cadastroCoords.longitude : null,
         usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
         codigosResgatados: [],
         indicadoPorEmail: indicadorEmail || null,
         bonusIndicacaoPendente: !!indicadorEmail,
         fcmTokens: [],
-        cortesRealizados: 0, 
-        conquistas: [], 
-        clientesAtendidos: 0, 
+        cortesRealizados: 0,
+        conquistas: [],
+        clientesAtendidos: 0,
         somaAvaliacoes: 0, numAvaliacoes: 0,
         ultimoBoostComprado: null,
         interesse_principal: onboardingState.interesse_principal || 'barbeiro',
-        onboarding_profissional_concluido: tipo === 'cliente' // Clientes já concluíram
+        onboarding_profissional_concluido: tipo === 'cliente', // Clientes já concluíram
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp() // Adiciona lastSeen inicial
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
+
+      // INICIA FLUXO DE POPUPS PÓS-CADASTRO PARA PROFISSIONAIS
+      if (tipo !== 'cliente') {
+          iniciarFluxoPosCadastroProfissional();
+      }
+      // Fim do fluxo pós-cadastro
+
     })
     .catch(e => {
         fecharTodosOsModais();
-        exibirPopup("Erro ao criar conta: " + e.message);
+        // Melhora a mensagem de erro para email já existente
+        if (e.code === 'auth/email-already-in-use') {
+             exibirPopup("Erro ao criar conta: Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.");
+        } else {
+             exibirPopup("Erro ao criar conta: " + e.message);
+        }
     });
 }
 
@@ -4411,6 +4472,28 @@ function criarAviso(uid, mensagem, tipo = 'geral', agendamentoId = null) {
   db.collection("avisos").add(avisoData);
 }
 
+function abrirModalComConfirmacao(modalId, tituloPopupConfirmacao = undefined, mensagemPopupConfirmacao = undefined) {
+    abrirModal(modalId);
+    const modalElement = document.getElementById(modalId);
+    // Encontra o botão de fechar padrão (que usa data-modal-id)
+    const btnFecharPadrao = modalElement.querySelector(`button[data-modal-id="${modalId}"]`);
+    if (btnFecharPadrao) {
+        // Modifica o onclick para chamar a confirmação
+        btnFecharPadrao.onclick = () => pedirConfirmacaoFecharPopup(modalId, tituloPopupConfirmacao, mensagemPopupConfirmacao);
+    }
+    // Adiciona a confirmação ao clique no fundo também (se o modal permitir fechar no fundo)
+    modalElement.onclick = (event) => {
+        if (event.target.id === modalId) { // Clicou no fundo
+            pedirConfirmacaoFecharPopup(modalId, tituloPopupConfirmacao, mensagemPopupConfirmacao);
+        }
+    };
+    // Impede que cliques dentro do conteúdo fechem (já feito no seu modal-content)
+    const modalContent = modalElement.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.onclick = (event) => event.stopPropagation();
+    }
+}
+
 function enviarDenuncia() {
   const texto = document.getElementById("textoDenuncia").value.trim();
   if (!texto) return exibirPopup("Por favor, descreva o problema.");
@@ -4448,6 +4531,12 @@ function listarServicos() {
   });
 }
 
+function iniciarFluxoPosCadastroProfissional() {
+    fluxoPosCadastroAtivo = true;
+    // Abre o primeiro modal (Logomarca) com a opção de confirmação ao fechar
+    abrirModalComConfirmacao('modalLogomarca', '🎨 Adicionar Logomarca');
+}
+
 function adicionarServico() {
   const nome = prompt("Nome do serviço:");
   const valor = parseFloat(prompt("Valor (ex: 25.50):"));
@@ -4467,61 +4556,42 @@ function removerServico(index) {
 }
 
 async function salvarLogomarca() {
+    // ... (código original de upload e salvar no DB) ...
     const fileInput = document.getElementById("logomarcaFile");
     const progressBar = document.getElementById('logoUploadProgress');
     const previewImg = document.getElementById('logomarcaPreview');
     const btnSalvar = document.getElementById('btnSalvarLogo');
 
-    if (!fileInput.files || fileInput.files.length === 0) {
-        return exibirPopup("Por favor, selecione um arquivo.");
-    }
+    if (!fileInput.files || fileInput.files.length === 0) { return exibirPopup("Por favor, selecione um arquivo."); }
     const file = fileInput.files[0];
     const userId = auth.currentUser.uid;
 
     exibirAguarde("Enviando logomarca...");
-    progressBar.style.display = 'block';
-    progressBar.value = 0;
-    previewImg.style.opacity = '0.5'; // Atenua preview durante upload
-    btnSalvar.disabled = true; // Desabilita botão durante upload
+    progressBar.style.display = 'block'; progressBar.value = 0; previewImg.style.opacity = '0.5'; btnSalvar.disabled = true;
 
-    // Deleta a logo antiga se existir, ANTES de enviar a nova
-    if (perfil && perfil.logo_url) {
-        try {
-            const oldLogoRef = storage.refFromURL(perfil.logo_url);
-            await oldLogoRef.delete();
-            console.log("Logo antiga deletada do Storage.");
-        } catch (e) {
-            console.warn("Não foi possível deletar a logo antiga (pode não existir mais):", e.message);
-        }
-    }
-
+    if (perfil && perfil.logo_url) { try { const oldLogoRef = storage.refFromURL(perfil.logo_url); await oldLogoRef.delete(); } catch (e) { console.warn("Não foi possível deletar a logo antiga:", e.message); } }
     const filePath = `logos/${userId}_${Date.now()}_${file.name}`;
 
     try {
-        const downloadURL = await uploadImage(file, filePath, (progress) => {
-            progressBar.value = progress;
-        });
-
+        const downloadURL = await uploadImage(file, filePath, (progress) => { progressBar.value = progress; });
         await db.collection("usuarios").doc(userId).update({ logo_url: downloadURL });
 
-        progressBar.style.display = 'none';
-        progressBar.value = 0;
-        previewImg.style.opacity = '1';
+        progressBar.style.display = 'none'; progressBar.value = 0; previewImg.style.opacity = '1';
         fecharTodosOsModais();
         exibirPopup("Logomarca salva com sucesso!");
-        fecharModalAtual(); // Fecha o modal da logo
 
-    } catch (error) {
-        progressBar.style.display = 'none';
-        progressBar.value = 0;
-        previewImg.style.opacity = '1';
-        fecharTodosOsModais();
-        exibirPopup("Erro ao salvar logomarca: " + error.message);
-        btnSalvar.disabled = false; // Reabilita em caso de erro
+        // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
+        if (fluxoPosCadastroAtivo) {
+            fecharModalAtual(); // Fecha o modal da logo
+            abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Abre o próximo
+        } else {
+             fecharModalAtual(); // Fecha o modal da logo (comportamento normal)
+        }
+        // --- FIM DA ADIÇÃO ---
 
-    } finally {
-        // Não limpa o input aqui, pode causar problemas se o usuário reabrir
-        // O listener de change cuidará de limpar o preview se o input for limpo
+    } catch (error) { /* ... (bloco catch original) ... */
+        progressBar.style.display = 'none'; progressBar.value = 0; previewImg.style.opacity = '1';
+        fecharTodosOsModais(); exibirPopup("Erro ao salvar logomarca: " + error.message); btnSalvar.disabled = false;
     }
 }
 
@@ -4546,6 +4616,18 @@ if (logoFileInput && logoPreviewImg && logoSaveBtn) {
             logoSaveBtn.disabled = true; // Desabilita o botão
         }
     });
+}
+
+async function finalizarFluxoPosCadastro() {
+    if (!fluxoPosCadastroAtivo) return;
+    fluxoPosCadastroAtivo = false; // Desativa o fluxo
+    try {
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({ onboarding_profissional_concluido: true });
+        console.log("Onboarding do profissional marcado como concluído.");
+    } catch (error) {
+        console.error("Erro ao marcar onboarding como concluído:", error);
+    }
+    // Não precisa fechar modal aqui, pois já foi fechado antes de chamar esta função
 }
 
 function alterarEnderecoBarbeiro(event) {
@@ -4644,6 +4726,21 @@ function abrirAgendamentosBarbeiro() {
             painel.innerHTML += `<div class="card"><b>${ag.clienteNome}</b> - ${ag.servico} (R$ ${ag.valor.toFixed(2)})<br>Horário: ${horarioInfo}<br>Status: <b>${statusTexto}</b>${ag.clienteTelefone ? `<br><a href="https://wa.me/55${ag.clienteTelefone}" target="_blank">📞 Contatar</a>` : ''}<div style="margin-top:10px; display:flex; gap: 8px;">${botoes}</div></div>`;
         });
     });
+}
+
+function formatarNomeProprio(texto) {
+  if (!texto) return "";
+  // Converte tudo para minúsculo primeiro para padronizar
+  return texto.toLowerCase()
+    // Separa as palavras por espaço
+    .split(' ')
+    // Mapeia cada palavra
+    .map(palavra => {
+      // Capitaliza a primeira letra e concatena com o resto da palavra
+      return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+    })
+    // Junta as palavras de volta com espaço
+    .join(' ');
 }
 
 function toggleVagaImediata() {
@@ -5011,45 +5108,39 @@ function abrirModalAddPromocao() {
 
 // SUBSTITUA a função salvarNovaPromocao por esta:
 async function salvarNovaPromocao() {
+    // ... (código original de validação e salvar no DB) ...
     const nome = document.getElementById('addPromocaoNome').value.trim();
     const descricao = document.getElementById('addPromocaoDescricao').value.trim();
     const desconto = parseInt(document.getElementById('addPromocaoDesconto').value);
     const validadeInput = document.getElementById('addPromocaoValidade').value;
     const valorMinimo = parseFloat(document.getElementById('addPromocaoValorMinimo').value) || 0;
+    const servicosSelecionados = Array.from(document.getElementById('addPromocaoServicos').selectedOptions).map(option => option.value);
 
-    const servicosSelecionados = Array.from(document.getElementById('addPromocaoServicos').selectedOptions)
-                                       .map(option => option.value);
+    if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) { return exibirPopup("Preencha nome, descrição e um desconto válido."); }
+    if (servicosSelecionados.length === 0) { return exibirPopup("Selecione pelo menos um serviço para aplicar a promoção."); }
 
-    if (!nome || !descricao || isNaN(desconto) || desconto <= 0 || desconto > 100) {
-        return exibirPopup("Preencha nome, descrição e um desconto válido.");
-    }
-
-    if (servicosSelecionados.length === 0) {
-        return exibirPopup("Selecione pelo menos um serviço para aplicar a promoção.");
-    }
-
-    const novaPromocao = {
-        id: `promo_${new Date().getTime()}`, // ID único para a promoção
-        nome,
-        descricao,
-        desconto,
-        servicosAplicaveis: servicosSelecionados,
-        valorMinimo: valorMinimo,
-        validade: validadeInput ? new Date(validadeInput + 'T23:59:59') : null // Pega o dia todo
-    };
+    const novaPromocao = { id: `promo_${new Date().getTime()}`, nome, descricao, desconto, servicosAplicaveis: servicosSelecionados, valorMinimo: valorMinimo, validade: validadeInput ? new Date(validadeInput + 'T23:59:59') : null };
 
     try {
-        await db.collection("usuarios").doc(auth.currentUser.uid).update({
-            promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
-        });
+        await db.collection("usuarios").doc(auth.currentUser.uid).update({ promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao) });
         exibirPopup("Promoção salva com sucesso!");
         fecharModalAtual();
-        // Atualiza a lista de promoções visível
-        const promocoesDoc = await db.collection("usuarios").doc(auth.currentUser.uid).get();
-        perfil.promocoes = promocoesDoc.data().promocoes;
-        carregarPromocoesAtivas(); // Adicionaremos esta função
 
-    } catch (e) {
+        // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
+        if (fluxoPosCadastroAtivo) {
+            finalizarFluxoPosCadastro(); // Finaliza o fluxo aqui
+        } else {
+            // Comportamento normal: Atualiza a lista de promoções se o modal estiver aberto
+            const promocoesDoc = await db.collection("usuarios").doc(auth.currentUser.uid).get();
+            perfil.promocoes = promocoesDoc.data().promocoes;
+            // Verifica se o modal de promoções ainda está aberto para recarregar
+            if (document.getElementById('modalPromocoesBarbeiro').classList.contains('show')) {
+                 carregarPromocoesAtivas();
+            }
+        }
+        // --- FIM DA ADIÇÃO ---
+
+    } catch (e) { /* ... (bloco catch original) ... */
         exibirPopup("Erro ao salvar promoção: " + e.message);
     }
 }
@@ -5232,6 +5323,46 @@ function contatarAdminSaque() {
 // ======================================================================
 // --- FIM DAS FUNÇÕES DE PAGAMENTO ---
 // ======================================================================
+
+function pedirConfirmacaoFecharPopup(modalId, titulo = '🤔 Tem certeza?', mensagem = 'Você pode completar esta etapa mais tarde pelas configurações.') {
+    modalOriginalIdParaConfirmar = modalId; // Guarda qual modal pediu
+    document.getElementById('confirmarFecharTitulo').textContent = titulo;
+    document.getElementById('confirmarFecharMensagem').textContent = mensagem;
+    abrirModal('modalConfirmarFecharPopup');
+}
+
+function confirmarFechamentoPopup() {
+    fecharModalAtual(); // Fecha o modal de confirmação
+    if (modalOriginalIdParaConfirmar) {
+        // Encontra o modal original na pilha e o remove também
+        const modalOriginal = document.getElementById(modalOriginalIdParaConfirmar);
+        if (modalOriginal && modalOriginal.classList.contains('show')) {
+            const indexNaPilha = modalStack.indexOf(modalOriginal);
+            if (indexNaPilha > -1) {
+                modalStack.splice(indexNaPilha, 1);
+            }
+            modalOriginal.classList.remove('show');
+            setTimeout(() => { modalOriginal.style.display = 'none'; }, 300);
+        }
+
+        // Se era parte do fluxo pós-cadastro, pode avançar ou marcar como concluído
+        if (modalOriginalIdParaConfirmar === 'modalLogomarca' && fluxoPosCadastroAtivo) {
+            abrirModalComConfirmacao('modalPortfolioBarbeiro'); // Abre o próximo
+        } else if (modalOriginalIdParaConfirmar === 'modalPortfolioBarbeiro' && fluxoPosCadastroAtivo) {
+            abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Abre o próximo (promoção)
+        } else if (modalOriginalIdParaConfirmar === 'modalAddPromocao' && fluxoPosCadastroAtivo) {
+            finalizarFluxoPosCadastro(); // Finaliza se fechar o de promoção
+        }
+
+        modalOriginalIdParaConfirmar = null; // Limpa a referência
+    }
+}
+
+function cancelarFechamentoPopup() {
+    fecharModalAtual(); // Fecha apenas o modal de confirmação
+    // Não faz nada com o modal original, ele continua aberto
+    modalOriginalIdParaConfirmar = null; // Limpa a referência
+}
 
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
@@ -5583,69 +5714,51 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => exibirPopup("Denúncia fechada!"));
 }
 
-async function abrirModalGerenciarUsuario(uid) {
+async function abrirModalAdminGerenciarUsuario(uid) {
   exibirAguarde("Carregando dados do usuário...");
   try {
-    // 1. Busca dados do backend (sem alterações aqui)
-    const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, {
+    const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, { /* ... (fetch continua igual) ... */
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            adminUid: auth.currentUser.uid,
-            targetUid: uid
-        })
+        body: JSON.stringify({ adminUid: auth.currentUser.uid, targetUid: uid })
     });
 
-    if (!response.ok) {
+    if (!response.ok) { /* ... (tratamento de erro continua igual) ... */
         const errorData = await response.json();
         throw new Error(errorData.message || `Erro ${response.status}`);
     }
-
     const { auth: userRecord, firestore: u } = await response.json();
-
-    // 2. Monta o HTML do modal (sem alterações na estrutura, apenas IDs corretos)
     const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
     const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
 
+    // Monta o HTML do modal usando os novos inputs para estado/cidade
     const container = document.getElementById('adminGerenciarConteudo');
     container.innerHTML = `
         <h4 style="word-break: break-all;">${u.nome}</h4>
         <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
-
-        
-         <div class="popup-section">
+        <div class="popup-section">
             <p><strong>Informações da Conta:</strong></p>
             <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
             <p style="font-size: 14px;"><strong>Último Login:</strong> ${lastSignInTime}</p>
             <p style="font-size: 14px;"><strong>Conta:</strong> <span style="color: ${userRecord.disabled ? '#e74c3c' : '#2ecc71'};">${userRecord.disabled ? 'Desabilitada' : 'Ativa'}</span></p>
         </div>
-
-
         <div class="popup-section">
             <p><strong>Alterar Dados Cadastrais:</strong></p>
             <label for="adminNovoNome">Nome de Exibição:</label>
             <input id="adminNovoNome" type="text" value="${u.nome}">
-
             <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
             <input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
 
-            
+            <!-- Inputs para Estado e Cidade -->
             <label for="adminNovoEstado">Estado:</label>
-            <select id="adminNovoEstado" onchange="carregarCidades('adminNovo')">
-                {/* Será preenchido pelo JS */}
-                <option value="">Carregando...</option>
-            </select>
-
+            <input id="adminNovoEstado" type="text" value="${u.estado || ''}" placeholder="Digite o estado" oninput="this.value = formatarNomeProprio(this.value)">
             <label for="adminNovoCidade">Cidade:</label>
-            <select id="adminNovoCidade">
-                <option value="">Selecione o estado</option>
-            </select>
-            
+            <input id="adminNovoCidade" type="text" value="${u.cidade || ''}" placeholder="Digite a cidade" oninput="this.value = formatarNomeProprio(this.value)">
+            <!-- Fim Inputs -->
 
             <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
         </div>
-
-        
+        <!-- ... (Restante do HTML do modal: Saldo, VIP, PRO, Pontos, Loja, Tipo, Segurança, Ações) ... continua igual -->
          <div class="popup-section">
             <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
             <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
@@ -5706,57 +5819,12 @@ async function abrirModalGerenciarUsuario(uid) {
             <button style="background-color: ${userRecord.disabled ? '#2ecc71' : '#f1c40f'};" onclick="adminToggleUserStatus('${uid}', ${!userRecord.disabled})">${userRecord.disabled ? 'Reativar Conta' : 'Desativar Conta'}</button>
             <button style="background-color: #c0392b; margin-top: 10px;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
         </div>
-
-
+        <!-- Fim do restante do HTML -->
         <button data-modal-id="modalAdminGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
     `;
 
     fecharTodosOsModais(); // Fecha o "Aguarde..."
-
-    // --- LÓGICA REVISADA: Chamadas diretas ---
-    const estadoSelectGerenciar = document.getElementById('adminNovoEstado');
-    const cidadeSelectGerenciar = document.getElementById('adminNovoCidade');
-
-    if (!estadoSelectGerenciar || !cidadeSelectGerenciar) {
-        // Isso não deveria acontecer se o HTML foi definido corretamente acima
-        console.error("Erro Crítico: Selects de estado/cidade não existem no DOM imediatamente após innerHTML.");
-        exibirPopup("Erro", "Falha ao renderizar o formulário. Tente novamente.");
-        return;
-    }
-
-    // Chama carregarEstados imediatamente. A função agora deve encontrar o elemento.
-    carregarEstados('adminNovo');
-
-    // VERIFICA se carregarEstados realmente preencheu as opções
-    if (estadoSelectGerenciar.options.length > 1) { // Mais que o placeholder "Carregando..."
-        estadoSelectGerenciar.value = u.estado || ""; // Define o estado do usuário
-
-        // Chama carregarCidades imediatamente. Ela usará o estado recém-definido.
-        carregarCidades('adminNovo');
-
-        // Tenta definir a cidade do usuário. Usa um timeout mínimo (0ms)
-        // para dar chance ao navegador de atualizar as opções do select de cidade
-        // antes de tentarmos definir o valor.
-        setTimeout(() => {
-            if (cidadeSelectGerenciar.querySelector(`option[value="${u.cidade}"]`)) {
-                cidadeSelectGerenciar.value = u.cidade;
-            } else {
-                cidadeSelectGerenciar.value = ""; // Deixa "Selecione a cidade" se não encontrar
-            }
-            console.log(`[Debug] Tentativa de definir cidade para: ${cidadeSelectGerenciar.value}`);
-        }, 0); // Delay mínimo
-
-    } else {
-        // Se carregarEstados falhou (ver console), mostra erro no select
-        console.error("Erro: carregarEstados('adminNovo') não preencheu as opções de estado.");
-        estadoSelectGerenciar.innerHTML = '<option value="">Erro!</option>';
-        cidadeSelectGerenciar.innerHTML = '<option value="">Selecione o estado</option>';
-        cidadeSelectGerenciar.disabled = true;
-    }
-    // --- FIM DA LÓGICA REVISADA ---
-
     abrirModal('modalAdminGerenciarUsuario'); // Abre o modal
-
   } catch (error) {
       fecharTodosOsModais();
       console.error("Erro ao buscar dados do usuário:", error);
@@ -5765,21 +5833,29 @@ async function abrirModalGerenciarUsuario(uid) {
 }
 
 async function adminSalvarAlteracoesUsuario(uid) {
+    const nomeInput = document.getElementById('adminNovoNome');
+    const telefoneInput = document.getElementById('adminNovoTelefone');
+    const estadoInput = document.getElementById('adminNovoEstado'); // Input de estado
+    const cidadeInput = document.getElementById('adminNovoCidade'); // Input de cidade
+
     const updates = {
-        nome: document.getElementById('adminNovoNome').value.trim(),
-        telefone: document.getElementById('adminNovoTelefone').value.trim(),
-        // Lê dos selects corretos (com prefixo 'adminNovo')
-        estado: document.getElementById('adminNovoEstado').value,
-        cidade: document.getElementById('adminNovoCidade').value
+        nome: nomeInput.value.trim(),
+        telefone: telefoneInput.value.trim(),
+        // Formata os valores dos inputs antes de salvar
+        estado: formatarNomeProprio(estadoInput.value.trim()),
+        cidade: formatarNomeProprio(cidadeInput.value.trim())
     };
 
     if (!updates.nome || !updates.telefone || !updates.estado || !updates.cidade) {
-        return exibirPopup("Todos os campos devem ser preenchidos.");
+        return exibirPopup("Todos os campos (Nome, Telefone, Estado, Cidade) devem ser preenchidos.");
+    }
+     // Validação extra para telefone (exemplo)
+    if (!/^\d{10,11}$/.test(updates.telefone)) {
+        return exibirPopup("O telefone deve conter 10 ou 11 dígitos (com DDD).");
     }
 
     exibirAguarde("Salvando...");
     try {
-        // Chama o backend para salvar
         const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -5790,12 +5866,8 @@ async function adminSalvarAlteracoesUsuario(uid) {
 
         fecharTodosOsModais();
         exibirPopup("Dados do usuário atualizados com sucesso!");
-        // Fechar o modal atual de gerenciamento
-        const currentModalElement = document.getElementById('modalAdminGerenciarUsuario');
-        if (currentModalElement && currentModalElement.classList.contains('show')) {
-            fecharModalAtual();
-        }
-        // Reabre a lista de usuários para mostrar a atualização (opcional)
+        // Não é mais necessário fechar o modal aqui, fecharTodosOsModais já faz
+        // Opcional: Reabrir a lista pode ser confuso, melhor deixar o admin fechar
         // abrirModalUsuarios();
 
     } catch (error) {
@@ -6313,6 +6385,7 @@ async function abrirModalPortfolioBarbeiro() {
 }
 
 async function salvarNovasImagensPortfolio() {
+    // ... (código original de validação, upload e salvar no DB) ...
     const fileInput = document.getElementById("portfolioFiles");
     const progressBar = document.getElementById('portfolioUploadProgress');
     const previewContainer = document.getElementById('portfolioPreviews');
@@ -6322,84 +6395,50 @@ async function salvarNovasImagensPortfolio() {
     const portfolioAtual = perfil?.portfolio || [];
     const espacoDisponivel = 30 - portfolioAtual.length;
 
-    if (!files || files.length === 0) {
-        return exibirPopup("Nenhuma nova imagem selecionada.");
-    }
-
-    if (files.length > espacoDisponivel) {
-        return exibirPopup('Limite Excedido', `Você só pode adicionar mais ${espacoDisponivel} imagens.`);
-    }
+    if (!files || files.length === 0) { return exibirPopup("Nenhuma nova imagem selecionada."); }
+    if (files.length > espacoDisponivel) { return exibirPopup('Limite Excedido', `Você só pode adicionar mais ${espacoDisponivel} imagens.`); }
 
     exibirAguarde(`Enviando ${files.length} imagem(ns)...`);
-    progressBar.style.display = 'block';
-    progressBar.value = 0;
-    btnSalvar.disabled = true; // Desabilita durante o upload
+    progressBar.style.display = 'block'; progressBar.value = 0; btnSalvar.disabled = true;
 
-    const uploadPromises = [];
-    let totalBytesTransferidosAcumulados = 0; // Para calcular progresso geral corretamente
-    const totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+    const uploadPromises = []; let totalBytesTransferidosAcumulados = 0; const totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0); const uploadTasksInfo = [];
 
-    // Array para guardar as tarefas de upload e seus progressos individuais
-    const uploadTasksInfo = [];
-
-    Array.from(files).forEach((file, index) => {
+    Array.from(files).forEach((file, index) => { /* ... (lógica de upload individual continua igual) ... */
         const filePath = `portfolio/${userId}/${Date.now()}_${index}_${file.name}`;
         const uploadPromise = new Promise((resolve, reject) => {
-            const storageRef = storage.ref(filePath);
-            const uploadTask = storageRef.put(file);
-            const taskInfo = { task: uploadTask, bytesTransferred: 0 }; // Guarda info da tarefa
-            uploadTasksInfo.push(taskInfo);
-
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    taskInfo.bytesTransferred = snapshot.bytesTransferred; // Atualiza bytes desta tarefa
-                    // Recalcula o progresso total somando bytes de todas as tarefas
-                    totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0);
-                    const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0;
-                    progressBar.value = progress;
-                },
-                (error) => {
-                    console.error(`Erro no upload ${index}: `, error);
-                    reject(error);
-                },
-                async () => {
-                    try {
-                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                        resolve(downloadURL); // Resolve com a URL quando upload termina
-                    } catch(urlError) {
-                        reject(urlError);
-                    }
-                }
-            );
-        });
-        uploadPromises.push(uploadPromise);
+            const storageRef = storage.ref(filePath); const uploadTask = storageRef.put(file); const taskInfo = { task: uploadTask, bytesTransferred: 0 }; uploadTasksInfo.push(taskInfo);
+            uploadTask.on('state_changed', (snapshot) => { taskInfo.bytesTransferred = snapshot.bytesTransferred; totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0); const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0; progressBar.value = progress; }, (error) => { console.error(`Erro no upload ${index}: `, error); reject(error); }, async () => { try { const downloadURL = await uploadTask.snapshot.ref.getDownloadURL(); resolve(downloadURL); } catch(urlError) { reject(urlError); } } ); }); uploadPromises.push(uploadPromise);
     });
 
     try {
-        // Espera todas as URLs serem obtidas
         const novasUrls = await Promise.all(uploadPromises);
-
-        // Adiciona as novas URLs ao array existente no Firestore
-        await db.collection('usuarios').doc(userId).update({
-            portfolio: firebase.firestore.FieldValue.arrayUnion(...novasUrls)
-        });
-        // O listener onSnapshot em carregarPortfolioExistente atualizará a UI
+        await db.collection('usuarios').doc(userId).update({ portfolio: firebase.firestore.FieldValue.arrayUnion(...novasUrls) });
 
         fecharTodosOsModais(); // Fecha o "Aguarde"
-        // exibirPopup(`Sucesso!`, `${novasUrls.length} imagem(ns) adicionada(s) ao portfólio!`); // Opcional, pois a UI atualiza
+        // exibirPopup(`Sucesso!`, `${novasUrls.length} imagem(ns) adicionada(s) ao portfólio!`);
 
-        // Limpa o input e previews
-        fileInput.value = '';
-        previewContainer.innerHTML = '';
-        progressBar.style.display = 'none';
-        // O listener onSnapshot reabilitará o botão de salvar se houver espaço
+        fileInput.value = ''; previewContainer.innerHTML = ''; progressBar.style.display = 'none';
 
-    } catch (error) {
-        fecharTodosOsModais(); // Fecha o "Aguarde"
-        exibirPopup('Erro', 'Falha ao salvar portfólio: ' + (error.message || error));
-        progressBar.style.display = 'none';
-        // Reabilita o botão apenas em caso de erro para permitir nova tentativa
-        btnSalvar.disabled = false;
+        // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
+        if (fluxoPosCadastroAtivo) {
+            fecharModalAtual(); // Fecha o modal de portfólio
+             // Verifica se JÁ existe alguma imagem no portfólio (incluindo as recém-adicionadas)
+             const perfilAtualizado = (await db.collection('usuarios').doc(userId).get()).data();
+             if (perfilAtualizado.portfolio && perfilAtualizado.portfolio.length > 0) {
+                 abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Abre promoção
+             } else {
+                 // Se ainda não tem NENHUMA imagem (ex: erro no upload, ou cancelou), força o usuário a tentar de novo
+                 exibirPopup("Portfólio Obrigatório", "Você precisa adicionar pelo menos uma imagem ao seu portfólio para continuar.");
+                 abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Reabre portfólio
+             }
+        } else {
+             // Comportamento normal (sem fluxo): apenas fecha o modal se não estiver no fluxo
+             fecharModalAtual();
+        }
+        // --- FIM DA ADIÇÃO ---
+
+    } catch (error) { /* ... (bloco catch original) ... */
+        fecharTodosOsModais(); exibirPopup('Erro', 'Falha ao salvar portfólio: ' + (error.message || error)); progressBar.style.display = 'none'; btnSalvar.disabled = false;
     }
 }
 
@@ -6750,39 +6789,49 @@ async function executarAlteracaoSenha() {
 }
 
 async function solicitarAlteracaoCidade() {
-    if (!perfil) return exibirPopup("Erro", "Não foi possível carregar seu perfil."); // Usa popup
+    if (!perfil) return exibirPopup("Erro", "Não foi possível carregar seu perfil.");
 
-    // Usa popup de confirmação customizado se você tiver um, senão usa confirm
-    if (!confirm("Isso criará uma solicitação para o administrador alterar sua cidade e abrirá o WhatsApp para agilizar. Continuar?")) return;
+    // INPUTS para o usuário digitar a nova cidade/estado
+    const novoEstadoInput = prompt("Digite o nome do NOVO ESTADO:");
+    if (!novoEstadoInput) return; // Cancelou
+    const novaCidadeInput = prompt(`Digite o nome da NOVA CIDADE em ${formatarNomeProprio(novoEstadoInput)}:`);
+    if (!novaCidadeInput) return; // Cancelou
 
-    exibirAguarde("Criando solicitação..."); // Usa popup de aguarde
+    const novoEstadoFormatado = formatarNomeProprio(novoEstadoInput);
+    const novaCidadeFormatada = formatarNomeProprio(novaCidadeInput);
+
+    if (!confirm(`Confirma a solicitação para alterar sua cidade para ${novaCidadeFormatada} - ${novoEstadoFormatado}? Isso abrirá o WhatsApp para agilizar.`)) return;
+
+    exibirAguarde("Criando solicitação...");
     try {
-        // Adiciona ID único para fácil referência
-        const solicitacaoRef = db.collection("solicitacoes").doc(); // Gera ID antes
+        const solicitacaoRef = db.collection("solicitacoes").doc();
         await solicitacaoRef.set({
-            id: solicitacaoRef.id, // Salva o próprio ID
+            id: solicitacaoRef.id,
             tipo: "alteracao_cidade",
             usuarioUid: auth.currentUser.uid,
             usuarioNome: perfil.nome,
             cidadeAtual: perfil.cidade,
             estadoAtual: perfil.estado,
+            // Salva o que o usuário digitou
+            novoEstadoSolicitado: novoEstadoFormatado,
+            novaCidadeSolicitada: novaCidadeFormatada,
             status: "pendente",
             ts: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        const mensagem = encodeURIComponent(`Olá! Gostaria de solicitar a alteração da minha cidade no app Nova Versão.\n\nUsuário: ${perfil.nome}\nCidade Atual: ${perfil.cidade} - ${perfil.estado}\n\nID da Solicitação (para referência do admin): ${solicitacaoRef.id}`);
+        const mensagem = encodeURIComponent(`Olá! Gostaria de solicitar a alteração da minha cidade no app Nova Versão.\n\nUsuário: ${perfil.nome}\nCidade Atual: ${perfil.cidade} - ${perfil.estado}\nNova Cidade: ${novaCidadeFormatada} - ${novoEstadoFormatado}\n\nID da Solicitação: ${solicitacaoRef.id}`);
         const phoneNum = WHATSAPP_ADM_PHONE.startsWith('55') ? WHATSAPP_ADM_PHONE : `55${WHATSAPP_ADM_PHONE}`;
         window.open(`https://wa.me/${phoneNum}?text=${mensagem}`, '_blank');
 
-        fecharAguarde(null, true); // Fecha popup de aguarde
-        exibirPopup("Sucesso", "Solicitação enviada! Você foi redirecionado para o WhatsApp."); // Usa popup
-        notifyAdmins("🏙️ Alteração de Cidade", `${perfil.nome} solicitou alteração de cidade (ID: ${solicitacaoRef.id}).`, { link: '#solicitacoes' });
-        fecharModalAtual(); // Fecha modal de configurações
+        fecharAguarde(null, true);
+        exibirPopup("Sucesso", "Solicitação enviada! Você foi redirecionado para o WhatsApp.");
+        notifyAdmins("🏙️ Alteração de Cidade", `${perfil.nome} solicitou alterar para ${novaCidadeFormatada} - ${novoEstadoFormatado} (ID: ${solicitacaoRef.id}).`, { link: '#solicitacoes' });
+        fecharModalAtual();
 
     } catch (error) {
-        fecharAguarde(null, true); // Fecha popup de aguarde
+        fecharAguarde(null, true);
         console.error("Erro ao solicitar alteração de cidade:", error);
-        exibirPopup("Erro", "Não foi possível criar a solicitação: " + error.message); // Usa popup
+        exibirPopup("Erro", "Não foi possível criar a solicitação: " + error.message);
     }
 }
 
@@ -6867,38 +6916,42 @@ function uploadImage(file, path, onProgress) {
 }
 
 async function aprovarAlteracaoCidade() {
-  // --- MODIFICATION START ---
-  // Read from the CORRECT select elements using their unique IDs
-  const novoEstado = document.getElementById('adminNovoEstadoSolicitacao').value;
-  const novaCidade = document.getElementById('adminNovoCidadeSolicitacao').value;
-  // --- MODIFICATION END ---
+    // Lê dos inputs corretos
+    const novoEstadoInput = document.getElementById('adminNovoEstadoSolicitacao');
+    const novaCidadeInput = document.getElementById('adminNovoCidadeSolicitacao');
 
-  if (!novoEstado || !novaCidade) {
-      return exibirPopup("Erro", "Selecione o novo estado e cidade.");
-  }
+    const novoEstado = formatarNomeProprio(novoEstadoInput.value.trim());
+    const novaCidade = formatarNomeProprio(novaCidadeInput.value.trim());
 
-  // --- No changes needed below this line in this function ---
-  if (!confirm(`Confirmar alteração para ${novaCidade} - ${novoEstado}?`)) return;
+    if (!novoEstado || !novaCidade) {
+        return exibirPopup("Erro", "Digite o novo estado e cidade.");
+    }
 
-  exibirAguarde("Atualizando cidade...");
-  try {
-      await db.runTransaction(async t => {
-          const userRef = db.collection("usuarios").doc(solicitacaoAtualUid);
-          const solicitacaoRef = db.collection("solicitacoes").doc(solicitacaoAtualId);
+    if (!confirm(`Confirmar alteração para ${novaCidade} - ${novoEstado}?`)) return;
 
-          t.update(userRef, { estado: novoEstado, cidade: novaCidade });
-          t.update(solicitacaoRef, { status: "aprovado", novoEstado: novoEstado, novaCidade: novaCidade });
-      });
+    exibirAguarde("Atualizando cidade...");
+    try {
+        await db.runTransaction(async t => {
+            const userRef = db.collection("usuarios").doc(solicitacaoAtualUid);
+            const solicitacaoRef = db.collection("solicitacoes").doc(solicitacaoAtualId);
 
-      fecharTodosOsModais(); // Fecha Aguarde e Modal Detalhes
-      exibirPopup("Sucesso", "Cidade do usuário alterada!");
-      notifyUser(solicitacaoAtualUid, "✅ Cidade Alterada!", `Sua cidade foi atualizada para ${novaCidade} - ${novoEstado}.`);
+            t.update(userRef, { estado: novoEstado, cidade: novaCidade });
+            t.update(solicitacaoRef, { status: "aprovado", novoEstado: novoEstado, novaCidade: novaCidade });
+        });
 
-  } catch (error) {
-      fecharTodosOsModais();
-      console.error("Erro ao aprovar alteração de cidade:", error);
-      exibirPopup("Erro", "Não foi possível aprovar a alteração: " + error.message);
-  }
+        fecharTodosOsModais(); // Fecha Aguarde e Modal Detalhes
+        exibirPopup("Sucesso", "Cidade do usuário alterada!");
+        notifyUser(solicitacaoAtualUid, "✅ Cidade Alterada!", `Sua cidade foi atualizada para ${novaCidade} - ${novoEstado}.`);
+
+    } catch (error) {
+        fecharTodosOsModais();
+        console.error("Erro ao aprovar alteração de cidade:", error);
+        exibirPopup("Erro", "Não foi possível aprovar a alteração: " + error.message);
+    } finally {
+        // Limpa as variáveis globais após a operação
+        solicitacaoAtualId = null;
+        solicitacaoAtualUid = null;
+    }
 }
 
 // Função auxiliar para recusar a solicitação aberta no modal de cidade
