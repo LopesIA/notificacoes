@@ -1332,6 +1332,12 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
           <button onclick="solicitarAlteracaoCidade()">🏙️ Solicitar Alteração de Cidade</button>
         </div>
 
+<div class="popup-section">
+    <h4>🛍️ Loja de Vendedores</h4>
+    <button id="btnSolicitarAcessoLoja" class="hidden" onclick="abrirModal('modalSolicitarLoja')">Quero Vender Meus Produtos</button>
+    <p id="msgLojaJaLiberada" class="hidden" style="font-size: 14px; opacity: 0.8;">Você já tem acesso para gerenciar seus produtos na loja.</p>
+ </div>
+
         <div class="popup-section">
           <h4>⚖️ Legal</h4>
           
@@ -2058,6 +2064,18 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     </div>
 </div>
 
+<div id="modalSolicitarLoja" class="modal" onclick="fecharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>🛍️ Venda Seus Produtos na Loja!</h3>
+        <p>Gostaria de se tornar um vendedor em nossa plataforma?</p>
+        <p style="font-size: 14px; opacity: 0.8;">Ao clicar em "Enviar Solicitação", um pedido será enviado ao administrador para análise e você será redirecionado(a) ao WhatsApp para agilizar o contato.</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button data-modal-id="modalSolicitarLoja" onclick="fecharModal(event)" style="background-color: #555;">Cancelar</button>
+            <button id="btnConfirmarSolicitarLoja" onclick="confirmarSolicitacaoAcessoLoja()">➡️ Enviar Solicitação</button>
+        </div>
+    </div>
+ </div>
+
 <div id="modalAddEditProduto" class="modal" onclick="fecharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()" style="max-height: 85vh; overflow-y: auto;"> <h3 id="formProdutoTitulo">📦 Adicionar/Editar Produto</h3>
 
@@ -2311,6 +2329,7 @@ let portfolioListener = null; // Guarda a referência do listener
 let imagensMarcadasParaExcluir = []; // Array global temporário para guardar URLs a excluir
 let modalOriginalIdParaConfirmar = null;
 let fluxoPosCadastroAtivo = false;
+let lastReloadTimestamp = null; // Variável para controlar o reload forçado
 
 let userView = {
     originalType: null,
@@ -3037,198 +3056,273 @@ document.getElementById('tipo').addEventListener('change', (e) => {
 });
 
 auth.onAuthStateChanged(async user => {
-  // ... (código existente) ...
+  // Limpa intervalos e listeners se o usuário deslogar
   if (!user) {
-// Limpa o intervalo de atualização de 'lastSeen' e o listener de online
-if (updateLastSeenInterval) {
-    clearInterval(updateLastSeenInterval);
-    updateLastSeenInterval = null;
-}
-if (onlineUsersListener) {
-    onlineUsersListener(); // Desinscreve o listener
-    onlineUsersListener = null;
-    // Esconde o contador se estava visível
-     const countElement = document.getElementById('onlineUserCount');
-     if (countElement) countElement.classList.add('hidden');
-}
-    // VERIFICA SE O ONBOARDING JÁ FOI CONCLUÍDO ANTES
+    if (updateLastSeenInterval) { clearInterval(updateLastSeenInterval); updateLastSeenInterval = null; }
+    if (onlineUsersListener) { onlineUsersListener(); onlineUsersListener = null; document.getElementById('onlineUserCount')?.classList.add('hidden'); }
+    if (globalChatListener) { globalChatListener(); globalChatListener = null; }
+    if (vendaListener) { vendaListener(); vendaListener = null; }
+    if (comprasClienteListener) { comprasClienteListener(); comprasClienteListener = null; }
+    if (pedidosVendedorListener) { pedidosVendedorListener(); pedidosVendedorListener = null; }
+    if (barbeirosListener) { barbeirosListener(); barbeirosListener = null; }
+    if (agendamentoListener) { agendamentoListener(); agendamentoListener = null; }
+    if (chatListener) { chatListener(); chatListener = null; }
+    if (portfolioListener) { portfolioListener(); portfolioListener = null; }
+    lastReloadTimestamp = null; // Reseta o timestamp de reload ao deslogar
+
     if (localStorage.getItem('onboarding_concluido') === 'true') {
-        // Se JÁ COMPLETOU, mostra a tela de login/cadastro normal.
         mostrar('authView');
     } else {
-        // SE É A PRIMEIRA VEZ, INICIA AS TELAS DE BOAS-VINDAS.
         iniciarOnboarding();
     }
-    
     document.getElementById("btnSair").classList.add("hidden");
     document.getElementById("redeemContainer").classList.add("hidden");
-    if(globalChatListener) globalChatListener(); 
-    if(vendaListener) vendaListener();
-    if (comprasClienteListener) comprasClienteListener();
+
+    // Limpa a variável perfil ao deslogar
+    perfil = null;
+    userView = { originalType: null, currentType: null }; // Reseta a visão
+
     return;
   }
+
+  // --- Se chegou aqui, o usuário está logado ---
   setupPlayStoreBilling();
   solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
   handleDeepLink();
 
   const ref = db.collection("usuarios").doc(user.uid);
-  ref.onSnapshot(s => {
-    if (!s.exists) return;
-    perfil = s.data(); 
-    const saldo = (s.data().saldo || 0).toFixed(2);
+  let perfilListenerUnsubscribe = null; // Variável para guardar a função de unsubscribe
+
+  // --- Listener Principal do Perfil do Usuário ---
+  perfilListenerUnsubscribe = ref.onSnapshot(s => { // Guarda a função de unsubscribe
+    if (!s.exists) {
+        console.warn("Documento do usuário não encontrado no Firestore. Deslogando.");
+        if (perfilListenerUnsubscribe) perfilListenerUnsubscribe(); // Cancela o listener antes de deslogar
+        auth.signOut(); // Desloga se o documento sumir
+        return;
+    }
+    const perfilAtual = s.data();
+    const isInitialLoad = !perfil; // Verifica se é o primeiro carregamento de dados
+    perfil = perfilAtual; // Atualiza o perfil global
+
+    // --- LÓGICA DE RELOAD FORÇADO ---
+    const newReloadTimestamp = perfilAtual.forceReloadTimestamp;
+    if (newReloadTimestamp && lastReloadTimestamp && newReloadTimestamp.toMillis() > lastReloadTimestamp.toMillis()) {
+        console.log("Detectada alteração de admin, recarregando a página...");
+        lastReloadTimestamp = newReloadTimestamp; // Atualiza o último timestamp visto
+        if (perfilListenerUnsubscribe) perfilListenerUnsubscribe(); // Cancela o listener ANTES de recarregar
+        location.reload(); // Recarrega a página
+        return; // Interrompe o processamento deste snapshot
+    }
+    // Guarda o timestamp atual para a próxima comparação, apenas se não for recarregar
+    if (newReloadTimestamp && !lastReloadTimestamp) {
+       lastReloadTimestamp = newReloadTimestamp;
+    }
+    // --- FIM DA LÓGICA DE RELOAD ---
+
+    // Atualiza a UI com os dados do perfil (saldo, VIP, PRO, etc.)
+    const saldo = (perfilAtual.saldo || 0).toFixed(2);
     document.getElementById("saldoHeader").textContent = saldo;
     document.getElementById("saldoModal").textContent = saldo;
+
     const btnVip = document.getElementById('btnVip');
-    if (isVipAtivo(perfil)) {
-      btnVip.textContent = '👑 Sou VIP';
-      btnVip.classList.add('vip-glow');
-    } else {
-      btnVip.textContent = '💎 VIP';
-      btnVip.classList.remove('vip-glow');
+    if (btnVip) { // Verifica se o botão existe
+      if (isVipAtivo(perfilAtual)) {
+          btnVip.textContent = '👑 Sou VIP'; btnVip.classList.add('vip-glow');
+      } else {
+          btnVip.textContent = '💎 VIP'; btnVip.classList.remove('vip-glow');
+      }
     }
 
-const btnVipPro = document.getElementById('btnVipPro');
+    const btnVipPro = document.getElementById('btnVipPro');
     if (btnVipPro) { // Verifica se o botão existe (só na tela de profissional)
-        if (isProAtivo(perfil)) {
-            btnVipPro.textContent = '🌟 Sou PRO';
-            btnVipPro.classList.add('pro-glow');
+        if (isProAtivo(perfilAtual)) {
+            btnVipPro.textContent = '🌟 Sou PRO'; btnVipPro.classList.add('pro-glow');
         } else {
-            btnVipPro.textContent = '🌟 Seja PRO (R$ 29,99/mês)';
+            // Define o texto padrão para quando não é PRO
+            btnVipPro.textContent = '🌟 Seja PRO'; // Remove o preço daqui
             btnVipPro.classList.remove('pro-glow');
         }
     }
 
-    aplicarTemaPorProfissao(perfil.interesse_principal);
-  });
+    // Aplica tema baseado no interesse principal
+    aplicarTemaPorProfissao(perfilAtual.interesse_principal);
 
-  const snap = await ref.get();
-  if (!snap.exists) { mostrar("authView"); return; }
-  perfil = snap.data(); 
-
-  const config = await db.collection("config").doc("sistema").get();
-  if (config.exists && config.data().ativo === false && perfil.tipo !== "admin") {
-    exibirPopup("🚧 Sistema em manutenção");
-    auth.signOut();
-    return;
-  }
-  
-  if(!userView.originalType) {
-    userView.originalType = perfil.tipo;
-    userView.currentType = perfil.tipo;
-  }
-  renderCurrentView();
-  
-  if (perfil.tipo !== 'cliente' && !perfil.onboarding_profissional_concluido) {
-    iniciarOnboardingProfissional();
-  }
-
-// Inicia a atualização periódica do lastSeen para o usuário logado
-if (!updateLastSeenInterval) {
-    const updateFn = () => {
-        if (auth.currentUser) { // Verifica se ainda está logado
-            db.collection('usuarios').doc(auth.currentUser.uid).update({
-                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(err => {
-                console.warn("Falha ao atualizar lastSeen:", err.message);
-                // Se der erro (ex: offline), para de tentar para não sobrecarregar
-                if (updateLastSeenInterval) {
-                     clearInterval(updateLastSeenInterval);
-                     updateLastSeenInterval = null;
-                     console.log("Interrompendo atualização de lastSeen devido a erro.");
-                }
-            });
-        } else {
-            // Se deslogou, limpa o intervalo
-            if (updateLastSeenInterval) {
-                 clearInterval(updateLastSeenInterval);
-                 updateLastSeenInterval = null;
-            }
-        }
-    };
-    updateFn(); // Atualiza imediatamente ao logar
-    updateLastSeenInterval = setInterval(updateFn, 60 * 1000); // Atualiza a cada 60 segundos
-}
-
-  setupFCM(user.uid);
-  exibirVersaoApp();
-  iniciarVerificacaoDePendencias(user.uid);
-
-  setTimeout(() => { document.getElementById("btnSair").classList.remove("hidden"); }, 15000);
-
-  db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
-    .onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-            if (change.type === "added") {
-                const aviso = change.doc.data();
-                if (aviso.tipo === 'vaga-aprovada' && aviso.agendamentoId) {
-                    abrirModalVagaAprovada(aviso.agendamentoId);
-                } else {
-                    exibirPopup(`🔔 Novo Aviso: ${aviso.mensagem}`);
-                }
-                change.doc.ref.update({ lido: true });
-            }
-        });
-    });
-
-    if (globalChatListener) globalChatListener(); 
-    globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
-        .orderBy("ts", "desc").limit(1)
-        .onSnapshot(snapshot => {
-            if (snapshot.empty) return;
-            const msg = snapshot.docs[0].data();
-            const janelaChat = document.getElementById('janelaChat');
-            
-            if (msg.ts?.seconds > (lastGlobalMessageTimestamp?.seconds || 0) && msg.remetenteUid !== user.uid) {
-                if (!janelaChat.classList.contains('show')) {
-                    const btnChat = document.getElementById('btnChat').querySelector('span:first-child');
-                    btnChat.classList.add('new-message-glow');
-                    setTimeout(() => btnChat.classList.remove('new-message-glow'), 2000);
-
-                    newMessagesCount++;
-                    const badge = document.querySelector('.notification-badge');
-                    badge.textContent = newMessagesCount;
-                    badge.classList.remove('hidden');
-
-                    const preview = document.getElementById('chatPreview');
-                    preview.innerHTML = `<b>${msg.remetenteNome}:</b> ${msg.texto}`;
-                    preview.classList.add('show');
-                    if (chatPreviewTimeout) clearTimeout(chatPreviewTimeout);
-                    chatPreviewTimeout = setTimeout(() => { preview.classList.remove('show'); }, 3000);
-                }
-            }
-            lastGlobalMessageTimestamp = msg.ts;
-        });
-    
-    // Listener de vendas para vendedores
-    if (vendaListener) vendaListener();
-    if(perfil.lojaLiberada || perfil.tipo === 'admin') {
-      vendaListener = db.collection("loja_pedidos")
-        .where("vendedorUid", "==", user.uid)
-        .where("vendedorNotificado", "==", false)
-        .onSnapshot(snapshot => {
-          snapshot.docChanges().forEach(change => {
-            if (change.type === "added") {
-              abrirModal('modalVendaRealizada');
-              change.doc.ref.update({ vendedorNotificado: true });
-            }
-          });
-        });
+    // Mostra/Esconde botão de solicitar loja nas configurações
+    const btnSolicitarLoja = document.getElementById('btnSolicitarAcessoLoja');
+    const msgLojaLiberada = document.getElementById('msgLojaJaLiberada');
+    if (btnSolicitarLoja && msgLojaLiberada) {
+       const mostrarBotao = !perfilAtual.lojaLiberada && perfilAtual.tipo !== 'admin';
+       btnSolicitarLoja.classList.toggle('hidden', !mostrarBotao);
+       msgLojaLiberada.classList.toggle('hidden', mostrarBotao);
     }
 
-    // Listener de confirmação para compradores
-    if (comprasClienteListener) comprasClienteListener();
-    comprasClienteListener = db.collection('loja_pedidos')
-      .where('clienteUid', '==', user.uid)
-      .where('status', '==', 'entregue_pendente_confirmacao')
-      .onSnapshot(snapshot => {
-        if (!snapshot.empty) {
-            const pedido = snapshot.docs[0].data();
-            pedido.id = snapshot.docs[0].id;
-            abrirModalConfirmacaoComprador(pedido);
+    // --- LÓGICA EXECUTADA APENAS NO PRIMEIRO CARREGAMENTO DO LISTENER ---
+    if (isInitialLoad) {
+        console.log("Carregamento inicial do perfil via listener concluído.");
+
+        // Define a view inicial
+        if (!userView.originalType) {
+            userView.originalType = perfil.tipo;
+            userView.currentType = perfil.tipo;
         }
-      });
-});
+        renderCurrentView(); // Renderiza a view correta
+
+        // Inicia Onboarding do Profissional se necessário
+        if (perfil.tipo !== 'cliente' && !perfil.onboarding_profissional_concluido) {
+            if (!fluxoPosCadastroAtivo && !document.getElementById('modalOnboardingProfissionalServicos')?.classList.contains('show')) {
+               iniciarFluxoPosCadastroProfissional();
+            }
+        }
+
+        // --- Demais inicializações (lastSeen, FCM, versão, pendências, etc.) ---
+        if (!updateLastSeenInterval) {
+            const updateFn = () => {
+                if (auth.currentUser) {
+                    db.collection('usuarios').doc(auth.currentUser.uid).update({
+                        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(err => {
+                        console.warn("Falha ao atualizar lastSeen:", err.message);
+                        if (updateLastSeenInterval) {
+                             clearInterval(updateLastSeenInterval);
+                             updateLastSeenInterval = null;
+                             console.log("Interrompendo atualização de lastSeen devido a erro.");
+                        }
+                    });
+                } else {
+                    if (updateLastSeenInterval) {
+                         clearInterval(updateLastSeenInterval);
+                         updateLastSeenInterval = null;
+                    }
+                }
+            };
+            updateFn();
+            updateLastSeenInterval = setInterval(updateFn, 60 * 1000); // Atualiza a cada 60 segundos
+        }
+        setupFCM(user.uid);
+        exibirVersaoApp();
+        iniciarVerificacaoDePendencias(user.uid);
+        setTimeout(() => { document.getElementById("btnSair").classList.remove("hidden"); }, 15000);
+
+        // --- Listeners adicionais (Avisos, Chat Global, Vendas, Compras) ---
+        // Listener de Avisos
+        db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
+            .onSnapshot(snapshot => {
+                 snapshot.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        const aviso = change.doc.data();
+                        if (aviso.tipo === 'vaga-aprovada' && aviso.agendamentoId) {
+                            abrirModalVagaAprovada(aviso.agendamentoId);
+                        } else {
+                            exibirPopup(`🔔 Novo Aviso: ${aviso.mensagem}`);
+                        }
+                        change.doc.ref.update({ lido: true });
+                    }
+                });
+            });
+
+        // Listener do Chat Global
+        if (globalChatListener) globalChatListener();
+        globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
+            .orderBy("ts", "desc").limit(1)
+            .onSnapshot(snapshot => {
+                if (snapshot.empty || !auth.currentUser) return; // Adiciona verificação de login
+                const msg = snapshot.docs[0].data();
+                const janelaChat = document.getElementById('janelaChat');
+
+                if (msg.ts?.seconds > (lastGlobalMessageTimestamp?.seconds || 0) && msg.remetenteUid !== auth.currentUser.uid) {
+                    if (janelaChat && !janelaChat.classList.contains('show')) { // Verifica se janelaChat existe
+                        const btnChatSpan = document.getElementById('btnChat')?.querySelector('span:first-child');
+                        if(btnChatSpan){
+                           btnChatSpan.classList.add('new-message-glow');
+                           setTimeout(() => btnChatSpan.classList.remove('new-message-glow'), 2000);
+                        }
+
+                        newMessagesCount++;
+                        const badge = document.querySelector('.notification-badge');
+                        if(badge){
+                           badge.textContent = newMessagesCount;
+                           badge.classList.remove('hidden');
+                        }
+
+                        const preview = document.getElementById('chatPreview');
+                        if(preview){
+                            preview.innerHTML = `<b>${msg.remetenteNome || 'Usuário'}:</b> ${msg.texto || ''}`;
+                            preview.classList.add('show');
+                            if (chatPreviewTimeout) clearTimeout(chatPreviewTimeout);
+                            chatPreviewTimeout = setTimeout(() => { preview.classList.remove('show'); }, 3000);
+                        }
+                    }
+                }
+                lastGlobalMessageTimestamp = msg.ts;
+            });
+
+        // Listener de Vendas para Vendedores
+        if (vendaListener) vendaListener();
+        if (perfil && (perfil.lojaLiberada || perfil.tipo === 'admin')) {
+            vendaListener = db.collection("loja_pedidos")
+                .where("vendedorUid", "==", user.uid)
+                .where("vendedorNotificado", "==", false)
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === "added") {
+                            abrirModal('modalVendaRealizada');
+                            change.doc.ref.update({ vendedorNotificado: true });
+                        }
+                    });
+                });
+        }
+
+        // Listener de Confirmação para Compradores
+        if (comprasClienteListener) comprasClienteListener();
+        comprasClienteListener = db.collection('loja_pedidos')
+            .where('clienteUid', '==', user.uid)
+            .where('status', '==', 'entregue_pendente_confirmacao')
+            .onSnapshot(snapshot => {
+                if (!snapshot.empty) {
+                    const pedido = snapshot.docs[0].data();
+                    pedido.id = snapshot.docs[0].id;
+                    abrirModalConfirmacaoComprador(pedido);
+                }
+            });
+        // --- Fim dos Listeners Adicionais ---
+    }
+    // --- FIM DA LÓGICA EXECUTADA APENAS NO PRIMEIRO CARREGAMENTO ---
+
+  }, error => { // Tratamento de erro para o listener principal
+      console.error("Erro no listener do perfil:", error);
+      exibirPopup("Erro Crítico", "Não foi possível carregar seus dados. Tente recarregar a página ou contate o suporte.", "erro");
+      if (perfilListenerUnsubscribe) perfilListenerUnsubscribe(); // Cancela o listener em caso de erro
+      auth.signOut(); // Desloga em caso de erro grave
+  });
+  // --- Fim do Listener Principal ---
+
+  // --- Bloco try/catch para verificação inicial de manutenção ---
+  // (Este bloco roda antes do listener principal ter certeza dos dados)
+  try {
+      const config = await db.collection("config").doc("sistema").get();
+      // Lê o perfil *novamente* aqui só para a verificação inicial
+      const initialProfileSnap = await ref.get();
+      if (!initialProfileSnap.exists) throw new Error("Perfil não encontrado na verificação inicial.");
+
+      if (config.exists && config.data().ativo === false && initialProfileSnap.data().tipo !== "admin") {
+          exibirPopup("🚧 Sistema em manutenção");
+          if (perfilListenerUnsubscribe) perfilListenerUnsubscribe(); // Cancela listener
+          auth.signOut();
+          return;
+      }
+  } catch (configError) {
+      console.error("Erro ao verificar status de manutenção:", configError);
+      // Decide se quer continuar ou deslogar em caso de erro aqui
+      // Por segurança, pode ser melhor deslogar:
+      // exibirPopup("Erro", "Não foi possível verificar o status do sistema.");
+      // auth.signOut();
+      // return;
+  }
+  // --- Fim da verificação inicial de manutenção ---
+
+ }); // Fim do onAuthStateChanged
 
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -4266,87 +4360,103 @@ function abrirChatGlobal() {
 
 // SUBSTITUA TODA A FUNÇÃO 'alternarChat' POR ESTA
 function alternarChat(tipo) {
-    chatAtual = tipo;
+    chatAtual = tipo; // Atualiza a variável global
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
     document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
 
+    // Remove permanentemente o seletor de cidade do admin da tela (não será usado)
     const adminSelector = document.getElementById('adminChatSelectorContainer');
+    if (adminSelector) adminSelector.classList.add('hidden'); // Garante que está escondido
+
     const chatContainer = document.getElementById("chatMessages");
-    chatContainer.innerHTML = ""; // Limpa antes de carregar
+    chatContainer.innerHTML = ""; // Limpa mensagens anteriores
     oldestMessageSnapshot = null; // Reseta a paginação
-    if (chatListener) chatListener();
+    if (chatListener) chatListener(); // Cancela o listener anterior
 
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
     const agora = new Date();
 
-    // Filtro base pelo tipo de chat
-    query = query.where("tipoChat", "==", tipo); // <-- FILTRO PRINCIPAL ADICIONADO
+    // --- CORREÇÃO PRINCIPAL: Adiciona o filtro por tipo de chat ---
+    query = query.where("tipoChat", "==", tipo);
+    // -----------------------------------------------------------
 
     if (tipo === 'local') {
         if (perfil.tipo === 'admin') {
-            adminSelector.classList.remove('hidden'); // Mostra o seletor para admin no local
-            const cidadeSelecionada = document.getElementById('adminChatCidade').value;
-            if (cidadeSelecionada) {
-                query = query.where("cidade", "==", cidadeSelecionada); // Filtra pela cidade do seletor
-                document.getElementById("chatTitle").textContent = `📍 Chat Local (${cidadeSelecionada})`;
-            } else {
-                // Se admin não selecionou cidade, mostra todas as locais (ou nenhuma, dependendo da regra)
-                // Para mostrar NENHUMA se não selecionar:
-                 query = query.where("cidade", "==", "CIDADE_IMPOSSIVEL_PARA_NAO_TRAZER_NADA"); // Gambiarra para não trazer nada
-                 document.getElementById("chatTitle").textContent = `📍 Chat Local (Selecione a cidade)`;
-                 // Ou para mostrar TODAS as locais (cuidado com performance):
-                 // document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
-            }
+            // Admin vê todas as mensagens locais, sem filtro de cidade
+            document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
+            // NÃO adiciona where("cidade",...) para admin ver tudo no local
         } else {
             // Usuário comum vê apenas o chat da sua cidade
-            adminSelector.classList.add('hidden'); // Esconde o seletor
-            query = query.where("cidade", "==", perfil.cidade);
+            query = query.where("cidade", "==", perfil.cidade); // Filtra pela cidade do usuário
             document.getElementById("chatTitle").textContent = `📍 Chat Local (${perfil.cidade})`;
         }
     } else {
         // Lógica para o chat global
-        adminSelector.classList.add('hidden'); // Esconde o seletor
         document.getElementById("chatTitle").textContent = '💬 Chat Global';
     }
 
-    // Ordenação e limite (mantém a lógica de expiração)
-    query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(50); // Aumentei um pouco o limite inicial
+    // Ordenação e limite (mantém a lógica de expiração pelo deleteAt)
+    // Usamos orderBy('ts') para ordem cronológica e limit para paginação
+    query = query.where("deleteAt", ">", agora) // Filtra mensagens não expiradas
+                 .orderBy("ts", "desc")         // Ordena pela mais recente primeiro
+                 .limit(50);                     // Limite inicial de mensagens
 
     chatListener = query.onSnapshot(async snapshot => {
+        const chatContainer = document.getElementById("chatMessages"); // Garante a referência
+        const carregarMaisBtn = document.getElementById('carregarMaisMsgBtn');
+
         if(snapshot.empty) {
-            chatContainer.innerHTML = `<p>Nenhuma mensagem ${tipo === 'local' ? 'nesta cidade' : 'neste chat'} ainda.</p>`;
-            document.getElementById('carregarMaisMsgBtn').style.display = 'none'; // Esconde botão se vazio
+            // Mensagem mais específica se estiver vazio
+            let msgVazio = `Nenhuma mensagem ${tipo === 'global' ? 'neste chat' : ''} ainda.`;
+            if (tipo === 'local' && perfil.tipo !== 'admin') {
+                msgVazio = `Nenhuma mensagem em ${perfil.cidade} ainda.`;
+            } else if (tipo === 'local' && perfil.tipo === 'admin') {
+                 msgVazio = `Nenhuma mensagem local encontrada.`;
+            }
+            chatContainer.innerHTML = `<p>${msgVazio}</p>`;
+            carregarMaisBtn.style.display = 'none'; // Esconde botão se vazio
+            oldestMessageSnapshot = null; // Garante que não tente carregar mais
             return;
         }
-        document.getElementById('carregarMaisMsgBtn').style.display = 'block'; // Mostra botão se tem msgs
+
+        // Mostra o botão se há mensagens
+        carregarMaisBtn.style.display = 'block';
+        carregarMaisBtn.textContent = 'Ver mensagens anteriores'; // Reseta texto do botão
+        carregarMaisBtn.disabled = false; // Garante que não está desabilitado
+
+        // Guarda o último documento para a próxima paginação
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
-        // chatContainer.innerHTML = ""; // Limpa para re-renderizar - REMOVIDO PARA PAGINAÇÃO FUNCIONAR MELHOR
+
+        // Processa as mensagens recebidas
         const novasMensagensDivs = [];
-        for(const doc of snapshot.docs.reverse()) { // Pega as mais recentes primeiro
+        // Itera na ordem correta para prepend (snapshot já vem desc)
+        for (const doc of snapshot.docs) {
              const msg = doc.data();
              const messageDiv = await createMessageDiv(msg); // Usar a createMessageDiv existente
              novasMensagensDivs.push(messageDiv);
         }
-        // Adiciona as novas mensagens no TOPO do container
+        // Limpa e Adiciona as novas mensagens no TOPO do container
+        chatContainer.innerHTML = ''; // Limpa completamente antes de adicionar
         novasMensagensDivs.forEach(div => chatContainer.prepend(div));
 
-         // Auto scroll apenas se estiver perto do fundo (ou na primeira carga)
-         // (Opcional, mas melhora a experiência ao carregar mais)
-         // if (chatContainer.scrollTop <= 50) {
-         //     chatContainer.scrollTop = 0;
-         // }
+        // Auto scroll para o fundo (mais recentes) na primeira carga da aba
+        chatContainer.scrollTop = chatContainer.scrollHeight;
 
     }, error => { // Adiciona tratamento de erro
         console.error("Erro ao carregar chat:", error);
         chatContainer.innerHTML = `<p style="color: red;">Erro ao carregar mensagens.</p>`;
+        document.getElementById('carregarMaisMsgBtn').style.display = 'none'; // Esconde botão em caso de erro
     });
 
-    document.getElementById('chatInput').removeEventListener('keydown', handleChatEnter); // Remove listener antigo
-    document.getElementById('chatInput').addEventListener('keydown', handleChatEnter); // Adiciona novo
-    // if (!botInterval && tipo === 'global') botInterval = setInterval(sendBotMessage, 3600000); // Bot só no global
- }
+    // Remove listener antigo para evitar duplicação e adiciona novo
+    const chatInput = document.getElementById('chatInput');
+    chatInput.removeEventListener('keydown', handleChatEnter);
+    chatInput.addEventListener('keydown', handleChatEnter);
 
- // Função separada para o listener de Enter
+    // Bot só inicia no global (se necessário)
+    // if (!botInterval && tipo === 'global') botInterval = setInterval(sendBotMessage, 3600000);
+ }
+ // Função separada para o listener de Enter (se não existir, adicione-a)
  function handleChatEnter(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -4358,6 +4468,7 @@ function alternarChat(tipo) {
 async function carregarMensagensAnteriores() {
     if (!oldestMessageSnapshot) {
         document.getElementById('carregarMaisMsgBtn').textContent = 'Fim do histórico';
+        document.getElementById('carregarMaisMsgBtn').disabled = true; // Desabilita o botão
         return;
     }
 
@@ -4368,30 +4479,24 @@ async function carregarMensagensAnteriores() {
     const agora = new Date();
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
 
-    // Adiciona filtro tipoChat
+    // --- CORREÇÃO PRINCIPAL: Adiciona o filtro por tipo de chat ---
     query = query.where("tipoChat", "==", chatAtual);
+    // -----------------------------------------------------------
 
     if (chatAtual === 'local') {
         if (perfil.tipo === 'admin') {
-            const cidadeSelecionada = document.getElementById('adminChatCidade').value;
-            if (cidadeSelecionada) {
-                query = query.where("cidade", "==", cidadeSelecionada);
-            } else {
-                 // Se admin não selecionou cidade, não carrega mais mensagens locais
-                 btn.textContent = 'Selecione uma cidade';
-                 btn.disabled = false; // Reabilita para poder selecionar
-                 return;
-            }
+            // Admin vê todas as locais, sem filtro de cidade para paginação também
         } else {
+            // Usuário comum só pagina na sua cidade
             query = query.where("cidade", "==", perfil.cidade);
         }
     }
 
-    // Continua com a paginação e expiração
-    query = query.where("deleteAt", ">", agora)
-                 .orderBy("deleteAt", "desc")
-                 .startAfter(oldestMessageSnapshot)
-                 .limit(30); // Limite para mensagens anteriores
+    // Continua com a paginação e expiração, ordenando por 'ts'
+    query = query.where("deleteAt", ">", agora) // Filtra mensagens não expiradas
+                 .orderBy("ts", "desc")         // Ordena pela mais recente primeiro
+                 .startAfter(oldestMessageSnapshot) // Começa depois da última mensagem carregada
+                 .limit(30);                     // Limite para mensagens anteriores
 
     try {
         const snapshot = await query.get();
@@ -4399,26 +4504,27 @@ async function carregarMensagensAnteriores() {
         if (snapshot.empty) {
             btn.textContent = 'Fim do histórico';
             oldestMessageSnapshot = null; // Marca que chegou ao fim
+            // Não desabilitar o botão aqui, apenas mudar o texto
             return;
         }
 
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1]; // Atualiza o cursor da paginação
 
         const chatContainer = document.getElementById("chatMessages");
-        // Guarda a altura atual para manter a posição do scroll
+        // Guarda a altura atual para tentar manter a posição do scroll
         const scrollAntes = chatContainer.scrollHeight - chatContainer.scrollTop;
 
         // Adiciona mensagens no FINAL do container ao carregar mais
-        for (const doc of snapshot.docs.reverse()) { // Itera na ordem correta (mais antigo primeiro)
+        // Iterar na ordem do snapshot (descendente, mais recente primeiro)
+        // mas adicionar no final (append) resulta na ordem correta visualmente
+        for (const doc of snapshot.docs) {
             const msg = doc.data();
             const messageDiv = await createMessageDiv(msg);
-            // chatContainer.appendChild(messageDiv); // ADICIONA NO FINAL
-            chatContainer.insertBefore(messageDiv, chatContainer.firstChild.nextSibling); // Insere após o botão "Carregar Mais"
+            chatContainer.appendChild(messageDiv); // ADICIONA NO FINAL
         }
 
-        // Restaura a posição do scroll relativa ao fundo
-        // chatContainer.scrollTop = chatContainer.scrollHeight - scrollAntes;
-        // Não precisa restaurar scroll, pois adicionamos no topo
+        // Tenta restaurar a posição do scroll relativa ao ponto onde estava
+        chatContainer.scrollTop = chatContainer.scrollHeight - scrollAntes;
 
         btn.textContent = 'Ver mensagens anteriores';
         btn.disabled = false;
@@ -4438,51 +4544,60 @@ async function createMessageDiv(msg) {
     const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
+    // Guarda o ID único do documento Firestore na div, se disponível
+    // Isso pode ser útil para debug ou futuras manipulações
+    if (msg.firestoreDocId) { // Assumindo que você adicione 'firestoreDocId' ao objeto 'msg' quando lê do snapshot
+        messageDiv.dataset.docId = msg.firestoreDocId;
+    }
+
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
         remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
     } else {
-        const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
-        if(remetenteDoc.exists) {
-            const remetenteData = remetenteDoc.data();
+        try {
+            const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
+            if(remetenteDoc.exists) {
+                const remetenteData = remetenteDoc.data();
 
-            if (remetenteData.possuiItemExclusivo) {
-                itemExclusivoIcone = '👕✨';
-            }
+                // Ícones opcionais (mantidos como antes)
+                if (remetenteData.possuiItemExclusivo) itemExclusivoIcone = '👕✨';
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, remetenteData.tipo === 'cliente' ? 'cliente' : 'profissional');
 
-            if (remetenteData.tipo === "admin") {
-                classeCSS = `admin-chat-red`; 
-                iconeBase = `🧠`;
-                messageDiv.style.textShadow = '0 0 5px #000';
-            } else if (remetenteData.tipo !== "cliente") {
-                classeCSS = `barbeiro-chat`;
-                if (isProAtivo(remetenteData)) {
-                    iconeBase = `🌟`; // Icone PRO
-                } else {
-                    iconeBase = `💼`; // Icone profissional normal
+                // Classe CSS e Ícone Base (mantidos como antes)
+                if (remetenteData.tipo === "admin") {
+                    classeCSS = `admin-chat-red`; iconeBase = `🧠`;
+                    messageDiv.style.textShadow = '0 0 5px #000'; // Sombra específica para admin
+                } else if (remetenteData.tipo !== "cliente") { // Profissionais
+                    classeCSS = `barbeiro-chat`;
+                    iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`; // Icone PRO vs Normal
+                } else { // Clientes
+                    classeCSS = `cliente-chat`;
+                    iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`; // Icone VIP vs Normal
                 }
-                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'profissional');
-            } else if (isVipAtivo(remetenteData)) {
-                classeCSS = `cliente-chat`; iconeBase = `👑`;
-                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
-            } else {
-                classeCSS = `cliente-chat`; iconeBase = `👤`;
-                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, 'cliente');
-            }
-            
-            // LÓGICA PRINCIPAL ADICIONADA AQUI
-            let cidadeLabel = '';
-            if (perfil.tipo === 'admin' && chatAtual === 'local' && msg.cidade) {
-                cidadeLabel = ` <small style="opacity: 0.7; font-weight: normal;">(${msg.cidade})</small>`;
-            }
 
-            remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}${cidadeLabel}</span>`;
+                // --- REMOÇÃO DA LÓGICA DE (Cidade) ---
+                // Não adicionamos mais a cidade aqui, pois o filtro da query já garante a separação
+                remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+                // ------------------------------------
+
+            } else {
+                 remetenteNome = `👻 Usuário Excluído`; // Caso o usuário tenha sido deletado
+                 classeCSS = `cliente-chat`; // Estilo padrão
+            }
+        } catch (error) {
+             console.error("Erro ao buscar dados do remetente:", error);
+             remetenteNome = `❓ Erro ao Carregar`; // Indica erro ao buscar dados
+             classeCSS = `cliente-chat`; // Estilo padrão
         }
     }
-    
+
     messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
-    messageDiv.id = `msg-${msg.id || new Date().getTime()}`;
+    // Adiciona timestamp formatado (opcional, mas útil)
+    if (msg.ts && msg.ts.toDate) {
+        const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em;">(${timeString})</small>`;
+    }
     return messageDiv;
-}
+ }
 
 
 const botMessages = [ "Dica: Avalie seu profissional para ganhar pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos!", "Fique de olho no nosso Blog! Postamos códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!", "Explore a nossa Loja! Produtos exclusivos e da comunidade estão disponíveis para você.", "Complete agendamentos e desbloqueie conquistas para mostrar seu status no chat!" ];
@@ -5484,6 +5599,53 @@ function cancelarFechamentoPopup() {
     // Não faz nada com o modal original, ele continua aberto
     modalOriginalIdParaConfirmar = null; // Limpa a referência
 }
+
+async function confirmarSolicitacaoAcessoLoja() {
+    // Verifica se já existe uma solicitação pendente para evitar duplicação
+    try {
+        const q = db.collection("solicitacoes")
+            .where("usuarioUid", "==", auth.currentUser.uid)
+            .where("tipo", "==", "liberacao_loja")
+            .where("status", "==", "pendente");
+        const existingRequests = await q.get();
+        if (!existingRequests.empty) {
+            fecharModalAtual(); // Fecha o modal de solicitação
+            return exibirPopup("Atenção", "Você já possui uma solicitação de acesso à loja pendente. Aguarde a análise do administrador.");
+        }
+    } catch (error) {
+        console.error("Erro ao verificar solicitações existentes:", error);
+        // Continua mesmo se a verificação falhar, mas loga o erro
+    }
+
+    exibirAguarde("Enviando solicitação...");
+
+    try {
+        // Cria a solicitação no Firestore
+        await db.collection("solicitacoes").add({
+            tipo: "liberacao_loja",
+            usuarioUid: auth.currentUser.uid,
+            usuarioNome: perfil.nome, // Pega o nome do perfil carregado
+            status: "pendente",
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Prepara e abre o link do WhatsApp
+        const mensagem = encodeURIComponent(`Olá! Gostaria de solicitar autorização para cadastrar produtos na loja do app Nova Versão.\n\nMeu nome de usuário é: ${perfil.nome}\nMeu email: ${perfil.email}`);
+        const phoneNum = WHATSAPP_ADM_PHONE.startsWith('55') ? WHATSAPP_ADM_PHONE : `55${WHATSAPP_ADM_PHONE.replace(/\D/g, '')}`;
+        window.open(`https://wa.me/${phoneNum}?text=${mensagem}`, '_blank');
+
+        fecharTodosOsModais(); // Fecha o "Aguarde" e o modal de solicitação
+        exibirPopup("✅ Solicitação Enviada!", "Seu pedido foi enviado para análise. Você foi redirecionado(a) ao WhatsApp para contato.");
+
+        // Notifica os administradores
+        notifyAdmins("🛍️ Nova Solicitação de Loja", `${perfil.nome} (${perfil.email}) solicitou acesso para vender na loja.`, { link: '#solicitacoes' });
+
+    } catch (error) {
+        fecharTodosOsModais();
+        console.error("Erro ao confirmar solicitação de acesso à loja:", error);
+        exibirPopup("Erro", "Não foi possível enviar sua solicitação: " + error.message);
+    }
+ }
 
 async function publicarBlog() {
   const titulo = document.getElementById("blogTitulo").value.trim();
@@ -8563,6 +8725,15 @@ function setupConfiguracoes() {
 // ADICIONAR ESTAS DUAS LINHAS
 configurarBotoesGuest();
 carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
+
+    const btnSolicitarLoja = document.getElementById('btnSolicitarAcessoLoja');
+    const msgLojaLiberada = document.getElementById('msgLojaJaLiberada');
+
+    if (btnSolicitarLoja && msgLojaLiberada && perfil) { // Verifica se elementos e perfil existem
+        const mostrarBotao = !perfil.lojaLiberada && perfil.tipo !== 'admin';
+        btnSolicitarLoja.classList.toggle('hidden', !mostrarBotao);
+        msgLojaLiberada.classList.toggle('hidden', mostrarBotao); // Mostra a mensagem se o botão estiver escondido
+    }
 
     const interesseContainer = document.getElementById('configInteresseContainer');
     const buttons = interesseContainer.querySelectorAll('button');
