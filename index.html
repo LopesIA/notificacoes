@@ -2957,38 +2957,39 @@ function criarConta() {
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha-cadastro").value;
   const senhaConfirm = document.getElementById("senha-confirm").value;
-  const tipo = document.getElementById("tipo").value;
+  const tipo = document.getElementById("tipo").value; // Lê o tipo selecionado
   const telefone = document.getElementById("telefone").value.trim();
-  // Lê dos inputs e formata
   const estadoInput = document.getElementById("estado").value.trim();
   const cidadeInput = document.getElementById("cidade").value.trim();
-  const estado = formatarNomeProprio(estadoInput); // Formata
-  const cidade = formatarNomeProprio(cidadeInput); // Formata
+  const estado = formatarNomeProprio(estadoInput);
+  const cidade = formatarNomeProprio(cidadeInput);
   const nome = document.getElementById("nomeExibido").value.trim();
   const indicadorEmail = document.getElementById("indicador").value.trim();
   let rua, numero;
 
   if (senha !== senhaConfirm) { fecharTodosOsModais(); return exibirPopup("As senhas não coincidem."); }
   if (!telefone || telefone.length < 10 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD (mínimo 10 dígitos)."); }
-  // Verifica se estado e cidade foram preenchidos (após formatação)
   if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return exibirPopup("Preencha todos os campos obrigatórios"); }
 
   const isProfissional = tipo !== 'cliente';
   if (isProfissional) {
     rua = document.getElementById("rua").value.trim();
     numero = document.getElementById("numero").value.trim();
-    // Validação de endereço para profissional (opcional, mas recomendado)
-    // if (!rua || !numero) { fecharTodosOsModais(); return exibirPopup("Profissionais devem informar Rua e Número."); }
   }
 
-  
+  // Define as variáveis finais ANTES de usar
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
   const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
+  const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo; // <-- CORREÇÃO APLICADA AQUI
 
   auth.createUserWithEmailAndPassword(email, senha)
     .then(async cred => {
       const data = {
-        email, nome, tipo: tipoFinal, telefone, estado: estadoFinal, cidade: cidadeFinal,
+        email, nome,
+        tipo: tipoFinal, // Agora tipoFinal existe
+        telefone,
+        estado: estadoFinal,
+        cidade: cidadeFinal,
         saldo: 0, reputacao: 100, cortesSemana: 0,
         disponivel: "nao", listaServicos: [], promocoes: [], portfolio: [],
         chatAtivo: true, vip: false, lojaLiberada: false,
@@ -3006,30 +3007,27 @@ function criarConta() {
         somaAvaliacoes: 0, numAvaliacoes: 0,
         ultimoBoostComprado: null,
         interesse_principal: onboardingState.interesse_principal || 'barbeiro',
-        onboarding_profissional_concluido: tipo === 'cliente', // Clientes já concluíram
-        lastSeen: firebase.firestore.FieldValue.serverTimestamp() // Adiciona lastSeen inicial
+        onboarding_profissional_concluido: tipoFinal === 'cliente', // Usa tipoFinal aqui também
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
 
-      // INICIA FLUXO DE POPUPS PÓS-CADASTRO PARA PROFISSIONAIS
-      if (tipo !== 'cliente') {
+      if (tipoFinal !== 'cliente') {
           iniciarFluxoPosCadastroProfissional();
       }
-      // Fim do fluxo pós-cadastro
 
     })
     .catch(e => {
         fecharTodosOsModais();
-        // Melhora a mensagem de erro para email já existente
         if (e.code === 'auth/email-already-in-use') {
              exibirPopup("Erro ao criar conta: Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.");
         } else {
              exibirPopup("Erro ao criar conta: " + e.message);
         }
     });
-}
+ }
 
 document.getElementById('tipo').addEventListener('change', (e) => {
   const isProfissional = e.target.value !== 'cliente';
