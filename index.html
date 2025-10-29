@@ -2972,6 +2972,7 @@ async function enviarSolicitacaoRecuperacaoSenha() {
     }
 }
 
+// SUBSTITUA A FUNÇÃO criarConta() INTEIRA POR ESTA VERSÃO:
 function criarConta() {
   exibirAguarde("Criando sua conta...");
   const email = document.getElementById("email").value.trim();
@@ -2979,10 +2980,10 @@ function criarConta() {
   const senhaConfirm = document.getElementById("senha-confirm").value;
   const tipo = document.getElementById("tipo").value; // Lê o tipo selecionado
   const telefone = document.getElementById("telefone").value.trim();
-  const estadoInput = document.getElementById("estado").value.trim();
-  const cidadeInput = document.getElementById("cidade").value.trim();
-  const estado = formatarNomeProprio(estadoInput);
-  const cidade = formatarNomeProprio(cidadeInput);
+  const estadoInput = document.getElementById("estado").value.trim(); // INPUT do estado
+  const cidadeInput = document.getElementById("cidade").value.trim(); // INPUT da cidade
+  const estado = formatarNomeProprio(estadoInput); // Nome próprio do estado
+  const cidade = formatarNomeProprio(cidadeInput); // Nome próprio da cidade
   const nome = document.getElementById("nomeExibido").value.trim();
   const indicadorEmail = document.getElementById("indicador").value.trim();
   let rua, numero;
@@ -2997,16 +2998,15 @@ function criarConta() {
     numero = document.getElementById("numero").value.trim();
   }
 
-  // Define as variáveis finais ANTES de usar
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
   const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
-  const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo; // <-- CORREÇÃO APLICADA AQUI
+  const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
 
   auth.createUserWithEmailAndPassword(email, senha)
     .then(async cred => {
       const data = {
         email, nome,
-        tipo: tipoFinal, // Agora tipoFinal existe
+        tipo: tipoFinal,
         telefone,
         estado: estadoFinal,
         cidade: cidadeFinal,
@@ -3027,16 +3027,20 @@ function criarConta() {
         somaAvaliacoes: 0, numAvaliacoes: 0,
         ultimoBoostComprado: null,
         interesse_principal: onboardingState.interesse_principal || 'barbeiro',
-        onboarding_profissional_concluido: tipoFinal === 'cliente', // Usa tipoFinal aqui também
+        onboarding_profissional_concluido: tipoFinal === 'cliente', // Define inicial
+        
+        // --- LINHA ADICIONADA ---
+        precisaConfiguracaoInicial: tipoFinal !== 'cliente', // Define como true se for profissional
+        // -------------------------
+
         lastSeen: firebase.firestore.FieldValue.serverTimestamp()
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
 
-      if (tipoFinal !== 'cliente') {
-          iniciarFluxoPosCadastroProfissional();
-      }
+      // REMOVIDO: A chamada iniciarFluxoPosCadastroProfissional() foi removida daqui.
+      // O listener onAuthStateChanged cuidará disso de forma mais robusta.
 
     })
     .catch(e => {
@@ -3223,14 +3227,23 @@ auth.onAuthStateChanged(async user => {
         }
         renderCurrentView(); // Renderiza a view correta
 
-        // Inicia Onboarding do Profissional se necessário
-        if (perfil.tipo !== 'cliente' && !perfil.onboarding_profissional_concluido) {
-            if (!fluxoPosCadastroAtivo && !document.getElementById('modalOnboardingProfissionalServicos')?.classList.contains('show')) {
-               iniciarFluxoPosCadastroProfissional();
+        // --- NOVA LÓGICA PARA INICIAR O ONBOARDING DO PROFISSIONAL ---
+        // Verifica a NOVA flag 'precisaConfiguracaoInicial'
+        if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
+            console.log("Profissional recém-criado detectado. Iniciando fluxo de configuração inicial...");
+            // Verifica se nenhum modal do fluxo já está aberto para evitar duplicação
+            if (!fluxoPosCadastroAtivo &&
+                !document.getElementById('modalOnboardingProfissionalServicos')?.classList.contains('show') &&
+                !document.getElementById('modalOnboardingProfissionalAgenda')?.classList.contains('show') &&
+                !document.getElementById('modalLogomarca')?.classList.contains('show') &&
+                !document.getElementById('modalPortfolioBarbeiro')?.classList.contains('show') &&
+                !document.getElementById('modalAddPromocao')?.classList.contains('show'))
+            {
+               iniciarFluxoPosCadastroProfissional(); // Inicia o fluxo
             }
         }
 
-        // --- Demais inicializações ---
+
         if (!updateLastSeenInterval) { /* ... (lógica do lastSeen) ... */
             const updateFn = () => { /* ... */ }; updateFn(); updateLastSeenInterval = setInterval(updateFn, 60 * 1000);
         }
@@ -4814,12 +4827,17 @@ if (logoFileInput && logoPreviewImg && logoSaveBtn) {
     });
 }
 
+// SUBSTITUA A FUNÇÃO finalizarFluxoPosCadastro() INTEIRA POR ESTA VERSÃO:
 async function finalizarFluxoPosCadastro() {
     if (!fluxoPosCadastroAtivo) return;
     fluxoPosCadastroAtivo = false; // Desativa o fluxo
     try {
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({ onboarding_profissional_concluido: true });
-        console.log("Onboarding do profissional marcado como concluído.");
+        // ATUALIZA AMBAS AS FLAGS
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+             onboarding_profissional_concluido: true,
+             precisaConfiguracaoInicial: false // <-- ADICIONADO AQUI
+        });
+        console.log("Onboarding do profissional marcado como concluído e flag 'precisaConfiguracaoInicial' definida como false.");
         exibirPopup("Configuração concluída!", "Você já pode usar todas as funções do painel do profissional."); // Feedback final
     } catch (error) {
         console.error("Erro ao marcar onboarding como concluído:", error);
@@ -8542,61 +8560,50 @@ function adicionarServicoOnboarding() {
     document.getElementById('btnOnboardingNextServicos').disabled = false;
 }
 
+// SUBSTITUA A FUNÇÃO avancarOnboarding(etapa) INTEIRA POR ESTA VERSÃO:
 function avancarOnboarding(etapa) {
     if (etapa === 2) {
+        // Lógica para avançar da tela de Serviços para a de Agenda (permanece igual)
         fecharModalAtual();
         abrirModal('modalOnboardingProfissionalAgenda');
-        
-        // Pega os elementos dos botões
+
         const btnVaga = document.getElementById('onboardingBtnVagaImediata');
         const btnManual = document.getElementById('onboardingBtnAgendaManual');
         const painelManual = document.getElementById('onboardingAgendaManualPainel');
 
-        // Reseta o estado inicial
         onboardingState.vagaImediata = false;
         onboardingState.usaAgendaManual = false;
         btnVaga.textContent = '⚡ Ativar Vaga Imediata';
         btnVaga.classList.remove('selected');
         btnManual.classList.remove('selected');
         painelManual.classList.add('hidden');
-        
+
         const horariosContainer = document.getElementById("onboardingHorariosContainer");
-        horariosContainer.innerHTML = ''; // Limpa para evitar duplicatas
+        horariosContainer.innerHTML = '';
         for (let i = 7; i <= 18; i++) {
             const horario = `${i}:00`;
             horariosContainer.innerHTML += `<button class="horario-btn" onclick="this.classList.toggle('selecionado')">${horario}</button>`;
         }
-        
-        // --- LÓGICA APRIMORADA PARA O BOTÃO DE VAGA IMEDIATA ---
+
         btnVaga.onclick = () => {
-            // Inverte o estado atual
             onboardingState.vagaImediata = !onboardingState.vagaImediata;
-            
             if (onboardingState.vagaImediata) {
-                // Se ativou a Vaga Imediata
                 btnVaga.textContent = '⚡ Vaga Imediata Ativa ✅';
                 btnVaga.classList.add('selected');
-                
-                // Garante que a outra opção seja desativada
                 onboardingState.usaAgendaManual = false;
                 btnManual.classList.remove('selected');
                 painelManual.classList.add('hidden');
             } else {
-                // Se desativou a Vaga Imediata
                 btnVaga.textContent = '⚡ Ativar Vaga Imediata';
                 btnVaga.classList.remove('selected');
             }
         };
-        
-        // --- LÓGICA APRIMORADA PARA O BOTÃO DE AGENDA MANUAL ---
+
         btnManual.onclick = () => {
             onboardingState.usaAgendaManual = !onboardingState.usaAgendaManual;
-            
             if (onboardingState.usaAgendaManual) {
                 btnManual.classList.add('selected');
                 painelManual.classList.remove('hidden');
-
-                // Garante que a outra opção seja desativada
                 onboardingState.vagaImediata = false;
                 btnVaga.textContent = '⚡ Ativar Vaga Imediata';
                 btnVaga.classList.remove('selected');
@@ -8607,36 +8614,38 @@ function avancarOnboarding(etapa) {
         };
 
     } else if (etapa === 3) {
-        // NÃO mostra o aguarde ainda, salva primeiro
+        // Lógica para salvar a Agenda e iniciar a PRÓXIMA FASE do onboarding (Logo/Portfolio/Promo)
+        exibirAguarde("Salvando configurações iniciais..."); // Mostra o aguarde
         const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
         const updates = {
             listaServicos: tempOnboardingServicos,
-            onboarding_profissional_concluido: false // AINDA NÃO CONCLUIU, faltam os popups
+            // NÃO atualiza 'onboarding_profissional_concluido' ou 'precisaConfiguracaoInicial' aqui
         };
 
-        // Pega a configuração da agenda escolhida
         if (onboardingState.usaAgendaManual) {
             updates.usaAgendaManual = true;
-            updates.vagaImediata = false; // Garante que vaga imediata está desligada
+            updates.vagaImediata = false;
             const agenda = {};
             document.querySelectorAll('#onboardingHorariosContainer .selecionado').forEach(btn => {
                 agenda[btn.textContent] = true;
             });
             updates.agenda = agenda;
         } else {
-            // Se não usou manual, salva o estado da vaga imediata (pode ser true ou false)
-            updates.vagaImediata = onboardingState.vagaImediata || false; // Usa o estado salvo ou false como padrão
+            updates.vagaImediata = onboardingState.vagaImediata || false;
             updates.usaAgendaManual = false;
         }
-
-        exibirAguarde("Salvando configurações iniciais..."); // Mostra o aguarde AGORA
 
         userRef.update(updates).then(() => {
             fecharAguarde(null, true); // Fecha o aguarde
             fecharModalAtual(); // Fecha o modal da agenda ('modalOnboardingProfissionalAgenda')
-            iniciarFluxoPosCadastroProfissional(); // <-- CHAMA A FUNÇÃO QUE INICIA OS POPUPS DE LOGO/PORTFOLIO/PROMO
+
+            // --- ALTERAÇÃO PRINCIPAL ---
+            // Em vez de finalizar, CHAMA a função que inicia os popups de Logo/Portfolio/Promo
+            iniciarFluxoPosCadastroProfissional();
+            // -------------------------
+
         }).catch(e => {
-            fecharTodosOsModais(); // Fecha aguarde e modal agenda em caso de erro
+            fecharTodosOsModais();
             exibirPopup("Erro ao salvar configurações da agenda: " + e.message);
         });
     }
