@@ -4270,56 +4270,96 @@ function alternarChat(tipo) {
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
     document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
 
-    // Remove permanentemente o seletor de cidade do admin da tela
     const adminSelector = document.getElementById('adminChatSelectorContainer');
-    adminSelector.classList.add('hidden'); 
-
     const chatContainer = document.getElementById("chatMessages");
     chatContainer.innerHTML = ""; // Limpa antes de carregar
+    oldestMessageSnapshot = null; // Reseta a paginação
     if (chatListener) chatListener();
 
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
     const agora = new Date();
 
+    // Filtro base pelo tipo de chat
+    query = query.where("tipoChat", "==", tipo); // <-- FILTRO PRINCIPAL ADICIONADO
+
     if (tipo === 'local') {
         if (perfil.tipo === 'admin') {
-            // Admin vê todas as mensagens locais, sem filtro de cidade
-            document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
+            adminSelector.classList.remove('hidden'); // Mostra o seletor para admin no local
+            const cidadeSelecionada = document.getElementById('adminChatCidade').value;
+            if (cidadeSelecionada) {
+                query = query.where("cidade", "==", cidadeSelecionada); // Filtra pela cidade do seletor
+                document.getElementById("chatTitle").textContent = `📍 Chat Local (${cidadeSelecionada})`;
+            } else {
+                // Se admin não selecionou cidade, mostra todas as locais (ou nenhuma, dependendo da regra)
+                // Para mostrar NENHUMA se não selecionar:
+                 query = query.where("cidade", "==", "CIDADE_IMPOSSIVEL_PARA_NAO_TRAZER_NADA"); // Gambiarra para não trazer nada
+                 document.getElementById("chatTitle").textContent = `📍 Chat Local (Selecione a cidade)`;
+                 // Ou para mostrar TODAS as locais (cuidado com performance):
+                 // document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
+            }
         } else {
             // Usuário comum vê apenas o chat da sua cidade
+            adminSelector.classList.add('hidden'); // Esconde o seletor
             query = query.where("cidade", "==", perfil.cidade);
             document.getElementById("chatTitle").textContent = `📍 Chat Local (${perfil.cidade})`;
         }
     } else {
         // Lógica para o chat global
+        adminSelector.classList.add('hidden'); // Esconde o seletor
         document.getElementById("chatTitle").textContent = '💬 Chat Global';
     }
 
-    // A ordenação e o limite continuam os mesmos
-    query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(15);
+    // Ordenação e limite (mantém a lógica de expiração)
+    query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").limit(50); // Aumentei um pouco o limite inicial
 
     chatListener = query.onSnapshot(async snapshot => {
         if(snapshot.empty) {
-            chatContainer.innerHTML = `<p>Nenhuma mensagem neste chat ainda.</p>`;
+            chatContainer.innerHTML = `<p>Nenhuma mensagem ${tipo === 'local' ? 'nesta cidade' : 'neste chat'} ainda.</p>`;
+            document.getElementById('carregarMaisMsgBtn').style.display = 'none'; // Esconde botão se vazio
             return;
         }
+        document.getElementById('carregarMaisMsgBtn').style.display = 'block'; // Mostra botão se tem msgs
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
-        chatContainer.innerHTML = ""; // Limpa para re-renderizar
-        for(const doc of snapshot.docs.reverse()) { // Renderiza na ordem correta
-            const msg = doc.data();
-            const messageDiv = await createMessageDiv(msg);
-            chatContainer.prepend(messageDiv);
+        // chatContainer.innerHTML = ""; // Limpa para re-renderizar - REMOVIDO PARA PAGINAÇÃO FUNCIONAR MELHOR
+        const novasMensagensDivs = [];
+        for(const doc of snapshot.docs.reverse()) { // Pega as mais recentes primeiro
+             const msg = doc.data();
+             const messageDiv = await createMessageDiv(msg); // Usar a createMessageDiv existente
+             novasMensagensDivs.push(messageDiv);
         }
+        // Adiciona as novas mensagens no TOPO do container
+        novasMensagensDivs.forEach(div => chatContainer.prepend(div));
+
+         // Auto scroll apenas se estiver perto do fundo (ou na primeira carga)
+         // (Opcional, mas melhora a experiência ao carregar mais)
+         // if (chatContainer.scrollTop <= 50) {
+         //     chatContainer.scrollTop = 0;
+         // }
+
+    }, error => { // Adiciona tratamento de erro
+        console.error("Erro ao carregar chat:", error);
+        chatContainer.innerHTML = `<p style="color: red;">Erro ao carregar mensagens.</p>`;
     });
 
-    document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagem(); } });
-    if (!botInterval) botInterval = setInterval(sendBotMessage, 3600000);
-}
+    document.getElementById('chatInput').removeEventListener('keydown', handleChatEnter); // Remove listener antigo
+    document.getElementById('chatInput').addEventListener('keydown', handleChatEnter); // Adiciona novo
+    // if (!botInterval && tipo === 'global') botInterval = setInterval(sendBotMessage, 3600000); // Bot só no global
+ }
+
+ // Função separada para o listener de Enter
+ function handleChatEnter(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        enviarMensagem();
+    }
+ }
 
 
-// NOVA FUNÇÃO PARA CARREGAR MENSAGENS ANTERIORES
 async function carregarMensagensAnteriores() {
-    if (!oldestMessageSnapshot) return; 
+    if (!oldestMessageSnapshot) {
+        document.getElementById('carregarMaisMsgBtn').textContent = 'Fim do histórico';
+        return;
+    }
 
     const btn = document.getElementById('carregarMaisMsgBtn');
     btn.textContent = 'Carregando...';
@@ -4327,30 +4367,68 @@ async function carregarMensagensAnteriores() {
 
     const agora = new Date();
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
+
+    // Adiciona filtro tipoChat
+    query = query.where("tipoChat", "==", chatAtual);
+
     if (chatAtual === 'local') {
-        query = query.where("cidade", "==", perfil.cidade);
-    }
-    query = query.where("deleteAt", ">", agora).orderBy("deleteAt", "desc").startAfter(oldestMessageSnapshot).limit(50);
-
-    const snapshot = await query.get();
-
-    if (snapshot.empty) {
-        btn.textContent = 'Fim do histórico';
-        return;
-    }
-
-    oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
-    
-    const chatContainer = document.getElementById("chatMessages");
-    for (const doc of snapshot.docs) { 
-        const msg = doc.data();
-        const messageDiv = await createMessageDiv(msg);
-        chatContainer.appendChild(messageDiv); 
+        if (perfil.tipo === 'admin') {
+            const cidadeSelecionada = document.getElementById('adminChatCidade').value;
+            if (cidadeSelecionada) {
+                query = query.where("cidade", "==", cidadeSelecionada);
+            } else {
+                 // Se admin não selecionou cidade, não carrega mais mensagens locais
+                 btn.textContent = 'Selecione uma cidade';
+                 btn.disabled = false; // Reabilita para poder selecionar
+                 return;
+            }
+        } else {
+            query = query.where("cidade", "==", perfil.cidade);
+        }
     }
 
-    btn.textContent = 'Ver mensagens anteriores';
-    btn.disabled = false;
-}
+    // Continua com a paginação e expiração
+    query = query.where("deleteAt", ">", agora)
+                 .orderBy("deleteAt", "desc")
+                 .startAfter(oldestMessageSnapshot)
+                 .limit(30); // Limite para mensagens anteriores
+
+    try {
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            btn.textContent = 'Fim do histórico';
+            oldestMessageSnapshot = null; // Marca que chegou ao fim
+            return;
+        }
+
+        oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1]; // Atualiza o cursor da paginação
+
+        const chatContainer = document.getElementById("chatMessages");
+        // Guarda a altura atual para manter a posição do scroll
+        const scrollAntes = chatContainer.scrollHeight - chatContainer.scrollTop;
+
+        // Adiciona mensagens no FINAL do container ao carregar mais
+        for (const doc of snapshot.docs.reverse()) { // Itera na ordem correta (mais antigo primeiro)
+            const msg = doc.data();
+            const messageDiv = await createMessageDiv(msg);
+            // chatContainer.appendChild(messageDiv); // ADICIONA NO FINAL
+            chatContainer.insertBefore(messageDiv, chatContainer.firstChild.nextSibling); // Insere após o botão "Carregar Mais"
+        }
+
+        // Restaura a posição do scroll relativa ao fundo
+        // chatContainer.scrollTop = chatContainer.scrollHeight - scrollAntes;
+        // Não precisa restaurar scroll, pois adicionamos no topo
+
+        btn.textContent = 'Ver mensagens anteriores';
+        btn.disabled = false;
+
+    } catch (error) {
+        console.error("Erro ao carregar mensagens anteriores:", error);
+        btn.textContent = 'Erro ao carregar';
+        btn.disabled = false; // Permite tentar novamente
+    }
+ }
 
 // SUBSTITUA TODA A FUNÇÃO 'createMessageDiv' POR ESTA
 async function createMessageDiv(msg) {
@@ -4435,19 +4513,28 @@ function enviarMensagem() {
     if (!texto) return;
     isSending = true;
     const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
-        remetenteUid: auth.currentUser.uid, remetenteNome: perfil.nome, tipo: perfil.tipo, texto,
+
+    // Adiciona o tipo do chat atual (global ou local)
+    const messageData = {
+        remetenteUid: auth.currentUser.uid,
+        remetenteNome: perfil.nome,
+        tipo: perfil.tipo,
+        texto,
         ts: firebase.firestore.FieldValue.serverTimestamp(),
-        cidade: perfil.cidade, // Adiciona a cidade à mensagem
+        cidade: perfil.cidade, // Cidade do remetente
+        tipoChat: chatAtual, // <-- ADICIONADO: 'global' ou 'local'
         deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
-    }).then(() => {
+    };
+
+    db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add(messageData)
+    .then(() => {
         document.getElementById("chatInput").value = "";
-        if (texto.toLowerCase().includes('suporte')) {
-            setTimeout(enviarRespostaAI, 1500); 
+        if (texto.toLowerCase().includes('suporte') && chatAtual === 'global') { // Bot só responde no global
+            setTimeout(enviarRespostaAI, 1500);
         }
         setTimeout(() => { isSending = false; }, 1000);
     }).catch(error => { isSending = false; });
-}
+ }
 
 function enviarRespostaAI() {
     const resposta = `Olá! Sou a assistente virtual. Como posso ajudar? <br><br>
@@ -4604,12 +4691,13 @@ async function salvarLogomarca() {
         exibirPopup("Logomarca salva com sucesso!");
 
         // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
-        if (fluxoPosCadastroAtivo) {
-            fecharModalAtual(); // Fecha o modal da logo
-            abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Abre o próximo
-        } else {
-             fecharModalAtual(); // Fecha o modal da logo (comportamento normal)
-        }
+        // ... (código de sucesso)
+ if (fluxoPosCadastroAtivo) {
+     fecharModalAtual(); // Fecha o modal da logo
+     abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Abre o próximo
+ } else {
+      fecharModalAtual(); // Fecha o modal da logo (comportamento normal)
+ }
         // --- FIM DA ADIÇÃO ---
 
     } catch (error) { /* ... (bloco catch original) ... */
@@ -4647,11 +4735,14 @@ async function finalizarFluxoPosCadastro() {
     try {
         await db.collection('usuarios').doc(auth.currentUser.uid).update({ onboarding_profissional_concluido: true });
         console.log("Onboarding do profissional marcado como concluído.");
+        exibirPopup("Configuração concluída!", "Você já pode usar todas as funções do painel do profissional."); // Feedback final
     } catch (error) {
         console.error("Erro ao marcar onboarding como concluído:", error);
+        // Informar o usuário sobre o erro pode ser útil
+        exibirPopup("Erro", "Houve um problema ao finalizar a configuração. Tente novamente mais tarde ou contate o suporte.");
     }
     // Não precisa fechar modal aqui, pois já foi fechado antes de chamar esta função
-}
+ }
 
 function alterarEnderecoBarbeiro(event) {
     const rua = document.getElementById("novoEnderecoRua").value.trim();
@@ -5150,17 +5241,21 @@ async function salvarNovaPromocao() {
         fecharModalAtual();
 
         // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
-        if (fluxoPosCadastroAtivo) {
-            finalizarFluxoPosCadastro(); // Finaliza o fluxo aqui
-        } else {
-            // Comportamento normal: Atualiza a lista de promoções se o modal estiver aberto
-            const promocoesDoc = await db.collection("usuarios").doc(auth.currentUser.uid).get();
-            perfil.promocoes = promocoesDoc.data().promocoes;
-            // Verifica se o modal de promoções ainda está aberto para recarregar
-            if (document.getElementById('modalPromocoesBarbeiro').classList.contains('show')) {
-                 carregarPromocoesAtivas();
-            }
-        }
+        // ... (código de sucesso)
+fecharModalAtual(); // Fecha o modal de adicionar promoção
+
+if (fluxoPosCadastroAtivo) {
+    finalizarFluxoPosCadastro(); // Finaliza o fluxo aqui
+} else {
+    // Comportamento normal: Atualiza a lista se o modal de promoções estiver aberto
+    const promocoesDoc = await db.collection("usuarios").doc(auth.currentUser.uid).get();
+    if (promocoesDoc.exists) { // Verifica se o documento existe
+       perfil.promocoes = promocoesDoc.data().promocoes;
+       if (document.getElementById('modalPromocoesBarbeiro').classList.contains('show')) {
+           carregarPromocoesAtivas();
+       }
+    }
+}
         // --- FIM DA ADIÇÃO ---
 
     } catch (e) { /* ... (bloco catch original) ... */
@@ -5368,18 +5463,21 @@ function confirmarFechamentoPopup() {
             setTimeout(() => { modalOriginal.style.display = 'none'; }, 300);
         }
 
-        // Se era parte do fluxo pós-cadastro, pode avançar ou marcar como concluído
-        if (modalOriginalIdParaConfirmar === 'modalLogomarca' && fluxoPosCadastroAtivo) {
-            abrirModalComConfirmacao('modalPortfolioBarbeiro'); // Abre o próximo
-        } else if (modalOriginalIdParaConfirmar === 'modalPortfolioBarbeiro' && fluxoPosCadastroAtivo) {
-            abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Abre o próximo (promoção)
-        } else if (modalOriginalIdParaConfirmar === 'modalAddPromocao' && fluxoPosCadastroAtivo) {
-            finalizarFluxoPosCadastro(); // Finaliza se fechar o de promoção
+        // --- LÓGICA DE AVANÇO NO FLUXO PÓS-CADASTRO ---
+        if (fluxoPosCadastroAtivo) {
+            if (modalOriginalIdParaConfirmar === 'modalLogomarca') {
+                abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Próximo: Portfólio
+            } else if (modalOriginalIdParaConfirmar === 'modalPortfolioBarbeiro') {
+                abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Próximo: Promoção (Opcional)
+            } else if (modalOriginalIdParaConfirmar === 'modalAddPromocao') {
+                finalizarFluxoPosCadastro(); // Finaliza o fluxo se pular a promoção
+            }
         }
+        // --- FIM DA LÓGICA DE AVANÇO ---
 
         modalOriginalIdParaConfirmar = null; // Limpa a referência
     }
-}
+ }
 
 function cancelarFechamentoPopup() {
     fecharModalAtual(); // Fecha apenas o modal de confirmação
@@ -6443,21 +6541,20 @@ async function salvarNovasImagensPortfolio() {
         fileInput.value = ''; previewContainer.innerHTML = ''; progressBar.style.display = 'none';
 
         // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
-        if (fluxoPosCadastroAtivo) {
-            fecharModalAtual(); // Fecha o modal de portfólio
-             // Verifica se JÁ existe alguma imagem no portfólio (incluindo as recém-adicionadas)
-             const perfilAtualizado = (await db.collection('usuarios').doc(userId).get()).data();
-             if (perfilAtualizado.portfolio && perfilAtualizado.portfolio.length > 0) {
-                 abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Abre promoção
-             } else {
-                 // Se ainda não tem NENHUMA imagem (ex: erro no upload, ou cancelou), força o usuário a tentar de novo
-                 exibirPopup("Portfólio Obrigatório", "Você precisa adicionar pelo menos uma imagem ao seu portfólio para continuar.");
-                 abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Reabre portfólio
-             }
-        } else {
-             // Comportamento normal (sem fluxo): apenas fecha o modal se não estiver no fluxo
-             fecharModalAtual();
-        }
+        // ... (código de sucesso)
+ if (fluxoPosCadastroAtivo) {
+     fecharModalAtual(); // Fecha o modal de portfólio
+     // Verifica se realmente adicionou imagens antes de prosseguir
+     const perfilAtualizado = (await db.collection('usuarios').doc(userId).get()).data();
+     if (perfilAtualizado.portfolio && perfilAtualizado.portfolio.length > 0) {
+          abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Abre promoção
+     } else {
+          exibirPopup("Portfólio Obrigatório", "Você precisa adicionar pelo menos uma imagem ao seu portfólio para continuar.");
+          abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Reabre portfólio
+     }
+ } else {
+      fecharModalAtual(); // Comportamento normal
+ }
         // --- FIM DA ADIÇÃO ---
 
     } catch (error) { /* ... (bloco catch original) ... */
@@ -8374,41 +8471,40 @@ function avancarOnboarding(etapa) {
         };
 
     } else if (etapa === 3) {
-        // MUDANÇA: Mostra o "Aguarde" ANTES de salvar e reiniciar
-        exibirAguarde("Finalizando configuração e reiniciando...");
-
+        // NÃO mostra o aguarde ainda, salva primeiro
         const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
         const updates = {
             listaServicos: tempOnboardingServicos,
-            onboarding_profissional_concluido: true
+            onboarding_profissional_concluido: false // AINDA NÃO CONCLUIU, faltam os popups
         };
 
+        // Pega a configuração da agenda escolhida
         if (onboardingState.usaAgendaManual) {
             updates.usaAgendaManual = true;
-            updates.vagaImediata = false;
+            updates.vagaImediata = false; // Garante que vaga imediata está desligada
             const agenda = {};
             document.querySelectorAll('#onboardingHorariosContainer .selecionado').forEach(btn => {
                 agenda[btn.textContent] = true;
             });
             updates.agenda = agenda;
         } else {
-            // Salva o estado da Vaga Imediata (seja true ou false)
-            updates.vagaImediata = onboardingState.vagaImediata;
+            // Se não usou manual, salva o estado da vaga imediata (pode ser true ou false)
+            updates.vagaImediata = onboardingState.vagaImediata || false; // Usa o estado salvo ou false como padrão
             updates.usaAgendaManual = false;
         }
 
-        // Atualiza o banco de dados
+        exibirAguarde("Salvando configurações iniciais..."); // Mostra o aguarde AGORA
+
         userRef.update(updates).then(() => {
-            // MUDANÇA PRINCIPAL: Em vez de fechar modais, REINICIA O APP
-            // Isso garante que tudo carregue do zero, já com o perfil de profissional configurado.
-            location.reload(); 
+            fecharAguarde(null, true); // Fecha o aguarde
+            fecharModalAtual(); // Fecha o modal da agenda ('modalOnboardingProfissionalAgenda')
+            iniciarFluxoPosCadastroProfissional(); // <-- CHAMA A FUNÇÃO QUE INICIA OS POPUPS DE LOGO/PORTFOLIO/PROMO
         }).catch(e => {
-            // Se der erro, fecha o "Aguarde" e mostra a falha
-            fecharTodosOsModais();
-            exibirPopup("Erro ao salvar: " + e.message);
+            fecharTodosOsModais(); // Fecha aguarde e modal agenda em caso de erro
+            exibirPopup("Erro ao salvar configurações da agenda: " + e.message);
         });
     }
-}
+ }
 
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
