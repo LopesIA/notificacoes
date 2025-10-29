@@ -4974,6 +4974,34 @@ function abrirAgendamentosBarbeiro() {
     });
 }
 
+// --- FUNÇÃO PARA CONTROLAR A VISIBILIDADE DE SEÇÕES/MENUS ---
+function toggleFuncoes(id, buttonElement) {
+    const elemento = document.getElementById(id);
+    if (!elemento) {
+        console.error(`Elemento com ID '${id}' não encontrado.`);
+        return;
+    }
+
+    // Alterna a classe 'hidden' no elemento principal
+    const isHidden = elemento.classList.toggle('hidden');
+
+    // Opcional: Altera o texto ou ícone do botão para indicar o estado
+    if (buttonElement) {
+        const textElement = buttonElement.querySelector('.toggle-text');
+        const iconElement = buttonElement.querySelector('.toggle-icon');
+
+        if (textElement) {
+            textElement.textContent = isHidden ? 'Mostrar Funções' : 'Ocultar Funções';
+        }
+        
+        if (iconElement) {
+             // Exemplo de mudança de ícone (assumindo que você usa classes de ícones como 'fa-chevron-down')
+             iconElement.classList.toggle('fa-chevron-down', isHidden);
+             iconElement.classList.toggle('fa-chevron-up', !isHidden);
+        }
+    }
+}
+
 function formatarNomeProprio(texto) {
   if (!texto) return "";
   // Converte tudo para minúsculo primeiro para padronizar
