@@ -5714,7 +5714,7 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => exibirPopup("Denúncia fechada!"));
 }
 
-async function abrirModalAdminGerenciarUsuario(uid) {
+async function abrirModalGerenciarUsuario(uid) {
   exibirAguarde("Carregando dados do usuário...");
   try {
     const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, { /* ... (fetch continua igual) ... */
