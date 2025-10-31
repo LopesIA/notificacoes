@@ -3513,9 +3513,7 @@ auth.onAuthStateChanged(async user => {
         renderCurrentView(); // Renderiza a view correta
 
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
-        if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
-            
-            const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
+        const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
             
             if (sessionStorage.getItem(reloadFlag) !== 'true') {
                 console.log("Primeira carga do profissional com onboarding pendente. Definindo flag e recarregando...");
@@ -3524,10 +3522,12 @@ auth.onAuthStateChanged(async user => {
                 return; 
             } else {
                 console.log("Flag de reload encontrada. Iniciando fluxo de onboarding...");
-                const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+                // Verifica se algum modal de onboarding já está aberto
+                const onboardingAberto = document.querySelector('#modalOnboardingProfissionalServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
                 if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
                    console.log("Iniciando fluxo de configuração inicial do profissional...");
-                   iniciarOnboardingProfissionalEtapa1(); // Chama a nova Etapa 1
+                   // CHAMA A NOVA FUNÇÃO MESTRE
+                   iniciarFluxoDeConfiguracaoProfissional();
                 }
             }
         
@@ -9224,6 +9224,7 @@ async function iniciarFluxoDeConfiguracaoProfissional() {
 // =====================================================================
 // ====== FIM: NOVA FUNÇÃO MESTRE DE ONBOARDING (ADICIONAR) ==========
 // =====================================================================
+
 // --- ETAPA 1: SERVIÇOS ---
 function iniciarOnboardingProfissionalEtapa1() {
     etapaAtualOnboarding = 1;
