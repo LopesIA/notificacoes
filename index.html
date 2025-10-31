@@ -3519,39 +3519,23 @@ auth.onAuthStateChanged(async user => {
         renderCurrentView(); // Renderiza a view correta
 
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
+                // MODIFICAÇÃO: Removida a lógica de reload forçado com sessionStorage.
                 if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
             
-            // --- INÍCIO DA MODIFICAÇÃO (Task 1: Forçar Reload) ---
-            const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
-            
-            if (sessionStorage.getItem(reloadFlag) !== 'true') {
-                // 1. É a primeira vez que vemos isso nesta sessão.
-                console.log("Primeira carga do profissional com onboarding pendente. Definindo flag e recarregando...");
-                sessionStorage.setItem(reloadFlag, 'true');
-                
-                // Força o recarregamento. O auth.onAuthStateChanged vai rodar de novo.
-                location.reload(); 
-                
-                // Interrompe a execução atual para esperar o reload
-                return; 
-            } else {
-                // 2. O reload já aconteceu. A flag está 'true'.
-                console.log("Flag de reload encontrada. Iniciando fluxo de onboarding...");
-                
-                // Verifica se um modal de onboarding já não está aberto (evita loop)
-                const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
-                if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
-                   console.log("Iniciando fluxo de configuração inicial do profissional...");
-              iniciarFluxoDeConfiguracaoProfissional();
-                }
-            }
+                    // Se a configuração inicial é necessária, chamamos o fluxo diretamente.
+                    console.log("Fluxo de onboarding inicial detectado. Iniciando...");
+                    
+                    // Verifica se um modal de onboarding já não está aberto (evita loop)
+                    const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+                    if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
+                       console.log("Iniciando fluxo de configuração inicial do profissional...");
+                       iniciarFluxoDeConfiguracaoProfissional(); // <-- CHAMA DIRETO
+                    }
         
         } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
              // Onboarding concluído, faz a verificação de rotina de pendências
-             const reloadFlag = 'onboarding_reload_done_' + user.uid;
-             if (sessionStorage.getItem(reloadFlag)) {
-                 sessionStorage.removeItem(reloadFlag);
-             }
+             // MODIFICAÇÃO: Removida a limpeza da flag de reload, pois ela não existe mais.
+             
              // Adiciona um delay para não sobrepor outros popups (ex: atualização)
              setTimeout(() => {
                 verificarPendenciasEssenciaisProfissional(user.uid);
