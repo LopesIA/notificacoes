@@ -1,6 +1,7 @@
 {
   "name": "Nova Versão",
   "short_name": "Nova Versão",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#0c0c0c",
   "theme_color": "#d4af37",
@@ -19,11 +20,8 @@
   "iarc_rating_id": "e84b072d-df9b-45b7-957a-9f86a7d5b7c7",
   "related_applications": [],
   "prefer_related_applications": false,
-"scope": "/",                   // <-- ADICIONADO
-  "id": "/",                      // <-- ADICIONADO
-  "orientation": "portrait-primary", // <-- ADICIONADO
   "display_override": [
-    "standalone"
+    "window-controls-overlay"
   ],
   "icons": [
     {
@@ -70,27 +68,27 @@
       "name": "Minha Carteira",
       "short_name": "Carteira",
       "description": "Acessar saldo e fazer depósitos",
-      "url": "/",
+      "url": "/#carteira",
       "icons": [{ "src": "/icone-carteira.png", "sizes": "96x96" }]
     },
     {
       "name": "Meus Agendamentos",
       "short_name": "Agenda",
       "description": "Ver seus agendamentos pendentes e histórico",
-      "url": "/",
+      "url": "/#historico",
       "icons": [{ "src": "/icone-agenda.png", "sizes": "96x96" }]
     },
     {
       "name": "Ver Loja",
       "short_name": "Loja",
       "description": "Explorar produtos da comunidade",
-      "url": "/",
+      "url": "/#loja",
       "icons": [{ "src": "/icone-loja.png", "sizes": "96x96" }]
     }
   ],
   "share_target": {
     "action": "/?shared=true",
-    "method": "GET",
+    "method": "POST",
     "enctype": "application/x-www-form-urlencoded",
     "params": {
       "title": "title",
