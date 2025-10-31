@@ -1224,6 +1224,42 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
          text-shadow: 0 0 10px var(--cor-destaque); /* Brilho maior no hover */
     }
 
+.card-reputacao-info {
+        font-size: 0.9em;
+        margin-top: 5px; /* Espaçamento do item acima (distância) */
+        color: var(--cor-destaque); /* Cor dourada/tema */
+    }
+    .card-reputacao-info span {
+        color: var(--cor-texto-principal); /* Cor do texto normal para o número */
+        opacity: 0.8;
+        font-size: 0.9em;
+    }
+
+#horariosContainer {
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 5px; 
+        justify-content: center;
+        max-height: 250px; /* Define uma altura máxima */
+        overflow-y: auto; /* Adiciona o scroll vertical */
+        padding: 5px; /* Adiciona um respiro */
+        background: var(--cor-fundo);
+        border-radius: 5px;
+    }
+
+    /* Scroll para a Agenda do Onboarding */
+    #onboardingHorariosContainer {
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 5px; 
+        justify-content: center;
+        max-height: 200px; /* Define uma altura máxima */
+        overflow-y: auto; /* Adiciona o scroll vertical */
+        padding: 5px;
+        background: var(--cor-fundo);
+        border-radius: 5px;
+    }
+
   </style>
 </head>
 <body>
@@ -3752,6 +3788,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         });
 
         barbeiros.sort((a, b) => {
+            // ... (lógica de ordenação existente, não precisa mudar) ...
             const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
             const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
             if (aDisponivel !== bDisponivel) {
@@ -3772,19 +3809,21 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
-            const reputacaoEstrelas = '⭐'.repeat(Math.round((b.reputacao || 100) / 20));
-            
-            // --- INÍCIO DA MODIFICAÇÃO ---
-            let statusHtml = '';
-            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            // --- LÓGICA DAS ESTRELAS CORRIGIDA (Máx 5) ---
+            const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5; // Nota de 0-10, padrão 5 (para reputação 50)
+            const estrelas = Math.round(notaMedia / 2); // Converte nota 0-10 para 0-5 estrelas
+            const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas))); // Garante de 0 a 5 estrelas
+            const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
+            // --- FIM DA CORREÇÃO ---
 
+            let statusHtml = '';
+            // ... (lógica de status existente, não precisa mudar) ...
+            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const agora = new Date();
             const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim &&
                                 agora >= b.ausenciaInicio.toDate() && 
                                 agora <= b.ausenciaFim.toDate();
-
             const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            
             if (estaAusente) {
                 const dataFimAusencia = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
                 statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente (Retorna ${dataFimAusencia})</div>`;
@@ -3800,9 +3839,10 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
                     statusHtml = `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
                 }
             }
-            // --- FIM DA MODIFICAÇÃO ---
+            // --- FIM DA LÓGICA DE STATUS ---
 
             let promocoesHtml = '';
+            // ... (lógica de promoções existente, não precisa mudar) ...
             if (b.promocoes && b.promocoes.length > 0) {
               promocoesHtml = '<div class="promo-info">';
               b.promocoes.forEach(p => {
@@ -3814,8 +3854,10 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px;">` : '';
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
+            
+            // --- !! ESTA É A ALTERAÇÃO (MOVIDO card-reputacao PARA DENTRO card-header-info) !! ---
+            const reputacaoHtml = `<p class="card-reputacao-info">${reputacaoEstrelas} <span>(${reputacaoTexto})</span></p>`;
 
-            // --- !! ESTA É A LINHA ALTERADA (REMOVIDO 💈 e ADICIONADO class) !! ---
             lista.innerHTML += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon}
@@ -3824,17 +3866,16 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
                       <div class="card-header-info">
                           <h4 class="professional-name-card">${b.nome}</h4>
                           ${distanciaTexto}
+                          ${reputacaoHtml} {/* <-- REPUTAÇÃO MOVIDA PARA CÁ */}
                       </div>
-                      <div class="card-reputacao">${reputacaoEstrelas}<br><span>(${b.reputacao || 100})</span></div>
+                      {/* O <div class="card-reputacao">...</div> foi REMOVIDO daqui */}
                   </div>
                   ${statusHtml}
                   ${promocoesHtml}
               </div>`;
-            // --------------------------------------------------------------------
         });
     });
 }
-
 
 function resetAgendamentoState() {
     agendamentoState = { barbeiroUid: null, barbeiroNome: null, servico: null, horario: null, barbeiroLat: null, barbeiroLon: null };
@@ -5234,6 +5275,7 @@ function abrirAgenda() {
     carregarAgenda();
 }
 
+// SUBSTITUA A FUNÇÃO 'carregarAgenda' INTEIRA EM index.html
 function carregarAgenda() {
     const btnDisp = document.getElementById("btnDisponibilidade");
     const btnVagaImediata = document.getElementById("btnVagaImediata");
@@ -5252,8 +5294,14 @@ function carregarAgenda() {
             agendaManualPainel.classList.remove("hidden");
             horariosContainer.innerHTML = "";
             tempSelectedHorarios = { ...perfil.agenda };
-            for (let i = 7; i <= 18; i++) {
-                const horario = `${i}:00`;
+            
+            // --- LOOP DE 30 MINUTOS ---
+            for (let i = 7 * 60; i <= 18 * 60; i += 30) { // De 7h às 18h, de 30 em 30 min
+                const horas = Math.floor(i / 60);
+                const minutos = i % 60;
+                const horario = `${horas}:${minutos.toString().padStart(2, '0')}`;
+            // --- FIM DO LOOP ---
+                
                 const statusHorario = tempSelectedHorarios[horario];
                 const btn = document.createElement('button');
                 btn.textContent = horario;
@@ -8717,6 +8765,7 @@ async function verificarPendencias(uid) {
 }
 
 // ADICIONE ESTA NOVA FUNÇÃO DENTRO DA TAG <script> EM index.html
+// SUBSTITUA A FUNÇÃO 'verificarPendenciasEssenciaisProfissional' INTEIRA EM index.html
 async function verificarPendenciasEssenciaisProfissional(uid) {
     // 1. Se já estiver no fluxo de onboarding (etapaAtualOnboarding > 0)
     // 2. OU se o onboarding inicial ainda não foi concluído (precisaConfiguracaoInicial === true)
@@ -8729,23 +8778,34 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     //    Usamos 'perfil' pois ele é atualizado em tempo real pelo listener
     const p = perfil;
 
-    // Verifica em ordem. Se abrir um modal, a função para.
+    // --- NOVA LÓGICA DE VERIFICAÇÃO ---
+
+    // 1. Verifica Serviços
     if (!p.listaServicos || p.listaServicos.length === 0) {
         exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.");
-        abrirOnboardingEtapa1(); // Reutiliza os modais de onboarding
-    } else if (!p.promocoes || p.promocoes.length === 0) {
-        exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos uma promoção.");
-        abrirOnboardingEtapa2();
-    } else if (p.disponivel === "nao" && !p.vagaImediata && !p.usaAgendaManual) {
-        exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure-a.");
-        abrirOnboardingEtapa3();
-    } else if (!p.logo_url) {
-        exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.");
-        abrirOnboardingEtapa4();
-    } else if (!p.portfolio || p.portfolio.length === 0) {
-        exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.");
-        abrirOnboardingEtapa5();
+        return abrirOnboardingEtapa1(); // Para aqui
     }
+    
+    // 2. Verifica Logomarca
+    if (!p.logo_url) {
+        exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.");
+        return abrirOnboardingEtapa4(); // Para aqui
+    }
+    
+    // 3. Verifica Portfólio
+    if (!p.portfolio || p.portfolio.length === 0) {
+        exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.");
+        return abrirOnboardingEtapa5(); // Para aqui
+    }
+
+    // 4. Verifica Agenda (só se vaga imediata E agenda manual estiverem inativas)
+    const temHorarioManual = Object.values(p.agenda || {}).some(v => v === true);
+    if (!p.vagaImediata && !temHorarioManual) {
+        exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure-a.");
+        return abrirOnboardingEtapa3(); // Para aqui
+    }
+
+    // 5. Popup 2 (Promoção) NÃO é verificado aqui, pois é opcional.
 }
 
 async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
@@ -9239,8 +9299,13 @@ function abrirOnboardingEtapa3() {
     
     // Popula os horários
     horariosContainer.innerHTML = "";
-    for (let i = 7; i <= 18; i++) {
-        const horario = `${i}:00`;
+    // --- LOOP DE 30 MINUTOS ---
+    for (let i = 7 * 60; i <= 18 * 60; i += 30) { // De 7h às 18h, de 30 em 30 min
+        const horas = Math.floor(i / 60);
+        const minutos = i % 60;
+        const horario = `${horas}:${minutos.toString().padStart(2, '0')}`;
+    // --- FIM DO LOOP ---
+    
         const btn = document.createElement('button');
         btn.textContent = horario;
         btn.className = `horario-btn`; // Sem 'selecionado' ou 'bloqueado'
@@ -9277,12 +9342,7 @@ function toggleOnboardingVagaImediata() {
     btnVaga.textContent = onboardingAgendaConfig.vagaImediata ? '⚠️ Desativar Vaga Imediata' : '⚡ Ativar Vaga Imediata';
     btnVaga.classList.toggle('selected', onboardingAgendaConfig.vagaImediata);
 
-    // Se ativar vaga imediata, desativa agenda manual
-    if (onboardingAgendaConfig.vagaImediata) {
-        onboardingAgendaConfig.usaAgendaManual = false;
-        document.getElementById("onboardingBtnAgendaManual").classList.remove('selected');
-        document.getElementById("onboardingAgendaManualPainel").classList.add("hidden");
-    }
+    // --- LÓGICA DE DESATIVAÇÃO MÚTUA REMOVIDA ---
 }
 
 function toggleOnboardingAgendaManual() {
@@ -9291,12 +9351,7 @@ function toggleOnboardingAgendaManual() {
     btnManual.classList.toggle('selected', onboardingAgendaConfig.usaAgendaManual);
     document.getElementById("onboardingAgendaManualPainel").classList.toggle("hidden", !onboardingAgendaConfig.usaAgendaManual);
 
-    // Se ativar agenda manual, desativa vaga imediata
-    if (onboardingAgendaConfig.usaAgendaManual) {
-        onboardingAgendaConfig.vagaImediata = false;
-        document.getElementById("onboardingBtnVagaImediata").classList.remove('selected');
-        document.getElementById("onboardingBtnVagaImediata").textContent = '⚡ Ativar Vaga Imediata';
-    }
+    // --- LÓGICA DE DESATIVAÇÃO MÚTUA REMOVIDA ---
 }
 
 // Salva e avança para a Etapa 4 (Logomarca)
