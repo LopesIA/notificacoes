@@ -1184,6 +1184,34 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     100% { background-position: 0% center; }
 }
 
+.online-counter {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2ecc71; /* Verde vivo */
+    background-color: var(--cor-botoes);
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+}
+
+/* Feedback visual para admin poder deletar msg no chat */
+.chat-message.admin-deletable {
+    cursor: pointer;
+    border: 1px dashed rgba(255, 0, 0, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+.chat-message.admin-deletable:hover {
+    background-color: #4d1c1c; /* Fundo vermelho escuro no hover */
+    border: 1px dashed rgba(255, 0, 0, 0.8);
+}
+
   </style>
 </head>
 <body>
@@ -1208,8 +1236,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     <button id="btnTema" onclick="alternarTema()">🌙</button>
     <button id="btnConfig" onclick="abrirModal('modalConfiguracoes')">⚙️</button>
     <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 R$ <span id="saldoHeader">0,00</span></button>
-<span id="onlineUserCount" class="hidden" style="margin-left: 10px; font-size: 12px; opacity: 0.8; color: #2ecc71; font-weight: bold;">🟢 0 Online</span>
-  </div>
+<div id="onlineUserCount" class="online-counter hidden">🟢 0 Online</div>  </div>
 </div>
 
 <div class="content-container">
@@ -4532,7 +4559,6 @@ function alternarChat(tipo) {
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
     document.getElementById('tabChatLocal').classList.toggle('active', tipo === 'local');
 
-    // Remove permanentemente o seletor de cidade do admin da tela (não será usado)
     const adminSelector = document.getElementById('adminChatSelectorContainer');
     if (adminSelector) adminSelector.classList.add('hidden'); // Garante que está escondido
 
@@ -4544,35 +4570,30 @@ function alternarChat(tipo) {
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
     const agora = new Date();
 
-    // --- FILTRO POR TIPO DE CHAT ---
     query = query.where("tipoChat", "==", tipo);
-    // ---------------------------------
 
     if (tipo === 'local') {
         if (perfil.tipo === 'admin') {
             document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
         } else {
-            query = query.where("cidade", "==", perfil.cidade); // Filtra pela cidade do usuário
+            query = query.where("cidade", "==", perfil.cidade); 
             document.getElementById("chatTitle").textContent = `📍 Chat Local (${perfil.cidade})`;
         }
     } else {
         document.getElementById("chatTitle").textContent = '💬 Chat Global';
     }
 
-    // Ordenação e limite
-    query = query.where("deleteAt", ">", agora) // Filtra mensagens não expiradas
-                 .orderBy("ts", "desc")         // MANTÉM DESC (mais recente primeiro)
-                 .limit(50);                     // Limite inicial de mensagens
+    query = query.where("deleteAt", ">", agora) 
+                 .orderBy("ts", "desc")         
+                 .limit(50);                     
 
     chatListener = query.onSnapshot(async snapshot => {
         const chatContainer = document.getElementById("chatMessages");
         const carregarMaisBtn = document.getElementById('carregarMaisMsgBtn');
-        // Verifica se o usuário está perto do final do chat
         const deveRolarParaBaixo = (chatContainer.scrollTop + chatContainer.clientHeight + 150) >= chatContainer.scrollHeight;
         
         const changes = snapshot.docChanges();
 
-        // Detecção de primeiro carregamento (quando o chat está vazio ou tem placeholder)
         const isFirstLoad = chatContainer.children.length === 0 || 
                           (chatContainer.children.length === 1 && chatContainer.children[0].tagName === 'P');
 
@@ -4592,9 +4613,8 @@ function alternarChat(tipo) {
             carregarMaisBtn.style.display = 'block';
             carregarMaisBtn.textContent = 'Ver mensagens anteriores';
             carregarMaisBtn.disabled = false;
-            oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1]; // O mais antigo da lista
+            oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1]; 
 
-            // Adiciona todos os docs do primeiro load, em ordem ASC (mais antigo primeiro)
             const docsEmOrdem = snapshot.docs.reverse(); 
             for (const doc of docsEmOrdem) {
                 const msg = doc.data();
@@ -4602,23 +4622,24 @@ function alternarChat(tipo) {
                 chatContainer.appendChild(messageDiv);
             }
         } else {
-            // Não é o primeiro load, processa apenas as mudanças
+            // Processa apenas as mudanças
             for (const change of changes) {
                 if (change.type === 'added') {
-                    // Verifica se a mensagem já existe (para evitar duplicatas da paginação)
                     const existingMsg = chatContainer.querySelector(`[data-doc-id="${change.doc.id}"]`);
-                    if (!existingMsg) {
-                        // É uma nova mensagem. Adiciona no final.
-                        // Precisamos garantir que é uma mensagem *nova* e não da paginação
-                        // Se newIndex é 0, é a mensagem mais recente na query (que é DESC)
-                        if (change.newIndex === 0) { 
-                            const msg = change.doc.data();
-                            const messageDiv = await createMessageDiv(msg, change.doc.id); // Passa o doc.id
-                            chatContainer.appendChild(messageDiv); // Adiciona no final
-                        }
+                    if (!existingMsg && change.newIndex === 0) { // Mensagem nova
+                        const msg = change.doc.data();
+                        const messageDiv = await createMessageDiv(msg, change.doc.id); 
+                        chatContainer.appendChild(messageDiv); 
                     }
                 }
-                // Você pode adicionar 'modified' e 'removed' aqui se precisar
+                // *** ESTE É O NOVO BLOCO ***
+                if (change.type === 'removed') {
+                    const existingMsg = chatContainer.querySelector(`[data-doc-id="${change.doc.id}"]`);
+                    if (existingMsg) {
+                        existingMsg.remove(); // Remove a mensagem da tela
+                    }
+                }
+                // *** FIM DO NOVO BLOCO ***
             }
         }
 
@@ -4632,7 +4653,6 @@ function alternarChat(tipo) {
         document.getElementById('carregarMaisMsgBtn').style.display = 'none';
     });
 
-    // Remove listener antigo para evitar duplicação e adiciona novo
     const chatInput = document.getElementById('chatInput');
     chatInput.removeEventListener('keydown', handleChatEnter);
     chatInput.addEventListener('keydown', handleChatEnter);
@@ -4761,21 +4781,27 @@ async function createMessageDiv(msg, docId) {
     const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
-    // Adiciona o ID do documento ao elemento para checagem de duplicatas
+    // Adiciona o ID do documento ao elemento para checagem de duplicatas e exclusão
     if (docId) {
         messageDiv.dataset.docId = docId;
+        
+        // *** INÍCIO DA NOVA LÓGICA DE EXCLUSÃO DO ADMIN ***
+        if (perfil && perfil.tipo === 'admin' && msg.tipo !== 'bot' && msg.tipo !== 'ai_suporte') {
+            messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto); // Passa o docId e o texto
+            messageDiv.title = 'Admin: Clique para deletar esta mensagem';
+            messageDiv.classList.add('admin-deletable'); // Adiciona classe para CSS
+        }
+        // *** FIM DA NOVA LÓGICA ***
     }
 
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
         remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
     } else {
         try {
-            // Otimização: Tentar buscar do 'perfil' se for a mensagem do próprio usuário
             let remetenteData;
             if (isCurrentUser) {
-                remetenteData = perfil; // Usa o perfil global do usuário logado
+                remetenteData = perfil; 
             } else {
-                // Se for de outro usuário, busca no DB
                 const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
                 if (remetenteDoc.exists) {
                     remetenteData = remetenteDoc.data();
@@ -4783,43 +4809,64 @@ async function createMessageDiv(msg, docId) {
             }
 
             if(remetenteData) {
-                // Ícones opcionais
                 if (remetenteData.possuiItemExclusivo) itemExclusivoIcone = '👕✨';
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, remetenteData.tipo === 'cliente' ? 'cliente' : 'profissional');
 
-                // Classe CSS e Ícone Base
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
-                    messageDiv.style.textShadow = '0 0 5px #000'; // Sombra específica para admin
-                } else if (remetenteData.tipo !== "cliente") { // Profissionais
+                    messageDiv.style.textShadow = '0 0 5px #000';
+                } else if (remetenteData.tipo !== "cliente") { 
                     classeCSS = `barbeiro-chat`;
-                    iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`; // Icone PRO vs Normal
-                } else { // Clientes
+                    iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`;
+                } else { 
                     classeCSS = `cliente-chat`;
-                    iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`; // Icone VIP vs Normal
+                    iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
                 }
 
                 remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
 
             } else {
-                 remetenteNome = `👻 Usuário Excluído`; // Caso o usuário tenha sido deletado
-                 classeCSS = `cliente-chat`; // Estilo padrão
+                 remetenteNome = `👻 Usuário Excluído`;
+                 classeCSS = `cliente-chat`;
             }
         } catch (error) {
              console.error("Erro ao buscar dados do remetente:", error);
-             remetenteNome = `❓ Erro ao Carregar`; // Indica erro ao buscar dados
-             classeCSS = `cliente-chat`; // Estilo padrão
+             remetenteNome = `❓ Erro ao Carregar`;
+             classeCSS = `cliente-chat`;
         }
     }
 
     messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
-    // Adiciona timestamp formatado
+    
+    // *** LÓGICA DO TIMESTAMP (JÁ ESTAVA CORRETA E É MANTIDA) ***
     if (msg.ts && msg.ts.toDate) {
         const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em;">(${timeString})</small>`;
     }
     return messageDiv;
  }
+
+async function adminDeletarMensagemChat(docId, textoMensagem) {
+    if (!docId) return;
+    
+    const confirmacao = confirm(`ADMIN: Deseja deletar permanentemente esta mensagem?\n\n"${textoMensagem.substring(0, 100)}..."`);
+    
+    if (confirmacao) {
+        exibirAguarde("Deletando mensagem...");
+        try {
+            const msgRef = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").doc(docId);
+            await msgRef.delete();
+            fecharTodosOsModais();
+            // O listener do 'alternarChat' (com a lógica 'removed')
+            // cuidará de remover a mensagem da tela.
+            console.log(`[Admin] Mensagem ${docId} deletada.`);
+        } catch (error) {
+            fecharTodosOsModais();
+            console.error("Erro ao deletar mensagem:", error);
+            exibirPopup("Erro", "Não foi possível deletar a mensagem: " + error.message);
+        }
+    }
+}
 
 function sendBotMessage() {
     let randomIndex;
@@ -6875,11 +6922,17 @@ async function abrirModalDashboardBarbeiro() {
 
 async function abrirModalPortfolioBarbeiro() {
     abrirModal('modalPortfolioBarbeiro');
-    // Chama carregarPortfolioExistente que agora usa um listener
-    // Ele vai carregar e atualizar o contador e o estado do botão/input
+    
+    // Cancela o listener anterior se ele estiver ativo
+    if (portfolioListener) {
+        portfolioListener();
+        portfolioListener = null;
+    }
+
+    // Chama a função que agora contém o listener para carregar as imagens
     carregarPortfolioExistente();
 
-    // Seletores dos elementos
+    // --- Configuração do Input de Novos Arquivos ---
     const fileInput = document.getElementById('portfolioFilesInput');
     const previewContainer = document.getElementById('portfolioPreviews');
     const progressBar = document.getElementById('portfolioUploadProgress');
@@ -6892,14 +6945,15 @@ async function abrirModalPortfolioBarbeiro() {
     progressBar.value = 0;
     btnSalvar.disabled = true; // Desabilita o botão de salvar inicialmente
 
-    // Remove listener antigo para evitar duplicação se modal for reaberto
+    // Remove listener antigo para evitar duplicação
     fileInput.onchange = null;
 
     // Adiciona novo listener para preview e habilita/desabilita botão
     fileInput.onchange = () => {
         previewContainer.innerHTML = ''; // Limpa previews antigos
         const files = fileInput.files;
-        const portfolioAtual = perfil?.portfolio?.length || 0;
+        // Usa 'perfil' que é atualizado pelo listener em carregarPortfolioExistente
+        const portfolioAtual = perfil?.portfolio?.length || 0; 
         const espacoDisponivel = 30 - portfolioAtual;
 
         if (files.length > 0) {
@@ -6988,7 +7042,6 @@ async function salvarNovasImagensPortfolio() {
 }
 
 async function removerImagemPortfolio(imageUrl) {
-    // Adiciona uma camada extra de confirmação
     if (!confirm("Tem certeza que deseja remover esta imagem permanentemente do seu portfólio?")) {
         return;
     }
@@ -7003,30 +7056,23 @@ async function removerImagemPortfolio(imageUrl) {
             portfolio: firebase.firestore.FieldValue.arrayRemove(imageUrl)
         });
 
-        // 2. Tenta deletar o arquivo do Storage (MELHORADO)
+        // 2. Tenta deletar o arquivo do Storage
         try {
-            const decodedUrl = decodeURIComponent(imageUrl);
-            const pathRegex = /\/o\/(.+)\?alt=media/; // Regex para extrair o caminho
-            const match = decodedUrl.match(pathRegex);
-
-            if (match && match[1]) {
-                const filePath = match[1]; // Caminho completo do arquivo no storage
-                const imageRef = storage.ref(filePath);
-                await imageRef.delete();
-                console.log("Imagem deletada do Storage:", filePath);
-            } else {
-                console.warn("Não foi possível extrair o caminho do arquivo da URL para deletar do Storage:", imageUrl);
-                // Notificar admin opcionalmente
-                notifyAdmins("⚠️ Falha ao extrair caminho (Portfólio)", `Não foi possível extrair o caminho para deletar a imagem ${imageUrl} do Storage ao ser removida por ${perfil.nome}.`);
-            }
+            // A forma mais segura de obter a referência de storage a partir de uma URL de download
+            const imageRef = storage.refFromURL(imageUrl);
+            await imageRef.delete();
+            console.log("Imagem deletada do Storage:", imageRef.fullPath);
         } catch (storageError) {
+            // Se falhar (ex: permissão, arquivo não existe, URL não é do storage)
             console.warn("Não foi possível deletar a imagem do Storage (pode já ter sido removida ou erro de permissão):", storageError.message, imageUrl);
-            // Não precisa notificar o admin necessariamente, pode ser normal
+            // Notifica o admin se a falha não for 'objeto não encontrado'
+            if (storageError.code !== 'storage/object-not-found') {
+                 notifyAdmins("⚠️ Falha ao deletar (Portfólio)", `Não foi possível deletar a imagem ${imageUrl} do Storage ao ser removida por ${perfil.nome}. Erro: ${storageError.code}`);
+            }
         }
 
         fecharTodosOsModais(); // Fecha o "Aguarde"
-        // O popup de sucesso não é estritamente necessário pois a UI atualiza
-        // exibirPopup("Sucesso!", "Imagem removida do portfólio.");
+        exibirPopup("Sucesso!", "Imagem removida do portfólio."); // O listener já terá atualizado a UI
 
     } catch (error) {
         fecharTodosOsModais();
@@ -7039,9 +7085,11 @@ function carregarPortfolioExistente() {
     const contadorElement = document.getElementById('portfolioContador');
     const fileInput = document.getElementById('portfolioFilesInput');
     const labelFileInput = document.getElementById('labelPortfolioFiles');
+    const btnSalvarPortfolio = document.getElementById('btnSalvarPortfolio');
+    
     gridContainer.innerHTML = '<p>Carregando...</p>'; // Feedback inicial
 
-    // Cancela o listener anterior, se existir, para evitar múltiplos listeners
+    // Cancela o listener anterior, se existir
     if (portfolioListener) {
         portfolioListener();
         portfolioListener = null;
@@ -7053,9 +7101,13 @@ function carregarPortfolioExistente() {
             // Verifica se o modal ainda está aberto antes de atualizar a UI
             const modalPortfolio = document.getElementById('modalPortfolioBarbeiro');
             if (!doc.exists || !modalPortfolio || !modalPortfolio.classList.contains('show')) {
-                if (portfolioListener) portfolioListener(); // Cancela listener se modal fechou ou doc não existe
+                if (portfolioListener) {
+                    portfolioListener(); // Cancela o listener se o modal fechou
+                    portfolioListener = null;
+                }
                 return;
             }
+            
             perfil = doc.data(); // Atualiza o perfil global
             const portfolioUrls = perfil?.portfolio || [];
 
@@ -7071,15 +7123,14 @@ function carregarPortfolioExistente() {
                 labelFileInput.textContent = espacoDisponivel <= 0
                     ? "Limite de 30 imagens atingido."
                     : `Adicionar Novas Imagens (${espacoDisponivel} restantes):`;
-                // Limpa seleção se não há espaço (caso tenha sido selecionado antes do limite ser atingido)
+                
+                // Limpa seleção se não há espaço
                 if (espacoDisponivel <= 0) fileInput.value = '';
             }
              // Desabilita botão de salvar se input está desabilitado ou sem arquivos
-             const btnSalvarPortfolio = document.getElementById('btnSalvarPortfolio');
              if(btnSalvarPortfolio) {
                  btnSalvarPortfolio.disabled = fileInput.disabled || !fileInput.files || fileInput.files.length === 0;
              }
-
 
             // Atualiza a grid de imagens existentes
             if (portfolioUrls.length === 0) {
@@ -7090,9 +7141,11 @@ function carregarPortfolioExistente() {
             gridContainer.innerHTML = ''; // Limpa o container
             portfolioUrls.forEach(url => {
                 const imgContainer = document.createElement('div');
+                // Estilo para criar 3 colunas
                 imgContainer.style.position = 'relative';
-                imgContainer.style.width = 'calc(33.33% - 10px)'; // Exemplo para 3 colunas com gap
-                imgContainer.style.marginBottom = '10px';
+                imgContainer.style.width = 'calc(33.33% - 8px)'; // 3 colunas com gap
+                imgContainer.style.margin = '4px';
+                imgContainer.style.display = 'inline-block'; // Garante alinhamento
 
                 const imgElement = document.createElement('img');
                 imgElement.src = url;
@@ -7104,7 +7157,7 @@ function carregarPortfolioExistente() {
                 imgElement.style.border = '1px solid var(--cor-borda)';
                 imgElement.onerror = function() {
                     this.src='https://via.placeholder.com/100x100?text=Erro!';
-                    console.warn("Erro ao carregar imagem do portfólio:", url);
+                    // Remove o botão de deletar se a imagem falhar ao carregar
                     const deleteBtn = this.nextElementSibling;
                     if(deleteBtn) deleteBtn.remove();
                 };
@@ -7126,6 +7179,7 @@ function carregarPortfolioExistente() {
                 deleteButton.style.padding = '0';
                 deleteButton.style.cursor = 'pointer';
                 deleteButton.title = 'Remover Imagem';
+                // Adiciona o onclick para a nova função de remover
                 deleteButton.onclick = (e) => {
                     e.stopPropagation();
                     removerImagemPortfolio(url);
@@ -7139,7 +7193,6 @@ function carregarPortfolioExistente() {
         }, error => {
             console.error("Erro ao ouvir updates do portfólio:", error);
             gridContainer.innerHTML = '<p style="color: red;">Erro ao carregar portfólio.</p>';
-            // Desabilita input em caso de erro grave
             if(fileInput) fileInput.disabled = true;
             if(labelFileInput) labelFileInput.textContent = "Erro ao carregar.";
         });
