@@ -460,7 +460,7 @@
       background: #0d0d0d;
       margin-bottom: 10px;
       display: flex;
-      flex-direction: column-reverse; 
+      flex-direction: column; 
     }
     .chat-message {
       padding: 8px 12px;
@@ -997,6 +997,52 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
         margin-bottom: 15px;
         background-color: var(--cor-botoes);
     }
+
+/* ===================================================================== */
+/* ====== INÍCIO: CSS PARA SCROLLBARS (COPIAR) ======================== */
+/* ===================================================================== */
+
+/* ===================================================================== */
+/* ====== INÍCIO: CORREÇÃO LAYOUT E SCROLL (SUBSTITUIR) =============== */
+/* ===================================================================== */
+
+/* Adiciona scroll ao popup de perfil do profissional (para o cliente) */
+#modalBarbeiroPerfil .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* --- CORREÇÃO DE LAYOUT E SCROLL DOS MODAIS DE ONBOARDING --- */
+/* Garante que o conteúdo dos modais fique em coluna (um abaixo do outro) */
+#modalOnboardingProfissionalServicos .modal-content,
+#modalAddPromocao .modal-content, 
+#modalOnboardingPromocoes .modal-content,
+#modalOnboardingAgenda .modal-content,
+#modalOnboardingLogomarca .modal-content,
+#modalOnboardingPortfolio .modal-content {
+    max-height: 90vh;
+    display: flex; 
+    flex-direction: column; /* <-- ESTA É A CORREÇÃO PRINCIPAL */
+}
+
+/* Garante que a área de conteúdo (inputs, listas, etc.) possa rolar */
+#modalOnboardingProfissionalServicos .modal-content,
+#modalOnboardingAgenda .modal-content,
+#modalOnboardingLogomarca .modal-content,
+#modalOnboardingPortfolio .modal-content {
+    overflow-y: auto; /* Adiciona scroll ao modal-content principal */
+}
+
+/* Para os modais de promoção (que têm um scrollable-list interno) */
+#modalAddPromocao .scrollable-list, 
+#modalOnboardingPromocoes .scrollable-list {
+    overflow-y: auto;
+    flex-grow: 1; /* Faz esta área crescer para ocupar o espaço */
+    padding-right: 10px;
+}
+/* ===================================================================== */
+/* ====== FIM: CORREÇÃO LAYOUT E SCROLL (SUBSTITUIR) ================== */
+/* ===================================================================== */
 
     /* ESTILOS ADICIONAIS Nova Versão */
     #popupAguarde {
@@ -1730,7 +1776,6 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 </div>
 
 <div id="modalOnboardingProfissionalServicos" class="modal"><div class="modal-content"><h3>1. Cadastre seus Serviços</h3><p>Adicione pelo menos um serviço para continuar.</p><div id="onboardingServicosList" class="scrollable-list"></div><input id="onboardingServicoNome" placeholder="Nome do Serviço"><input id="onboardingServicoValor" type="number" placeholder="Valor (R$)"><input id="onboardingServicoTempo" type="number" placeholder="Tempo (minutos)"><button onclick="adicionarServicoOnboarding()">Adicionar Serviço</button><button id="btnOnboardingNextServicos" disabled onclick="avancarOnboarding(2)">Próximo ➡️</button></div></div>
-<div id="modalOnboardingProfissionalAgenda" class="modal"><div class="modal-content"><h3>2. Configure sua Agenda</h3><p>Como você irá atender seus clientes?</p><button id="onboardingBtnVagaImediata">⚡ Ativar Vaga Imediata</button><button id="onboardingBtnAgendaManual">📅 Usar Agenda Manual</button><div id="onboardingAgendaManualPainel" class="hidden card"><h4>Horários Disponíveis Hoje</h4><div id="onboardingHorariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div></div><button onclick="avancarOnboarding(3)">✅ Concluir</button></div></div>
 
 
 <div id="modalAgendamentosBarbeiro" class="modal" onclick="fecharModal(event)">
@@ -1867,8 +1912,8 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <div id="portfolioExistenteGrid" class="portfolio-grid" style="margin-bottom: 15px; border: 1px dashed var(--cor-borda); padding: 10px; min-height: 100px; max-height: 250px; overflow-y: auto;">
       </div>
 
-    <label id="labelPortfolioFiles" for="portfolioFiles">Adicionar Novas Imagens:</label>
-    <input id="portfolioFiles" type="file" accept="image/*,image/gif" multiple style="margin-bottom: 10px;" disabled>
+    <label id="labelPortfolioFiles" for="portfolioFilesInput" style="cursor: pointer; background-color: var(--cor-botoes); padding: 10px; border-radius: 8px; text-align: center; display: block; margin-bottom: 10px;">Adicionar Novas Imagens:</label>
+    <input id="portfolioFilesInput" type="file" accept="image/*,image/gif" multiple style="display: none;">
     <progress id="portfolioUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-bottom: 10px;"></progress>
     <div id="portfolioPreviews" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; max-height: 100px; overflow-y: auto;"></div>
 
@@ -2236,6 +2281,138 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
+<!-- ===================================================================== -->
+<!-- ====== INÍCIO: NOVOS MODAIS ONBOARDING PROFISSIONAL (COPIAR) ====== -->
+<!-- ===================================================================== -->
+
+<!-- Popup 2: Promoções (Onboarding) -->
+<div id="modalOnboardingPromocoes" class="modal" style="z-index: 21;">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-overlay-content hidden" id="overlayOnboardingPromocao">
+        <h3 id="onboardingPromocaoTituloAviso">Atenção</h3>
+        <p id="onboardingPromocaoMensagemAviso">É necessário adicionar pelo menos 1 promoção para concluir esta etapa.</p>
+        <button onclick="document.getElementById('overlayOnboardingPromocao').classList.add('hidden')" style="margin-top: 15px;">OK</button>
+    </div>
+
+    <h3>2. Crie sua Primeira Promoção</h3>
+    <p style="font-size: 14px; opacity: 0.8;">Atraia clientes com um desconto! (Ex: Combo Barba+Cabelo com 10% OFF).</p>
+
+    <!-- Adicionado scrollable-list aqui -->
+    <div class="scrollable-list" style="max-height: 55vh; padding-right: 10px;">
+        <input type="text" id="onboardingPromocaoNome" placeholder="Nome da Promoção (Ex: Combo Barba+Cabelo)" required>
+        <textarea id="onboardingPromocaoDescricao" placeholder="Descrição (Ex: Válido de segunda a quarta)" required></textarea>
+
+        <div class="popup-section">
+          <h4>✂️ Aplicar a quais serviços?</h4>
+          <p style="font-size: 12px; opacity: 0.7;">Selecione os serviços que você acabou de cadastrar. Segure Ctrl (ou Cmd) para selecionar vários.</p>
+          <select id="onboardingPromocaoServicos" multiple style="height: 120px;"></select>
+        </div>
+
+        <div class="popup-section">
+          <h4>⚙️ Condições da Promoção</h4>
+          <label for="onboardingPromocaoDesconto">Desconto (%):</label>
+          <input type="number" id="onboardingPromocaoDesconto" placeholder="Ex: 15" required>
+
+          <label for="onboardingPromocaoValidade">Válida até (opcional):</label>
+          <input type="date" id="onboardingPromocaoValidade">
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="fecharOnboardingComAviso(2)" style="background-color: #555;">❌ Fechar</button>
+        <button id="btnOnboardingNextPromocoes" onclick="salvarOnboardingPromocao()">Concluir ➡️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup 3: Agenda (Onboarding) - (Você já tem 'modalAgendaBarbeiro', vamos criar um clone para o onboarding) -->
+<div id="modalOnboardingAgenda" class="modal" style="z-index: 22;">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-overlay-content hidden" id="overlayOnboardingAgenda">
+        <h3>Atenção</h3>
+        <p>Você precisa ativar pelo menos uma forma de atendimento (Vaga Imediata ou Agenda Manual) para continuar.</p>
+        <button onclick="document.getElementById('overlayOnboardingAgenda').classList.add('hidden')" style="margin-top: 15px;">OK</button>
+    </div>
+    
+    <h3>3. Configure sua Agenda</h3>
+    <p>Use os botões abaixo para gerenciar sua disponibilidade.</p>
+    <button id="onboardingBtnDisponibilidade" onclick="toggleOnboardingDisponibilidade()"></button>
+    <button id="onboardingBtnVagaImediata" onclick="toggleOnboardingVagaImediata()"></button>
+    <button id="onboardingBtnAgendaManual" onclick="toggleOnboardingAgendaManual()"></button>
+    
+    <div id="onboardingAgendaManualPainel" class="hidden card">
+        <h4>Horários Disponíveis Hoje</h4>
+        <p>Selecione os horários para trabalhar.</p>
+        <div id="onboardingHorariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div>
+    </div>
+    
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="fecharOnboardingComAviso(3)" style="background-color: #555;">❌ Fechar</button>
+        <button id="btnOnboardingNextAgenda" onclick="salvarOnboardingAgenda()">Concluir ➡️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup 4: Logomarca (Onboarding) -->
+<div id="modalOnboardingLogomarca" class="modal" style="z-index: 23;">
+  <div class="modal-content" onclick="event.stopPropagation()">
+     <div class="modal-overlay-content hidden" id="overlayOnboardingLogo">
+        <h3>Atenção</h3>
+        <p>É necessário enviar uma logomarca para concluir esta etapa.</p>
+        <button onclick="document.getElementById('overlayOnboardingLogo').classList.add('hidden')" style="margin-top: 15px;">OK</button>
+    </div>
+
+    <h3>4. Adicione sua Logomarca</h3>
+    <p style="font-size: 12px; opacity: 0.8;">Selecione uma imagem ou GIF do seu dispositivo.</p>
+    
+    <input id="onboardingLogomarcaFile" type="file" accept="image/*,image/gif">
+    <img id="onboardingLogomarcaPreview" src="#" alt="Preview" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none; border-radius: 50%; object-fit: cover;">
+    <progress id="onboardingLogoUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-top: 10px;"></progress>
+    
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="fecharOnboardingComAviso(4)" style="background-color: #555;">❌ Fechar</button>
+        <button id="btnOnboardingNextLogo" onclick="salvarOnboardingLogo()" disabled>Concluir ➡️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup 5: Portfólio (Onboarding) -->
+<div id="modalOnboardingPortfolio" class="modal" style="z-index: 24;">
+  <div class="modal-content" onclick="event.stopPropagation()">
+     <div class="modal-overlay-content hidden" id="overlayOnboardingPortfolio">
+        <h3>Atenção</h3>
+        <p>É necessário enviar pelo menos uma imagem para seu portfólio para concluir.</p>
+        <button onclick="document.getElementById('overlayOnboardingPortfolio').classList.add('hidden')" style="margin-top: 15px;">OK</button>
+    </div>
+
+    <h3>5. Mostre seu Trabalho (Portfólio)</h3>
+    <p style="font-size: 12px; opacity: 0.8;">Envie pelo menos 1 imagem (Máx. 30) para que os clientes vejam sua qualidade.</p>
+    
+    <label for="onboardingPortfolioFilesInput" style="cursor: pointer; background-color: var(--cor-botoes); padding: 10px; border-radius: 8px; text-align: center; display: block; margin-bottom: 10px;">Adicionar Imagens</label>
+    <input id="onboardingPortfolioFilesInput" type="file" accept="image/*,image/gif" multiple style="display: none;">
+    
+    <progress id="onboardingPortfolioUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-bottom: 10px;"></progress>
+    <div id="onboardingPortfolioPreviews" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; max-height: 150px; overflow-y: auto;"></div>
+
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="fecharOnboardingComAviso(5)" style="background-color: #555;">❌ Fechar</button>
+        <button id="btnOnboardingNextPortfolio" onclick="salvarOnboardingPortfolio()" disabled>🎉 Finalizar Configuração</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup de Aviso Genérico (Onboarding) -->
+<div id="modalAvisoOnboarding" class="modal" style="z-index: 30;">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3 id="avisoOnboardingTitulo">Atenção</h3>
+    <p id="avisoOnboardingMensagem">Você precisa concluir esta etapa mais tarde para que os clientes possam agendar com você.</p>
+    <button onclick="confirmarFechamentoOnboarding()" style="margin-top: 15px;">OK, Entendi</button>
+  </div>
+</div>
+<!-- ===================================================================== -->
+<!-- ====== FIM: NOVOS MODAIS ONBOARDING PROFISSIONAL (COPIAR) ========= -->
+<!-- ===================================================================== -->
+
 <div id="modalAdminDetalhesCidade" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🏙️ Aprovar Alteração de Cidade</h3>
@@ -2476,17 +2653,12 @@ function fecharAguarde(event, force = false) {
 function abrirModal(modalId) {
     const novoModal = document.getElementById(modalId);
     if (novoModal && !novoModal.classList.contains('show')) {
-        // Se for um modal de onboarding, não adiciona ao stack principal para não ser fechado por outros modais
-        if (modalId.startsWith('modalOnboarding')) {
-            novoModal.style.display = 'flex';
-            setTimeout(() => novoModal.classList.add('show'), 10);
-            return;
-        }
+        // REMOVIDA A EXCEÇÃO para modalOnboarding
         
         novoModal.style.display = 'flex';
         setTimeout(() => {
             novoModal.classList.add('show');
-            modalStack.push(novoModal);
+            modalStack.push(novoModal); // Todos os modais agora entram na pilha
         }, 10);
     }
 }
@@ -2516,13 +2688,34 @@ function fecharModalAtual(forcePopupAguarde = false) {
 }
 
 function fecharTodosOsModais() {
+    // Fecha todos os modais da pilha
     while (modalStack.length > 0) {
         fecharModalAtual();
     }
+    
     // Garante que o de aguarde feche também
     const popup = document.getElementById('popupAguarde');
     if(popup.classList.contains('show')){
        fecharModalAtual(true);
+    }
+
+    // Força o fechamento de qualquer modal de onboarding que possa ter ficado aberto
+    // (Medida de segurança caso a pilha falhe)
+    document.querySelectorAll('.modal[id^="modalOnboarding"]').forEach(modal => {
+        if (modal.classList.contains('show')) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    });
+    // Fecha também o popup de aviso
+    const avisoOnboarding = document.getElementById('modalAvisoOnboarding');
+    if (avisoOnboarding.classList.contains('show')) {
+        avisoOnboarding.classList.remove('show');
+        setTimeout(() => {
+            avisoOnboarding.style.display = 'none';
+        }, 300);
     }
 }
 
@@ -3228,9 +3421,12 @@ auth.onAuthStateChanged(async user => {
         renderCurrentView(); // Renderiza a view correta
 
         // Inicia Onboarding do Profissional se necessário
-        if (perfil.tipo !== 'cliente' && !perfil.onboarding_profissional_concluido) {
-            if (!fluxoPosCadastroAtivo && !document.getElementById('modalOnboardingProfissionalServicos')?.classList.contains('show')) {
-               iniciarFluxoPosCadastroProfissional();
+        if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
+            // Verifica se um modal de onboarding já não está aberto (evita loop)
+            const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+            if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
+               console.log("Iniciando fluxo de configuração inicial do profissional...");
+               iniciarOnboardingProfissionalEtapa1(); // Chama a nova Etapa 1
             }
         }
 
@@ -4332,7 +4528,6 @@ function abrirChatGlobal() {
     alternarChat('global'); // Começa sempre no global
 }
 
-// SUBSTITUA TODA A FUNÇÃO 'alternarChat' POR ESTA
 function alternarChat(tipo) {
     chatAtual = tipo; // Atualiza a variável global
     document.getElementById('tabChatGlobal').classList.toggle('active', tipo === 'global');
@@ -4350,94 +4545,76 @@ function alternarChat(tipo) {
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
     const agora = new Date();
 
-    // --- CORREÇÃO PRINCIPAL: Adiciona o filtro por tipo de chat ---
+    // --- FILTRO POR TIPO DE CHAT ---
     query = query.where("tipoChat", "==", tipo);
-    // -----------------------------------------------------------
+    // ---------------------------------
 
     if (tipo === 'local') {
         if (perfil.tipo === 'admin') {
-            // Admin vê todas as mensagens locais, sem filtro de cidade
             document.getElementById("chatTitle").textContent = `📍 Chat Local (Todas as Cidades)`;
-            // NÃO adiciona where("cidade",...) para admin ver tudo no local
         } else {
-            // Usuário comum vê apenas o chat da sua cidade
             query = query.where("cidade", "==", perfil.cidade); // Filtra pela cidade do usuário
             document.getElementById("chatTitle").textContent = `📍 Chat Local (${perfil.cidade})`;
         }
     } else {
-        // Lógica para o chat global
         document.getElementById("chatTitle").textContent = '💬 Chat Global';
     }
 
-    // Ordenação e limite (mantém a lógica de expiração pelo deleteAt)
-    // Usamos orderBy('ts') para ordem cronológica e limit para paginação
+    // Ordenação e limite
     query = query.where("deleteAt", ">", agora) // Filtra mensagens não expiradas
-                 .orderBy("ts", "desc")         // Ordena pela mais recente primeiro
+                 .orderBy("ts", "desc")         // MANTÉM DESC (mais recente primeiro)
                  .limit(50);                     // Limite inicial de mensagens
 
     chatListener = query.onSnapshot(async snapshot => {
         const chatContainer = document.getElementById("chatMessages"); // Garante a referência
         const carregarMaisBtn = document.getElementById('carregarMaisMsgBtn');
+        const deveRolarParaBaixo = (chatContainer.scrollTop + chatContainer.clientHeight + 150) >= chatContainer.scrollHeight;
 
         if(snapshot.empty) {
-            // Mensagem mais específica se estiver vazio
             let msgVazio = `Nenhuma mensagem ${tipo === 'global' ? 'neste chat' : ''} ainda.`;
-            if (tipo === 'local' && perfil.tipo !== 'admin') {
-                msgVazio = `Nenhuma mensagem em ${perfil.cidade} ainda.`;
-            } else if (tipo === 'local' && perfil.tipo === 'admin') {
-                 msgVazio = `Nenhuma mensagem local encontrada.`;
-            }
+            if (tipo === 'local' && perfil.tipo !== 'admin') msgVazio = `Nenhuma mensagem em ${perfil.cidade} ainda.`;
+            else if (tipo === 'local' && perfil.tipo === 'admin') msgVazio = `Nenhuma mensagem local encontrada.`;
             chatContainer.innerHTML = `<p>${msgVazio}</p>`;
-            carregarMaisBtn.style.display = 'none'; // Esconde botão se vazio
-            oldestMessageSnapshot = null; // Garante que não tente carregar mais
+            carregarMaisBtn.style.display = 'none';
+            oldestMessageSnapshot = null;
             return;
         }
 
-        // Mostra o botão se há mensagens
         carregarMaisBtn.style.display = 'block';
-        carregarMaisBtn.textContent = 'Ver mensagens anteriores'; // Reseta texto do botão
-        carregarMaisBtn.disabled = false; // Garante que não está desabilitado
+        carregarMaisBtn.textContent = 'Ver mensagens anteriores';
+        carregarMaisBtn.disabled = false;
 
-        // Guarda o último documento para a próxima paginação
+        // Guarda o último documento (mais antigo) para a próxima paginação
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
 
         // Processa as mensagens recebidas
-        const novasMensagensDivs = [];
-        // Itera na ordem correta para prepend (snapshot já vem desc)
-        for (const doc of snapshot.docs) {
-             const msg = doc.data();
-             const messageDiv = await createMessageDiv(msg); // Usar a createMessageDiv existente
-             novasMensagensDivs.push(messageDiv);
-        }
-        // Limpa e Adiciona as novas mensagens no TOPO do container
         chatContainer.innerHTML = ''; // Limpa completamente antes de adicionar
-        novasMensagensDivs.forEach(div => chatContainer.prepend(div));
+        
+        // Inverte a ordem do snapshot (que veio DESC) para iterar (ASC)
+        const docsEmOrdem = snapshot.docs.reverse(); 
+        
+        for (const doc of docsEmOrdem) { // Iteração agora ASC (oldest to newest)
+             const msg = doc.data();
+             const messageDiv = await createMessageDiv(msg);
+             chatContainer.appendChild(messageDiv); // Adiciona no final (bottom)
+        }
 
-        // Auto scroll para o fundo (mais recentes) na primeira carga da aba
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        // Rola para o final
+        if (deveRolarParaBaixo) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
-    }, error => { // Adiciona tratamento de erro
+    }, error => { 
         console.error("Erro ao carregar chat:", error);
         chatContainer.innerHTML = `<p style="color: red;">Erro ao carregar mensagens.</p>`;
-        document.getElementById('carregarMaisMsgBtn').style.display = 'none'; // Esconde botão em caso de erro
+        document.getElementById('carregarMaisMsgBtn').style.display = 'none';
     });
 
     // Remove listener antigo para evitar duplicação e adiciona novo
     const chatInput = document.getElementById('chatInput');
     chatInput.removeEventListener('keydown', handleChatEnter);
     chatInput.addEventListener('keydown', handleChatEnter);
-
-    // Bot só inicia no global (se necessário)
-    // if (!botInterval && tipo === 'global') botInterval = setInterval(sendBotMessage, 3600000);
  }
- // Função separada para o listener de Enter (se não existir, adicione-a)
- function handleChatEnter(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        enviarMensagem();
-    }
- }
-
 
 async function carregarMensagensAnteriores() {
     if (!oldestMessageSnapshot) {
@@ -4453,9 +4630,9 @@ async function carregarMensagensAnteriores() {
     const agora = new Date();
     let query = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens");
 
-    // --- CORREÇÃO PRINCIPAL: Adiciona o filtro por tipo de chat ---
+    // --- FILTRO POR TIPO DE CHAT ---
     query = query.where("tipoChat", "==", chatAtual);
-    // -----------------------------------------------------------
+    // ---------------------------------
 
     if (chatAtual === 'local') {
         if (perfil.tipo === 'admin') {
@@ -4474,27 +4651,27 @@ async function carregarMensagensAnteriores() {
 
     try {
         const snapshot = await query.get();
+        const chatContainer = document.getElementById("chatMessages");
+        
+        // Guarda a altura atual para manter a posição do scroll
+        const scrollAntes = chatContainer.scrollHeight - chatContainer.scrollTop;
 
         if (snapshot.empty) {
             btn.textContent = 'Fim do histórico';
             oldestMessageSnapshot = null; // Marca que chegou ao fim
-            // Não desabilitar o botão aqui, apenas mudar o texto
+            btn.disabled = true; // Desabilita pois não há mais o que carregar
             return;
         }
 
         oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1]; // Atualiza o cursor da paginação
 
-        const chatContainer = document.getElementById("chatMessages");
-        // Guarda a altura atual para tentar manter a posição do scroll
-        const scrollAntes = chatContainer.scrollHeight - chatContainer.scrollTop;
+        // Inverte a ordem do snapshot (que veio DESC) para iterar (ASC)
+        const docsEmOrdem = snapshot.docs.reverse();
 
-        // Adiciona mensagens no FINAL do container ao carregar mais
-        // Iterar na ordem do snapshot (descendente, mais recente primeiro)
-        // mas adicionar no final (append) resulta na ordem correta visualmente
-        for (const doc of snapshot.docs) {
+        for (const doc of docsEmOrdem) {
             const msg = doc.data();
             const messageDiv = await createMessageDiv(msg);
-            chatContainer.appendChild(messageDiv); // ADICIONA NO FINAL
+            chatContainer.prepend(messageDiv); // ADICIONA NO TOPO (prepend)
         }
 
         // Tenta restaurar a posição do scroll relativa ao ponto onde estava
@@ -5999,6 +6176,20 @@ async function abrirModalGerenciarUsuario(uid) {
             <p style="font-size: 14px;"><strong>Último Login:</strong> ${lastSignInTime}</p>
             <p style="font-size: 14px;"><strong>Conta:</strong> <span style="color: ${userRecord.disabled ? '#e74c3c' : '#2ecc71'};">${userRecord.disabled ? 'Desabilitada' : 'Ativa'}</span></p>
         </div>
+
+        <div class="popup-section">
+            <button onclick="document.getElementById('adminDadosCadastroOculto').classList.toggle('hidden')">📋 Mostrar/Ocultar Dados de Cadastro</button>
+            <div id="adminDadosCadastroOculto" class="hidden" style="margin-top: 10px; background: var(--cor-fundo); padding: 10px; border-radius: 8px;">
+                <p style="font-size: 14px;"><strong>Email:</strong> ${u.email || 'N/A'}</p>
+                <p style="font-size: 14px;"><strong>Telefone:</strong> ${u.telefone || 'N/A'}</p>
+                <p style="font-size: 14px;"><strong>Estado:</strong> ${u.estado || 'N/A'}</p>
+                <p style="font-size: 14px;"><strong>Cidade:</strong> ${u.cidade || 'N/A'}</p>
+                <p style="font-size: 14px;"><strong>Endereço (Rua):</strong> ${u.rua || 'N/A'}</p>
+                <p style="font-size: 14px;"><strong>Endereço (Número):</strong> ${u.numero || 'N/A'}</p>
+                <p style="font-size: 14px;"><strong>Indicado Por (Email):</strong> ${u.indicadoPorEmail || 'N/A'}</p>
+                <p style="font-size: 14px;"><strong>Coordenadas (Lat/Lon):</strong> ${u.latitude ? u.latitude.toFixed(4) : 'N/A'} / ${u.longitude ? u.longitude.toFixed(4) : 'N/A'}</p>
+            </div>
+        </div>
         <div class="popup-section">
             <p><strong>Alterar Dados Cadastrais:</strong></p>
             <label for="adminNovoNome">Nome de Exibição:</label>
@@ -6595,7 +6786,7 @@ async function abrirModalPortfolioBarbeiro() {
     carregarPortfolioExistente();
 
     // Seletores dos elementos
-    const fileInput = document.getElementById('portfolioFiles');
+    const fileInput = document.getElementById('portfolioFilesInput');
     const previewContainer = document.getElementById('portfolioPreviews');
     const progressBar = document.getElementById('portfolioUploadProgress');
     const btnSalvar = document.getElementById('btnSalvarPortfolio');
@@ -6647,7 +6838,7 @@ async function abrirModalPortfolioBarbeiro() {
 
 async function salvarNovasImagensPortfolio() {
     // ... (código original de validação, upload e salvar no DB) ...
-    const fileInput = document.getElementById("portfolioFiles");
+    const fileInput = document.getElementById("portfolioFilesInput");
     const progressBar = document.getElementById('portfolioUploadProgress');
     const previewContainer = document.getElementById('portfolioPreviews');
     const btnSalvar = document.getElementById('btnSalvarPortfolio');
@@ -6752,7 +6943,7 @@ async function removerImagemPortfolio(imageUrl) {
 function carregarPortfolioExistente() {
     const gridContainer = document.getElementById('portfolioExistenteGrid');
     const contadorElement = document.getElementById('portfolioContador');
-    const fileInput = document.getElementById('portfolioFiles');
+    const fileInput = document.getElementById('portfolioFilesInput');
     const labelFileInput = document.getElementById('labelPortfolioFiles');
     gridContainer.innerHTML = '<p>Carregando...</p>'; // Feedback inicial
 
@@ -8525,126 +8716,502 @@ function aplicarTemaPorProfissao(interesse) {
     document.documentElement.style.setProperty('--cor-destaque', cor);
 }
 
-function iniciarOnboardingProfissional() {
-    tempOnboardingServicos = [];
+// =====================================================================
+// ====== INÍCIO: NOVAS FUNÇÕES ONBOARDING (SUBSTITUIR) ===============
+// =====================================================================
+
+// Variáveis globais para o fluxo de onboarding
+let onboardingServicos = [];
+let onboardingPromocoes = [];
+let onboardingAgendaConfig = { vagaImediata: false, usaAgendaManual: false, agenda: {} };
+let onboardingLogoUrl = null;
+let onboardingPortfolioUrls = [];
+let etapaAtualOnboarding = 0;
+
+// --- ETAPA 1: SERVIÇOS ---
+function iniciarOnboardingProfissionalEtapa1() {
+    etapaAtualOnboarding = 1;
+    onboardingServicos = []; // Limpa
+    
+    // Pega o modal antigo que você já tinha
+    const modal = document.getElementById('modalOnboardingProfissionalServicos');
+    if (!modal) {
+        console.error("Modal modalOnboardingProfissionalServicos não encontrado!");
+        return;
+    }
+
+    // Limpa campos e lista
+    document.getElementById('onboardingServicosList').innerHTML = '';
+    document.getElementById('onboardingServicoNome').value = '';
+    document.getElementById('onboardingServicoValor').value = '';
+    document.getElementById('onboardingServicoTempo').value = '';
+    document.getElementById('btnOnboardingNextServicos').disabled = true;
+
+    // Ajusta os botões para o novo fluxo
+    const btnConcluir = document.getElementById('btnOnboardingNextServicos');
+    btnConcluir.textContent = 'Concluir ➡️';
+    btnConcluir.onclick = salvarOnboardingServicos;
+
+    // Adiciona o botão Fechar
+    if (!document.getElementById('btnOnboardingCloseServicos')) {
+        const btnFechar = document.createElement('button');
+        btnFechar.id = 'btnOnboardingCloseServicos';
+        btnFechar.textContent = '❌ Fechar';
+        btnFechar.style.backgroundColor = '#555';
+        btnFechar.onclick = () => fecharOnboardingComAviso(1);
+        btnConcluir.parentNode.insertBefore(btnFechar, btnConcluir);
+        btnConcluir.parentNode.style.display = 'flex';
+        btnConcluir.parentNode.style.gap = '10px';
+    }
+
     abrirModal('modalOnboardingProfissionalServicos');
 }
 
+// Função que você já tinha, mas agora atualiza o array global
 function adicionarServicoOnboarding() {
     const nome = document.getElementById('onboardingServicoNome').value.trim();
     const valor = parseFloat(document.getElementById('onboardingServicoValor').value);
     const tempo = parseInt(document.getElementById('onboardingServicoTempo').value);
-    if (!nome || isNaN(valor) || isNaN(tempo)) return exibirPopup("Preencha todos os campos do serviço.");
+    if (!nome || isNaN(valor) || valor <= 0 || isNaN(tempo) || tempo <= 0) return exibirPopup("Entrada inválida.");
 
-    tempOnboardingServicos.push({ nome, valor, duracao: tempo });
+    onboardingServicos.push({ nome, valor, duracao: tempo });
     
     const list = document.getElementById('onboardingServicosList');
-    list.innerHTML += `<p>✅ ${nome} - R$${valor.toFixed(2)}</p>`;
+    list.innerHTML += `<p>✅ ${nome} - R$${valor.toFixed(2)} (${tempo} min)</p>`;
     document.getElementById('onboardingServicoNome').value = '';
     document.getElementById('onboardingServicoValor').value = '';
     document.getElementById('onboardingServicoTempo').value = '';
     document.getElementById('btnOnboardingNextServicos').disabled = false;
 }
 
-function avancarOnboarding(etapa) {
-    if (etapa === 2) {
-        fecharModalAtual();
-        abrirModal('modalOnboardingProfissionalAgenda');
-        
-        // Pega os elementos dos botões
-        const btnVaga = document.getElementById('onboardingBtnVagaImediata');
-        const btnManual = document.getElementById('onboardingBtnAgendaManual');
-        const painelManual = document.getElementById('onboardingAgendaManualPainel');
-
-        // Reseta o estado inicial
-        onboardingState.vagaImediata = false;
-        onboardingState.usaAgendaManual = false;
-        btnVaga.textContent = '⚡ Ativar Vaga Imediata';
-        btnVaga.classList.remove('selected');
-        btnManual.classList.remove('selected');
-        painelManual.classList.add('hidden');
-        
-        const horariosContainer = document.getElementById("onboardingHorariosContainer");
-        horariosContainer.innerHTML = ''; // Limpa para evitar duplicatas
-        for (let i = 7; i <= 18; i++) {
-            const horario = `${i}:00`;
-            horariosContainer.innerHTML += `<button class="horario-btn" onclick="this.classList.toggle('selecionado')">${horario}</button>`;
-        }
-        
-        // --- LÓGICA APRIMORADA PARA O BOTÃO DE VAGA IMEDIATA ---
-        btnVaga.onclick = () => {
-            // Inverte o estado atual
-            onboardingState.vagaImediata = !onboardingState.vagaImediata;
-            
-            if (onboardingState.vagaImediata) {
-                // Se ativou a Vaga Imediata
-                btnVaga.textContent = '⚡ Vaga Imediata Ativa ✅';
-                btnVaga.classList.add('selected');
-                
-                // Garante que a outra opção seja desativada
-                onboardingState.usaAgendaManual = false;
-                btnManual.classList.remove('selected');
-                painelManual.classList.add('hidden');
-            } else {
-                // Se desativou a Vaga Imediata
-                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
-                btnVaga.classList.remove('selected');
-            }
-        };
-        
-        // --- LÓGICA APRIMORADA PARA O BOTÃO DE AGENDA MANUAL ---
-        btnManual.onclick = () => {
-            onboardingState.usaAgendaManual = !onboardingState.usaAgendaManual;
-            
-            if (onboardingState.usaAgendaManual) {
-                btnManual.classList.add('selected');
-                painelManual.classList.remove('hidden');
-
-                // Garante que a outra opção seja desativada
-                onboardingState.vagaImediata = false;
-                btnVaga.textContent = '⚡ Ativar Vaga Imediata';
-                btnVaga.classList.remove('selected');
-            } else {
-                btnManual.classList.remove('selected');
-                painelManual.classList.add('hidden');
-            }
-        };
-
-    } else if (etapa === 3) {
-        // NÃO mostra o aguarde ainda, salva primeiro
-        const userRef = db.collection('usuarios').doc(auth.currentUser.uid);
-        const updates = {
-            listaServicos: tempOnboardingServicos,
-            onboarding_profissional_concluido: false // AINDA NÃO CONCLUIU, faltam os popups
-        };
-
-        // Pega a configuração da agenda escolhida
-        if (onboardingState.usaAgendaManual) {
-            updates.usaAgendaManual = true;
-            updates.vagaImediata = false; // Garante que vaga imediata está desligada
-            const agenda = {};
-            document.querySelectorAll('#onboardingHorariosContainer .selecionado').forEach(btn => {
-                agenda[btn.textContent] = true;
-            });
-            updates.agenda = agenda;
-        } else {
-            // Se não usou manual, salva o estado da vaga imediata (pode ser true ou false)
-            updates.vagaImediata = onboardingState.vagaImediata || false; // Usa o estado salvo ou false como padrão
-            updates.usaAgendaManual = false;
-        }
-
-        exibirAguarde("Salvando configurações iniciais..."); // Mostra o aguarde AGORA
-
-        userRef.update(updates).then(() => {
-            fecharAguarde(null, true); // Fecha o aguarde
-            fecharModalAtual(); // Fecha o modal da agenda ('modalOnboardingProfissionalAgenda')
-            iniciarFluxoPosCadastroProfissional(); // <-- CHAMA A FUNÇÃO QUE INICIA OS POPUPS DE LOGO/PORTFOLIO/PROMO
-        }).catch(e => {
-            fecharTodosOsModais(); // Fecha aguarde e modal agenda em caso de erro
-            exibirPopup("Erro ao salvar configurações da agenda: " + e.message);
-        });
+// Salva e avança para a Etapa 2 (Promoções)
+async function salvarOnboardingServicos() {
+    if (onboardingServicos.length === 0) {
+        exibirPopup("Atenção", "Você precisa adicionar pelo menos 1 serviço para continuar.");
+        return;
     }
- }
+    
+    exibirAguarde("Salvando serviços...");
+    try {
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+            listaServicos: onboardingServicos
+        });
+        fecharTodosOsModais(); // Fecha aguarde e modal
+        abrirOnboardingEtapa2(); // Abre Etapa 2
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao salvar serviços", e.message);
+    }
+}
+
+// --- ETAPA 2: PROMOÇÕES ---
+function abrirOnboardingEtapa2() {
+    etapaAtualOnboarding = 2;
+    onboardingPromocoes = []; // Limpa
+
+    // Carrega os serviços cadastrados na etapa 1 no select
+    const selectServicos = document.getElementById('onboardingPromocaoServicos');
+    selectServicos.innerHTML = '';
+    onboardingServicos.forEach(servico => {
+        selectServicos.innerHTML += `<option value="${servico.nome}">${servico.nome} - R$ ${servico.valor.toFixed(2)}</option>`;
+    });
+
+    // Limpa campos do formulário
+    document.getElementById('onboardingPromocaoNome').value = '';
+    document.getElementById('onboardingPromocaoDescricao').value = '';
+    document.getElementById('onboardingPromocaoDesconto').value = '';
+    document.getElementById('onboardingPromocaoValidade').value = '';
+    
+    abrirModal('modalOnboardingPromocoes');
+}
+
+// Salva e avança para a Etapa 3 (Agenda)
+async function salvarOnboardingPromocao() {
+    const nome = document.getElementById('onboardingPromocaoNome').value.trim();
+    const descricao = document.getElementById('onboardingPromocaoDescricao').value.trim();
+    const desconto = parseInt(document.getElementById('onboardingPromocaoDesconto').value);
+    const validadeInput = document.getElementById('onboardingPromocaoValidade').value;
+    const servicosSelecionados = Array.from(document.getElementById('onboardingPromocaoServicos').selectedOptions).map(option => option.value);
+
+    // Validação
+    if (servicosSelecionados.length === 0 || !nome || isNaN(desconto) || desconto <= 0) {
+        document.getElementById('overlayOnboardingPromocao').classList.remove('hidden');
+        return;
+    }
+    
+    const novaPromocao = {
+        id: `promo_${new Date().getTime()}`, nome, descricao, desconto, 
+        servicosAplicaveis: servicosSelecionados, valorMinimo: 0,
+        validade: validadeInput ? new Date(validadeInput + 'T23:59:59') : null 
+    };
+    
+    onboardingPromocoes.push(novaPromocao); // Salva localmente por enquanto
+
+    exibirAguarde("Salvando promoção...");
+    try {
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+            promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
+        });
+        fecharTodosOsModais();
+        abrirOnboardingEtapa3(); // Abre Etapa 3
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao salvar promoção", e.message);
+    }
+}
+
+// --- ETAPA 3: AGENDA ---
+function abrirOnboardingEtapa3() {
+    etapaAtualOnboarding = 3;
+    
+    // Reseta o estado da agenda
+    onboardingAgendaConfig = { vagaImediata: false, usaAgendaManual: false, agenda: {} };
+
+    const btnDisp = document.getElementById("onboardingBtnDisponibilidade");
+    const btnVaga = document.getElementById("onboardingBtnVagaImediata");
+    const btnManual = document.getElementById("onboardingBtnAgendaManual");
+    const painelManual = document.getElementById("onboardingAgendaManualPainel");
+    const horariosContainer = document.getElementById("onboardingHorariosContainer");
+
+    // Define estado inicial dos botões (baseado no modal de agenda normal)
+    btnDisp.textContent = '🟢 Ficar Disponível (Automático)';
+    btnDisp.classList.remove('selected'); 
+    onboardingAgendaConfig.disponivel = "nao";
+
+    btnVaga.textContent = '⚡ Ativar Vaga Imediata';
+    btnVaga.classList.remove('selected');
+
+    btnManual.textContent = '📅 Ativar Agenda Manual';
+    btnManual.classList.remove('selected');
+    
+    painelManual.classList.add("hidden");
+    
+    // Popula os horários
+    horariosContainer.innerHTML = "";
+    for (let i = 7; i <= 18; i++) {
+        const horario = `${i}:00`;
+        const btn = document.createElement('button');
+        btn.textContent = horario;
+        btn.className = `horario-btn`; // Sem 'selecionado' ou 'bloqueado'
+        btn.onclick = () => {
+            const statusAtual = onboardingAgendaConfig.agenda[horario];
+            if (statusAtual === true) {
+                // Se estava selecionado, remove (não bloqueia no onboarding)
+                delete onboardingAgendaConfig.agenda[horario];
+                btn.classList.remove("selecionado");
+            } else {
+                // Se não estava, seleciona
+                onboardingAgendaConfig.agenda[horario] = true;
+                btn.classList.add("selecionado");
+            }
+        };
+        horariosContainer.appendChild(btn);
+    }
+    
+    abrirModal('modalOnboardingAgenda');
+}
+
+// Funções de toggle para a agenda do onboarding
+function toggleOnboardingDisponibilidade() {
+    const btnDisp = document.getElementById("onboardingBtnDisponibilidade");
+    const novoStatus = (onboardingAgendaConfig.disponivel === "sim") ? "nao" : "sim";
+    onboardingAgendaConfig.disponivel = novoStatus;
+    btnDisp.textContent = novoStatus === 'sim' ? '🔴 Ficar Indisponível (Automático)' : '🟢 Ficar Disponível (Automático)';
+    btnDisp.classList.toggle('selected', novoStatus === 'sim');
+}
+
+function toggleOnboardingVagaImediata() {
+    const btnVaga = document.getElementById("onboardingBtnVagaImediata");
+    onboardingAgendaConfig.vagaImediata = !onboardingAgendaConfig.vagaImediata;
+    btnVaga.textContent = onboardingAgendaConfig.vagaImediata ? '⚠️ Desativar Vaga Imediata' : '⚡ Ativar Vaga Imediata';
+    btnVaga.classList.toggle('selected', onboardingAgendaConfig.vagaImediata);
+
+    // Se ativar vaga imediata, desativa agenda manual
+    if (onboardingAgendaConfig.vagaImediata) {
+        onboardingAgendaConfig.usaAgendaManual = false;
+        document.getElementById("onboardingBtnAgendaManual").classList.remove('selected');
+        document.getElementById("onboardingAgendaManualPainel").classList.add("hidden");
+    }
+}
+
+function toggleOnboardingAgendaManual() {
+    const btnManual = document.getElementById("onboardingBtnAgendaManual");
+    onboardingAgendaConfig.usaAgendaManual = !onboardingAgendaConfig.usaAgendaManual;
+    btnManual.classList.toggle('selected', onboardingAgendaConfig.usaAgendaManual);
+    document.getElementById("onboardingAgendaManualPainel").classList.toggle("hidden", !onboardingAgendaConfig.usaAgendaManual);
+
+    // Se ativar agenda manual, desativa vaga imediata
+    if (onboardingAgendaConfig.usaAgendaManual) {
+        onboardingAgendaConfig.vagaImediata = false;
+        document.getElementById("onboardingBtnVagaImediata").classList.remove('selected');
+        document.getElementById("onboardingBtnVagaImediata").textContent = '⚡ Ativar Vaga Imediata';
+    }
+}
+
+// Salva e avança para a Etapa 4 (Logomarca)
+async function salvarOnboardingAgenda() {
+    // Validação: Pelo menos uma opção deve ser ativada
+    const { disponivel, vagaImediata, usaAgendaManual, agenda } = onboardingAgendaConfig;
+    const agendaManualConfigurada = usaAgendaManual && Object.values(agenda).some(v => v === true);
+
+    if (disponivel === "nao" && !vagaImediata && !agendaManualConfigurada) {
+        document.getElementById('overlayOnboardingAgenda').classList.remove('hidden');
+        return;
+    }
+    
+    exibirAguarde("Salvando agenda...");
+    try {
+        const updates = {
+            disponivel: disponivel,
+            vagaImediata: vagaImediata,
+            usaAgendaManual: usaAgendaManual,
+            agenda: usaAgendaManual ? agenda : {} // Salva agenda se manual, senão limpa
+        };
+        await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+        fecharTodosOsModais();
+        abrirOnboardingEtapa4(); // Abre Etapa 4
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao salvar agenda", e.message);
+    }
+}
+
+// --- ETAPA 4: LOGOMARCA ---
+function abrirOnboardingEtapa4() {
+    etapaAtualOnboarding = 4;
+    onboardingLogoUrl = null; // Reseta
+
+    const fileInput = document.getElementById("onboardingLogomarcaFile");
+    const previewImg = document.getElementById("onboardingLogomarcaPreview");
+    const btnSalvar = document.getElementById("btnOnboardingNextLogo");
+    
+    fileInput.value = ''; // Limpa seleção anterior
+    previewImg.style.display = 'none';
+    btnSalvar.disabled = true;
+
+    // Remove listener antigo e adiciona novo
+    fileInput.onchange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+                btnSalvar.disabled = false; // Habilita o botão
+            }
+            reader.readAsDataURL(file);
+        } else {
+            previewImg.style.display = 'none';
+            btnSalvar.disabled = true;
+        }
+    };
+    
+    abrirModal('modalOnboardingLogomarca');
+}
+
+// Salva e avança para a Etapa 5 (Portfólio)
+async function salvarOnboardingLogo() {
+    const fileInput = document.getElementById("onboardingLogomarcaFile");
+    const progressBar = document.getElementById('onboardingLogoUploadProgress');
+    const btnSalvar = document.getElementById('btnOnboardingNextLogo');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        document.getElementById('overlayOnboardingLogo').classList.remove('hidden');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const userId = auth.currentUser.uid;
+    const filePath = `logos/${userId}_${Date.now()}_${file.name}`;
+
+    exibirAguarde("Enviando logomarca...");
+    progressBar.style.display = 'block'; btnSalvar.disabled = true;
+
+    try {
+        // Usa a função de upload genérica
+        const downloadURL = await uploadImage(file, filePath, (progress) => {
+            progressBar.value = progress;
+        });
+        
+        onboardingLogoUrl = downloadURL; // Salva localmente
+
+        await db.collection("usuarios").doc(userId).update({
+            logo_url: downloadURL
+        });
+        
+        fecharTodosOsModais();
+        abrirOnboardingEtapa5(); // Abre Etapa 5
+        
+    } catch (error) {
+        fecharTodosOsModais();
+        progressBar.style.display = 'none'; btnSalvar.disabled = false;
+        exibirPopup("Erro ao salvar logomarca", error.message);
+    }
+}
+
+// --- ETAPA 5: PORTFÓLIO ---
+function abrirOnboardingEtapa5() {
+    etapaAtualOnboarding = 5;
+    onboardingPortfolioUrls = []; // Reseta
+
+    const fileInput = document.getElementById("onboardingPortfolioFilesInput");
+    const previewContainer = document.getElementById("onboardingPortfolioPreviews");
+    const btnSalvar = document.getElementById("btnOnboardingNextPortfolio");
+
+    fileInput.value = '';
+    previewContainer.innerHTML = '';
+    btnSalvar.disabled = true;
+    
+    // Remove listener antigo e adiciona novo
+    fileInput.onchange = (event) => {
+        previewContainer.innerHTML = ''; // Limpa previews
+        const files = event.target.files;
+        
+        if (files.length === 0) {
+            btnSalvar.disabled = true;
+            return;
+        }
+
+        if (files.length > 30) {
+            exibirPopup("Limite Excedido", "Você pode enviar no máximo 30 imagens de uma vez.");
+            fileInput.value = '';
+            btnSalvar.disabled = true;
+            return;
+        }
+
+        Array.from(files).forEach(file => {
+             const reader = new FileReader();
+             reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.width = '60px'; img.style.height = '60px';
+                img.style.objectFit = 'cover'; img.style.borderRadius = '4px';
+                previewContainer.appendChild(img);
+             }
+             reader.readAsDataURL(file);
+        });
+        btnSalvar.disabled = false; // Habilita o botão
+    };
+
+    abrirModal('modalOnboardingPortfolio');
+}
+
+// Salva e FINALIZA o fluxo
+async function salvarOnboardingPortfolio() {
+    const fileInput = document.getElementById("onboardingPortfolioFilesInput");
+    const progressBar = document.getElementById('onboardingPortfolioUploadProgress');
+    const btnSalvar = document.getElementById('btnOnboardingNextPortfolio');
+    const userId = auth.currentUser.uid;
+    const files = fileInput.files;
+
+    if (!files || files.length === 0) {
+        document.getElementById('overlayOnboardingPortfolio').classList.remove('hidden');
+        return;
+    }
+    
+    exibirAguarde(`Enviando ${files.length} imagem(ns)...`);
+    progressBar.style.display = 'block'; btnSalvar.disabled = true;
+
+    const uploadPromises = [];
+    let totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+    const uploadTasksInfo = [];
+
+    Array.from(files).forEach((file, index) => {
+        const filePath = `portfolio/${userId}/${Date.now()}_${index}_${file.name}`;
+        const uploadPromise = new Promise((resolve, reject) => {
+            const storageRef = storage.ref(filePath);
+            const uploadTask = storageRef.put(file);
+            const taskInfo = { task: uploadTask, bytesTransferred: 0 };
+            uploadTasksInfo.push(taskInfo);
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    taskInfo.bytesTransferred = snapshot.bytesTransferred;
+                    let totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0);
+                    const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0;
+                    progressBar.value = progress;
+                },
+                (error) => reject(error),
+                async () => {
+                    try {
+                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                        resolve(downloadURL); // Retorna a URL
+                    } catch(urlError) { reject(urlError); }
+                }
+            );
+        });
+        uploadPromises.push(uploadPromise);
+    });
+
+    try {
+        const novasUrls = await Promise.all(uploadPromises);
+        onboardingPortfolioUrls = novasUrls; // Salva localmente
+
+        await db.collection('usuarios').doc(userId).update({
+            portfolio: firebase.firestore.FieldValue.arrayUnion(...novasUrls)
+        });
+        
+        // Se chegou aqui, tudo deu certo
+        finalizarOnboardingCompleto();
+        
+    } catch (error) {
+        fecharTodosOsModais();
+        progressBar.style.display = 'none'; btnSalvar.disabled = false;
+        exibirPopup("Erro ao salvar portfólio", error.message);
+    }
+}
+
+// --- FUNÇÕES DE CONTROLE DO FLUXO ONBOARDING ---
+
+function fecharOnboardingComAviso(etapa) {
+    etapaAtualOnboarding = etapa; // Guarda a etapa atual
+    const mensagens = {
+        1: "Você precisa adicionar seus serviços para que clientes possam agendar.",
+        2: "Sem promoções, você pode perder a chance de atrair novos clientes.",
+        3: "Você deve configurar sua agenda para que clientes saibam quando você atende.",
+        4: "Uma logomarca gera credibilidade e ajuda clientes a te reconhecerem.",
+        5: "O portfólio é essencial para clientes verem a qualidade do seu trabalho."
+    };
+    
+    document.getElementById('avisoOnboardingTitulo').textContent = `Sair da Etapa ${etapa}?`;
+    document.getElementById('avisoOnboardingMensagem').textContent = mensagens[etapa] || "Você pode concluir esta etapa mais tarde nas configurações.";
+    
+    abrirModal('modalAvisoOnboarding');
+}
+
+// Chamada quando o usuário clica "OK, Entendi" no aviso
+async function confirmarFechamentoOnboarding() {
+    fecharTodosOsModais(); // Fecha o aviso e o modal da etapa
+    // Não marca como concluído, o flag `precisaConfiguracaoInicial` continua `true`
+    // O fluxo será reiniciado no próximo login.
+}
+
+// Chamada APENAS no sucesso da Etapa 5
+async function finalizarOnboardingCompleto() {
+    exibirAguarde("Finalizando configuração...");
+    try {
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+            precisaConfiguracaoInicial: false // Finalmente, marca como concluído!
+        });
+        fecharTodosOsModais(); // Fecha o aguarde e o modal de portfólio
+        exibirPopup("🎉 Configuração Concluída!", "Seu perfil de profissional está pronto! Bem-vindo(a) ao Nova Versão.");
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao finalizar", e.message);
+    }
+}
+
+
+// Substitui a função 'avancarOnboarding' antiga que não será mais usada
+function avancarOnboarding(etapa) {
+   // Esta função foi substituída pela nova lógica (salvarOnboardingServicos, etc.)
+   // Mas a deixamos aqui em branco para evitar erros caso algo ainda a chame.
+   console.warn("Função 'avancarOnboarding' obsoleta foi chamada.");
+}
+
+// =====================================================================
+// ====== FIM: NOVAS FUNÇÕES ONBOARDING (SUBSTITUIR) =================
+// =====================================================================
 
 async function adminToggleLoja(uid, deveAtivar) {
     await db.collection('usuarios').doc(uid).update({ lojaLiberada: deveAtivar });
