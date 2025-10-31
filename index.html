@@ -2270,7 +2270,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   <div class="modal-content" onclick="event.stopPropagation()" style="text-align: center;">
     <h3 id="popupGenericoTitulo" style="margin-top: 0;"></h3>
     <p id="popupGenericoMensagem" style="margin-bottom: 20px;"></p>
-    <button data-modal-id="modalPopupGenerico" onclick="fecharModal(event)">OK</button>
+    <button data-modal-id="modalPopupGenerico" onclick="handlePopupGenericoOk(event)">OK</button>
   </div>
 </div>
 
@@ -2532,6 +2532,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
 
+let popupGenericoCallback = null;
+
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .then(() => {
     console.log("Persistência de autenticação definida para 'local'. O usuário ficará logado.");
@@ -2673,7 +2675,8 @@ function fecharAguarde(event) {
 
 let modalStack = [];
 
-function exibirPopup(titulo, mensagem, tipo = 'info') { // Adiciona 'tipo' opcional
+// SUBSTITUA A FUNÇÃO 'exibirPopup'
+function exibirPopup(titulo, mensagem, tipo = 'info', onOkCallback = null) { // Adiciona 'onOkCallback'
     // Fecha qualquer popup de aguarde que possa estar aberto
     const aguardePopup = document.getElementById('popupAguarde');
     if (aguardePopup.classList.contains('show')) {
@@ -2698,6 +2701,8 @@ function exibirPopup(titulo, mensagem, tipo = 'info') { // Adiciona 'tipo' opcio
     // Reset border style
     modalContent.style.border = '1px solid var(--cor-borda)';
 
+    // Armazena o callback para a função handlePopupGenericoOk usar
+    popupGenericoCallback = onOkCallback;
 
     // Abre o modal genérico
     abrirModal('modalPopupGenerico');
@@ -3153,6 +3158,7 @@ function entrar() {
     .then(() => {
         console.log("Login OK");
         fecharTodosOsModais();
+        location.reload(); // <-- LINHA ADICIONADA PARA FORÇAR O RELOAD APÓS LOGIN
     })
     .catch(e => {
         fecharTodosOsModais();
@@ -3239,8 +3245,6 @@ async function enviarSolicitacaoRecuperacaoSenha() {
     }
 }
 
-// SUBSTITUA A FUNÇÃO criarConta() INTEIRA POR ESTA VERSÃO:
-// SUBSTITUA A FUNÇÃO 'criarConta' INTEIRA EM index.html
 function criarConta() {
   exibirAguarde("Criando sua conta...");
   const email = document.getElementById("email").value.trim();
@@ -3307,7 +3311,7 @@ function criarConta() {
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
 
-      // --- !! ESTA É A LINHA ADICIONADA PARA FORÇAR O LOGIN/RELOAD !! ---
+      // --- !! ESTA É A LINHA QUE FORÇA O LOGIN/RELOAD !! ---
       location.reload();
       // ------------------------------------------------------------------
 
@@ -8763,8 +8767,6 @@ async function verificarPendencias(uid) {
     }
 }
 
-// ADICIONE ESTA NOVA FUNÇÃO DENTRO DA TAG <script> EM index.html
-// SUBSTITUA A FUNÇÃO 'verificarPendenciasEssenciaisProfissional' INTEIRA EM index.html
 async function verificarPendenciasEssenciaisProfissional(uid) {
     // 1. Se já estiver no fluxo de onboarding (etapaAtualOnboarding > 0)
     // 2. OU se o onboarding inicial ainda não foi concluído (precisaConfiguracaoInicial === true)
@@ -8781,27 +8783,35 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
 
     // 1. Verifica Serviços
     if (!p.listaServicos || p.listaServicos.length === 0) {
-        exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.");
-        return abrirOnboardingEtapa1(); // Para aqui
+        exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.", 'aviso', () => {
+            abrirOnboardingEtapa1();
+        });
+        return; // Para aqui
     }
     
     // 2. Verifica Logomarca
     if (!p.logo_url) {
-        exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.");
-        return abrirOnboardingEtapa4(); // Para aqui
+        exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.", 'aviso', () => {
+            abrirOnboardingEtapa4();
+        });
+        return; // Para aqui
     }
     
     // 3. Verifica Portfólio
     if (!p.portfolio || p.portfolio.length === 0) {
-        exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.");
-        return abrirOnboardingEtapa5(); // Para aqui
+        exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.", 'aviso', () => {
+            abrirOnboardingEtapa5();
+        });
+        return; // Para aqui
     }
 
     // 4. Verifica Agenda (só se vaga imediata E agenda manual estiverem inativas)
     const temHorarioManual = Object.values(p.agenda || {}).some(v => v === true);
     if (!p.vagaImediata && !temHorarioManual) {
-        exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure-a.");
-        return abrirOnboardingEtapa3(); // Para aqui
+        exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure-a.", 'aviso', () => {
+            abrirOnboardingEtapa3();
+        });
+        return; // Para aqui
     }
 
     // 5. Popup 2 (Promoção) NÃO é verificado aqui, pois é opcional.
