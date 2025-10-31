@@ -2676,6 +2676,7 @@ function fecharAguarde(event) {
 let modalStack = [];
 
 // SUBSTITUA A FUNÇÃO 'exibirPopup'
+// SUBSTITUA A FUNÇÃO 'exibirPopup'
 function exibirPopup(titulo, mensagem, tipo = 'info', onOkCallback = null) { // Adiciona 'onOkCallback'
     // Fecha qualquer popup de aguarde que possa estar aberto
     const aguardePopup = document.getElementById('popupAguarde');
@@ -2714,7 +2715,7 @@ function handlePopupGenericoOk(event) {
     
     // Executa o callback se ele existir
     if (popupGenericoCallback) {
-        popupGenericoCallback(); // Executa a ação (ex: abrirOnboardingEtapa1)
+        popupGenericoCallback(); // Executa a ação (ex: abrirModalEtapa1)
         popupGenericoCallback = null; // Limpa o callback
     }
 }
@@ -3512,9 +3513,7 @@ auth.onAuthStateChanged(async user => {
         renderCurrentView(); // Renderiza a view correta
 
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
-        if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
-            
-            const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
+        const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
             
             if (sessionStorage.getItem(reloadFlag) !== 'true') {
                 console.log("Primeira carga do profissional com onboarding pendente. Definindo flag e recarregando...");
@@ -3523,10 +3522,12 @@ auth.onAuthStateChanged(async user => {
                 return; 
             } else {
                 console.log("Flag de reload encontrada. Iniciando fluxo de onboarding...");
-                const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+                // Verifica se algum modal de onboarding já está aberto
+                const onboardingAberto = document.querySelector('#modalOnboardingProfissionalServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
                 if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
                    console.log("Iniciando fluxo de configuração inicial do profissional...");
-                   iniciarOnboardingProfissionalEtapa1(); // Chama a nova Etapa 1
+                   // CHAMA A NOVA FUNÇÃO MESTRE
+                   iniciarFluxoDeConfiguracaoProfissional();
                 }
             }
         
@@ -8778,7 +8779,6 @@ async function verificarPendencias(uid) {
     }
 }
 
-// SUBSTITUA A FUNÇÃO 'verificarPendenciasEssenciaisProfissional' INTEIRA POR ESTA VERSÃO CORRIGIDA
 async function verificarPendenciasEssenciaisProfissional(uid) {
     // 1. Se já estiver no fluxo de onboarding (etapaAtualOnboarding > 0)
     // 2. OU se o onboarding inicial ainda não foi concluído (precisaConfiguracaoInicial === true)
@@ -8796,8 +8796,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     // 1. Verifica Serviços
     if (!p.listaServicos || p.listaServicos.length === 0) {
         exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.", 'aviso', () => {
-            // CORREÇÃO APLICADA AQUI:
-            iniciarOnboardingProfissionalEtapa1(); 
+            abrirOnboardingEtapa1();
         });
         return; // Para aqui
     }
@@ -8805,7 +8804,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     // 2. Verifica Logomarca
     if (!p.logo_url) {
         exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.", 'aviso', () => {
-            abrirOnboardingEtapa4(); // Esta função está correta
+            abrirOnboardingEtapa4();
         });
         return; // Para aqui
     }
@@ -8813,7 +8812,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     // 3. Verifica Portfólio
     if (!p.portfolio || p.portfolio.length === 0) {
         exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.", 'aviso', () => {
-            abrirOnboardingEtapa5(); // Esta função está correta
+            abrirOnboardingEtapa5();
         });
         return; // Para aqui
     }
@@ -8822,7 +8821,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     const temHorarioManual = Object.values(p.agenda || {}).some(v => v === true);
     if (!p.vagaImediata && !temHorarioManual) {
         exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure-a.", 'aviso', () => {
-            abrirOnboardingEtapa3(); // Esta função está correta
+            abrirOnboardingEtapa3();
         });
         return; // Para aqui
     }
@@ -9161,6 +9160,71 @@ let onboardingLogoUrl = null;
 let onboardingPortfolioUrls = [];
 let etapaAtualOnboarding = 0;
 
+// =====================================================================
+// ====== INÍCIO: NOVA FUNÇÃO MESTRE DE ONBOARDING (ADICIONAR) ========
+// =====================================================================
+
+/**
+ * Esta é a função "mestre" que verifica todas as pendências essenciais
+ * em ordem e abre o popup correto.
+ * É chamada no login (se o onboarding estiver pendente) e após a conclusão de cada etapa.
+ */
+async function iniciarFluxoDeConfiguracaoProfissional() {
+    if (!perfil) {
+        // Garante que o perfil esteja carregado antes de checar
+        console.log("Fluxo: Perfil não carregado, buscando...");
+        try {
+            const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
+            if (!userDoc.exists) throw new Error("Usuário não encontrado no DB.");
+            perfil = userDoc.data();
+        } catch (e) {
+            exibirPopup("Erro Crítico", "Não foi possível carregar seu perfil: " + e.message, "erro");
+            auth.signOut();
+            return;
+        }
+    }
+    
+    const p = perfil;
+    console.log("Fluxo: Iniciando verificação de pendências de configuração...");
+
+    // Etapa 1: Serviços (ESSENCIAL)
+    // Critério: Só aparece se não tiver nenhum serviço.
+    if (!p.listaServicos || p.listaServicos.length === 0) {
+        console.log("Fluxo: Pendência encontrada [Etapa 1: Serviços]");
+        return iniciarOnboardingProfissionalEtapa1(); 
+    }
+
+    // Etapa 3: Agenda (ESSENCIAL)
+    // Critério: Só aparece se vaga imediata E agenda manual estiverem desativadas/vazias.
+    const temHorarioManual = Object.values(p.agenda || {}).some(v => v === true);
+    if (!p.vagaImediata && !temHorarioManual) {
+        console.log("Fluxo: Pendência encontrada [Etapa 3: Agenda]");
+        return abrirOnboardingEtapa3();
+    }
+
+    // Etapa 4: Logomarca (ESSENCIAL)
+    // Critério: Só aparece se não tiver logo.
+    if (!p.logo_url) {
+        console.log("Fluxo: Pendência encontrada [Etapa 4: Logomarca]");
+        return abrirOnboardingEtapa4();
+    }
+    
+    // Etapa 5: Portfólio (ESSENCIAL)
+    // Critério: Só aparece se não tiver nenhuma foto no portfólio.
+    if (!p.portfolio || p.portfolio.length === 0) {
+        console.log("Fluxo: Pendência encontrada [Etapa 5: Portfólio]");
+        return abrirOnboardingEtapa5();
+    }
+
+    // Se passou por tudo, finaliza o onboarding!
+    console.log("Fluxo: Nenhuma pendência essencial encontrada. Finalizando onboarding.");
+    finalizarOnboardingCompleto();
+}
+
+// =====================================================================
+// ====== FIM: NOVA FUNÇÃO MESTRE DE ONBOARDING (ADICIONAR) ==========
+// =====================================================================
+
 // --- ETAPA 1: SERVIÇOS ---
 function iniciarOnboardingProfissionalEtapa1() {
     etapaAtualOnboarding = 1;
@@ -9220,7 +9284,7 @@ function adicionarServicoOnboarding() {
 // Salva e avança para a Etapa 2 (Promoções)
 async function salvarOnboardingServicos() {
     if (onboardingServicos.length === 0) {
-        exibirPopup("Atenção", "Você precisa adicionar pelo menos 1 serviço para continuar.");
+        exibirPopup("Atenção", "Você precisa adicionar pelo menos 1 serviço para continuar.", "aviso");
         return;
     }
     
@@ -9229,11 +9293,18 @@ async function salvarOnboardingServicos() {
         await db.collection('usuarios').doc(auth.currentUser.uid).update({
             listaServicos: onboardingServicos
         });
+        
+        // Atualiza o perfil local para a próxima verificação
+        perfil.listaServicos = onboardingServicos; 
+        
         fecharTodosOsModais(); // Fecha aguarde e modal
-        abrirOnboardingEtapa2(); // Abre Etapa 2
+        
+        // Etapa 1 sempre leva para Etapa 2 (Promoções), que é opcional
+        abrirOnboardingEtapa2(); 
+
     } catch (e) {
         fecharTodosOsModais();
-        exibirPopup("Erro ao salvar serviços", e.message);
+        exibirPopup("Erro ao salvar serviços", e.message, "erro");
     }
 }
 
@@ -9258,7 +9329,6 @@ function abrirOnboardingEtapa2() {
     abrirModal('modalOnboardingPromocoes');
 }
 
-// Salva e avança para a Etapa 3 (Agenda)
 async function salvarOnboardingPromocao() {
     const nome = document.getElementById('onboardingPromocaoNome').value.trim();
     const descricao = document.getElementById('onboardingPromocaoDescricao').value.trim();
@@ -9285,11 +9355,18 @@ async function salvarOnboardingPromocao() {
         await db.collection('usuarios').doc(auth.currentUser.uid).update({
             promocoes: firebase.firestore.FieldValue.arrayUnion(novaPromocao)
         });
+        
+        // Atualiza o perfil local antes de checar de novo
+        perfil = (await db.collection('usuarios').doc(auth.currentUser.uid).get()).data();
+        
         fecharTodosOsModais();
-        abrirOnboardingEtapa3(); // Abre Etapa 3
+        
+        // Chama a função mestre para encontrar a próxima pendência
+        iniciarFluxoDeConfiguracaoProfissional(); 
+
     } catch (e) {
         fecharTodosOsModais();
-        exibirPopup("Erro ao salvar promoção", e.message);
+        exibirPopup("Erro ao salvar promoção", e.message, "erro");
     }
 }
 
@@ -9376,7 +9453,6 @@ function toggleOnboardingAgendaManual() {
     // --- LÓGICA DE DESATIVAÇÃO MÚTUA REMOVIDA ---
 }
 
-// Salva e avança para a Etapa 4 (Logomarca)
 async function salvarOnboardingAgenda() {
     // Validação: Pelo menos uma opção deve ser ativada
     const { disponivel, vagaImediata, usaAgendaManual, agenda } = onboardingAgendaConfig;
@@ -9396,11 +9472,18 @@ async function salvarOnboardingAgenda() {
             agenda: usaAgendaManual ? agenda : {} // Salva agenda se manual, senão limpa
         };
         await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+        
+        // Atualiza o perfil local antes de checar de novo
+        perfil = (await db.collection('usuarios').doc(auth.currentUser.uid).get()).data();
+
         fecharTodosOsModais();
-        abrirOnboardingEtapa4(); // Abre Etapa 4
+
+        // Chama a função mestre para encontrar a próxima pendência
+        iniciarFluxoDeConfiguracaoProfissional(); 
+
     } catch (e) {
         fecharTodosOsModais();
-        exibirPopup("Erro ao salvar agenda", e.message);
+        exibirPopup("Erro ao salvar agenda", e.message, "erro");
     }
 }
 
@@ -9437,7 +9520,6 @@ function abrirOnboardingEtapa4() {
     abrirModal('modalOnboardingLogomarca');
 }
 
-// Salva e avança para a Etapa 5 (Portfólio)
 async function salvarOnboardingLogo() {
     const fileInput = document.getElementById("onboardingLogomarcaFile");
     const progressBar = document.getElementById('onboardingLogoUploadProgress');
@@ -9467,13 +9549,18 @@ async function salvarOnboardingLogo() {
             logo_url: downloadURL
         });
         
+        // Atualiza o perfil local antes de checar de novo
+        perfil = (await db.collection('usuarios').doc(auth.currentUser.uid).get()).data();
+        
         fecharTodosOsModais();
-        abrirOnboardingEtapa5(); // Abre Etapa 5
+        
+        // Chama a função mestre para encontrar a próxima pendência
+        iniciarFluxoDeConfiguracaoProfissional(); 
         
     } catch (error) {
         fecharTodosOsModais();
         progressBar.style.display = 'none'; btnSalvar.disabled = false;
-        exibirPopup("Erro ao salvar logomarca", error.message);
+        exibirPopup("Erro ao salvar logomarca", error.message, "erro");
     }
 }
 
@@ -9580,12 +9667,13 @@ async function salvarOnboardingPortfolio() {
         });
         
         // Se chegou aqui, tudo deu certo
+        // Esta é a última etapa, então chama a finalização
         finalizarOnboardingCompleto();
         
     } catch (error) {
         fecharTodosOsModais();
         progressBar.style.display = 'none'; btnSalvar.disabled = false;
-        exibirPopup("Erro ao salvar portfólio", error.message);
+        exibirPopup("Erro ao salvar portfólio", error.message, "erro");
     }
 }
 
@@ -9610,8 +9698,17 @@ function fecharOnboardingComAviso(etapa) {
 // Chamada quando o usuário clica "OK, Entendi" no aviso
 async function confirmarFechamentoOnboarding() {
     fecharTodosOsModais(); // Fecha o aviso e o modal da etapa
-    // Não marca como concluído, o flag `precisaConfiguracaoInicial` continua `true`
-    // O fluxo será reiniciado no próximo login.
+
+    // Se pulou a etapa de Promoções (2), que é opcional,
+    // chama a função mestre para continuar a verificação.
+    if (etapaAtualOnboarding === 2) { 
+        console.log("Fluxo: Pulando Etapa 2 (Promoções). Verificando próximas pendências...");
+        iniciarFluxoDeConfiguracaoProfissional(); 
+    }
+    
+    // Se pulou qualquer outra etapa essencial (1, 3, 4, 5),
+    // o fluxo é interrompido. `precisaConfiguracaoInicial` continua `true`
+    // e a função mestre será chamada novamente no próximo login/reload.
 }
 
 // Chamada APENAS no sucesso da Etapa 5
