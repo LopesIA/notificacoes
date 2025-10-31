@@ -3513,7 +3513,9 @@ auth.onAuthStateChanged(async user => {
         renderCurrentView(); // Renderiza a view correta
 
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
-        const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
+                if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
+
+const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
             
             if (sessionStorage.getItem(reloadFlag) !== 'true') {
                 console.log("Primeira carga do profissional com onboarding pendente. Definindo flag e recarregando...");
