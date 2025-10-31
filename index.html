@@ -2488,6 +2488,17 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 <!-- ====== FIM: NOVOS MODAIS ONBOARDING PROFISSIONAL (COPIAR) ========= -->
 <!-- ===================================================================== -->
 
+<div id="modalLembretePendencia" class="modal" style="z-index: 30;">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>Configurações Pendentes</h3>
+    <p>Faltam configurações essenciais para que os clientes possam encontrar e agendar com você. Recomendamos que conclua agora.</p>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button onclick="fecharModalAtual()" style="background-color: #555;">Deixar pra depois</button>
+      <button id="btnLembreteOk" onclick="iniciarFluxoDeLembrete()">OK, Configurar</button>
+    </div>
+  </div>
+</div>
+
 <div id="modalAdminDetalhesCidade" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>🏙️ Aprovar Alteração de Cidade</h3>
@@ -8785,49 +8796,105 @@ async function verificarPendencias(uid) {
 
 // SUBSTITUA A FUNÇÃO 'verificarPendenciasEssenciaisProfissional' INTEIRA EM index.html
 async function verificarPendenciasEssenciaisProfissional(uid) {
-    // 1. Se já estiver no fluxo de onboarding (etapaAtualOnboarding > 0)
-    // 2. OU se o onboarding inicial ainda não foi concluído (precisaConfiguracaoInicial === true)
-    // ... não faz nada, pois o 'onAuthStateChanged' já cuidará disso.
+    // Se o fluxo inicial ainda está ativo (true) ou se um popup de etapa já está aberto, não faz nada.
     if (etapaAtualOnboarding > 0 || !perfil || perfil.precisaConfiguracaoInicial === true) {
         return;
     }
 
-    // 3. Se o onboarding FOI concluído (false), verifica item por item
-    //    Usamos 'perfil' pois ele é atualizado em tempo real pelo listener
+    // Se o onboarding inicial foi pulado (false), verificamos as pendências.
     const p = perfil;
 
-    // --- NOVA LÓGICA DE VERIFICAÇÃO ---
+    // 1. Verifica se HÁ ALGUMA pendência essencial
+    const temServicos = p.listaServicos && p.listaServicos.length > 0;
+    const temHorarioManual = Object.values(p.agenda || {}).some(v => v === true);
+    const temAgenda = p.vagaImediata || temHorarioManual;
+    const temLogo = !!p.logo_url;
+    const temPortfolio = p.portfolio && p.portfolio.length > 0;
+
+    const temPendencia = !temServicos || !temAgenda || !temLogo || !temPortfolio;
+
+    // 2. Se tiver pendência, mostra o popup de Lembrete
+    if (temPendencia) {
+        // Não abre se outro modal já estiver visível (ex: o de Lembrete)
+        if (document.getElementById('modalLembretePendencia').classList.contains('show')) {
+            return;
+        }
+        console.log("Fluxo Lembrete: Pendências encontradas. Abrindo modalLembretePendencia.");
+        abrirModal('modalLembretePendencia');
+    }
+    // Se não houver pendência, não faz nada.
+}
+
+// [ADICIONAR ESTAS NOVAS FUNÇÕES]
+
+/**
+ * Chamada pelo botão "OK, Configurar" do modal de lembrete.
+ * Fecha o lembrete e inicia a verificação do primeiro popup pendente.
+ */
+function iniciarFluxoDeLembrete() {
+    fecharModalAtual(); // Fecha o modal de lembrete
+    
+    // Roda a verificação de qual popup abrir.
+    // Usamos um timeout curto para garantir que o modal de lembrete feche antes do próximo abrir.
+    setTimeout(() => {
+        abrirProximoPopupDeLembrete();
+    }, 350); 
+}
+
+/**
+ * Verifica (recarregando o perfil) qual a próxima configuração essencial pendente
+ * e abre o modal correspondente no "modo lembrete".
+ */
+async function abrirProximoPopupDeLembrete() {
+    // Recarrega o perfil para garantir dados frescos
+    let p;
+    try {
+        exibirAguarde("Verificando..."); // Mostra um aguarde rápido
+        const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
+        if (!userDoc.exists) throw new Error("Usuário não encontrado.");
+        p = userDoc.data();
+        perfil = p; // Atualiza o perfil global
+        fecharAguarde(null, true); // Fecha o aguarde
+    } catch (e) {
+        fecharAguarde(null, true);
+        exibirPopup("Erro", "Não foi possível verificar suas configurações: " + e.message, "erro");
+        return;
+    }
+    
+    console.log("Fluxo Lembrete: Verificando próxima pendência...");
 
     // 1. Verifica Serviços
     if (!p.listaServicos || p.listaServicos.length === 0) {
-        exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.");
-        return abrirOnboardingEtapa1(); // Para aqui
-location.reload();
-    }
-    
-    // 2. Verifica Logomarca
-    if (!p.logo_url) {
-        exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.");
-        return abrirOnboardingEtapa4(); // Para aqui
-location.reload();
-    }
-    
-    // 3. Verifica Portfólio
-    if (!p.portfolio || p.portfolio.length === 0) {
-        exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.");
-        return abrirOnboardingEtapa5(); // Para aqui
-location.reload();
+        console.log("Fluxo Lembrete: Abrindo Etapa 1 (Serviços).");
+        abrirOnboardingEtapa1(true); // 'true' para modo lembrete
+        return;
     }
 
-    // 4. Verifica Agenda (só se vaga imediata E agenda manual estiverem inativas)
+    // 2. Verifica Agenda (Etapa 3 do fluxo original)
     const temHorarioManual = Object.values(p.agenda || {}).some(v => v === true);
     if (!p.vagaImediata && !temHorarioManual) {
-        exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure.");
-        return abrirOnboardingEtapa3(); // Para aqui
-location.reload();
+        console.log("Fluxo Lembrete: Abrindo Etapa 3 (Agenda).");
+        abrirOnboardingEtapa3(true); // 'true' para modo lembrete
+        return;
     }
 
-    // 5. Popup 2 (Promoção) NÃO é verificado aqui, pois é opcional.
+    // 3. Verifica Logomarca (Etapa 4)
+    if (!p.logo_url) {
+        console.log("Fluxo Lembrete: Abrindo Etapa 4 (Logo).");
+        abrirOnboardingEtapa4(true); // 'true' para modo lembrete
+        return;
+    }
+    
+    // 4. Verifica Portfólio (Etapa 5)
+    if (!p.portfolio || p.portfolio.length === 0) {
+        console.log("Fluxo Lembrete: Abrindo Etapa 5 (Portfólio).");
+        abrirOnboardingEtapa5(true); // 'true' para modo lembrete
+        return;
+    }
+
+    // 5. Nenhuma pendência encontrada!
+    console.log("Fluxo Lembrete: Nenhuma pendência restante.");
+    exibirPopup("Tudo Certo!", "Todas as suas configurações essenciais estão completas.", "sucesso");
 }
 
 async function carregarAvaliacaoProduto(produtoId, produtoNome, container) {
@@ -9227,11 +9294,11 @@ async function iniciarFluxoDeConfiguracaoProfissional() {
 // =====================================================================
 
 // --- ETAPA 1: SERVIÇOS ---
-function abrirOnboardingEtapa1() {
+// [SUBSTITUIR ESTA FUNÇÃO]
+function abrirOnboardingEtapa1(isModoLembrete = false) {
     etapaAtualOnboarding = 1;
     onboardingServicos = []; // Limpa
     
-    // Pega o modal antigo que você já tinha
     const modal = document.getElementById('modalOnboardingProfissionalServicos');
     if (!modal) {
         console.error("Modal modalOnboardingProfissionalServicos não encontrado!");
@@ -9245,14 +9312,12 @@ function abrirOnboardingEtapa1() {
     document.getElementById('onboardingServicoTempo').value = '';
     document.getElementById('btnOnboardingNextServicos').disabled = true;
 
-    // Ajusta os botões para o novo fluxo
     const btnConcluir = document.getElementById('btnOnboardingNextServicos');
-    btnConcluir.textContent = 'Concluir ➡️';
-    btnConcluir.onclick = salvarOnboardingServicos;
+    let btnFechar = document.getElementById('btnOnboardingCloseServicos');
 
-    // Adiciona o botão Fechar
-    if (!document.getElementById('btnOnboardingCloseServicos')) {
-        const btnFechar = document.createElement('button');
+    // Adiciona o botão Fechar se não existir
+    if (!btnFechar) {
+        btnFechar = document.createElement('button');
         btnFechar.id = 'btnOnboardingCloseServicos';
         btnFechar.textContent = '❌ Fechar';
         btnFechar.style.backgroundColor = '#555';
@@ -9260,6 +9325,19 @@ function abrirOnboardingEtapa1() {
         btnConcluir.parentNode.insertBefore(btnFechar, btnConcluir);
         btnConcluir.parentNode.style.display = 'flex';
         btnConcluir.parentNode.style.gap = '10px';
+    }
+
+    // Lógica dos botões baseada no modo
+    if (isModoLembrete) {
+        btnConcluir.textContent = 'Concluir ➡️';
+        btnConcluir.onclick = salvarOnboardingServicosLembrete; // Nova função wrapper
+        btnFechar.classList.add('hidden'); // Esconde o "Fechar"
+        btnFechar.parentNode.style.justifyContent = 'flex-end'; 
+    } else {
+        btnConcluir.textContent = 'Próximo ➡️'; // No fluxo inicial, é "Próximo"
+        btnConcluir.onclick = salvarOnboardingServicos; // Função original
+        btnFechar.classList.remove('hidden'); // Mostra o "Fechar"
+        btnFechar.parentNode.style.justifyContent = 'space-between';
     }
 
     abrirModal('modalOnboardingProfissionalServicos');
@@ -9359,10 +9437,10 @@ async function salvarOnboardingPromocao() {
 }
 
 // --- ETAPA 3: AGENDA ---
-function abrirOnboardingEtapa3() {
+function abrirOnboardingEtapa3(isModoLembrete = false) {
     etapaAtualOnboarding = 3;
+    const modal = document.getElementById('modalOnboardingAgenda');
     
-    // Reseta o estado da agenda
     onboardingAgendaConfig = { vagaImediata: false, usaAgendaManual: false, agenda: {} };
 
     const btnDisp = document.getElementById("onboardingBtnDisponibilidade");
@@ -9371,44 +9449,50 @@ function abrirOnboardingEtapa3() {
     const painelManual = document.getElementById("onboardingAgendaManualPainel");
     const horariosContainer = document.getElementById("onboardingHorariosContainer");
 
-    // Define estado inicial dos botões (baseado no modal de agenda normal)
     btnDisp.textContent = '🟢 Ficar Disponível (Automático)';
     btnDisp.classList.remove('selected'); 
     onboardingAgendaConfig.disponivel = "nao";
-
     btnVaga.textContent = '⚡ Ativar Vaga Imediata';
     btnVaga.classList.remove('selected');
-
     btnManual.textContent = '📅 Ativar Agenda Manual';
     btnManual.classList.remove('selected');
-    
     painelManual.classList.add("hidden");
     
-    // Popula os horários
     horariosContainer.innerHTML = "";
-    // --- LOOP DE 30 MINUTOS ---
-    for (let i = 7 * 60; i <= 18 * 60; i += 30) { // De 7h às 18h, de 30 em 30 min
+    for (let i = 7 * 60; i <= 18 * 60; i += 30) {
         const horas = Math.floor(i / 60);
         const minutos = i % 60;
         const horario = `${horas}:${minutos.toString().padStart(2, '0')}`;
-    // --- FIM DO LOOP ---
-    
         const btn = document.createElement('button');
         btn.textContent = horario;
-        btn.className = `horario-btn`; // Sem 'selecionado' ou 'bloqueado'
+        btn.className = `horario-btn`;
         btn.onclick = () => {
             const statusAtual = onboardingAgendaConfig.agenda[horario];
             if (statusAtual === true) {
-                // Se estava selecionado, remove (não bloqueia no onboarding)
                 delete onboardingAgendaConfig.agenda[horario];
                 btn.classList.remove("selecionado");
             } else {
-                // Se não estava, seleciona
                 onboardingAgendaConfig.agenda[horario] = true;
                 btn.classList.add("selecionado");
             }
         };
         horariosContainer.appendChild(btn);
+    }
+
+    // Lógica dos botões
+    const btnConcluir = document.getElementById('btnOnboardingNextAgenda');
+    const btnFechar = modal.querySelector('button[onclick^="fecharOnboardingComAviso(3)"]'); 
+
+    if (isModoLembrete) {
+        btnConcluir.textContent = 'Concluir ➡️';
+        btnConcluir.onclick = salvarOnboardingAgendaLembrete; // Nova função wrapper
+        if(btnFechar) btnFechar.classList.add('hidden');
+        if(btnFechar) btnFechar.parentNode.style.justifyContent = 'flex-end';
+    } else {
+        btnConcluir.textContent = 'Concluir ➡️';
+        btnConcluir.onclick = salvarOnboardingAgenda; // Função original
+        if(btnFechar) btnFechar.classList.remove('hidden');
+        if(btnFechar) btnFechar.parentNode.style.justifyContent = 'space-between';
     }
     
     abrirModal('modalOnboardingAgenda');
@@ -9470,19 +9554,19 @@ async function salvarOnboardingAgenda() {
 }
 
 // --- ETAPA 4: LOGOMARCA ---
-function abrirOnboardingEtapa4() {
+function abrirOnboardingEtapa4(isModoLembrete = false) {
     etapaAtualOnboarding = 4;
-    onboardingLogoUrl = null; // Reseta
+    onboardingLogoUrl = null; 
+    const modal = document.getElementById('modalOnboardingLogomarca');
 
     const fileInput = document.getElementById("onboardingLogomarcaFile");
     const previewImg = document.getElementById("onboardingLogomarcaPreview");
     const btnSalvar = document.getElementById("btnOnboardingNextLogo");
     
-    fileInput.value = ''; // Limpa seleção anterior
+    fileInput.value = ''; 
     previewImg.style.display = 'none';
     btnSalvar.disabled = true;
 
-    // Remove listener antigo e adiciona novo
     fileInput.onchange = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -9490,7 +9574,7 @@ function abrirOnboardingEtapa4() {
             reader.onload = (e) => {
                 previewImg.src = e.target.result;
                 previewImg.style.display = 'block';
-                btnSalvar.disabled = false; // Habilita o botão
+                btnSalvar.disabled = false; 
             }
             reader.readAsDataURL(file);
         } else {
@@ -9498,6 +9582,22 @@ function abrirOnboardingEtapa4() {
             btnSalvar.disabled = true;
         }
     };
+
+    // Lógica dos botões
+    const btnConcluir = btnSalvar; // Reutilizando a var
+    const btnFechar = modal.querySelector('button[onclick^="fecharOnboardingComAviso(4)"]');
+
+    if (isModoLembrete) {
+        btnConcluir.textContent = 'Concluir ➡️';
+        btnConcluir.onclick = salvarOnboardingLogoLembrete; // Nova função wrapper
+        if(btnFechar) btnFechar.classList.add('hidden');
+        if(btnFechar) btnFechar.parentNode.style.justifyContent = 'flex-end';
+    } else {
+        btnConcluir.textContent = 'Concluir ➡️';
+        btnConcluir.onclick = salvarOnboardingLogo; // Função original
+        if(btnFechar) btnFechar.classList.remove('hidden');
+        if(btnFechar) btnFechar.parentNode.style.justifyContent = 'space-between';
+    }
     
     abrirModal('modalOnboardingLogomarca');
 }
@@ -9543,9 +9643,10 @@ async function salvarOnboardingLogo() {
 }
 
 // --- ETAPA 5: PORTFÓLIO ---
-function abrirOnboardingEtapa5() {
+function abrirOnboardingEtapa5(isModoLembrete = false) {
     etapaAtualOnboarding = 5;
-    onboardingPortfolioUrls = []; // Reseta
+    onboardingPortfolioUrls = []; 
+    const modal = document.getElementById('modalOnboardingPortfolio');
 
     const fileInput = document.getElementById("onboardingPortfolioFilesInput");
     const previewContainer = document.getElementById("onboardingPortfolioPreviews");
@@ -9555,16 +9656,14 @@ function abrirOnboardingEtapa5() {
     previewContainer.innerHTML = '';
     btnSalvar.disabled = true;
     
-    // Remove listener antigo e adiciona novo
     fileInput.onchange = (event) => {
-        previewContainer.innerHTML = ''; // Limpa previews
+        previewContainer.innerHTML = ''; 
         const files = event.target.files;
         
         if (files.length === 0) {
             btnSalvar.disabled = true;
             return;
         }
-
         if (files.length > 30) {
             exibirPopup("Limite Excedido", "Você pode enviar no máximo 30 imagens de uma vez.");
             fileInput.value = '';
@@ -9583,10 +9682,177 @@ function abrirOnboardingEtapa5() {
              }
              reader.readAsDataURL(file);
         });
-        btnSalvar.disabled = false; // Habilita o botão
+        btnSalvar.disabled = false; 
     };
 
+    // Lógica dos botões
+    const btnConcluir = btnSalvar; // Reutilizando a var
+    const btnFechar = modal.querySelector('button[onclick^="fecharOnboardingComAviso(5)"]');
+
+    if (isModoLembrete) {
+        btnConcluir.textContent = '🎉 Concluir'; // Última etapa
+        btnConcluir.onclick = salvarOnboardingPortfolioLembrete; // Nova função wrapper
+        if(btnFechar) btnFechar.classList.add('hidden');
+        if(btnFechar) btnFechar.parentNode.style.justifyContent = 'flex-end';
+    } else {
+        btnConcluir.textContent = '🎉 Finalizar Configuração'; // Última etapa
+        btnConcluir.onclick = salvarOnboardingPortfolio; // Função original
+        if(btnFechar) btnFechar.classList.remove('hidden');
+        if(btnFechar) btnFechar.parentNode.style.justifyContent = 'space-between';
+    }
+
     abrirModal('modalOnboardingPortfolio');
+}
+
+// [ADICIONAR ESTAS NOVAS FUNÇÕES]
+
+/** (Modo Lembrete) Salva Serviços e chama o próximo popup */
+async function salvarOnboardingServicosLembrete() {
+    if (onboardingServicos.length === 0) {
+        exibirPopup("Atenção", "Você precisa adicionar pelo menos 1 serviço para continuar.");
+        return;
+    }
+    
+    exibirAguarde("Salvando serviços...");
+    try {
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+            listaServicos: onboardingServicos
+        });
+        fecharTodosOsModais(); // Fecha aguarde e modal
+        abrirProximoPopupDeLembrete(); // <-- Chama o verificador
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao salvar serviços", e.message, "erro");
+    }
+}
+
+/** (Modo Lembrete) Salva Agenda e chama o próximo popup */
+async function salvarOnboardingAgendaLembrete() {
+    const { disponivel, vagaImediata, usaAgendaManual, agenda } = onboardingAgendaConfig;
+    const agendaManualConfigurada = usaAgendaManual && Object.values(agenda).some(v => v === true);
+
+    if (disponivel === "nao" && !vagaImediata && !agendaManualConfigurada) {
+        document.getElementById('overlayOnboardingAgenda').classList.remove('hidden');
+        return;
+    }
+    
+    exibirAguarde("Salvando agenda...");
+    try {
+        const updates = {
+            disponivel: disponivel,
+            vagaImediata: vagaImediata,
+            usaAgendaManual: usaAgendaManual,
+            agenda: usaAgendaManual ? agenda : {}
+        };
+        await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+        fecharTodosOsModais();
+        abrirProximoPopupDeLembrete(); // <-- Chama o verificador
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao salvar agenda", e.message, "erro");
+    }
+}
+
+/** (Modo Lembrete) Salva Logo e chama o próximo popup */
+async function salvarOnboardingLogoLembrete() {
+    const fileInput = document.getElementById("onboardingLogomarcaFile");
+    const progressBar = document.getElementById('onboardingLogoUploadProgress');
+    const btnSalvar = document.getElementById('btnOnboardingNextLogo');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        document.getElementById('overlayOnboardingLogo').classList.remove('hidden');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const userId = auth.currentUser.uid;
+    const filePath = `logos/${userId}_${Date.now()}_${file.name}`;
+
+    exibirAguarde("Enviando logomarca...");
+    progressBar.style.display = 'block'; btnSalvar.disabled = true;
+
+    try {
+        const downloadURL = await uploadImage(file, filePath, (progress) => {
+            progressBar.value = progress;
+        });
+        
+        await db.collection("usuarios").doc(userId).update({
+            logo_url: downloadURL
+        });
+        
+        fecharTodosOsModais();
+        abrirProximoPopupDeLembrete(); // <-- Chama o verificador
+        
+    } catch (error) {
+        fecharTodosOsModais();
+        progressBar.style.display = 'none'; btnSalvar.disabled = false;
+        exibirPopup("Erro ao salvar logomarca", error.message, "erro");
+    }
+}
+
+/** (Modo Lembrete) Salva Portfólio e chama o próximo popup (que finalizará) */
+async function salvarOnboardingPortfolioLembrete() {
+    const fileInput = document.getElementById("onboardingPortfolioFilesInput");
+    const progressBar = document.getElementById('onboardingPortfolioUploadProgress');
+    const btnSalvar = document.getElementById('btnOnboardingNextPortfolio');
+    const userId = auth.currentUser.uid;
+    const files = fileInput.files;
+
+    if (!files || files.length === 0) {
+        document.getElementById('overlayOnboardingPortfolio').classList.remove('hidden');
+        return;
+    }
+    
+    exibirAguarde(`Enviando ${files.length} imagem(ns)...`);
+    progressBar.style.display = 'block'; btnSalvar.disabled = true;
+
+    // (Lógica de upload copiada de 'salvarOnboardingPortfolio')
+    const uploadPromises = [];
+    let totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+    const uploadTasksInfo = [];
+
+    Array.from(files).forEach((file, index) => {
+        const filePath = `portfolio/${userId}/${Date.now()}_${index}_${file.name}`;
+        const uploadPromise = new Promise((resolve, reject) => {
+            const storageRef = storage.ref(filePath);
+            const uploadTask = storageRef.put(file);
+            const taskInfo = { task: uploadTask, bytesTransferred: 0 };
+            uploadTasksInfo.push(taskInfo);
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    taskInfo.bytesTransferred = snapshot.bytesTransferred;
+                    let totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0);
+                    const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0;
+                    progressBar.value = progress;
+                },
+                (error) => reject(error),
+                async () => {
+                    try {
+                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                        resolve(downloadURL);
+                    } catch(urlError) { reject(urlError); }
+                }
+            );
+        });
+        uploadPromises.push(uploadPromise);
+    });
+
+    try {
+        const novasUrls = await Promise.all(uploadPromises);
+        
+        await db.collection('usuarios').doc(userId).update({
+            portfolio: firebase.firestore.FieldValue.arrayUnion(...novasUrls)
+        });
+        
+        fecharTodosOsModais();
+        abrirProximoPopupDeLembrete(); // <-- Chama o verificador (que verá que tudo está completo)
+        
+    } catch (error) {
+        fecharTodosOsModais();
+        progressBar.style.display = 'none'; btnSalvar.disabled = false;
+        exibirPopup("Erro ao salvar portfólio", error.message, "erro");
+    }
 }
 
 // Salva e FINALIZA o fluxo
@@ -9672,11 +9938,24 @@ function fecharOnboardingComAviso(etapa) {
     abrirModal('modalAvisoOnboarding');
 }
 
-// Chamada quando o usuário clica "OK, Entendi" no aviso
 async function confirmarFechamentoOnboarding() {
     fecharTodosOsModais(); // Fecha o aviso e o modal da etapa
-    // Não marca como concluído, o flag `precisaConfiguracaoInicial` continua `true`
-    // O fluxo será reiniciado no próximo login.
+    
+    // --- NOVA LÓGICA (PEDIDO DO USUÁRIO) ---
+    // Marca o onboarding inicial como "ignorado" para não mostrar mais.
+    // O novo fluxo de "lembrete" será ativado no próximo login.
+    exibirAguarde("Salvando preferência...");
+    try {
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+            precisaConfiguracaoInicial: false // <-- A MUDANÇA PRINCIPAL
+        });
+        fecharTodosOsModais();
+        exibirPopup("OK!", "Você pode completar as configurações mais tarde no seu painel. Elas são essenciais para clientes agendarem.");
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro", "Não foi possível salvar sua preferência: " + e.message, "erro");
+    }
+    // --- FIM DA NOVA LÓGICA ---
 }
 
 // Chamada APENAS no sucesso da Etapa 5
