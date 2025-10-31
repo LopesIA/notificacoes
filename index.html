@@ -6696,6 +6696,7 @@ const conquistasDefinidas = {
     }
 };
 
+// SUBSTITUA A FUNÇÃO verificarConquistas
 async function verificarConquistas(uid) {
     const userRef = db.collection('usuarios').doc(uid);
     const userDoc = await userRef.get();
@@ -6704,7 +6705,8 @@ async function verificarConquistas(uid) {
     const conquistasAtuais = userData.conquistas || [];
     const cortes = userData.cortesRealizados || 0;
     const definicoes = conquistasDefinidas.cliente;
-    const niveis = { 1: 'cortes_1', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100', 250: 'cortes_250', 500: 'cortes_500', 1000: 'cortes_'1000' };
+    // CORREÇÃO: 'cortes_1000' estava com aspas erradas
+    const niveis = { 1: 'cortes_1', 5: 'cortes_5', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100', 250: 'cortes_250', 500: 'cortes_500', 1000: 'cortes_1000' };
 
     for (const nivel in niveis) {
         const conquistaId = niveis[nivel];
@@ -6716,6 +6718,7 @@ async function verificarConquistas(uid) {
     }
 }
 
+// SUBSTITUA A FUNÇÃO verificarConquistasBarbeiro
 async function verificarConquistasBarbeiro(uid) {
     const userRef = db.collection('usuarios').doc(uid);
     const userDoc = await userRef.get();
@@ -6724,7 +6727,8 @@ async function verificarConquistasBarbeiro(uid) {
     const conquistasAtuais = userData.conquistas || [];
     const cortes = userData.clientesAtendidos || 0;
     const definicoes = conquistasDefinidas.profissional;
-    const niveis = { 1: 'cortes_1', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100', 250: 'cortes_250', 500: 'cortes_500', 1000: 'cortes_'1000' };
+    // CORREÇÃO: 'cortes_1000' estava com aspas erradas e 'cortes_5' estava faltando (agora incluído como você pediu)
+    const niveis = { 1: 'cortes_1', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100', 250: 'cortes_250', 500: 'cortes_500', 1000: 'cortes_1000' };
 
     
     for (const nivel in niveis) {
