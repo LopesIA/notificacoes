@@ -1212,6 +1212,18 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     border: 1px dashed rgba(255, 0, 0, 0.8);
 }
 
+.professional-name-card {
+        margin: 0;
+        font-size: 1.2em; /* Um pouco maior */
+        font-weight: 700; /* Mais forte (Poppins 700) */
+        color: var(--cor-destaque); /* Usa a cor do tema */
+        text-shadow: 0 0 6px rgba(212, 175, 55, 0.4); /* Brilho sutil */
+        transition: text-shadow 0.3s ease;
+    }
+    .barbeiro-card:hover .professional-name-card {
+         text-shadow: 0 0 10px var(--cor-destaque); /* Brilho maior no hover */
+    }
+
   </style>
 </head>
 <body>
@@ -3192,6 +3204,7 @@ async function enviarSolicitacaoRecuperacaoSenha() {
 }
 
 // SUBSTITUA A FUNÇÃO criarConta() INTEIRA POR ESTA VERSÃO:
+// SUBSTITUA A FUNÇÃO 'criarConta' INTEIRA EM index.html
 function criarConta() {
   exibirAguarde("Criando sua conta...");
   const email = document.getElementById("email").value.trim();
@@ -3258,8 +3271,9 @@ function criarConta() {
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
 
-      // REMOVIDO: A chamada iniciarFluxoPosCadastroProfissional() foi removida daqui.
-      // O listener onAuthStateChanged cuidará disso de forma mais robusta.
+      // --- !! ESTA É A LINHA ADICIONADA PARA FORÇAR O LOGIN/RELOAD !! ---
+      location.reload();
+      // ------------------------------------------------------------------
 
     })
     .catch(e => {
@@ -3446,46 +3460,50 @@ auth.onAuthStateChanged(async user => {
         }
         renderCurrentView(); // Renderiza a view correta
 
-        // Inicia Onboarding do Profissional se necessário
+        // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
         if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
             
-            // --- INÍCIO DA MODIFICAÇÃO (Task 1: Forçar Reload) ---
             const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
             
             if (sessionStorage.getItem(reloadFlag) !== 'true') {
-                // 1. É a primeira vez que vemos isso nesta sessão.
                 console.log("Primeira carga do profissional com onboarding pendente. Definindo flag e recarregando...");
                 sessionStorage.setItem(reloadFlag, 'true');
-                
-                // Força o recarregamento. O auth.onAuthStateChanged vai rodar de novo.
                 location.reload(); 
-                
-                // Interrompe a execução atual para esperar o reload
                 return; 
             } else {
-                // 2. O reload já aconteceu. A flag está 'true'.
                 console.log("Flag de reload encontrada. Iniciando fluxo de onboarding...");
-                
-                // Verifica se um modal de onboarding já não está aberto (evita loop)
                 const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
                 if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
                    console.log("Iniciando fluxo de configuração inicial do profissional...");
                    iniciarOnboardingProfissionalEtapa1(); // Chama a nova Etapa 1
                 }
             }
-            // --- FIM DA MODIFICAÇÃO ---
-
+        
         } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
-             // Limpa a flag se o onboarding for concluído
+             // Onboarding concluído, faz a verificação de rotina de pendências
              const reloadFlag = 'onboarding_reload_done_' + user.uid;
              if (sessionStorage.getItem(reloadFlag)) {
                  sessionStorage.removeItem(reloadFlag);
              }
+             // Adiciona um delay para não sobrepor outros popups (ex: atualização)
+             setTimeout(() => {
+                verificarPendenciasEssenciaisProfissional(user.uid);
+             }, 2000); // 2 segundos de delay
         }
+        // --- !! FIM DO BLOCO DE ONBOARDING ATUALIZADO !! ---
 
         // --- Demais inicializações ---
-        if (!updateLastSeenInterval) { /* ... (lógica do lastSeen) ... */
-            const updateFn = () => { /* ... */ }; updateFn(); updateLastSeenInterval = setInterval(updateFn, 60 * 1000);
+        if (!updateLastSeenInterval) {
+            // Lógica do lastSeen
+            const updateFn = () => {
+                if(auth.currentUser) {
+                    db.collection('usuarios').doc(auth.currentUser.uid).update({
+                        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(err => console.warn("Falha ao atualizar lastSeen:", err.code));
+                }
+            };
+            updateFn(); // Chama uma vez imediatamente
+            updateLastSeenInterval = setInterval(updateFn, 60 * 1000); // Atualiza a cada 60s
         }
         setupFCM(user.uid);
         exibirVersaoApp();
@@ -3495,13 +3513,17 @@ auth.onAuthStateChanged(async user => {
         // --- Listeners adicionais ---
         // Listener de Avisos
         db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
-            .onSnapshot(snapshot => { /* ... (lógica dos avisos) ... */ });
+            .onSnapshot(snapshot => {
+                // (lógica de avisos existente)
+            });
 
         // Listener do Chat Global
         if (globalChatListener) globalChatListener();
         globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
             .orderBy("ts", "desc").limit(1)
-            .onSnapshot(snapshot => { /* ... (lógica do chat global preview) ... */ });
+            .onSnapshot(snapshot => {
+                 // (lógica de chat preview existente)
+            });
 
         // Listener de Vendas para Vendedores
         if (vendaListener) vendaListener();
@@ -3509,7 +3531,9 @@ auth.onAuthStateChanged(async user => {
             vendaListener = db.collection("loja_pedidos")
                 .where("vendedorUid", "==", user.uid)
                 .where("vendedorNotificado", "==", false)
-                .onSnapshot(snapshot => { /* ... (lógica popup nova venda) ... */ });
+                .onSnapshot(snapshot => {
+                    // (lógica popup nova venda existente)
+                });
         }
 
         // Listener de Confirmação para Compradores
@@ -3517,7 +3541,9 @@ auth.onAuthStateChanged(async user => {
         comprasClienteListener = db.collection('loja_pedidos')
             .where('clienteUid', '==', user.uid)
             .where('status', '==', 'entregue_pendente_confirmacao')
-            .onSnapshot(snapshot => { /* ... (lógica modal confirmação comprador) ... */ });
+            .onSnapshot(snapshot => {
+                // (lógica modal confirmação comprador existente)
+            });
         // --- Fim dos Listeners Adicionais ---
         console.log("Inicialização no primeiro load concluída.");
     }
@@ -3532,7 +3558,7 @@ auth.onAuthStateChanged(async user => {
   // --- Fim do Listener Principal ---
 
   // --- Verificação inicial de manutenção ---
-  try { /* ... (lógica de verificação de manutenção - permanece igual) ... */
+  try {
       const config = await db.collection("config").doc("sistema").get();
       const initialProfileSnap = await ref.get();
       if (!initialProfileSnap.exists) throw new Error("Perfil não encontrado na verificação inicial.");
@@ -3542,7 +3568,9 @@ auth.onAuthStateChanged(async user => {
           auth.signOut();
           return;
       }
-  } catch (configError) { /* ... (tratamento de erro - permanece igual) ... */ }
+  } catch (configError) { 
+      console.warn("Não foi possível verificar config/sistema:", configError);
+  }
   // --- Fim da verificação inicial de manutenção ---
 
 }); // Fim do onAuthStateChanged
@@ -3688,6 +3716,7 @@ function filtrarBarbeiros() {
   });
 }
 
+// SUBSTITUA A FUNÇÃO 'carregarBarbeirosPrincipal' INTEIRA EM index.html
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
     lista.innerHTML = "<p>⏳ Carregando profissionais...</p>";
@@ -3743,7 +3772,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
-            const reputacaoEstrelas = ''.repeat(Math.round((b.reputacao || 100) / 20));
+            const reputacaoEstrelas = '⭐'.repeat(Math.round((b.reputacao || 100) / 20));
             
             // --- INÍCIO DA MODIFICAÇÃO ---
             let statusHtml = '';
@@ -3786,13 +3815,14 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 Aprox. ${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
 
+            // --- !! ESTA É A LINHA ALTERADA (REMOVIDO 💈 e ADICIONADO class) !! ---
             lista.innerHTML += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon}
                   <div class="card-header">
                       ${logoHtml}
                       <div class="card-header-info">
-                          <h4>💈 ${b.nome}</h4>
+                          <h4 class="professional-name-card">${b.nome}</h4>
                           ${distanciaTexto}
                       </div>
                       <div class="card-reputacao">${reputacaoEstrelas}<br><span>(${b.reputacao || 100})</span></div>
@@ -3800,6 +3830,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
                   ${statusHtml}
                   ${promocoesHtml}
               </div>`;
+            // --------------------------------------------------------------------
         });
     });
 }
@@ -8682,6 +8713,38 @@ async function verificarPendencias(uid) {
     const saqueSnap = await db.collection("solicitacoes").where("usuarioUid", "==", uid).where("status", "==", "pendente").where("tipo", "==", "saque").get();
     if (!saqueSnap.empty) {
         notifyUser(uid, "⏳ Saque em Análise", "Sua solicitação de saque ainda está pendente de aprovação.", { link: '#carteira' });
+    }
+}
+
+// ADICIONE ESTA NOVA FUNÇÃO DENTRO DA TAG <script> EM index.html
+async function verificarPendenciasEssenciaisProfissional(uid) {
+    // 1. Se já estiver no fluxo de onboarding (etapaAtualOnboarding > 0)
+    // 2. OU se o onboarding inicial ainda não foi concluído (precisaConfiguracaoInicial === true)
+    // ... não faz nada, pois o 'onAuthStateChanged' já cuidará disso.
+    if (etapaAtualOnboarding > 0 || !perfil || perfil.precisaConfiguracaoInicial === true) {
+        return;
+    }
+
+    // 3. Se o onboarding FOI concluído (false), verifica item por item
+    //    Usamos 'perfil' pois ele é atualizado em tempo real pelo listener
+    const p = perfil;
+
+    // Verifica em ordem. Se abrir um modal, a função para.
+    if (!p.listaServicos || p.listaServicos.length === 0) {
+        exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.");
+        abrirOnboardingEtapa1(); // Reutiliza os modais de onboarding
+    } else if (!p.promocoes || p.promocoes.length === 0) {
+        exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos uma promoção.");
+        abrirOnboardingEtapa2();
+    } else if (p.disponivel === "nao" && !p.vagaImediata && !p.usaAgendaManual) {
+        exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure-a.");
+        abrirOnboardingEtapa3();
+    } else if (!p.logo_url) {
+        exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.");
+        abrirOnboardingEtapa4();
+    } else if (!p.portfolio || p.portfolio.length === 0) {
+        exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.");
+        abrirOnboardingEtapa5();
     }
 }
 
