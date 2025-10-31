@@ -8778,6 +8778,7 @@ async function verificarPendencias(uid) {
     }
 }
 
+// SUBSTITUA A FUNÇÃO 'verificarPendenciasEssenciaisProfissional' INTEIRA POR ESTA VERSÃO CORRIGIDA
 async function verificarPendenciasEssenciaisProfissional(uid) {
     // 1. Se já estiver no fluxo de onboarding (etapaAtualOnboarding > 0)
     // 2. OU se o onboarding inicial ainda não foi concluído (precisaConfiguracaoInicial === true)
@@ -8795,7 +8796,8 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     // 1. Verifica Serviços
     if (!p.listaServicos || p.listaServicos.length === 0) {
         exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.", 'aviso', () => {
-            abrirOnboardingEtapa1();
+            // CORREÇÃO APLICADA AQUI:
+            iniciarOnboardingProfissionalEtapa1(); 
         });
         return; // Para aqui
     }
@@ -8803,7 +8805,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     // 2. Verifica Logomarca
     if (!p.logo_url) {
         exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.", 'aviso', () => {
-            abrirOnboardingEtapa4();
+            abrirOnboardingEtapa4(); // Esta função está correta
         });
         return; // Para aqui
     }
@@ -8811,7 +8813,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     // 3. Verifica Portfólio
     if (!p.portfolio || p.portfolio.length === 0) {
         exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.", 'aviso', () => {
-            abrirOnboardingEtapa5();
+            abrirOnboardingEtapa5(); // Esta função está correta
         });
         return; // Para aqui
     }
@@ -8820,7 +8822,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     const temHorarioManual = Object.values(p.agenda || {}).some(v => v === true);
     if (!p.vagaImediata && !temHorarioManual) {
         exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure-a.", 'aviso', () => {
-            abrirOnboardingEtapa3();
+            abrirOnboardingEtapa3(); // Esta função está correta
         });
         return; // Para aqui
     }
