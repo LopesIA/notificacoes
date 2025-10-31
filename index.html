@@ -6690,9 +6690,10 @@ const conquistasDefinidas = {
         'cortes_10': { nome: 'Profissional em Ascensão', icone: '🔥', descricao: 'Concluiu 10 serviços.', level: 3 },
         'cortes_50': { nome: 'Profissional Experiente', icone: '😎', descricao: 'Concluiu 50 serviços.', level: 5 },
         'cortes_100': { nome: 'Mestre da Área', icone: '💎', descricao: 'Concluiu 100 serviços.', level: 6 },
-        'cortes_1000': { nome: 'Lenda do Ramo', icone: '🏆', descricao: 'Concluiu 1000 serviços.', level: 7 }
-    }
-};
+        'cortes_250': { nome: 'Referência Local', icone: '🚀', descricao: 'Concluiu 250 serviços.', level: 7 }, // ADICIONADO
+        'cortes_500': { nome: 'Influenciador da Beleza', icone: '🌟', descricao: 'Concluiu 500 serviços.', level: 8 }, // ADICIONADO
+        'cortes_1000': { nome: 'Lenda do Ramo', icone: '🏆', descricao: 'Concluiu 1000 serviços.', level: 9 } // Level ajustado
+    },
 
 async function verificarConquistas(uid) {
     const userRef = db.collection('usuarios').doc(uid);
@@ -6731,7 +6732,15 @@ async function verificarConquistasBarbeiro(uid) {
     const conquistasAtuais = userData.conquistas || [];
     const cortes = userData.clientesAtendidos || 0;
     const definicoes = conquistasDefinidas.profissional;
-    const niveis = { 1: 'cortes_1', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100', 1000: 'cortes_1000' };
+    const niveis = { 
+        1: 'cortes_1', 
+        10: 'cortes_10', 
+        50: 'cortes_50', 
+        100: 'cortes_100', 
+        250: 'cortes_250', // ADICIONADO
+        500: 'cortes_500', // ADICIONADO
+        1000: 'cortes_1000' 
+    };
     
     for (const nivel in niveis) {
         const conquistaId = niveis[nivel];
