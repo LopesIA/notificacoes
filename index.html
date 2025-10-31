@@ -7098,7 +7098,6 @@ function carregarPortfolioExistente() {
     // Cria um novo listener para o documento do usuário
     portfolioListener = db.collection('usuarios').doc(auth.currentUser.uid)
         .onSnapshot(doc => {
-            // Verifica se o modal ainda está aberto antes de atualizar a UI
             const modalPortfolio = document.getElementById('modalPortfolioBarbeiro');
             if (!doc.exists || !modalPortfolio || !modalPortfolio.classList.contains('show')) {
                 if (portfolioListener) {
@@ -7124,10 +7123,8 @@ function carregarPortfolioExistente() {
                     ? "Limite de 30 imagens atingido."
                     : `Adicionar Novas Imagens (${espacoDisponivel} restantes):`;
                 
-                // Limpa seleção se não há espaço
                 if (espacoDisponivel <= 0) fileInput.value = '';
             }
-             // Desabilita botão de salvar se input está desabilitado ou sem arquivos
              if(btnSalvarPortfolio) {
                  btnSalvarPortfolio.disabled = fileInput.disabled || !fileInput.files || fileInput.files.length === 0;
              }
@@ -7141,11 +7138,9 @@ function carregarPortfolioExistente() {
             gridContainer.innerHTML = ''; // Limpa o container
             portfolioUrls.forEach(url => {
                 const imgContainer = document.createElement('div');
-                // Estilo para criar 3 colunas
-                imgContainer.style.position = 'relative';
-                imgContainer.style.width = 'calc(33.33% - 8px)'; // 3 colunas com gap
-                imgContainer.style.margin = '4px';
-                imgContainer.style.display = 'inline-block'; // Garante alinhamento
+                // *** CORREÇÃO: Estilos de layout (width, margin, display) removidos ***
+                // O layout agora é 100% controlado pela classe CSS ".portfolio-grid"
+                imgContainer.style.position = 'relative'; 
 
                 const imgElement = document.createElement('img');
                 imgElement.src = url;
@@ -7157,7 +7152,6 @@ function carregarPortfolioExistente() {
                 imgElement.style.border = '1px solid var(--cor-borda)';
                 imgElement.onerror = function() {
                     this.src='https://via.placeholder.com/100x100?text=Erro!';
-                    // Remove o botão de deletar se a imagem falhar ao carregar
                     const deleteBtn = this.nextElementSibling;
                     if(deleteBtn) deleteBtn.remove();
                 };
@@ -7174,15 +7168,14 @@ function carregarPortfolioExistente() {
                 deleteButton.style.width = '20px';
                 deleteButton.style.height = '20px';
                 deleteButton.style.fontSize = '10px';
-                deleteButton.style.lineHeight = '20px'; // Centraliza o X
+                deleteButton.style.lineHeight = '20px'; 
                 deleteButton.style.textAlign = 'center';
                 deleteButton.style.padding = '0';
                 deleteButton.style.cursor = 'pointer';
                 deleteButton.title = 'Remover Imagem';
-                // Adiciona o onclick para a nova função de remover
                 deleteButton.onclick = (e) => {
                     e.stopPropagation();
-                    removerImagemPortfolio(url);
+                    removerImagemPortfolio(url); // Função que você já tem
                 };
 
                 imgContainer.appendChild(imgElement);
