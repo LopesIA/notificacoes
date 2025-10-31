@@ -2708,6 +2708,17 @@ function exibirPopup(titulo, mensagem, tipo = 'info', onOkCallback = null) { // 
     abrirModal('modalPopupGenerico');
 }
 
+function handlePopupGenericoOk(event) {
+    // Fecha o modal genérico
+    fecharModal(event); 
+    
+    // Executa o callback se ele existir
+    if (popupGenericoCallback) {
+        popupGenericoCallback(); // Executa a ação (ex: abrirOnboardingEtapa1)
+        popupGenericoCallback = null; // Limpa o callback
+    }
+}
+
 // Modificar fecharAguarde para aceitar um segundo argumento para forçar fechamento
 function fecharAguarde(event, force = false) {
     const popup = document.getElementById('popupAguarde');
