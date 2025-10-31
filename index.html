@@ -3514,22 +3514,29 @@ auth.onAuthStateChanged(async user => {
 
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
                 if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
-
-const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
+            
+            // --- INÍCIO DA MODIFICAÇÃO (Task 1: Forçar Reload) ---
+            const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
             
             if (sessionStorage.getItem(reloadFlag) !== 'true') {
+                // 1. É a primeira vez que vemos isso nesta sessão.
                 console.log("Primeira carga do profissional com onboarding pendente. Definindo flag e recarregando...");
                 sessionStorage.setItem(reloadFlag, 'true');
+                
+                // Força o recarregamento. O auth.onAuthStateChanged vai rodar de novo.
                 location.reload(); 
+                
+                // Interrompe a execução atual para esperar o reload
                 return; 
             } else {
+                // 2. O reload já aconteceu. A flag está 'true'.
                 console.log("Flag de reload encontrada. Iniciando fluxo de onboarding...");
-                // Verifica se algum modal de onboarding já está aberto
-                const onboardingAberto = document.querySelector('#modalOnboardingProfissionalServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+                
+                // Verifica se um modal de onboarding já não está aberto (evita loop)
+                const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
                 if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
                    console.log("Iniciando fluxo de configuração inicial do profissional...");
-                   // CHAMA A NOVA FUNÇÃO MESTRE
-                   iniciarFluxoDeConfiguracaoProfissional();
+              iniciarFluxoDeConfiguracaoProfissional();
                 }
             }
         
