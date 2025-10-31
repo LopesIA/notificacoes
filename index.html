@@ -3522,19 +3522,22 @@ auth.onAuthStateChanged(async user => {
                 // MODIFICAÇÃO: Removida a lógica de reload forçado com sessionStorage.
                 if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
             
-                    // Se a configuração inicial é necessária, chamamos o fluxo diretamente.
-                    console.log("Fluxo de onboarding inicial detectado. Iniciando...");
+                    // Se a configuração inicial é necessária, chamamos o fluxo com um pequeno delay.
+                    console.log("Fluxo de onboarding inicial detectado. Iniciando com delay...");
                     
-                    // Verifica se um modal de onboarding já não está aberto (evita loop)
-                    const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
-                    if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
-                       console.log("Iniciando fluxo de configuração inicial do profissional...");
-                       iniciarFluxoDeConfiguracaoProfissional(); // <-- CHAMA DIRETO
-                    }
+                    // Adicionamos um pequeno delay (500ms) para permitir que a UI do login/cadastro
+                    // termine de carregar/fechar modais antes de abrir o de onboarding.
+                    setTimeout(() => {
+                        // Verifica se um modal de onboarding já não está aberto (evita loop)
+                        const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+                        if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
+                           console.log("Iniciando fluxo de configuração inicial do profissional...");
+                           iniciarFluxoDeConfiguracaoProfissional(); 
+                        }
+                    }, 500); // 500ms de atraso é geralmente suficiente.
         
-        } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
+                } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
              // Onboarding concluído, faz a verificação de rotina de pendências
-             // MODIFICAÇÃO: Removida a limpeza da flag de reload, pois ela não existe mais.
              
              // Adiciona um delay para não sobrepor outros popups (ex: atualização)
              setTimeout(() => {
