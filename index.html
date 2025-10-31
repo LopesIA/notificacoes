@@ -7087,6 +7087,8 @@ async function salvarAlteracoesPortfolio() {
             portfolio: finalImageUrls // Salva o array final
         });
         
+perfil = (await db.collection('usuarios').doc(userId).get()).data();
+
         // --- 4. Limpeza e Feedback ---
         fecharTodosOsModais(); // Fecha o "Aguarde"
         exibirPopup('Sucesso!', 'Seu portfólio foi atualizado.');
