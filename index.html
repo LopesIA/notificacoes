@@ -3170,7 +3170,6 @@ function entrar() {
     .then(() => {
         console.log("Login OK");
         fecharTodosOsModais();
-        location.reload(); // <-- LINHA ADICIONADA PARA FORÇAR O RELOAD APÓS LOGIN
     })
     .catch(e => {
         fecharTodosOsModais();
@@ -3323,11 +3322,7 @@ function criarConta() {
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
 
-      // --- !! ESTA É A LINHA QUE FORÇA O LOGIN/RELOAD !! ---
-      location.reload();
-      // ------------------------------------------------------------------
-
-    })
+          })
     .catch(e => {
         fecharTodosOsModais();
         if (e.code === 'auth/email-already-in-use') {
@@ -8807,18 +8802,21 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     if (!p.listaServicos || p.listaServicos.length === 0) {
         exibirPopup("Configuração Pendente", "Você precisa cadastrar pelo menos um serviço.");
         return abrirOnboardingEtapa1(); // Para aqui
+location.reload();
     }
     
     // 2. Verifica Logomarca
     if (!p.logo_url) {
         exibirPopup("Configuração Pendente", "Você precisa enviar sua logomarca.");
         return abrirOnboardingEtapa4(); // Para aqui
+location.reload();
     }
     
     // 3. Verifica Portfólio
     if (!p.portfolio || p.portfolio.length === 0) {
         exibirPopup("Configuração Pendente", "Seu portfólio está vazio. Adicione pelo menos uma foto.");
         return abrirOnboardingEtapa5(); // Para aqui
+location.reload();
     }
 
     // 4. Verifica Agenda (só se vaga imediata E agenda manual estiverem inativas)
@@ -8826,6 +8824,7 @@ async function verificarPendenciasEssenciaisProfissional(uid) {
     if (!p.vagaImediata && !temHorarioManual) {
         exibirPopup("Configuração Pendente", "Sua agenda parece estar desativada. Configure.");
         return abrirOnboardingEtapa3(); // Para aqui
+location.reload();
     }
 
     // 5. Popup 2 (Promoção) NÃO é verificado aqui, pois é opcional.
