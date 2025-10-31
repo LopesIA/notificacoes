@@ -3534,7 +3534,7 @@ auth.onAuthStateChanged(async user => {
                            console.log("Iniciando fluxo de configuração inicial do profissional...");
                            iniciarFluxoDeConfiguracaoProfissional(); 
                         }
-                    }, 500); // 500ms de atraso é geralmente suficiente.
+                    }, 2000); // 2000ms de atraso é geralmente suficiente.
         
                 } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
              // Onboarding concluído, faz a verificação de rotina de pendências
@@ -3542,7 +3542,7 @@ auth.onAuthStateChanged(async user => {
              // Adiciona um delay para não sobrepor outros popups (ex: atualização)
              setTimeout(() => {
                 verificarPendenciasEssenciaisProfissional(user.uid);
-             }, 2000); // 2 segundos de delay
+             }, 3000); // 3 segundos de delay
         }
         // --- !! FIM DO BLOCO DE ONBOARDING ATUALIZADO !! ---
 
