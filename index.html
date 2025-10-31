@@ -1912,7 +1912,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <div id="portfolioExistenteGrid" class="portfolio-grid" style="margin-bottom: 15px; border: 1px dashed var(--cor-borda); padding: 10px; min-height: 100px; max-height: 250px; overflow-y: auto;">
       </div>
 
-    <label id="labelPortfolioFiles" for="portfolioFilesInput" style="cursor: pointer; background-color: var(--cor-botoes); padding: 10px; border-radius: 8px; text-align: center; display: block; margin-bottom: 10px;">Adicionar Novas Imagens:</label>
+    <label id="labelPortfolioFiles" for="portfolioFilesInput" style="cursor: pointer; background-color: var(--cor-botoes); padding: 10px; border-radius: 8px; text-align: center; display: block; margin-bottom: 10px;">Adicionar Novas Imagens</label>
     <input id="portfolioFilesInput" type="file" accept="image/*,image/gif" multiple style="display: none;">
     <progress id="portfolioUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-bottom: 10px;"></progress>
     <div id="portfolioPreviews" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; max-height: 100px; overflow-y: auto;"></div>
@@ -2130,7 +2130,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
             <p style="font-size: 14px;">Imagens Atuais: <b id="produtoContadorImagens">0</b>/5</p>
             <div id="produtoPreviewsExistentes" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; border: 1px dashed var(--cor-borda); padding: 5px; min-height: 70px;">
                 </div>
-            <label id="labelProdutoFiles" for="produtoFiles">Adicionar Novas Imagens:</label>
+            <label id="labelProdutoFiles" for="produtoFiles">Adicionar Novas Imagens</label>
             <input id="produtoFiles" type="file" accept="image/*,image/gif" multiple style="margin-bottom: 5px;" disabled>
             <progress id="produtoUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-bottom: 5px;"></progress>
             <div id="produtoPreviewsNovas" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; max-height: 80px; overflow-y: auto;"></div>
@@ -2490,7 +2490,6 @@ let tempSelectedHorarios = {};
 let onboardingState = {};
 let tempOnboardingServicos = [];
 const CHAT_GLOBAL_ID = "chatGlobal";
-let botInterval = null;
 let newWorker;
 let localizacaoCliente = null;
 let cadastroCoords = null;
@@ -4566,40 +4565,63 @@ function alternarChat(tipo) {
                  .limit(50);                     // Limite inicial de mensagens
 
     chatListener = query.onSnapshot(async snapshot => {
-        const chatContainer = document.getElementById("chatMessages"); // Garante a referência
+        const chatContainer = document.getElementById("chatMessages");
         const carregarMaisBtn = document.getElementById('carregarMaisMsgBtn');
+        // Verifica se o usuário está perto do final do chat
         const deveRolarParaBaixo = (chatContainer.scrollTop + chatContainer.clientHeight + 150) >= chatContainer.scrollHeight;
+        
+        const changes = snapshot.docChanges();
 
-        if(snapshot.empty) {
-            let msgVazio = `Nenhuma mensagem ${tipo === 'global' ? 'neste chat' : ''} ainda.`;
-            if (tipo === 'local' && perfil.tipo !== 'admin') msgVazio = `Nenhuma mensagem em ${perfil.cidade} ainda.`;
-            else if (tipo === 'local' && perfil.tipo === 'admin') msgVazio = `Nenhuma mensagem local encontrada.`;
-            chatContainer.innerHTML = `<p>${msgVazio}</p>`;
-            carregarMaisBtn.style.display = 'none';
-            oldestMessageSnapshot = null;
-            return;
+        // Detecção de primeiro carregamento (quando o chat está vazio ou tem placeholder)
+        const isFirstLoad = chatContainer.children.length === 0 || 
+                          (chatContainer.children.length === 1 && chatContainer.children[0].tagName === 'P');
+
+        if (isFirstLoad) {
+            chatContainer.innerHTML = ""; // Limpa o placeholder
+            if (snapshot.empty) {
+                let msgVazio = `Nenhuma mensagem ${tipo === 'global' ? 'neste chat' : ''} ainda.`;
+                if (tipo === 'local' && perfil.tipo !== 'admin') msgVazio = `Nenhuma mensagem em ${perfil.cidade} ainda.`;
+                else if (tipo === 'local' && perfil.tipo === 'admin') msgVazio = `Nenhuma mensagem local encontrada.`;
+                chatContainer.innerHTML = `<p>${msgVazio}</p>`;
+                
+                carregarMaisBtn.style.display = 'none';
+                oldestMessageSnapshot = null;
+                return;
+            }
+            
+            carregarMaisBtn.style.display = 'block';
+            carregarMaisBtn.textContent = 'Ver mensagens anteriores';
+            carregarMaisBtn.disabled = false;
+            oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1]; // O mais antigo da lista
+
+            // Adiciona todos os docs do primeiro load, em ordem ASC (mais antigo primeiro)
+            const docsEmOrdem = snapshot.docs.reverse(); 
+            for (const doc of docsEmOrdem) {
+                const msg = doc.data();
+                const messageDiv = await createMessageDiv(msg, doc.id); // Passa o doc.id
+                chatContainer.appendChild(messageDiv);
+            }
+        } else {
+            // Não é o primeiro load, processa apenas as mudanças
+            for (const change of changes) {
+                if (change.type === 'added') {
+                    // Verifica se a mensagem já existe (para evitar duplicatas da paginação)
+                    const existingMsg = chatContainer.querySelector(`[data-doc-id="${change.doc.id}"]`);
+                    if (!existingMsg) {
+                        // É uma nova mensagem. Adiciona no final.
+                        // Precisamos garantir que é uma mensagem *nova* e não da paginação
+                        // Se newIndex é 0, é a mensagem mais recente na query (que é DESC)
+                        if (change.newIndex === 0) { 
+                            const msg = change.doc.data();
+                            const messageDiv = await createMessageDiv(msg, change.doc.id); // Passa o doc.id
+                            chatContainer.appendChild(messageDiv); // Adiciona no final
+                        }
+                    }
+                }
+                // Você pode adicionar 'modified' e 'removed' aqui se precisar
+            }
         }
 
-        carregarMaisBtn.style.display = 'block';
-        carregarMaisBtn.textContent = 'Ver mensagens anteriores';
-        carregarMaisBtn.disabled = false;
-
-        // Guarda o último documento (mais antigo) para a próxima paginação
-        oldestMessageSnapshot = snapshot.docs[snapshot.docs.length - 1];
-
-        // Processa as mensagens recebidas
-        chatContainer.innerHTML = ''; // Limpa completamente antes de adicionar
-        
-        // Inverte a ordem do snapshot (que veio DESC) para iterar (ASC)
-        const docsEmOrdem = snapshot.docs.reverse(); 
-        
-        for (const doc of docsEmOrdem) { // Iteração agora ASC (oldest to newest)
-             const msg = doc.data();
-             const messageDiv = await createMessageDiv(msg);
-             chatContainer.appendChild(messageDiv); // Adiciona no final (bottom)
-        }
-
-        // Rola para o final
         if (deveRolarParaBaixo) {
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -4670,7 +4692,7 @@ async function carregarMensagensAnteriores() {
 
         for (const doc of docsEmOrdem) {
             const msg = doc.data();
-            const messageDiv = await createMessageDiv(msg);
+            const messageDiv = await createMessageDiv(msg, doc.id); // Passa o doc.id
             chatContainer.prepend(messageDiv); // ADICIONA NO TOPO (prepend)
         }
 
@@ -4687,33 +4709,85 @@ async function carregarMensagensAnteriores() {
     }
  }
 
-// SUBSTITUA TODA A FUNÇÃO 'createMessageDiv' POR ESTA
-async function createMessageDiv(msg) {
+// SUBSTITUA A FUNÇÃO enviarMensagem INTEIRA POR ESTA:
+async function enviarMensagem() {
+    if (!auth.currentUser) {
+        exibirPopup("Para enviar mensagens, por favor, faça login ou crie uma conta.");
+        mostrar('authView');
+        fecharModalAtual();
+        return;
+    }
+    if (isSending) return; // Impede envio se já estiver enviando
+    const texto = document.getElementById("chatInput").value.trim();
+    if (!texto) return;
+    
+    isSending = true; // Trava o botão
+    const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const messageData = {
+        remetenteUid: auth.currentUser.uid,
+        remetenteNome: perfil.nome,
+        tipo: perfil.tipo,
+        texto,
+        ts: firebase.firestore.FieldValue.serverTimestamp(),
+        cidade: perfil.cidade, // Cidade do remetente
+        tipoChat: chatAtual, // 'global' ou 'local'
+        deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
+    };
+
+    try {
+        await db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add(messageData);
+        
+        document.getElementById("chatInput").value = ""; // Limpa o input
+        
+        const lowerTexto = texto.toLowerCase();
+        if ((lowerTexto.includes('suporte') || lowerTexto.includes('ajuda')) && chatAtual === 'global') { 
+            setTimeout(enviarRespostaAI, 1000); // Resposta do bot 1s depois
+        }
+        
+        // Libera o botão após 1 segundo, independentemente da resposta do bot
+        setTimeout(() => { isSending = false; }, 1000); 
+
+    } catch (error) {
+        console.error("Erro ao enviar mensagem:", error);
+        isSending = false; // Libera o botão em caso de erro
+    }
+ }
+
+async function createMessageDiv(msg, docId) {
     let remetenteNome = msg.remetenteNome || "Desconhecido";
     let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = "";
     const messageDiv = document.createElement('div');
     const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
-    // Guarda o ID único do documento Firestore na div, se disponível
-    // Isso pode ser útil para debug ou futuras manipulações
-    if (msg.firestoreDocId) { // Assumindo que você adicione 'firestoreDocId' ao objeto 'msg' quando lê do snapshot
-        messageDiv.dataset.docId = msg.firestoreDocId;
+    // Adiciona o ID do documento ao elemento para checagem de duplicatas
+    if (docId) {
+        messageDiv.dataset.docId = docId;
     }
 
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
         remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
     } else {
         try {
-            const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
-            if(remetenteDoc.exists) {
-                const remetenteData = remetenteDoc.data();
+            // Otimização: Tentar buscar do 'perfil' se for a mensagem do próprio usuário
+            let remetenteData;
+            if (isCurrentUser) {
+                remetenteData = perfil; // Usa o perfil global do usuário logado
+            } else {
+                // Se for de outro usuário, busca no DB
+                const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
+                if (remetenteDoc.exists) {
+                    remetenteData = remetenteDoc.data();
+                }
+            }
 
-                // Ícones opcionais (mantidos como antes)
+            if(remetenteData) {
+                // Ícones opcionais
                 if (remetenteData.possuiItemExclusivo) itemExclusivoIcone = '👕✨';
                 medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, remetenteData.tipo === 'cliente' ? 'cliente' : 'profissional');
 
-                // Classe CSS e Ícone Base (mantidos como antes)
+                // Classe CSS e Ícone Base
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
                     messageDiv.style.textShadow = '0 0 5px #000'; // Sombra específica para admin
@@ -4725,10 +4799,7 @@ async function createMessageDiv(msg) {
                     iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`; // Icone VIP vs Normal
                 }
 
-                // --- REMOÇÃO DA LÓGICA DE (Cidade) ---
-                // Não adicionamos mais a cidade aqui, pois o filtro da query já garante a separação
                 remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
-                // ------------------------------------
 
             } else {
                  remetenteNome = `👻 Usuário Excluído`; // Caso o usuário tenha sido deletado
@@ -4742,17 +4813,13 @@ async function createMessageDiv(msg) {
     }
 
     messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
-    // Adiciona timestamp formatado (opcional, mas útil)
+    // Adiciona timestamp formatado
     if (msg.ts && msg.ts.toDate) {
         const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em;">(${timeString})</small>`;
     }
     return messageDiv;
  }
-
-
-const botMessages = [ "Dica: Avalie seu profissional para ganhar pontos de fidelidade e ajudar a comunidade!", "Você sabia? Indicando um amigo com seu e-mail, vocês dois ganham 100 pontos de fidelidade após o primeiro agendamento concluído dele!", "Mantenha seu saldo atualizado! Use a função de depósito para adicionar créditos de forma rápida e segura.", "Precisa de ajuda ou tem uma sugestão? Use a opção 'Denunciar' para falar diretamente com um administrador.", "Torne-se VIP para ter 10% de desconto em todos os serviços e ganhar o dobro de pontos!", "Fique de olho no nosso Blog! Postamos códigos de resgate valendo pontos de fidelidade. Procure por códigos entre (parênteses)!", "Explore a nossa Loja! Produtos exclusivos e da comunidade estão disponíveis para você.", "Complete agendamentos e desbloqueie conquistas para mostrar seu status no chat!" ];
-let lastBotMessageIndex = -1;
 
 function sendBotMessage() {
     let randomIndex;
@@ -4765,6 +4832,15 @@ function sendBotMessage() {
         cidade: "global", // Mensagem do bot é global
         deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
     });
+}
+
+// ADICIONE ESTA NOVA FUNÇÃO
+function handleChatEnter(event) {
+    // Verifica se a tecla pressionada foi "Enter" e se a tecla Shift NÃO estava pressionada
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // Impede a quebra de linha
+        enviarMensagem(); // Chama a função de enviar
+    }
 }
 
 function enviarMensagem() {
@@ -4802,10 +4878,17 @@ function enviarMensagem() {
     }).catch(error => { isSending = false; });
  }
 
+// SUBSTITUA A FUNÇÃO enviarRespostaAI INTEIRA POR ESTA:
 function enviarRespostaAI() {
-    const resposta = `Olá! Sou a assistente virtual. Como posso ajudar? <br><br>
-        • Para <b>dúvidas sobre o app</b> (agendamentos, carteira, VIP, etc.), tente ser específico na sua pergunta. <br>
-        • Para <b>contatar um administrador</b> sobre problemas urgentes, denúncias ou sugestões, use o botão 🚨 no canto inferior esquerdo ou chame diretamente no WhatsApp: <a href="https://wa.me/${WHATSAPP_ADM_PHONE}" target="_blank">clique aqui</a>.`;
+    // A constante WHATSAPP_ADM_PHONE já deve estar definida no topo do seu script
+    const mensagemPreEscrita = encodeURIComponent("Olá! Preciso de ajuda/suporte com o app Nova Versão.");
+    const whatsappLink = `https://wa.me/${WHATSAPP_ADM_PHONE}?text=${mensagemPreEscrita}`;
+
+    const resposta = `Olá! Sou a assistente virtual. <br><br>
+        • Se você precisa de <b>ajuda ou suporte</b> de um administrador, a forma mais rápida é pelo WhatsApp. <br>
+        • <b><a href="${whatsappLink}" target="_blank" style="color: var(--cor-destaque);">Clique aqui para falar com o suporte agora.</a></b> <br><br>
+        • Se for uma dúvida geral sobre o app, tente perguntar aqui.`;
+        
     const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens").add({
         remetenteUid: "ai-suporte-uid",
@@ -4813,7 +4896,8 @@ function enviarRespostaAI() {
         tipo: "ai_suporte",
         texto: resposta,
         ts: firebase.firestore.FieldValue.serverTimestamp(),
-        cidade: chatAtual === 'local' ? perfil.cidade : 'global',
+        cidade: "global", // Resposta de suporte é sempre no global
+        tipoChat: "global",
         deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt)
     });
 }
@@ -6596,7 +6680,10 @@ const conquistasDefinidas = {
         'cortes_5': { nome: 'Cliente Iniciante', icone: '👍', descricao: 'Concluiu 5 agendamentos.', level: 2 },
         'cortes_10': { nome: 'Cliente Regular', icone: '⭐', descricao: 'Concluiu 10 agendamentos.', level: 3 },
         'cortes_50': { nome: 'Parceiro da Beleza', icone: '💪', descricao: 'Concluiu 50 agendamentos.', level: 5 },
-        'cortes_100': { nome: 'Membro de Honra', icone: '👑', descricao: 'Concluiu 100 agendamentos.', level: 6 }
+        'cortes_100': { nome: 'Membro de Honra', icone: '👑', descricao: 'Concluiu 100 agendamentos.', level: 6 },
+        'cortes_250': { nome: 'Cliente Fanático', icone: '🔥', descricao: 'Concluiu 250 agendamentos.', level: 7 },
+        'cortes_500': { nome: 'Cliente Lenda', icone: '🏆', descricao: 'Concluiu 500 agendamentos.', level: 8 },
+        'cortes_1000': { nome: 'Embaixador Nova Versão', icone: '💎', descricao: 'Concluiu 1000 agendamentos.', level: 9 }
     },
     'profissional': {
         'cortes_1': { nome: 'Primeiro Cliente', icone: '🎉', descricao: 'Concluiu seu primeiro serviço.', level: 1 },
@@ -6615,7 +6702,16 @@ async function verificarConquistas(uid) {
     const conquistasAtuais = userData.conquistas || [];
     const cortes = userData.cortesRealizados || 0;
     const definicoes = conquistasDefinidas.cliente;
-    const niveis = { 1: 'cortes_1', 5: 'cortes_5', 10: 'cortes_10', 50: 'cortes_50', 100: 'cortes_100' };
+    const niveis = { 
+        1: 'cortes_1', 
+        5: 'cortes_5', 
+        10: 'cortes_10', 
+        50: 'cortes_50', 
+        100: 'cortes_100',
+        250: 'cortes_250',
+        500: 'cortes_500',
+        1000: 'cortes_1000'
+    };
 
     for (const nivel in niveis) {
         const conquistaId = niveis[nivel];
@@ -7832,7 +7928,7 @@ async function abrirFormularioProduto(produtoId = null) {
     tamanhosCheckboxes.forEach(c => c.checked = false);
     fileInput.value = ''; // Limpa seleção de arquivos
     fileInput.disabled = false; // Habilita input por padrão
-    labelFileInput.textContent = 'Adicionar Novas Imagens:'; // Reseta label
+    labelFileInput.textContent = 'Adicionar Novas Imagens'; // Reseta label
     previewsExistentesContainer.innerHTML = '';
     previewsNovasContainer.innerHTML = '';
     progressBar.style.display = 'none';
