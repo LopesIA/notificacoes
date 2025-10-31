@@ -9244,7 +9244,7 @@ async function iniciarFluxoDeConfiguracaoProfissional() {
     // Critério: Só aparece se não tiver nenhum serviço.
     if (!p.listaServicos || p.listaServicos.length === 0) {
         console.log("Fluxo: Pendência encontrada [Etapa 1: Serviços]");
-        return iniciarOnboardingProfissionalEtapa1(); 
+        return abrirOnboardingEtapa1(); // <-- CORREÇÃO AQUI (nome da função corrigido)
     }
 
     // Etapa 3: Agenda (ESSENCIAL)
