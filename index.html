@@ -3448,12 +3448,39 @@ auth.onAuthStateChanged(async user => {
 
         // Inicia Onboarding do Profissional se necessário
         if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
-            // Verifica se um modal de onboarding já não está aberto (evita loop)
-            const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
-            if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
-               console.log("Iniciando fluxo de configuração inicial do profissional...");
-               iniciarOnboardingProfissionalEtapa1(); // Chama a nova Etapa 1
+            
+            // --- INÍCIO DA MODIFICAÇÃO (Task 1: Forçar Reload) ---
+            const reloadFlag = 'onboarding_reload_done_' + user.uid; // Flag por usuário
+            
+            if (sessionStorage.getItem(reloadFlag) !== 'true') {
+                // 1. É a primeira vez que vemos isso nesta sessão.
+                console.log("Primeira carga do profissional com onboarding pendente. Definindo flag e recarregando...");
+                sessionStorage.setItem(reloadFlag, 'true');
+                
+                // Força o recarregamento. O auth.onAuthStateChanged vai rodar de novo.
+                location.reload(); 
+                
+                // Interrompe a execução atual para esperar o reload
+                return; 
+            } else {
+                // 2. O reload já aconteceu. A flag está 'true'.
+                console.log("Flag de reload encontrada. Iniciando fluxo de onboarding...");
+                
+                // Verifica se um modal de onboarding já não está aberto (evita loop)
+                const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+                if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
+                   console.log("Iniciando fluxo de configuração inicial do profissional...");
+                   iniciarOnboardingProfissionalEtapa1(); // Chama a nova Etapa 1
+                }
             }
+            // --- FIM DA MODIFICAÇÃO ---
+
+        } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
+             // Limpa a flag se o onboarding for concluído
+             const reloadFlag = 'onboarding_reload_done_' + user.uid;
+             if (sessionStorage.getItem(reloadFlag)) {
+                 sessionStorage.removeItem(reloadFlag);
+             }
         }
 
         // --- Demais inicializações ---
@@ -6929,10 +6956,13 @@ async function abrirModalPortfolioBarbeiro() {
         portfolioListener = null;
     }
 
-imagensMarcadasParaExcluir = [];
+    imagensMarcadasParaExcluir = [];
 
-    // Chama a função que agora contém o listener para carregar as imagens
-    carregarPortfolioExistente();
+    // --- INÍCIO DA MODIFICAÇÃO (Task 2) ---
+    // Aguarda o carregamento inicial (get()) antes de continuar
+    // Isso garante que o 'perfil' esteja atualizado
+    await carregarPortfolioExistente();
+    // --- FIM DA MODIFICAÇÃO ---
 
     // --- Configuração do Input de Novos Arquivos ---
     const fileInput = document.getElementById('portfolioFilesInput');
@@ -6945,7 +6975,6 @@ imagensMarcadasParaExcluir = [];
     previewContainer.innerHTML = '';
     progressBar.style.display = 'none';
     progressBar.value = 0;
-    btnSalvar.disabled = true; // Desabilita o botão de salvar inicialmente
 
     // Remove listener antigo para evitar duplicação
     fileInput.onchange = null;
@@ -6954,9 +6983,12 @@ imagensMarcadasParaExcluir = [];
     fileInput.onchange = () => {
         previewContainer.innerHTML = ''; // Limpa previews antigos
         const files = fileInput.files;
-        // Usa 'perfil' que é atualizado pelo listener em carregarPortfolioExistente
-        const portfolioAtual = perfil?.portfolio?.length || 0; 
-        const espacoDisponivel = 30 - portfolioAtual;
+        
+        // Usa 'perfil' que é atualizado pelo listener/get
+        const portfolioAtual = (perfil?.portfolio || []).length; 
+        const imagensMarcadas = imagensMarcadasParaExcluir.length;
+        // Calcula o espaço baseado em quantas imagens VÃO SOBRAR
+        const espacoDisponivel = 30 - (portfolioAtual - imagensMarcadas);
 
         if (files.length > 0) {
             if (files.length > espacoDisponivel) {
@@ -6981,9 +7013,49 @@ imagensMarcadasParaExcluir = [];
             });
             btnSalvar.disabled = false; // Habilita o botão se houver arquivos válidos
         } else {
-            btnSalvar.disabled = true; // Desabilita se não houver arquivos
+            // Habilita salvar se houver apenas exclusões
+            btnSalvar.disabled = imagensMarcadasParaExcluir.length === 0;
         }
     };
+
+    // Atualiza o estado do contador e do input (caso já tenha 30 imagens)
+    atualizarContadorEInputPortfolio();
+}
+
+// 2. ADICIONE ESTA NOVA FUNÇÃO (Função de ajuda)
+function atualizarContadorEInputPortfolio() {
+    // Garante que está lendo o 'perfil' mais recente
+    const portfolioUrls = perfil?.portfolio || [];
+    const contadorElement = document.getElementById('portfolioContador');
+    const fileInput = document.getElementById('portfolioFilesInput');
+    const labelFileInput = document.getElementById('labelPortfolioFiles');
+    const btnSalvarPortfolio = document.getElementById('btnSalvarPortfolio');
+
+    // Calcula quantas imagens "contam" (total - marcadas para excluir)
+    const imagensAtuaisContagem = portfolioUrls.length - imagensMarcadasParaExcluir.length;
+    if (contadorElement) {
+         contadorElement.textContent = imagensAtuaisContagem;
+    }
+
+    const espacoDisponivel = 30 - imagensAtuaisContagem;
+    if (fileInput && labelFileInput) {
+        fileInput.disabled = espacoDisponivel <= 0;
+        labelFileInput.textContent = espacoDisponivel <= 0
+            ? "Limite de 30 imagens atingido."
+            : `Adicionar Novas Imagens (${espacoDisponivel} restantes)`;
+        
+        // Se o espaço for 0, limpa qualquer seleção de arquivo
+        if (espacoDisponivel <= 0) {
+            fileInput.value = ''; 
+            document.getElementById('portfolioPreviews').innerHTML = ''; // Limpa previews de novas
+        }
+    }
+    
+    if(btnSalvarPortfolio) {
+         const novosArquivosSelecionados = fileInput.files && fileInput.files.length > 0;
+         // O botão só fica desabilitado se NÃO houver novos arquivos E NÃO houver exclusões marcadas
+         btnSalvarPortfolio.disabled = (!novosArquivosSelecionados && imagensMarcadasParaExcluir.length === 0);
+    }
 }
 
 // Esta função substitui 'salvarNovasImagensPortfolio' e 'removerImagemPortfolio'
@@ -7128,13 +7200,8 @@ perfil = (await db.collection('usuarios').doc(userId).get()).data();
     }
 }
 
-function carregarPortfolioExistente() {
+async function carregarPortfolioExistente() {
     const gridContainer = document.getElementById('portfolioExistenteGrid');
-    const contadorElement = document.getElementById('portfolioContador');
-    const fileInput = document.getElementById('portfolioFilesInput');
-    const labelFileInput = document.getElementById('labelPortfolioFiles');
-    const btnSalvarPortfolio = document.getElementById('btnSalvarPortfolio');
-    
     gridContainer.innerHTML = '<p>Carregando...</p>'; // Feedback inicial
 
     // Cancela o listener anterior, se existir
@@ -7142,106 +7209,111 @@ function carregarPortfolioExistente() {
         portfolioListener();
         portfolioListener = null;
     }
+    
+    const docRef = db.collection('usuarios').doc(auth.currentUser.uid);
 
-    // Cria um novo listener para o documento do usuário
-    portfolioListener = db.collection('usuarios').doc(auth.currentUser.uid)
-        .onSnapshot(doc => {
-            const modalPortfolio = document.getElementById('modalPortfolioBarbeiro');
-            if (!doc.exists || !modalPortfolio || !modalPortfolio.classList.contains('show')) {
-                if (portfolioListener) {
-                    portfolioListener(); // Cancela o listener se o modal fechou
-                    portfolioListener = null;
-                }
-                return;
+    try {
+        // 1. FAZ UM GET PRIMEIRO PARA CARGA RÁPIDA E SINCRONIZAÇÃO
+        const doc = await docRef.get();
+        if (doc.exists) {
+            perfil = doc.data(); // ATUALIZA O PERFIL GLOBAL IMEDIATAMENTE
+            renderizarGridPortfolio(doc.data()); // Renderiza a grid com os dados do get()
+        } else {
+            gridContainer.innerHTML = '<p style="color: red;">Erro: Perfil não encontrado.</p>';
+        }
+    } catch (getError) {
+         console.error("Erro ao fazer 'get' do portfólio:", getError);
+         gridContainer.innerHTML = `<p style="color: red;">Erro ao carregar: ${getError.message}</p>`;
+    }
+
+    // 2. AGORA, ANEXA O LISTENER para atualizações em tempo real
+    portfolioListener = docRef.onSnapshot(doc => {
+        const modalPortfolio = document.getElementById('modalPortfolioBarbeiro');
+        // Se o modal não estiver aberto ou o doc não existir, cancela o listener
+        if (!doc.exists || !modalPortfolio || !modalPortfolio.classList.contains('show')) {
+            if (portfolioListener) {
+                portfolioListener(); // Cancela o listener
+                portfolioListener = null;
             }
-            
-            perfil = doc.data(); // Atualiza o perfil global
-            const portfolioUrls = perfil?.portfolio || [];
+            return;
+        }
+        
+        perfil = doc.data(); // Atualiza o perfil global
+        renderizarGridPortfolio(doc.data()); // Re-renderiza a grid com novos dados
+        atualizarContadorEInputPortfolio(); // Atualiza o contador/input
 
-            // Atualiza o contador
-            if (contadorElement) {
-                contadorElement.textContent = portfolioUrls.length;
-            }
+    }, error => {
+        console.error("Erro ao ouvir updates do portfólio:", error);
+        gridContainer.innerHTML = '<p style="color: red;">Erro ao carregar portfólio.</p>';
+    });
+}
 
-            // Atualiza o estado do input de arquivos e label
-            const espacoDisponivel = 30 - portfolioUrls.length;
-            if (fileInput && labelFileInput) {
-                fileInput.disabled = espacoDisponivel <= 0;
-                labelFileInput.textContent = espacoDisponivel <= 0
-                    ? "Limite de 30 imagens atingido."
-                    : `Adicionar Novas Imagens (${espacoDisponivel} restantes):`;
-                
-                if (espacoDisponivel <= 0) fileInput.value = '';
-            }
-             if(btnSalvarPortfolio) {
-                 btnSalvarPortfolio.disabled = fileInput.disabled || !fileInput.files || fileInput.files.length === 0;
-             }
+function renderizarGridPortfolio(perfilData) {
+    const gridContainer = document.getElementById('portfolioExistenteGrid');
+    const portfolioUrls = perfilData?.portfolio || [];
+    
+    gridContainer.innerHTML = ''; // Limpa o container
 
-            // Atualiza a grid de imagens existentes
-            if (portfolioUrls.length === 0) {
-                gridContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">Nenhuma imagem no portfólio ainda.</p>';
-                return;
-            }
+    if (portfolioUrls.length === 0) {
+        gridContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">Nenhuma imagem no portfólio ainda.</p>';
+        return;
+    }
 
-            gridContainer.innerHTML = ''; // Limpa o container
-            portfolioUrls.forEach(url => {
-                const imgContainer = document.createElement('div');
-                imgContainer.style.position = 'relative'; 
-                
-                // === ADIÇÃO ===
-                imgContainer.dataset.url = url; // Adiciona o data-url
-                // ==============
+    portfolioUrls.forEach(url => {
+        const imgContainer = document.createElement('div');
+        imgContainer.style.position = 'relative'; 
+        imgContainer.dataset.url = url; // Guarda a URL no elemento
 
-                const imgElement = document.createElement('img');
-                imgElement.src = url;
-                imgElement.alt = 'Imagem do Portfólio';
-                imgElement.style.width = '100%';
-                imgElement.style.height = '100px';
-                imgElement.style.objectFit = 'cover';
-                imgElement.style.borderRadius = '4px';
-                imgElement.style.border = '1px solid var(--cor-borda)';
-                imgElement.onerror = function() {
-                    this.src='https://via.placeholder.com/100x100?text=Erro!';
-                    const deleteBtn = this.nextElementSibling;
-                    if(deleteBtn) deleteBtn.remove();
-                };
+        const imgElement = document.createElement('img');
+        imgElement.src = url;
+        imgElement.alt = 'Imagem do Portfólio';
+        imgElement.style.width = '100%';
+        imgElement.style.height = '100px';
+        imgElement.style.objectFit = 'cover';
+        imgElement.style.borderRadius = '4px';
+        imgElement.style.border = '1px solid var(--cor-borda)';
+        imgElement.onerror = function() {
+            this.src='https://via.placeholder.com/100x100?text=Erro!';
+            const deleteBtn = this.nextElementSibling;
+            if(deleteBtn) deleteBtn.remove();
+        };
 
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = '❌';
-                deleteButton.style.position = 'absolute';
-                deleteButton.style.top = '2px';
-                deleteButton.style.right = '2px';
-                deleteButton.style.background = 'rgba(0,0,0,0.7)';
-                deleteButton.style.color = 'white';
-                deleteButton.style.border = 'none';
-                deleteButton.style.borderRadius = '50%';
-                deleteButton.style.width = '20px';
-                deleteButton.style.height = '20px';
-                deleteButton.style.fontSize = '10px';
-                deleteButton.style.lineHeight = '20px'; 
-                deleteButton.style.textAlign = 'center';
-                deleteButton.style.padding = '0';
-                deleteButton.style.cursor = 'pointer';
-                deleteButton.title = 'Remover Imagem';
-                
-                // === ALTERAÇÃO ===
-                deleteButton.onclick = (e) => {
-                    e.stopPropagation();
-                    marcarImagemPortfolioParaExcluir(deleteButton, url); // Chama a nova função de "marcar"
-                };
-                // =================
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = '❌';
+        deleteButton.style.position = 'absolute';
+        deleteButton.style.top = '2px';
+        deleteButton.style.right = '2px';
+        deleteButton.style.background = 'rgba(0,0,0,0.7)';
+        deleteButton.style.color = 'white';
+        deleteButton.style.border = 'none';
+        deleteButton.style.borderRadius = '50%';
+        deleteButton.style.width = '20px';
+        deleteButton.style.height = '20px';
+        deleteButton.style.fontSize = '10px';
+        deleteButton.style.lineHeight = '20px'; 
+        deleteButton.style.textAlign = 'center';
+        deleteButton.style.padding = '0';
+        deleteButton.style.cursor = 'pointer';
+        deleteButton.title = 'Remover Imagem';
 
-                imgContainer.appendChild(imgElement);
-                imgContainer.appendChild(deleteButton);
-                gridContainer.appendChild(imgContainer);
-            });
+        deleteButton.onclick = (e) => {
+            e.stopPropagation();
+            marcarImagemPortfolioParaExcluir(deleteButton, url); // Chama a função de "marcar"
+        };
 
-        }, error => {
-            console.error("Erro ao ouvir updates do portfólio:", error);
-            gridContainer.innerHTML = '<p style="color: red;">Erro ao carregar portfólio.</p>';
-            if(fileInput) fileInput.disabled = true;
-            if(labelFileInput) labelFileInput.textContent = "Erro ao carregar.";
-        });
+        imgContainer.appendChild(imgElement);
+        imgContainer.appendChild(deleteButton);
+        gridContainer.appendChild(imgContainer);
+
+        // Re-aplica o estilo de "marcado" se a imagem estiver na lista global de exclusão
+        if (imagensMarcadasParaExcluir.includes(url)) {
+             imgContainer.classList.add('marcada-para-excluir');
+             deleteButton.textContent = '↩️';
+             deleteButton.title = 'Manter Imagem';
+             imgElement.style.opacity = '0.5';
+             imgElement.style.border = '2px solid red';
+        }
+    });
 }
 
 async function enviarEmailDeContato() {
@@ -8166,17 +8238,11 @@ function marcarImagemProdutoParaExcluir(buttonElement, imageUrl) {
      }
 }
 
-// Função auxiliar para marcar/desmarcar imagem de PORTFÓLIO para exclusão
 function marcarImagemPortfolioParaExcluir(buttonElement, imageUrl) {
     const imgContainer = buttonElement.parentElement;
     const imgElement = imgContainer.querySelector('img');
     const isMarked = imgContainer.classList.toggle('marcada-para-excluir');
     
-    // Seleciona os IDs corretos do modal de Portfólio
-    const fileInput = document.getElementById('portfolioFilesInput');
-    const labelFileInput = document.getElementById('labelPortfolioFiles');
-    const contadorImagensElement = document.getElementById('portfolioContador');
-
     if (isMarked) {
         imagensMarcadasParaExcluir.push(imageUrl); // Adiciona ao array de exclusão
         buttonElement.textContent = '↩️';
@@ -8192,35 +8258,8 @@ function marcarImagemPortfolioParaExcluir(buttonElement, imageUrl) {
         imgElement.style.border = '1px solid var(--cor-borda)'; // Volta ao normal
     }
 
-     // Atualiza contador e estado do input de novas imagens
-     const previewsExistentesContainer = document.getElementById('portfolioExistenteGrid');
-     const existingImagesTotal = (perfil?.portfolio || []).length; // Total vindo do 'perfil'
-     const currentImageCount = existingImagesTotal - imagensMarcadasParaExcluir.length; // Quantas ficarão
-     const allowedNew = 30 - currentImageCount;
-
-     if (contadorImagensElement) contadorImagensElement.textContent = currentImageCount; // Atualiza o contador exibido
-
-     if (allowedNew <= 0) {
-         fileInput.disabled = true;
-         fileInput.value = ''; // Limpa seleção se não pode adicionar mais
-         document.getElementById('portfolioPreviews').innerHTML = ''; // Limpa previews de novas
-         labelFileInput.textContent = 'Limite de 30 imagens atingido.';
-     } else {
-         fileInput.disabled = false;
-         labelFileInput.textContent = `Adicionar Novas Imagens (${allowedNew} restantes):`;
-         // Se o número de arquivos selecionados agora excede o limite, limpa
-         if (fileInput.files.length > allowedNew) {
-             fileInput.value = '';
-             document.getElementById('portfolioPreviews').innerHTML = '';
-             exibirPopup("Atenção", `Você só pode adicionar ${allowedNew} nova(s) imagem(ns) devido às exclusões marcadas. Selecione novamente.`);
-         }
-     }
-     
-     // Habilita o botão salvar se houver mudanças (novos arquivos OU exclusões)
-     const btnSalvar = document.getElementById('btnSalvarPortfolio');
-     // Verifica se o fileInput tem arquivos selecionados
-     const novosArquivosSelecionados = fileInput.files && fileInput.files.length > 0;
-     btnSalvar.disabled = (!novosArquivosSelecionados && imagensMarcadasParaExcluir.length === 0);
+     // Atualiza contador, input e botão salvar
+     atualizarContadorEInputPortfolio();
 }
 
 async function salvarProdutoVendedor() {
