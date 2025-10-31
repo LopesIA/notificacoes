@@ -1944,7 +1944,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <progress id="portfolioUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-bottom: 10px;"></progress>
     <div id="portfolioPreviews" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; max-height: 100px; overflow-y: auto;"></div>
 
-    <button id="btnSalvarPortfolio" onclick="salvarNovasImagensPortfolio()" disabled>💾 Adicionar Imagens Selecionadas</button>
+    <button id="btnSalvarPortfolio" onclick="salvarAlteracoesPortfolio()" disabled>💾 Salvar Alterações</button>
     <button data-modal-id="modalPortfolioBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -6929,6 +6929,8 @@ async function abrirModalPortfolioBarbeiro() {
         portfolioListener = null;
     }
 
+imagensMarcadasParaExcluir = [];
+
     // Chama a função que agora contém o listener para carregar as imagens
     carregarPortfolioExistente();
 
@@ -6984,99 +6986,143 @@ async function abrirModalPortfolioBarbeiro() {
     };
 }
 
-async function salvarNovasImagensPortfolio() {
-    // ... (código original de validação, upload e salvar no DB) ...
+// Esta função substitui 'salvarNovasImagensPortfolio' e 'removerImagemPortfolio'
+async function salvarAlteracoesPortfolio() {
     const fileInput = document.getElementById("portfolioFilesInput");
     const progressBar = document.getElementById('portfolioUploadProgress');
-    const previewContainer = document.getElementById('portfolioPreviews');
     const btnSalvar = document.getElementById('btnSalvarPortfolio');
     const userId = auth.currentUser.uid;
     const files = fileInput.files;
+
+    // Pega imagens existentes que serão mantidas
     const portfolioAtual = perfil?.portfolio || [];
-    const espacoDisponivel = 30 - portfolioAtual.length;
+    const imagensExistentesParaManter = portfolioAtual.filter(url => !imagensMarcadasParaExcluir.includes(url));
+    
+    // Pega as imagens a serem deletadas (que já estão em `imagensMarcadasParaExcluir`)
 
-    if (!files || files.length === 0) { return exibirPopup("Nenhuma nova imagem selecionada."); }
-    if (files.length > espacoDisponivel) { return exibirPopup('Limite Excedido', `Você só pode adicionar mais ${espacoDisponivel} imagens.`); }
+    // Calcula o total final
+    const totalImagensFinais = imagensExistentesParaManter.length + (files ? files.length : 0);
+    
+    // Validações
+    if (totalImagensFinais > 30) {
+        return exibirPopup(`O limite é 30 imagens. Você está tentando salvar ${totalImagensFinais}.`);
+    }
+    if (files.length === 0 && imagensMarcadasParaExcluir.length === 0) {
+        // Se o botão estava habilitado (por ex, marcou e desmarcou), mas não há mudanças, apenas avise.
+        btnSalvar.disabled = true; // Desabilita de novo
+        return exibirPopup("Nenhuma alteração detectada.", "Nenhuma imagem nova selecionada ou marcada para exclusão.");
+    }
+    if (totalImagensFinais === 0 && (files.length > 0 || imagensMarcadasParaExcluir.length > 0)) {
+       // Se o usuário está intencionalmente limpando o portfólio (0 imagens), permita.
+       console.log("Usuário está limpando o portfólio.");
+    }
 
-    exibirAguarde(`Enviando ${files.length} imagem(ns)...`);
-    progressBar.style.display = 'block'; progressBar.value = 0; btnSalvar.disabled = true;
 
-    const uploadPromises = []; let totalBytesTransferidosAcumulados = 0; const totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0); const uploadTasksInfo = [];
+    exibirAguarde("Salvando alterações no portfólio...");
+    btnSalvar.disabled = true;
+    progressBar.style.display = 'block';
+    progressBar.value = 0;
 
-    Array.from(files).forEach((file, index) => { /* ... (lógica de upload individual continua igual) ... */
-        const filePath = `portfolio/${userId}/${Date.now()}_${index}_${file.name}`;
-        const uploadPromise = new Promise((resolve, reject) => {
-            const storageRef = storage.ref(filePath); const uploadTask = storageRef.put(file); const taskInfo = { task: uploadTask, bytesTransferred: 0 }; uploadTasksInfo.push(taskInfo);
-            uploadTask.on('state_changed', (snapshot) => { taskInfo.bytesTransferred = snapshot.bytesTransferred; totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0); const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0; progressBar.value = progress; }, (error) => { console.error(`Erro no upload ${index}: `, error); reject(error); }, async () => { try { const downloadURL = await uploadTask.snapshot.ref.getDownloadURL(); resolve(downloadURL); } catch(urlError) { reject(urlError); } } ); }); uploadPromises.push(uploadPromise);
-    });
+    const uploadPromises = [];
+    const newImageUrls = [];
+    let totalBytesUpload = 0;
+    const uploadTasksInfo = [];
+
+    // --- 1. Upload de Novas Imagens ---
+    if (files && files.length > 0) {
+        totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+        Array.from(files).forEach((file, index) => {
+            const filePath = `portfolio/${userId}/${Date.now()}_${index}_${file.name}`;
+            const uploadPromise = new Promise((resolve, reject) => {
+                const storageRef = storage.ref(filePath);
+                const uploadTask = storageRef.put(file);
+                const taskInfo = { task: uploadTask, bytesTransferred: 0 };
+                uploadTasksInfo.push(taskInfo);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        taskInfo.bytesTransferred = snapshot.bytesTransferred;
+                        let totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0);
+                        const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0;
+                        progressBar.value = progress;
+                    },
+                    (error) => reject(error),
+                    async () => {
+                        try {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            newImageUrls.push(downloadURL); // Adiciona a nova URL
+                            resolve();
+                        } catch(urlError) { reject(urlError); }
+                    }
+                );
+            });
+            uploadPromises.push(uploadPromise);
+        });
+    }
 
     try {
-        const novasUrls = await Promise.all(uploadPromises);
-        await db.collection('usuarios').doc(userId).update({ portfolio: firebase.firestore.FieldValue.arrayUnion(...novasUrls) });
+        // Espera todos os uploads terminarem
+        await Promise.all(uploadPromises);
 
+        // --- 2. Deletar Imagens Marcadas do Storage ---
+        const deletePromises = imagensMarcadasParaExcluir.map(async url => {
+            try {
+                const imageRef = storage.refFromURL(url);
+                await imageRef.delete();
+                console.log("Imagem marcada deletada do Storage:", url);
+            } catch (e) {
+                console.warn("Erro ao deletar imagem marcada do Storage (pode já ter sido removida):", e.message, url);
+                if (e.code !== 'storage/object-not-found') {
+                     notifyAdmins("⚠️ Falha ao deletar (Portfólio)", `Não foi possível deletar a imagem ${url} do Storage ao ser removida por ${perfil.nome}. Erro: ${e.code}`);
+                }
+            }
+        });
+        await Promise.all(deletePromises); // Espera as exclusões terminarem
+
+        // --- 3. Atualizar Firestore ---
+        // Combina imagens existentes mantidas com as novas
+        const finalImageUrls = [...imagensExistentesParaManter, ...newImageUrls];
+
+        await db.collection('usuarios').doc(userId).update({
+            portfolio: finalImageUrls // Salva o array final
+        });
+        
+        // --- 4. Limpeza e Feedback ---
         fecharTodosOsModais(); // Fecha o "Aguarde"
-        // exibirPopup(`Sucesso!`, `${novasUrls.length} imagem(ns) adicionada(s) ao portfólio!`);
+        exibirPopup('Sucesso!', 'Seu portfólio foi atualizado.');
 
-        fileInput.value = ''; previewContainer.innerHTML = ''; progressBar.style.display = 'none';
+        // Limpa os campos do formulário
+        fileInput.value = '';
+        document.getElementById('portfolioPreviews').innerHTML = '';
+        progressBar.style.display = 'none';
+        btnSalvar.disabled = true;
+        imagensMarcadasParaExcluir = []; // Limpa o array global
 
+        // O listener onSnapshot em 'carregarPortfolioExistente'
+        // irá recarregar a grid de imagens existentes automaticamente.
+        
         // --- ADIÇÃO PARA FLUXO PÓS-CADASTRO ---
-        // ... (código de sucesso)
- if (fluxoPosCadastroAtivo) {
-     fecharModalAtual(); // Fecha o modal de portfólio
-     // Verifica se realmente adicionou imagens antes de prosseguir
-     const perfilAtualizado = (await db.collection('usuarios').doc(userId).get()).data();
-     if (perfilAtualizado.portfolio && perfilAtualizado.portfolio.length > 0) {
-          abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Abre promoção
-     } else {
-          exibirPopup("Portfólio Obrigatório", "Você precisa adicionar pelo menos uma imagem ao seu portfólio para continuar.");
-          abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Reabre portfólio
-     }
- } else {
-      fecharModalAtual(); // Comportamento normal
- }
+        if (fluxoPosCadastroAtivo) {
+             fecharModalAtual(); // Fecha o modal de portfólio
+             // Verifica se realmente adicionou imagens antes de prosseguir
+             const perfilAtualizado = (await db.collection('usuarios').doc(userId).get()).data();
+             if (perfilAtualizado.portfolio && perfilAtualizado.portfolio.length > 0) {
+                  abrirModalComConfirmacao('modalAddPromocao', '🎁 Adicionar Promoção (Opcional)'); // Abre promoção
+             } else {
+                  exibirPopup("Portfólio Obrigatório", "Você precisa adicionar pelo menos uma imagem ao seu portfólio para continuar.");
+                  abrirModalComConfirmacao('modalPortfolioBarbeiro', '🖼️ Adicionar ao Portfólio'); // Reabre portfólio
+             }
+         } else {
+              // Comportamento normal: não precisa fechar, pois fecharTodosOsModais já fechou
+         }
         // --- FIM DA ADIÇÃO ---
 
-    } catch (error) { /* ... (bloco catch original) ... */
-        fecharTodosOsModais(); exibirPopup('Erro', 'Falha ao salvar portfólio: ' + (error.message || error)); progressBar.style.display = 'none'; btnSalvar.disabled = false;
-    }
-}
-
-async function removerImagemPortfolio(imageUrl) {
-    if (!confirm("Tem certeza que deseja remover esta imagem permanentemente do seu portfólio?")) {
-        return;
-    }
-
-    exibirAguarde("Removendo imagem...");
-    const userId = auth.currentUser.uid;
-
-    try {
-        // 1. Remove a URL do array no Firestore
-        // O listener onSnapshot em carregarPortfolioExistente atualizará a UI automaticamente
-        await db.collection('usuarios').doc(userId).update({
-            portfolio: firebase.firestore.FieldValue.arrayRemove(imageUrl)
-        });
-
-        // 2. Tenta deletar o arquivo do Storage
-        try {
-            // A forma mais segura de obter a referência de storage a partir de uma URL de download
-            const imageRef = storage.refFromURL(imageUrl);
-            await imageRef.delete();
-            console.log("Imagem deletada do Storage:", imageRef.fullPath);
-        } catch (storageError) {
-            // Se falhar (ex: permissão, arquivo não existe, URL não é do storage)
-            console.warn("Não foi possível deletar a imagem do Storage (pode já ter sido removida ou erro de permissão):", storageError.message, imageUrl);
-            // Notifica o admin se a falha não for 'objeto não encontrado'
-            if (storageError.code !== 'storage/object-not-found') {
-                 notifyAdmins("⚠️ Falha ao deletar (Portfólio)", `Não foi possível deletar a imagem ${imageUrl} do Storage ao ser removida por ${perfil.nome}. Erro: ${storageError.code}`);
-            }
-        }
-
-        fecharTodosOsModais(); // Fecha o "Aguarde"
-        exibirPopup("Sucesso!", "Imagem removida do portfólio."); // O listener já terá atualizado a UI
 
     } catch (error) {
         fecharTodosOsModais();
-        exibirPopup("Erro", "Falha ao remover imagem do Firestore: " + error.message);
+        exibirPopup('Erro ao salvar portfólio: ' + (error.message || error));
+        btnSalvar.disabled = false; // Reabilita o botão em caso de erro
+        progressBar.style.display = 'none';
     }
 }
 
@@ -7138,9 +7184,11 @@ function carregarPortfolioExistente() {
             gridContainer.innerHTML = ''; // Limpa o container
             portfolioUrls.forEach(url => {
                 const imgContainer = document.createElement('div');
-                // *** CORREÇÃO: Estilos de layout (width, margin, display) removidos ***
-                // O layout agora é 100% controlado pela classe CSS ".portfolio-grid"
                 imgContainer.style.position = 'relative'; 
+                
+                // === ADIÇÃO ===
+                imgContainer.dataset.url = url; // Adiciona o data-url
+                // ==============
 
                 const imgElement = document.createElement('img');
                 imgElement.src = url;
@@ -7173,10 +7221,13 @@ function carregarPortfolioExistente() {
                 deleteButton.style.padding = '0';
                 deleteButton.style.cursor = 'pointer';
                 deleteButton.title = 'Remover Imagem';
+                
+                // === ALTERAÇÃO ===
                 deleteButton.onclick = (e) => {
                     e.stopPropagation();
-                    removerImagemPortfolio(url); // Função que você já tem
+                    marcarImagemPortfolioParaExcluir(deleteButton, url); // Chama a nova função de "marcar"
                 };
+                // =================
 
                 imgContainer.appendChild(imgElement);
                 imgContainer.appendChild(deleteButton);
@@ -8113,6 +8164,62 @@ function marcarImagemProdutoParaExcluir(buttonElement, imageUrl) {
      }
 }
 
+// Função auxiliar para marcar/desmarcar imagem de PORTFÓLIO para exclusão
+function marcarImagemPortfolioParaExcluir(buttonElement, imageUrl) {
+    const imgContainer = buttonElement.parentElement;
+    const imgElement = imgContainer.querySelector('img');
+    const isMarked = imgContainer.classList.toggle('marcada-para-excluir');
+    
+    // Seleciona os IDs corretos do modal de Portfólio
+    const fileInput = document.getElementById('portfolioFilesInput');
+    const labelFileInput = document.getElementById('labelPortfolioFiles');
+    const contadorImagensElement = document.getElementById('portfolioContador');
+
+    if (isMarked) {
+        imagensMarcadasParaExcluir.push(imageUrl); // Adiciona ao array de exclusão
+        buttonElement.textContent = '↩️';
+        buttonElement.title = 'Manter Imagem';
+        imgElement.style.opacity = '0.5';
+        imgElement.style.border = '2px solid red';
+    } else {
+        // Remove do array de exclusão
+        imagensMarcadasParaExcluir = imagensMarcadasParaExcluir.filter(url => url !== imageUrl);
+        buttonElement.textContent = '❌';
+        buttonElement.title = 'Remover Imagem';
+        imgElement.style.opacity = '1';
+        imgElement.style.border = '1px solid var(--cor-borda)'; // Volta ao normal
+    }
+
+     // Atualiza contador e estado do input de novas imagens
+     const previewsExistentesContainer = document.getElementById('portfolioExistenteGrid');
+     const existingImagesTotal = (perfil?.portfolio || []).length; // Total vindo do 'perfil'
+     const currentImageCount = existingImagesTotal - imagensMarcadasParaExcluir.length; // Quantas ficarão
+     const allowedNew = 30 - currentImageCount;
+
+     if (contadorImagensElement) contadorImagensElement.textContent = currentImageCount; // Atualiza o contador exibido
+
+     if (allowedNew <= 0) {
+         fileInput.disabled = true;
+         fileInput.value = ''; // Limpa seleção se não pode adicionar mais
+         document.getElementById('portfolioPreviews').innerHTML = ''; // Limpa previews de novas
+         labelFileInput.textContent = 'Limite de 30 imagens atingido.';
+     } else {
+         fileInput.disabled = false;
+         labelFileInput.textContent = `Adicionar Novas Imagens (${allowedNew} restantes):`;
+         // Se o número de arquivos selecionados agora excede o limite, limpa
+         if (fileInput.files.length > allowedNew) {
+             fileInput.value = '';
+             document.getElementById('portfolioPreviews').innerHTML = '';
+             exibirPopup("Atenção", `Você só pode adicionar ${allowedNew} nova(s) imagem(ns) devido às exclusões marcadas. Selecione novamente.`);
+         }
+     }
+     
+     // Habilita o botão salvar se houver mudanças (novos arquivos OU exclusões)
+     const btnSalvar = document.getElementById('btnSalvarPortfolio');
+     // Verifica se o fileInput tem arquivos selecionados
+     const novosArquivosSelecionados = fileInput.files && fileInput.files.length > 0;
+     btnSalvar.disabled = (!novosArquivosSelecionados && imagensMarcadasParaExcluir.length === 0);
+}
 
 async function salvarProdutoVendedor() {
     const modal = document.getElementById('modalAddEditProduto');
