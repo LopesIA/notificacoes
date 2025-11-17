@@ -4452,7 +4452,7 @@ function confirmarAgendamento() {
             ts: firebase.firestore.FieldValue.serverTimestamp(),
             avaliado: false, lembreteEnviado: false,
             clienteNotificado: false, // <-- REQUERIDO PARA O POPUP DO CLIENTE
-            lembreteConcluirEnviado: false // <-- REQUERIDO PARA O LEMBRETE DO PROFISSIONAL
+            lembreteConcluirEnviado: false, // <-- REQUERIDO PARA O LEMBRETE DO PROFISSIONAL
             avisoAvaliacaoEnviado: false
         };
         if (horario !== 'imediato') agendamentoData.horario = horario;
