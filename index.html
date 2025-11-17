@@ -616,10 +616,13 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
         gap: 12px;
         cursor: pointer;
     }
-    .card-header {
+    .card-header-info {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+        flex-direction: column; /* Garante que fique um embaixo do outro */
+        justify-content: center;
+        align-items: center; /* Centraliza horizontalmente */
+        flex-grow: 1; /* Ocupa o espaço restante ao lado da logo */
+        text-align: center; /* Centraliza o texto */
         border-bottom: 1px solid var(--cor-borda);
         padding-bottom: 10px;
     }
@@ -2637,7 +2640,8 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <p>Deixe um comentário:</p>
     <textarea id="inputAvaliacaoComentario" placeholder="Descreva sua experiência..."></textarea>
     <p>Enviar foto do resultado? (Opcional)</p>
-    <input id="inputAvaliacaoFoto" type="text" placeholder="Cole o Link Direto do postimages.org aqui">
+    <input id="inputAvaliacaoFotoFile" type="file" accept="image/*" style="background-color: var(--cor-botoes);">
+    <progress id="avaliacaoUploadProgress" value="0" max="100" style="width: 100%; display: none; margin-top: 5px;"></progress>
     <button id="btnSalvarAvaliacao" onclick="executarAvaliacaoCliente()">Enviar Avaliação</button>
     <button data-modal-id="modalAvaliacaoCliente" onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
@@ -4591,38 +4595,59 @@ function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
   // Limpa os campos do modal
   document.getElementById('inputAvaliacaoNota').value = '';
   document.getElementById('inputAvaliacaoComentario').value = '';
-  document.getElementById('inputAvaliacaoFoto').value = '';
+  document.getElementById('inputAvaliacaoFotoFile').value = ''; // Limpa o input de arquivo
+  document.getElementById('avaliacaoUploadProgress').style.display = 'none'; // Esconde a barra
   
   abrirModal('modalAvaliacaoCliente');
 }
 
-// ESTA É UMA NOVA FUNÇÃO (cole junto com abrirModalAvaliacao)
 async function executarAvaliacaoCliente() {
   const nota = parseInt(document.getElementById('inputAvaliacaoNota').value);
   const comentario = document.getElementById('inputAvaliacaoComentario').value.trim();
-  let fotoUrl = document.getElementById('inputAvaliacaoFoto').value.trim() || null;
+  const fileInput = document.getElementById('inputAvaliacaoFotoFile');
+  let fotoUrl = null;
 
   if (isNaN(nota) || nota < 1 || nota > 10) {
       return exibirPopup("Avaliação inválida.", "Use um número de 1 a 10.");
   }
   
-  if (fotoUrl && !fotoUrl.startsWith("http")) {
-      exibirPopup("Link inválido.", "Certifique-se de copiar o 'Link Direto' do postimages.org.");
-      fotoUrl = null;
+  // Fecha o modal atual mas mantém o overlay se precisar
+  // fecharModalAtual(); 
+  // Mostra aguarde (o botão ficará desativado pelo overlay do aguarde)
+  exibirAguarde("Processando avaliação...");
+
+  try {
+      // Lógica de Upload de Imagem (se houver arquivo)
+      if (fileInput.files && fileInput.files.length > 0) {
+          const progressBar = document.getElementById('avaliacaoUploadProgress');
+          progressBar.style.display = 'block';
+          document.getElementById('popupAguardeTexto').textContent = "Enviando foto..."; // Atualiza texto do aguarde
+
+          const file = fileInput.files[0];
+          // Caminho: avaliacoes/UID_DO_USUARIO/TIMESTAMP_NOME
+          const filePath = `avaliacoes/${auth.currentUser.uid}/${Date.now()}_${file.name}`;
+          
+          // Usa a sua função auxiliar uploadImage que já existe no código
+          fotoUrl = await uploadImage(file, filePath, (progress) => {
+              progressBar.value = progress;
+          });
+      }
+
+      // Chama a função de avaliar serviço passando a URL (se houver) ou null
+      document.getElementById('popupAguardeTexto').textContent = "Finalizando...";
+      await avaliarServico(avaliacaoAgendamentoId, avaliacaoBarbeiroUid, nota, comentario, fotoUrl);
+      
+      // Limpa as variáveis globais
+      avaliacaoAgendamentoId = null;
+      avaliacaoBarbeiroUid = null;
+
+      fecharTodosOsModais(); // Fecha tudo no final
+
+  } catch (error) {
+      fecharTodosOsModais();
+      console.error("Erro na avaliação:", error);
+      exibirPopup("Erro", "Falha ao enviar avaliação: " + (error.message || error));
   }
-
-  // Fecha o modal de avaliação e mostra "aguarde"
-  fecharModalAtual();
-  exibirAguarde("Enviando avaliação...");
-
-  // Chama a função de avaliar serviço (que você já tinha)
-  await avaliarServico(avaliacaoAgendamentoId, avaliacaoBarbeiroUid, nota, comentario, fotoUrl);
-  
-  // Limpa as variáveis globais
-  avaliacaoAgendamentoId = null;
-  avaliacaoBarbeiroUid = null;
-
-  fecharTodosOsModais(); // Fecha o "aguarde"
 }
 
 async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = null) {
@@ -6696,7 +6721,8 @@ function carregarAdmin() {
                 snap.forEach(doc => {
                     const u = doc.data();
                     // Adiciona o item clicável
-                    lista.innerHTML += `<div class="selectable-item" onclick="abrirWhatsApp('${u.telefone}')" title="Chamar ${u.nome} no WhatsApp">${u.nome}</div>`;
+                    // Alterado para chamar adminAbrirInfoChat passando o ID do documento (doc.id)
+lista.innerHTML += `<div class="selectable-item" onclick="adminAbrirInfoChat('${doc.id}')" title="Ver opções para ${u.nome}">${u.nome}</div>`;
                 });
             }
 
