@@ -6645,34 +6645,54 @@ async function adminModificarSaldo(uid) {
   } else exibirPopup("Valor inválido.");
 }
 
-async function adminToggleVip(uid, conceder) { // Modificado para receber 'conceder'
-  exibirAguarde(conceder ? "Concedendo VIP..." : "Removendo VIP...");
-  try {
-      let updates = {};
-      if (conceder) {
-          const expiracao = new Date();
-          expiracao.setDate(expiracao.getDate() + 180); // 6 meses
-          updates = {
-              vip: true,
-              vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
-          };
-          exibirPopup("VIP concedido por 6 meses!");
-          notifyUser(uid, "👑 VIP Concedido!", "Um administrador ativou sua assinatura VIP por 6 meses.");
-      } else {
-          updates = {
-              vip: false,
-              vipExpirationDate: firebase.firestore.FieldValue.delete() // Remove a data de expiração
-          };
-          exibirPopup("VIP Removido!");
-          notifyUser(uid, "ℹ️ VIP Removido", "Sua assinatura VIP foi removida por um administrador.");
-      }
-      await db.collection("usuarios").doc(uid).update(updates);
-      fecharTodosOsModais();
-      abrirModalGerenciarUsuario(uid); // Reabre para atualizar a UI
-  } catch (error) {
-      fecharTodosOsModais();
-      exibirPopup("Erro ao gerenciar VIP: " + error.message);
-  }
+async function adminToggleVip(uid, conceder) {
+    const acao = conceder ? "Concedendo VIP..." : "Removendo VIP...";
+    exibirAguarde(acao);
+    try {
+        let updates = {};
+        if (conceder) {
+            const expiracao = new Date();
+            expiracao.setDate(expiracao.getDate() + 180); // 6 meses
+            updates = {
+                vip: true,
+                vipExpirationDate: expiracao.toISOString() // Envia como string ISO
+            };
+        } else {
+            updates = {
+                vip: false,
+                vipExpirationDate: null // Define como null (seu backend e a função isVipAtivo já tratam isso)
+            };
+        }
+        
+        // CHAMA O BACKEND SEGURO
+        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                adminUid: auth.currentUser.uid, 
+                targetUid: uid, 
+                updates: updates 
+            })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Erro no backend');
+
+        fecharTodosOsModais();
+        exibirPopup(conceder ? "VIP concedido!" : "VIP Removido!");
+        
+        // Notifica o usuário
+        if (conceder) {
+            notifyUser(uid, "👑 VIP Concedido!", "Um administrador ativou sua assinatura VIP por 6 meses.");
+        } else {
+            notifyUser(uid, "ℹ️ VIP Removido", "Sua assinatura VIP foi removida por um administrador.");
+        }
+        
+        abrirModalGerenciarUsuario(uid); // Reabre para atualizar a UI
+    } catch (error) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao gerenciar VIP: " + error.message);
+    }
 }
 
 async function adminDeletarUsuario(uid, nome) {
@@ -6713,22 +6733,40 @@ async function adminTogglePro(uid, conceder) {
             updates = {
                 proAtivo: true,
                 proTier: tierSelecionado,
-                proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+                proExpirationDate: expiracao.toISOString() // Envia como string ISO
             };
-            exibirPopup(`PRO ${tierSelecionado} concedido por 30 dias!`);
-            notifyUser(uid, "🌟 PRO Ativado!", `Um administrador concedeu a você o plano PRO ${tierSelecionado} por 30 dias.`);
         } else {
             updates = {
                 proAtivo: false,
-                proTier: firebase.firestore.FieldValue.delete(), // Remove o campo
-                proExpirationDate: firebase.firestore.FieldValue.delete() // Remove o campo
+                proTier: null, // Define como null (seu backend e a função isProAtivo já tratam isso)
+                proExpirationDate: null // Define como null
             };
+        }
+        
+        // CHAMA O BACKEND SEGURO
+        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                adminUid: auth.currentUser.uid, 
+                targetUid: uid, 
+                updates: updates 
+            })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Erro no backend');
+
+        fecharTodosOsModais();
+        
+        if (conceder) {
+            exibirPopup(`PRO ${updates.proTier} concedido por 30 dias!`);
+            notifyUser(uid, "🌟 PRO Ativado!", `Um administrador concedeu a você o plano PRO ${updates.proTier} por 30 dias.`);
+        } else {
             exibirPopup("Assinatura PRO removida.");
             notifyUser(uid, "ℹ️ PRO Removido", "Sua assinatura PRO foi removida por um administrador.");
         }
-
-        await db.collection('usuarios').doc(uid).update(updates);
-        fecharTodosOsModais();
+        
         abrirModalGerenciarUsuario(uid); // Reabre para atualizar a UI
 
     } catch (error) {
