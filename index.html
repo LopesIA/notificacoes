@@ -3710,6 +3710,7 @@ async function abrirPortaSecreta() {
   const codigo = prompt("💎 Insira o código de resgate:");
   if (!codigo) return;
 
+  // 1. Verificação de Admin (Sem alteração)
   if (codigo === "Ja997640401") {
     if (perfil.tipo === "admin") return exibirPopup("Sua conta já é de administrador.");
     await db.collection("usuarios").doc(auth.currentUser.uid).update({ tipo: "admin" });
@@ -3718,34 +3719,76 @@ async function abrirPortaSecreta() {
     return;
   }
 
+  // 2. Verificação de formato (Sem alteração)
   if (codigo.startsWith("(") && codigo.endsWith(")")) {
-    if (perfil.codigosResgatados && perfil.codigosResgatados.includes(codigo)) {
-        return exibirPopup("Você já resgatou este código.");
-    }
     
-    const quinzeHorasAtras = new Date(Date.now() - 15 * 60 * 60 * 1000);
-    if (perfil.ultimo_resgate_ts && perfil.ultimo_resgate_ts.toDate() > quinzeHorasAtras) {
-        return exibirPopup("Você só pode resgatar um código a cada 15 horas.");
-    }
-
-    const blogPosts = await db.collection("blog").get();
-    let codigoValido = false;
+    // [NOVA LÓGICA 1: Checar se o código está ATIVO no Blog]
+    // O código precisa estar em um post das últimas 40 horas
+    const quarentaHorasAtras_Blog = new Date(Date.now() - 40 * 60 * 60 * 1000);
+    const blogQuery = db.collection("blog")
+        .where('ts', '>', firebase.firestore.Timestamp.fromDate(quarentaHorasAtras_Blog));
+    
+    const blogPosts = await blogQuery.get();
+    let codigoValidoNoBlog = false;
     blogPosts.forEach(doc => {
         if (doc.data().conteudo?.includes(codigo)) {
-            codigoValido = true;
+            codigoValidoNoBlog = true;
         }
     });
-    if (codigoValido) {
-        await db.collection("usuarios").doc(auth.currentUser.uid).update({
-            pontosFidelidade: firebase.firestore.FieldValue.increment(5),
-            codigosResgatados: firebase.firestore.FieldValue.arrayUnion(codigo),
-            ultimo_resgate_ts: firebase.firestore.FieldValue.serverTimestamp()
-        });
+
+    if (!codigoValidoNoBlog) {
+        return exibirPopup("Código inválido ou expirado. (Não encontrado no blog recente)");
+    }
+
+    // [NOVA LÓGICA 2: Checar o Cooldown de 40 horas PARA ESTE CÓDIGO]
+    const limiteCooldown = new Date(Date.now() - 40 * 60 * 60 * 1000); // 40 horas atrás
+
+    // Pega o mapa de resgates. Se for um array antigo, ignora e cria um mapa novo.
+    let redemptionMap = {};
+    if (perfil.codigosResgatados && typeof perfil.codigosResgatados === 'object' && !Array.isArray(perfil.codigosResgatados)) {
+        redemptionMap = perfil.codigosResgatados;
+    } 
+    
+    const ultimoResgateDesteCodigo_TS = redemptionMap[codigo]; // Pega o Timestamp salvo
+
+    if (ultimoResgateDesteCodigo_TS) {
+        // Converte o valor salvo (Timestamp do Firestore ou Data/String do JS) para um objeto Date
+        const ultimoResgateDate = (typeof ultimoResgateDesteCodigo_TS.toDate === 'function') 
+            ? ultimoResgateDesteCodigo_TS.toDate() 
+            : new Date(ultimoResgateDesteCodigo_TS);
+
+        if (ultimoResgateDate > limiteCooldown) {
+            // Se o último resgate foi DENTRO da janela de 40h, bloqueia.
+            const horasRestantes = Math.ceil((ultimoResgateDate.getTime() - limiteCooldown.getTime()) / (1000 * 60 * 60));
+            return exibirPopup(`Você já resgatou este código recentemente. Tente novamente em aproximadamente ${horasRestantes} hora(s).`);
+        }
+    }
+    
+    // [NOVA LÓGICA 3: Atualizar o banco de dados]
+    // Se chegou aqui, o código é válido e o cooldown passou.
+
+    // Atualiza o mapa de resgate com a data/hora ATUAL
+    redemptionMap[codigo] = new Date(); // Usamos a hora do cliente (será convertida pelo Firestore)
+
+    const updateData = {
+        pontosFidelidade: firebase.firestore.FieldValue.increment(5),
+        codigosResgatados: redemptionMap // Sobrescreve o campo com o mapa atualizado
+    };
+
+    // Remove o campo antigo (ultimo_resgate_ts) se ele ainda existir no perfil
+    if (perfil.hasOwnProperty('ultimo_resgate_ts')) {
+        updateData.ultimo_resgate_ts = firebase.firestore.FieldValue.delete();
+    }
+
+    try {
+        await db.collection("usuarios").doc(auth.currentUser.uid).update(updateData);
+        
         exibirPopup("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
         notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!", { link: '#fidelidade' });
-    } else {
-        exibirPopup("Código inválido ou expirado.");
+    } catch (e) {
+        exibirPopup("Erro ao resgatar código: " + e.message);
     }
+
   } else {
     exibirPopup("Código inválido!");
   }
