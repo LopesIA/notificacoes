@@ -43,6 +43,46 @@
     }
 }
 
+/* Estilo para o botão de Usuários Online (Admin) */
+#onlineUserCount {
+    font-size: 14px;
+    font-weight: 600;
+    /* color: #2ecc71;  <-- REMOVIDO */
+    background: linear-gradient(45deg, var(--cor-destaque-prata), var(--cor-destaque-ouro));
+    color: var(--cor-fundo);
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    /* animation: pulse-green 2s infinite; <-- REMOVIDO */
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+#onlineUserCount:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
+}
+
+/* Estilo para o modal de novo agendamento (não-fechável) */
+#modalNovoAgendamento {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Estilo para item clicável na lista de usuários online */
+#listaUsuariosOnline .selectable-item {
+    background: var(--cor-botoes);
+    border: 1px solid var(--cor-borda);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+#listaUsuariosOnline .selectable-item:hover {
+    border-color: var(--cor-destaque);
+    background-color: var(--cor-card);
+}
+
 /* Estilos para Desktop - Agendamentos do Profissional */
 @media (min-width: 768px) { /* Aplica a partir de telas médias (tablets e desktops) */
   #modalAgendamentosBarbeiro .modal-content {
@@ -1470,6 +1510,10 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
           </div>
         </div>
 
+<div class="popup-section">
+  <h4>🔒 Encerrar Conta</h4>
+  <button onclick="prepararDeletarConta()" style="background-color: #c0392b; border: 1px solid #e74c3c;">Excluir Minha Conta Permanentemente</button>
+</div>
          
          <div class="popup-section footer-contact" style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--cor-borda);">
             <p style="font-size: 12px; margin-bottom: 8px;">
@@ -2556,6 +2600,105 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
+<!-- Modal para Adicionar/Editar Serviço (Substitui o prompt) -->
+<div id="modalAddServico" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3 id="modalAddServicoTitulo">Adicionar Novo Serviço</h3>
+    <input id="addServicoNome" type="text" placeholder="Nome do Serviço (Ex: Corte Masculino)">
+    <input id="addServicoValor" type="number" placeholder="Preço (Ex: 25.50)">
+    <input id="addServicoTempo" type="number" placeholder="Tempo Estimado (em minutos, Ex: 30)">
+    <button id="btnSalvarServico" onclick="salvarServico()">💾 Salvar Serviço</button>
+    <button data-modal-id="modalAddServico" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal para Resgatar Código (Substitui o prompt) -->
+<div id="modalResgatarCodigo" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>✨ Resgatar Código</h3>
+    <p>Insira o código de resgate:</p>
+    <input id="inputCodigoResgate" type="text" placeholder="Digite o código aqui...">
+    <button onclick="executarResgateCodigo()">➡️ Resgatar</button>
+    <button data-modal-id="modalResgatarCodigo" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal para Avaliação do Cliente (Substitui os prompts) -->
+<div id="modalAvaliacaoCliente" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>⭐ Avaliar Serviço</h3>
+    <p>Avalie o serviço de 1 a 10:</p>
+    <input id="inputAvaliacaoNota" type="number" min="1" max="10" placeholder="Nota (1-10)">
+    <p>Deixe um comentário:</p>
+    <textarea id="inputAvaliacaoComentario" placeholder="Descreva sua experiência..."></textarea>
+    <p>Enviar foto do resultado? (Opcional)</p>
+    <input id="inputAvaliacaoFoto" type="text" placeholder="Cole o Link Direto do postimages.org aqui">
+    <button id="btnSalvarAvaliacao" onclick="executarAvaliacaoCliente()">Enviar Avaliação</button>
+    <button data-modal-id="modalAvaliacaoCliente" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal para Confirmar Exclusão de Conta (Substitui o prompt) -->
+<div id="modalConfirmarSenhaExclusao" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>🗑️ Excluir Conta</h3>
+    <p style="color: #e74c3c; font-weight: bold;">Atenção: Esta ação é irreversível!</p>
+    <p>Para confirmar a exclusão da sua conta, digite sua senha atual:</p>
+    <div class="show-password-container">
+      <input id="exclusaoSenhaInput" type="password" placeholder="🔑 Sua Senha">
+      <span class="show-password-toggle" onclick="togglePasswordVisibility('exclusaoSenhaInput', this)">👁️</span>
+    </div>
+    <button onclick="deletarConta()" style="background-color: #c0392b; margin-top: 15px;">Confirmar Exclusão Permanente</button>
+    <button data-modal-id="modalConfirmarSenhaExclusao" onclick="fecharModal(event)">❌ Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal POPUP PERSISTENTE Novo Agendamento (Profissional) -->
+<div id="modalNovoAgendamento" class="modal" style="z-index: 98;">
+  <div class="modal-content" style="border: 3px solid var(--cor-destaque);">
+    <h3 style="color: var(--cor-destaque);">🔔 Novo Agendamento Recebido!</h3>
+    <div id="modalNovoAgendamentoInfo" style="text-align: left; margin-bottom: 20px;">
+      <p><b>Cliente:</b> <span id="popupClienteNome"></span></p>
+      <p><b>Serviço:</b> <span id="popupServicoNome"></span></p>
+      <p><b>Horário:</b> <span id="popupHorario"></span></p>
+      <p><b>Valor:</b> R$ <span id="popupValor"></span></p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button id="btnRecusarAgendamentoPopup" style="background-color: #c0392b; flex: 1;">❌ Recusar</button>
+      <button id="btnAceitarAgendamentoPopup" style="background-color: #2ecc71; flex: 1;">✅ Aceitar</button>
+    </div>
+    <a id="btnWhatsAppPopup" href="#" target="_blank" style="margin-top: 10px; display: block;">
+      <button style="background-color: #25D366; width: 100%;">💬 Chamar Cliente no WhatsApp</button>
+    </a>
+  </div>
+</div>
+
+<!-- Modal Admin: Lista de Usuários Online -->
+<div id="modalUsuariosOnline" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>Usuários Online (Últimos 5 min)</h3>
+    <div id="listaUsuariosOnline" class="scrollable-list" style="max-height: 60vh;">
+      <p>Carregando...</p>
+    </div>
+    <button data-modal-id="modalUsuariosOnline" onclick="fecharModal(event)" style="margin-top: 15px;">❌ Fechar</button>
+  </div>
+</div>
+
+<!-- Modal Admin: Info Rápida do Chat -->
+<div id="modalAdminInfoChat" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3 id="adminInfoChatNome">Info do Usuário</h3>
+    <div id="adminInfoChatConteudo" class="scrollable-list" style="max-height: 50vh; text-align: left;">
+      <p>Carregando...</p>
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <button id="adminInfoChatBtnWpp" onclick="">💬 Chamar no WhatsApp</button>
+      <button id="adminInfoChatBtnGerenciar" onclick="">⚙️ Gerenciamento Completo</button>
+    </div>
+    <button data-modal-id="modalAdminInfoChat" onclick="fecharModal(event)" style="margin-top: 10px;">❌ Fechar</button>
+  </div>
+</div>
+
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
@@ -2652,6 +2795,9 @@ let fluxoPosCadastroAtivo = false;
 let lastReloadTimestamp = null; // Variável para controlar o reload forçado
 let previousTipo = null;
 let onConfirmCallback = null;
+let avaliacaoAgendamentoId = null;
+let avaliacaoBarbeiroUid = null;
+let popupAgendamentoAberto = false;
 
 let userView = {
     originalType: null,
@@ -2825,6 +2971,13 @@ function abrirModal(modalId) {
 function fecharModal(event) {
     // Permite fechar clicando no fundo (classe .modal) ou em um botão com data-modal-id
     if (event && event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id')) {
+        
+        // Impede o fechamento do modal de novo agendamento
+        if (event.target.id === 'modalNovoAgendamento') {
+            console.log("Fechamento do modal de agendamento bloqueado.");
+            return;
+        }
+        
         fecharModalAtual();
     }
 }
@@ -3565,6 +3718,63 @@ auth.onAuthStateChanged(async user => {
 
     // --- LÓGICA EXECUTADA APENAS NO PRIMEIRO CARREGAMENTO DO LISTENER ---
     if (isInitialLoad) {
+if (perfil.tipo !== 'cliente') {
+        
+        // 1. Listener para o POPUP PERSISTENTE de novo agendamento
+        // Adiciona um delay de 10 segundos como solicitado
+        setTimeout(() => {
+            console.log("Iniciando listener de novos agendamentos (10s delay)...");
+            db.collection("agendamentos")
+              .where("barbeiroUid", "==", user.uid)
+              .where("status", "in", ["pendente", "imediato"])
+              .orderBy("ts", "asc") // Pega o mais antigo primeiro
+              .limit(1)
+              .onSnapshot(snapshot => {
+                  if (!snapshot.empty) {
+                      const primeiroAgendamentoPendente = snapshot.docs[0];
+                      // Chama o popup
+                      exibirPopupNovoAgendamento(primeiroAgendamentoPendente);
+                  } else {
+                      // Se não há pendentes, garante que o popup feche caso estivesse aberto
+                      if (popupAgendamentoAberto) {
+                          fecharModalAtual();
+                          popupAgendamentoAberto = false;
+                      }
+                  }
+              });
+        }, 10000); // 10 segundos de delay
+
+        // 2. Listener para LEMBRETE DE CONCLUSÃO (Verificação a cada 1 min)
+        setInterval(() => {
+            checkLembretesConclusao(user.uid);
+        }, 60000); // 1 minuto
+    }
+// 3. Listener para POPUP DE STATUS (Cliente)
+    if (perfil.tipo === 'cliente') {
+        console.log("Iniciando listener de status de agendamentos (Cliente)...");
+        db.collection("agendamentos")
+          .where("clienteUid", "==", user.uid)
+          .where("clienteNotificado", "==", false)
+          .where("status", "in", ["conclusão pendente", "cancelado"])
+          .onSnapshot(snapshot => {
+              snapshot.docChanges().forEach(change => {
+                  if (change.type === 'added' || change.type === 'modified') {
+                      const ag = change.doc.data();
+                      
+                      if (ag.status === "conclusão pendente") {
+                          // Só exibe se TIVER horário (ou seja, não é vaga imediata)
+                          if (ag.horario) {
+                              exibirPopup("Agendamento Aceito!", `Seu agendamento com ${ag.barbeiroNome} às ${ag.horario} foi aceito. Você receberá um lembrete 30 minutos antes.`);
+                              change.doc.ref.update({ clienteNotificado: true });
+                          }
+                      } else if (ag.status === "cancelado") {
+                          exibirPopup("Agendamento Recusado", `Seu agendamento com ${ag.barbeiroNome} (serviço: ${ag.servico}) foi recusado pelo profissional.`);
+                          change.doc.ref.update({ clienteNotificado: true });
+                      }
+                  }
+              });
+          });
+    }
         console.log("Carregamento inicial do perfil via listener concluído.");
         previousTipo = perfil.tipo; // Define o tipo inicial para a próxima comparação
 
@@ -3702,6 +3912,54 @@ window.addEventListener('beforeinstallprompt', (e) => {
     }
 });
 
+async function checkLembretesConclusao(uid) {
+    if (!perfil || perfil.tipo === 'cliente') return; // Só para profissionais
+
+    try {
+        const query = db.collection("agendamentos")
+            .where("barbeiroUid", "==", uid)
+            .where("status", "==", "conclusão pendente")
+            .where("lembreteConcluirEnviado", "==", false);
+            
+        const snapshot = await query.get();
+        if (snapshot.empty) return; // Sem lembretes
+
+        const agora = new Date();
+        const batch = db.batch(); // Para atualizar os lembretes enviados
+
+        for (const doc of snapshot.docs) {
+            const ag = doc.data();
+            
+            // Tenta encontrar o serviço na lista de perfil para pegar a duração
+            const servicoNome = ag.servico;
+            const servico = perfil.listaServicos.find(s => s.nome === servicoNome);
+
+            if (!servico || !servico.duracao || !ag.confirmadoEm) {
+                // Se não achar o serviço ou a duração, marca como enviado para não checar de novo
+                batch.update(doc.ref, { lembreteConcluirEnviado: true });
+                continue;
+            }
+
+            const duracaoMs = servico.duracao * 60 * 1000;
+            const horaConfirmacao = ag.confirmadoEm.toDate();
+            const horaLembrete = new Date(horaConfirmacao.getTime() + duracaoMs);
+
+            // Se o tempo já passou
+            if (agora > horaLembrete) {
+                exibirPopup("Lembrete de Conclusão", `O tempo estimado para o serviço '${servicoNome}' com ${ag.clienteNome} já passou. Não se esqueça de ir em 'Agendamentos' e clicar em 'Concluir' para liberar a avaliação do cliente e ambos ganharem pontos.`);
+                
+                // Marca para não notificar de novo
+                batch.update(doc.ref, { lembreteConcluirEnviado: true });
+            }
+        }
+        
+        await batch.commit(); // Atualiza todos os lembretes enviados
+
+    } catch (error) {
+        console.error("Erro ao checar lembretes de conclusão:", error);
+    }
+}
+
 async function enviarNotificacaoParaBackend(uid, title, body, data = {}) {
   const backendUrl = "https://navalhabackend.onrender.com"; 
   const notificationEndpoint = "/enviar-notificacao";
@@ -3763,23 +4021,34 @@ async function notifyAdmins(title, body, data = {}) {
 }
 
 async function abrirPortaSecreta() {
-  const codigo = prompt("💎 Insira o código de resgate:");
+  document.getElementById('inputCodigoResgate').value = ''; // Limpa o input
+  abrirModal('modalResgatarCodigo');
+}
+
+// ESTA É UMA NOVA FUNÇÃO (cole junto com abrirPortaSecreta)
+async function executarResgateCodigo() {
+  const codigo = document.getElementById('inputCodigoResgate').value;
   if (!codigo) return;
 
-  // 1. Verificação de Admin (Sem alteração)
+  fecharModalAtual(); // Fecha o modal do código
+  exibirAguarde("Verificando código...");
+
+  // 1. Verificação de Admin
   if (codigo === "Ja997640401") {
-    if (perfil.tipo === "admin") return exibirPopup("Sua conta já é de administrador.");
+    if (perfil.tipo === "admin") {
+        fecharTodosOsModais();
+        return exibirPopup("Aviso", "Sua conta já é de administrador.");
+    }
     await db.collection("usuarios").doc(auth.currentUser.uid).update({ tipo: "admin" });
-    exibirPopup("🔑 Sua conta agora é de Administrador! A página será recarregada.");
-    location.reload();
+    fecharTodosOsModais();
+    exibirPopup("Sucesso!", "🔑 Sua conta agora é de Administrador! A página será recarregada.");
+    setTimeout(() => location.reload(), 4000); // Adicionado delay
     return;
   }
 
-  // 2. Verificação de formato (Sem alteração)
+  // 2. Verificação de formato (Código do Blog)
   if (codigo.startsWith("(") && codigo.endsWith(")")) {
     
-    // [NOVA LÓGICA 1: Checar se o código está ATIVO no Blog]
-    // O código precisa estar em um post das últimas 40 horas
     const quarentaHorasAtras_Blog = new Date(Date.now() - 40 * 60 * 60 * 1000);
     const blogQuery = db.collection("blog")
         .where('ts', '>', firebase.firestore.Timestamp.fromDate(quarentaHorasAtras_Blog));
@@ -3793,60 +4062,52 @@ async function abrirPortaSecreta() {
     });
 
     if (!codigoValidoNoBlog) {
-        return exibirPopup("Código inválido ou expirado. (Não encontrado no blog recente)");
+        fecharTodosOsModais();
+        return exibirPopup("Erro", "Código inválido ou expirado. (Não encontrado no blog recente)");
     }
 
-    // [NOVA LÓGICA 2: Checar o Cooldown de 40 horas PARA ESTE CÓDIGO]
-    const limiteCooldown = new Date(Date.now() - 40 * 60 * 60 * 1000); // 40 horas atrás
-
-    // Pega o mapa de resgates. Se for um array antigo, ignora e cria um mapa novo.
+    const limiteCooldown = new Date(Date.now() - 40 * 60 * 60 * 1000);
     let redemptionMap = {};
     if (perfil.codigosResgatados && typeof perfil.codigosResgatados === 'object' && !Array.isArray(perfil.codigosResgatados)) {
         redemptionMap = perfil.codigosResgatados;
     } 
     
-    const ultimoResgateDesteCodigo_TS = redemptionMap[codigo]; // Pega o Timestamp salvo
+    const ultimoResgateDesteCodigo_TS = redemptionMap[codigo];
 
     if (ultimoResgateDesteCodigo_TS) {
-        // Converte o valor salvo (Timestamp do Firestore ou Data/String do JS) para um objeto Date
         const ultimoResgateDate = (typeof ultimoResgateDesteCodigo_TS.toDate === 'function') 
             ? ultimoResgateDesteCodigo_TS.toDate() 
             : new Date(ultimoResgateDesteCodigo_TS);
 
         if (ultimoResgateDate > limiteCooldown) {
-            // Se o último resgate foi DENTRO da janela de 40h, bloqueia.
             const horasRestantes = Math.ceil((ultimoResgateDate.getTime() - limiteCooldown.getTime()) / (1000 * 60 * 60));
-            return exibirPopup(`Você já resgatou este código recentemente. Tente novamente em aproximadamente ${horasRestantes} hora(s).`);
+            fecharTodosOsModais();
+            return exibirPopup("Aguarde", `Você já resgatou este código recentemente. Tente novamente em aproximadamente ${horasRestantes} hora(s).`);
         }
     }
     
-    // [NOVA LÓGICA 3: Atualizar o banco de dados]
-    // Se chegou aqui, o código é válido e o cooldown passou.
-
-    // Atualiza o mapa de resgate com a data/hora ATUAL
-    redemptionMap[codigo] = new Date(); // Usamos a hora do cliente (será convertida pelo Firestore)
-
+    redemptionMap[codigo] = new Date();
     const updateData = {
         pontosFidelidade: firebase.firestore.FieldValue.increment(5),
-        codigosResgatados: redemptionMap // Sobrescreve o campo com o mapa atualizado
+        codigosResgatados: redemptionMap
     };
-
-    // Remove o campo antigo (ultimo_resgate_ts) se ele ainda existir no perfil
     if (perfil.hasOwnProperty('ultimo_resgate_ts')) {
         updateData.ultimo_resgate_ts = firebase.firestore.FieldValue.delete();
     }
 
     try {
         await db.collection("usuarios").doc(auth.currentUser.uid).update(updateData);
-        
-        exibirPopup("🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
+        fecharTodosOsModais();
+        exibirPopup("Sucesso!", "🎉 Código válido! Você ganhou 5 pontos de fidelidade.");
         notifyUser(auth.currentUser.uid, "🏆 Pontos de Fidelidade!", "Você ganhou 5 pontos por resgatar um código do blog!", { link: '#fidelidade' });
     } catch (e) {
+        fecharTodosOsModais();
         exibirPopup("Erro ao resgatar código: " + e.message);
     }
 
   } else {
-    exibirPopup("Código inválido!");
+    fecharTodosOsModais();
+    exibirPopup("Erro", "Código inválido!");
   }
 }
 
@@ -4144,58 +4405,57 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
 }
 
 function confirmarAgendamento() {
-    // MOVEMOS A LÓGICA PARA ANTES DO "AGUARDE"
     const { barbeiroUid, barbeiroNome, servico, horario } = agendamentoState;
     if (!servico || !horario) {
-        // Se algo der errado, apenas fecha o modal de perfil
         fecharModalAtual();
         return;
     }
 
     const preco = isVipAtivo(perfil) ? servico.valor * 0.9 : servico.valor;
     
-    // 1. PRIMEIRO, VERIFICA O SALDO
     if (perfil.saldo < preco) {
-        // Se não tiver saldo, fecha o modal de agendamento e abre o da carteira. NENHUM "AGUARDE" É MOSTRADO.
-        fecharModalAtual(); // Fecha o modal do perfil do barbeiro
-        exibirPopup("💸 Saldo insuficiente. Por favor, deposite mais dinheiro em sua carteira.");
-        abrirModal('modalCarteira');
+        fecharModalAtual();
+        exibirPopup("💸 Saldo insuficiente.", "Por favor, deposite mais dinheiro em sua carteira.", 'aviso', () => {
+            abrirModal('modalCarteira');
+        });
         return;
     }
     
-    // 2. SE O SALDO FOR SUFICIENTE, PEDE A CONFIRMAÇÃO
     const horarioTexto = horario === 'imediato' ? 'uma Vaga Imediata' : `o horário das ${horario}`;
-    let detalhes = `Confirma o agendamento?\n\nProfissional: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
+    let detalhes = `Profissional: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
     if (servico.duracao) detalhes += `Duração Estimada: ${servico.duracao} minutos\n`;
     detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${isVipAtivo(perfil) ? ' (Desconto VIP de 10% aplicado)' : ''}`;
-    
-    if (!confirm(detalhes)) {
-        return; // Usuário cancelou, não faz nada
-    }
 
-    // 3. SÓ AGORA, DEPOIS DE TUDO VERIFICADO, MOSTRA O "AGUARDE" E PROCESSA
-    exibirAguarde("Agendando...");
+    // Usa o novo popup de confirmação
+    exibirConfirmacao("Confirmar Agendamento?", detalhes, () => {
+        // Esta função de callback só executa se o usuário clicar "Sim"
+        exibirAguarde("Agendando...");
     
-    const agendamentoData = {
-        clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
-        barbeiroUid, barbeiroNome, servico: servico.nome, valor: preco,
-        status: horario === 'imediato' ? 'imediato' : 'pendente',
-        ts: firebase.firestore.FieldValue.serverTimestamp(),
-        avaliado: false, lembreteEnviado: false
-    };
-    if (horario !== 'imediato') agendamentoData.horario = horario;
+        const agendamentoData = {
+            clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
+            barbeiroUid, barbeiroNome, servico: servico.nome, valor: preco,
+            status: horario === 'imediato' ? 'imediato' : 'pendente',
+            ts: firebase.firestore.FieldValue.serverTimestamp(),
+            avaliado: false, lembreteEnviado: false,
+            clienteNotificado: false, // <-- REQUERIDO PARA O POPUP DO CLIENTE
+            lembreteConcluirEnviado: false // <-- REQUERIDO PARA O LEMBRETE DO PROFISSIONAL
+        };
+        if (horario !== 'imediato') agendamentoData.horario = horario;
 
-    db.collection("agendamentos").add(agendamentoData).then(() => {
-        const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
-        criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`);
-        criarAviso(auth.currentUser.uid, "✅ Seu pedido foi enviado! Aguarde a aprovação do profissional.");
-        notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
-        fecharTodosOsModais();
-        exibirPopup("Pedido enviado com sucesso!");
-        // fecharModalAtual(); // Removido, pois fecharTodosOsModais já faz isso.
-    }).catch(e => {
-        fecharTodosOsModais();
-        exibirPopup("Erro ao enviar pedido: " + e.message)
+        db.collection("agendamentos").add(agendamentoData).then(() => {
+            const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
+            
+            // ATENÇÃO: Aviso para o barbeiro ainda é necessário para o popup persistente
+            criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`, 'novo-agendamento', agendamentoData);
+            
+            notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
+            
+            fecharTodosOsModais();
+            exibirPopup("Sucesso!", "Pedido enviado com sucesso! Aguarde a aprovação do profissional.");
+        }).catch(e => {
+            fecharTodosOsModais();
+            exibirPopup("Erro ao enviar pedido: " + e.message, 'erro');
+        });
     });
 }
 
@@ -4256,25 +4516,46 @@ function abrirHistoricoCliente() {
     });
 }
 
-// ATUALIZE ESTA FUNÇÃO EM INDEX.HTML
 function abrirModalAvaliacao(agendamentoId, barbeiroUid) {
-  const nota = parseInt(prompt("Avalie o serviço de 1 a 10:"));
-  if (isNaN(nota) || nota < 1 || nota > 10) return exibirPopup("Avaliação inválida. Use um número de 1 a 10.");
+  // Guarda os IDs para a função de salvar
+  avaliacaoAgendamentoId = agendamentoId;
+  avaliacaoBarbeiroUid = barbeiroUid;
+
+  // Limpa os campos do modal
+  document.getElementById('inputAvaliacaoNota').value = '';
+  document.getElementById('inputAvaliacaoComentario').value = '';
+  document.getElementById('inputAvaliacaoFoto').value = '';
   
-  const comentario = prompt("Deixe um comentário sobre o serviço:");
+  abrirModal('modalAvaliacaoCliente');
+}
 
-  const querEnviarFoto = confirm("Gostaria de enviar uma foto do resultado? (Opcional)\n\nSua foto ficará visível no perfil do profissional por 24 horas.");
-  let fotoUrl = null;
+// ESTA É UMA NOVA FUNÇÃO (cole junto com abrirModalAvaliacao)
+async function executarAvaliacaoCliente() {
+  const nota = parseInt(document.getElementById('inputAvaliacaoNota').value);
+  const comentario = document.getElementById('inputAvaliacaoComentario').value.trim();
+  let fotoUrl = document.getElementById('inputAvaliacaoFoto').value.trim() || null;
 
-  if (querEnviarFoto) {
-      fotoUrl = prompt("Ótimo! Siga os passos:\n1. Acesse postimages.org\n2. Envie sua foto.\n3. Copie o 'Link Direto' e cole aqui:");
-      if (fotoUrl && !fotoUrl.startsWith("http")) {
-          exibirPopup("Link inválido. Certifique-se de copiar o 'Link Direto'.");
-          fotoUrl = null;
-      }
+  if (isNaN(nota) || nota < 1 || nota > 10) {
+      return exibirPopup("Avaliação inválida.", "Use um número de 1 a 10.");
+  }
+  
+  if (fotoUrl && !fotoUrl.startsWith("http")) {
+      exibirPopup("Link inválido.", "Certifique-se de copiar o 'Link Direto' do postimages.org.");
+      fotoUrl = null;
   }
 
-  avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl);
+  // Fecha o modal de avaliação e mostra "aguarde"
+  fecharModalAtual();
+  exibirAguarde("Enviando avaliação...");
+
+  // Chama a função de avaliar serviço (que você já tinha)
+  await avaliarServico(avaliacaoAgendamentoId, avaliacaoBarbeiroUid, nota, comentario, fotoUrl);
+  
+  // Limpa as variáveis globais
+  avaliacaoAgendamentoId = null;
+  avaliacaoBarbeiroUid = null;
+
+  fecharTodosOsModais(); // Fecha o "aguarde"
 }
 
 async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, fotoUrl = null) {
@@ -4961,21 +5242,22 @@ async function createMessageDiv(msg, docId) {
     const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
-    // Adiciona o ID do documento ao elemento para checagem de duplicatas e exclusão
     if (docId) {
         messageDiv.dataset.docId = docId;
         
-        // *** INÍCIO DA NOVA LÓGICA DE EXCLUSÃO DO ADMIN ***
+        // Lógica de exclusão para Admin (no clique da MENSAGEM)
         if (perfil && perfil.tipo === 'admin' && msg.tipo !== 'bot' && msg.tipo !== 'ai_suporte') {
-            messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto); // Passa o docId e o texto
+            messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto);
             messageDiv.title = 'Admin: Clique para deletar esta mensagem';
-            messageDiv.classList.add('admin-deletable'); // Adiciona classe para CSS
+            messageDiv.classList.add('admin-deletable');
         }
-        // *** FIM DA NOVA LÓGICA ***
     }
 
+    let nomeSpanHtml = ''; // String para o span do nome
+
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
-        remetenteNome = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
+        nomeSpanHtml = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
+    
     } else {
         try {
             let remetenteData;
@@ -5003,28 +5285,86 @@ async function createMessageDiv(msg, docId) {
                     iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
                 }
 
-                remetenteNome = `<span class="${classeCSS}">${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+                // --- INÍCIO DA LÓGICA DO POPUP DE INFO ---
+                let nomeOnclick = '';
+                let nomeStyle = '';
+                let nomeTitle = '';
+                if (perfil && perfil.tipo === 'admin' && !isCurrentUser) {
+                    // Adiciona o onclick para abrir o popup de info
+                    nomeOnclick = `onclick="event.stopPropagation(); adminAbrirInfoChat('${msg.remetenteUid}')"`;
+                    nomeStyle = 'style="cursor: pointer; text-decoration: underline;"';
+                    nomeTitle = `title="Ver info de ${remetenteData.nome}"`;
+                }
+                // --- FIM DA LÓGICA ---
+
+                nomeSpanHtml = `<span class="${classeCSS}" ${nomeOnclick} ${nomeStyle} ${nomeTitle}>${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
 
             } else {
-                 remetenteNome = `👻 Usuário Excluído`;
-                 classeCSS = `cliente-chat`;
+                 nomeSpanHtml = `<span class="cliente-chat">👻 Usuário Excluído</span>`;
             }
         } catch (error) {
              console.error("Erro ao buscar dados do remetente:", error);
-             remetenteNome = `❓ Erro ao Carregar`;
-             classeCSS = `cliente-chat`;
+             nomeSpanHtml = `<span class="cliente-chat">❓ Erro ao Carregar</span>`;
         }
     }
 
-    messageDiv.innerHTML = `<b>${remetenteNome}:</b> ${msg.texto}`;
+    messageDiv.innerHTML = `<b>${nomeSpanHtml}:</b> ${msg.texto}`;
     
-    // *** LÓGICA DO TIMESTAMP (JÁ ESTAVA CORRETA E É MANTIDA) ***
     if (msg.ts && msg.ts.toDate) {
         const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em;">(${timeString})</small>`;
     }
     return messageDiv;
  }
+
+async function adminAbrirInfoChat(uid) {
+    exibirAguarde("Buscando dados do usuário...");
+    
+    const modal = document.getElementById('modalAdminInfoChat');
+    const nomeEl = modal.querySelector('#adminInfoChatNome');
+    const conteudoEl = modal.querySelector('#adminInfoChatConteudo');
+    const btnWpp = modal.querySelector('#adminInfoChatBtnWpp');
+    const btnGerenciar = modal.querySelector('#adminInfoChatBtnGerenciar');
+
+    try {
+        const userDoc = await db.collection('usuarios').doc(uid).get();
+        if (!userDoc.exists) {
+            throw new Error("Usuário não encontrado.");
+        }
+        const u = userDoc.data();
+
+        nomeEl.textContent = u.nome;
+        conteudoEl.innerHTML = `
+            <p><strong>Email:</strong> ${u.email}</p>
+            <p><strong>Telefone:</strong> ${u.telefone || 'N/A'}</p>
+            <p><strong>Tipo:</strong> ${u.tipo}</p>
+            <p><strong>Cidade/Estado:</strong> ${u.cidade || 'N/A'} - ${u.estado || 'N/A'}</p>
+            <p><strong>Saldo:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
+            <p><strong>VIP:</strong> ${isVipAtivo(u) ? 'Sim' : 'Não'}</p>
+            <p><strong>PRO:</strong> ${isProAtivo(u) ? `Sim (Tier: ${u.proTier})` : 'Não'}</p>
+        `;
+
+        if (u.telefone) {
+            btnWpp.onclick = () => abrirWhatsApp(u.telefone);
+            btnWpp.disabled = false;
+        } else {
+            btnWpp.onclick = null;
+            btnWpp.disabled = true;
+        }
+        
+        btnGerenciar.onclick = () => {
+            fecharModalAtual(); // Fecha o modal de info
+            abrirModalGerenciarUsuario(uid); // Abre o de gerenciamento completo
+        };
+
+        fecharTodosOsModais(); // Fecha o "aguarde"
+        abrirModal('modalAdminInfoChat');
+
+    } catch (error) {
+        fecharTodosOsModais();
+        exibirPopup("Erro", "Não foi possível carregar os dados: " + error.message, 'erro');
+    }
+}
 
 async function adminDeletarMensagemChat(docId, textoMensagem) {
     if (!docId) return;
@@ -5196,10 +5536,9 @@ function enviarDenuncia() {
   }).catch(e => exibirPopup("Erro ao enviar denúncia: " + e.message));
 }
 
-// Funções do Barbeiro
 function abrirServicos() {
   abrirModal('modalServicosBarbeiro');
-  listarServicos();
+  listarServicos(); // Apenas lista os serviços
 }
 
 function listarServicos() {
@@ -5225,13 +5564,40 @@ function iniciarFluxoPosCadastroProfissional() {
 }
 
 function adicionarServico() {
-  const nome = prompt("Nome do serviço:");
-  const valor = parseFloat(prompt("Valor (ex: 25.50):"));
-  const duracao = parseInt(prompt("Duração em minutos (ex: 30):"));
-  if (!nome || isNaN(valor) || valor <= 0 || isNaN(duracao) || duracao <= 0) return exibirPopup("Entrada inválida.");
+  // Limpa os campos do modal e define o título para "Adicionar"
+  document.getElementById('modalAddServicoTitulo').textContent = 'Adicionar Novo Serviço';
+  document.getElementById('addServicoNome').value = '';
+  document.getElementById('addServicoValor').value = '';
+  document.getElementById('addServicoTempo').value = '';
+  
+  // Define o botão para chamar a função de salvar (sem índice)
+  document.getElementById('btnSalvarServico').onclick = () => salvarServico();
+  
+  abrirModal('modalAddServico');
+}
+
+// ESTA É UMA NOVA FUNÇÃO (cole junto com as outras funções do profissional)
+function salvarServico() {
+  const nome = document.getElementById("addServicoNome").value;
+  const valor = parseFloat(document.getElementById("addServicoValor").value);
+  const duracao = parseInt(document.getElementById("addServicoTempo").value);
+  
+  if (!nome || isNaN(valor) || valor <= 0 || isNaN(duracao) || duracao <= 0) {
+      return exibirPopup("Entrada inválida.", "Por favor, preencha nome, valor (Ex: 25.50) e duração (Ex: 30).");
+  }
+
+  exibirAguarde("Salvando...");
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     listaServicos: firebase.firestore.FieldValue.arrayUnion({ nome, valor, duracao })
-  }).then(() => exibirPopup("Serviço adicionado!")).catch(e => exibirPopup("Erro: " + e.message));
+  }).then(() => {
+    fecharTodosOsModais(); // Fecha o "aguarde"
+    fecharModalAtual(); // Fecha o modal "modalAddServico"
+    exibirPopup("Sucesso!", "Serviço adicionado!");
+    // listarServicos() será chamado automaticamente pelo onSnapshot em modalServicosBarbeiro
+  }).catch(e => {
+    fecharTodosOsModais();
+    exibirPopup("Erro: " + e.message);
+  });
 }
 
 function removerServico(index) {
@@ -5536,18 +5902,20 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
 
         t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
         t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa), vagaImediata: false });
-        t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+        t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), lembreteConcluirEnviado: false });
         const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
     }).then(() => {
-        setTimeout(() => location.reload(), 100);
+        setTimeout(() => location.reload(), 4000); // 4 segundos
+
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         exibirPopup("Agendamento aprovado!");
     }).catch(e => {
         exibirPopup("Erro ao aprovar: " + e);
-setTimeout(() => location.reload(), 100);
+setTimeout(() => location.reload(), 4000); // 4 segundos
+
     });
 }
 
@@ -5574,7 +5942,7 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
 
       t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
       t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
-      t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+      t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), lembreteConcluirEnviado: false });
 
       if (barbeiroDoc.data().usaAgendaManual && horario) {
           const agendaAtual = barbeiroDoc.data().agenda || {};
@@ -5584,13 +5952,15 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
   }).then(() => {
-      setTimeout(() => location.reload(), 100);
-      criarAviso(clienteUid, `✅ Seu agendamento foi aprovado pelo profissional ${perfil.nome}!`);
+      setTimeout(() => location.reload(), 4000); // 4 segundos
+
+      
       notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
       exibirPopup("Agendamento aprovado!");
   }).catch(e => {
       exibirPopup("Erro ao aprovar: " + e);
-setTimeout(() => location.reload(), 100);
+setTimeout(() => location.reload(), 4000); // 4 segundos
+
   });
 }
 
@@ -5603,8 +5973,9 @@ function recusarAgendamento(agendamentoId, clienteUid) {
       if (status !== 'pendente' && status !== 'imediato') throw "Solicitação já processada.";
       t.update(agendamentoRef, { status: "cancelado" });
   }).then(() => {
-      setTimeout(() => location.reload(), 100);
-      criarAviso(clienteUid, `❌ O profissional ${perfil.nome} recusou seu agendamento.`);
+      setTimeout(() => location.reload(), 4000); // 4 segundos
+
+      
       notifyUser(clienteUid, "❌ Agendamento Recusado", `O profissional ${perfil.nome} não pôde aceitar seu pedido.`);
       exibirPopup("Agendamento recusado.");
   }).catch(e => exibirPopup("Erro ao recusar: " + e));
@@ -5630,12 +6001,14 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
       if (!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(-valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(-valorAdmin) }, { merge: true });
   }).then(() => {
-      setTimeout(() => location.reload(), 100);
+      setTimeout(() => location.reload(), 4000); // 4 segundos
+
       criarAviso(clienteUid, `❌ O profissional ${perfil.nome} cancelou seu agendamento. O valor de R$ ${valor.toFixed(2)} foi reembolsado.`);
       notifyUser(clienteUid, "🔄 Agendamento Cancelado", `${perfil.nome} cancelou seu horário. O valor de R$ ${valor.toFixed(2)} foi estornado.`);
       exibirPopup("Agendamento cancelado e valor reembolsado. Sua reputação diminuiu.");
   }).catch(e => {
-      setTimeout(() => location.reload(), 100);
+      setTimeout(() => location.reload(), 4000); // 4 segundos
+
       exibirPopup("Erro ao cancelar: " + e);
   });
 }
@@ -5657,7 +6030,8 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
     
-    setTimeout(() => location.reload(), 100);
+    setTimeout(() => location.reload(), 4000); // 4 segundos
+
     exibirPopup("Serviço concluído!");
     criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
@@ -5675,7 +6049,8 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     }
   } catch(e) {
     exibirPopup("Erro ao concluir serviço: " + e);
-setTimeout(() => location.reload(), 3000);
+setTimeout(() => location.reload(), 4000); // 4 segundos
+
   }
 }
 
@@ -6193,6 +6568,8 @@ function carregarListaBlog() {
   });
 }
 
+document.getElementById('onlineUserCount').onclick = () => abrirModalUsuariosOnline();
+
 function carregarAdmin() {
     if (adminBalanceListener) adminBalanceListener(); 
     db.collection("usuarios").get().then(snapshot => {
@@ -6225,25 +6602,55 @@ function carregarAdmin() {
         const btn = document.getElementById('btnAdminDenuncias');
         if (btn) btn.classList.toggle('notificacao-pulsante', !snap.empty);
     });
-// Listener para usuários online (somente admin)
-const countElement = document.getElementById('onlineUserCount');
-if (onlineUsersListener) onlineUsersListener(); // Cancela listener anterior
 
-const thresholdDate = new Date(Date.now() - USER_ACTIVE_THRESHOLD_MS); // Data limite (ex: 5 min atrás)
+    // Listener para usuários online (somente admin)
+    const countElement = document.getElementById('onlineUserCount');
+    if (onlineUsersListener) onlineUsersListener(); // Cancela listener anterior
 
-onlineUsersListener = db.collection('usuarios')
-    .where('lastSeen', '>', thresholdDate) // Busca usuários ativos recentemente
-    .onSnapshot(snap => {
-        const count = snap.size;
-        if (countElement) {
-            countElement.textContent = `🟢 ${count} Online`;
-            // Mostra o contador APENAS se for admin E estiver na visão de admin
-            countElement.classList.toggle('hidden', !(perfil && perfil.tipo === 'admin' && userView.currentType === 'admin'));
-        }
-    }, err => {
-        console.error("Erro ao ouvir usuários online:", err);
-        if (countElement) countElement.classList.add('hidden'); // Esconde em caso de erro
-    });
+    const thresholdDate = new Date(Date.now() - USER_ACTIVE_THRESHOLD_MS); // Data limite (ex: 5 min atrás)
+
+    onlineUsersListener = db.collection('usuarios')
+        .where('lastSeen', '>', thresholdDate)
+        .onSnapshot(snap => {
+            const count = snap.size;
+            if (countElement) {
+                // Atualiza o texto do botão
+                countElement.textContent = `🏆 ${count} Online`; // <-- MUDANÇA AQUI
+                countElement.classList.toggle('hidden', !(perfil && perfil.tipo === 'admin' && userView.currentType === 'admin'));
+            }
+
+            // ATUALIZA A LISTA DO MODAL EM TEMPO REAL
+            const lista = document.getElementById('listaUsuariosOnline');
+            if (lista) {
+                lista.innerHTML = ""; // Limpa a lista
+                if (snap.empty) {
+                    lista.innerHTML = "<p>Nenhum usuário online no momento.</p>";
+                    return;
+                }
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    // Adiciona o item clicável
+                    lista.innerHTML += `<div class="selectable-item" onclick="abrirWhatsApp('${u.telefone}')" title="Chamar ${u.nome} no WhatsApp">${u.nome}</div>`;
+                });
+            }
+
+        }, err => {
+            console.error("Erro ao ouvir usuários online:", err);
+            if (countElement) countElement.classList.add('hidden');
+        });
+}
+
+function abrirModalUsuariosOnline() {
+    abrirModal('modalUsuariosOnline');
+    // A lista é populada em tempo real pelo listener em carregarAdmin()
+}
+
+function abrirWhatsApp(telefone) {
+    if (!telefone) {
+        return exibirPopup("Aviso", "Este usuário não possui um número de telefone cadastrado.");
+    }
+    const phoneNum = telefone.startsWith('55') ? telefone : `55${telefone.replace(/\D/g, '')}`;
+    window.open(`https://wa.me/${phoneNum}`, '_blank');
 }
 
 async function abrirModalEstatisticas() {
@@ -6648,6 +7055,58 @@ async function abrirModalGerenciarUsuario(uid) {
       fecharTodosOsModais();
       console.error("Erro ao buscar dados do usuário:", error);
       exibirPopup("Não foi possível carregar os dados completos do usuário. " + error.message);
+  }
+}
+
+function prepararDeletarConta() {
+  // Fecha o modal de config
+  fecharModalAtual();
+  
+  // Pede a primeira confirmação
+  exibirConfirmacao("Excluir Conta?", "Esta ação é irreversível. Todos os seus dados, saldo, agendamentos e histórico serão apagados permanentemente. Deseja continuar?", (confirmacao1) => {
+      // Pede a segunda confirmação
+      exibirConfirmacao("Confirmação Final", "Esta é sua última chance. Todos os seus dados serão perdidos. Confirma a exclusão permanente da sua conta?", async (confirmacao2) => {
+          // Se chegou aqui, abre o modal de senha
+          document.getElementById('exclusaoSenhaInput').value = ''; // Limpa senha
+          abrirModal('modalConfirmarSenhaExclusao');
+      });
+  });
+}
+
+async function deletarConta() {
+  const password = document.getElementById('exclusaoSenhaInput').value;
+  if (!password) {
+      return exibirPopup("Senha necessária.", "Digite sua senha para confirmar.");
+  }
+
+  fecharModalAtual(); // Fecha o modal de senha
+  exibirAguarde("Reautenticando e excluindo sua conta...");
+
+  const user = auth.currentUser;
+  const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+
+  try {
+      // 1. Reautenticar
+      await user.reauthenticateWithCredential(credential);
+
+      // 2. Deletar dados do Firestore
+      await db.collection('usuarios').doc(user.uid).delete();
+      
+      // 3. Deletar usuário do Auth
+      await user.delete();
+
+      fecharTodosOsModais();
+      exibirPopup("Conta Excluída", "Sua conta foi excluída com sucesso. Sentiremos sua falta.", 'sucesso', () => {
+          location.reload(); // Recarrega a página após o usuário clicar em OK
+      });
+      
+  } catch (error) {
+      fecharTodosOsModais();
+      if (error.code === 'auth/wrong-password') {
+          exibirPopup("Senha Incorreta", "A senha digitada está incorreta. A exclusão foi cancelada.", 'erro');
+      } else {
+          exibirPopup("Erro", "Ocorreu um erro ao excluir sua conta: " + error.message, 'erro');
+      }
   }
 }
 
@@ -7075,6 +7534,55 @@ async function adminMudarTipoUsuario(uid, novoTipo) {
         exibirPopup("Erro", `Erro ao alterar tipo: ${error.message}`);
     }
 }
+
+function exibirPopupNovoAgendamento(agendamentoDoc) {
+    if (popupAgendamentoAberto) return; // Impede abrir múltiplos
+
+    const ag = agendamentoDoc.data();
+    
+    // Preenche as informações
+    document.getElementById('popupClienteNome').textContent = ag.clienteNome;
+    document.getElementById('popupServicoNome').textContent = ag.servico;
+    document.getElementById('popupHorario').textContent = ag.horario ? ag.horario : "Vaga Imediata";
+    document.getElementById('popupValor').textContent = ag.valor.toFixed(2);
+    
+    const whatsappLink = document.getElementById('btnWhatsAppPopup');
+    if (ag.clienteTelefone) {
+        whatsappLink.href = `https://wa.me/55${ag.clienteTelefone.replace(/\D/g,'')}`;
+        whatsappLink.style.display = 'block';
+    } else {
+        whatsappLink.style.display = 'none';
+    }
+
+    // Configura os botões Aceitar/Recusar
+    const btnAceitar = document.getElementById('btnAceitarAgendamentoPopup');
+    const btnRecusar = document.getElementById('btnRecusarAgendamentoPopup');
+
+    if (ag.status === 'imediato') {
+        btnAceitar.onclick = () => {
+            popupAgendamentoAberto = false;
+            fecharModalAtual(); // Fecha o popup
+            aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
+        };
+    } else { // status 'pendente'
+        btnAceitar.onclick = () => {
+            popupAgendamentoAberto = false;
+            fecharModalAtual(); // Fecha o popup
+            aprovarAgendamento(agendamentoDoc.id, ag.clienteUid, ag.valor, ag.horario);
+        };
+    }
+
+    btnRecusar.onclick = () => {
+        popupAgendamentoAberto = false;
+        fecharModalAtual(); // Fecha o popup
+        recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
+    };
+
+    // Abre o modal
+    popupAgendamentoAberto = true;
+    abrirModal('modalNovoAgendamento');
+}
+
 
 async function enviarNotificacaoMarketing() {
     const title = document.getElementById('marketingTitulo').value.trim();
