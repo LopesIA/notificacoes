@@ -4562,82 +4562,49 @@ function confirmarTurbinar() {
  * Verifica se a assinatura PRO do profissional está ativa.
  */
 function isProAtivo(perfilUsuario) {
-    if (!perfilUsuario || !perfilUsuario.proAtivo || !perfilUsuario.proExpirationDate) {
+    // 1. Verificação básica de existência
+    if (!perfilUsuario || !perfilUsuario.proExpirationDate) {
         return false;
     }
-    // Verifica se a data de expiração ainda não passou
-    return perfilUsuario.proExpirationDate.toDate() > new Date();
-}
 
-/**
- * Abre o modal para o profissional assinar ou ver o status do PRO.
- */
-// CÓDIGO ATUALIZADO (COPIE E COLE SUBSTITUINDO A FUNÇÃO INTEIRA)
-// SUBSTITUA TODA A FUNÇÃO 'abrirModalVipPro' POR ESTA
-function abrirModalVipPro() {
-    const container = document.getElementById('vipProContentContainer');
-    const proAtivo = isProAtivo(perfil);
+    let expiracao;
+    const dateData = perfilUsuario.proExpirationDate;
 
-    if (proAtivo) {
-        const dataExpiracao = perfil.proExpirationDate.toDate().toLocaleDateString('pt-BR');
-        let taxaAtual = (TAXA * 100); // Taxa padrão
-        if(perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-            taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
+    try {
+        // 2. Tentativas de converter a data (cobre todos os formatos possíveis)
+        if (typeof dateData.toDate === 'function') {
+            // Formato Timestamp do Firebase (SDK Cliente)
+            expiracao = dateData.toDate();
+        } else if (dateData instanceof Date) {
+            // Já é um objeto Date
+            expiracao = dateData;
+        } else if (typeof dateData === 'string') {
+            // Formato Texto ISO (Vindo do JSON/Admin)
+            expiracao = new Date(dateData);
+        } else if (typeof dateData === 'object' && (dateData.seconds || dateData._seconds)) {
+            // Formato Timestamp serializado (Objeto JSON com seconds)
+            const seconds = dateData.seconds || dateData._seconds;
+            expiracao = new Date(seconds * 1000);
+        } else {
+            // Formato desconhecido
+            console.warn("Formato de data PRO desconhecido:", dateData);
+            return false;
         }
 
-        container.innerHTML = `
-            <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
-                <h3 style="color: var(--cor-destaque-azul);">🌟 Você é um Profissional PRO!</h3>
-                <p>Sua assinatura mensal é válida até: <strong>${dataExpiracao}</strong>.</p>
-                <p>Sua taxa de serviço atual é de apenas: <strong>${taxaAtual.toFixed(1)}%</strong>.</p>
-                <div class="vantagens" style="text-align: left; margin-top: 20px;">
-                    <h4>Seus Benefícios Atuais:</h4>
-                    <ul>
-                        <li>Selo 🌟 PRO de destaque no perfil e no chat.</li>
-                        <li><strong>Taxa de serviço reduzida.</strong></li>
-                        <li>Acesso ao Dashboard de Desempenho.</li>
-                    </ul>
-                </div>
-            </div>
-        `;
-    } else {
-        container.innerHTML = `
-            <div style="text-align: center;">
-                <h3 style="color: var(--cor-destaque-azul);">🌟 Torne-se um Profissional PRO!</h3>
-                <p>Aumente seus lucros reduzindo a taxa de serviço do aplicativo.</p>
-                
-                <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
-                    <div class="card" style="border: 1px solid #cd7f32;">
-                        <h4>Plano Bronze</h4>
-                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}<small>/mês</small></p>
-                        <p>Reduz a taxa de serviço para <strong>4%</strong>.</p>
-                        <button onclick="assinarPro('tier1')" style="background-color: #cd7f32;">Assinar Bronze</button>
-                    </div>
+        // 3. VERIFICAÇÃO FINAL (A Lógica de Ouro)
+        // Se a data convertida é válida e é maior que agora, é PRO.
+        // Ignoramos a flag 'proAtivo' se a data for válida, para garantir que apareça.
+        if (expiracao instanceof Date && !isNaN(expiracao)) {
+             return expiracao > new Date();
+        }
+        
+        return false;
 
-                    <div class="card" style="border: 1px solid #c0c0c0;">
-                        <h4>Plano Prata</h4>
-                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}<small>/mês</small></p>
-                        <p>Reduz a taxa de serviço para <strong>2%</strong>.</p>
-                        <button onclick="assinarPro('tier2')" style="background-color: #c0c0c0; color: #333;">Assinar Prata</button>
-                    </div>
-
-                    <div class="card vip-glow">
-                        <h4>Plano Ouro</h4>
-                        <p style="font-size: 22px; font-weight: bold;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}<small>/mês</small></p>
-                        <p><strong>ZERE</strong> a taxa de serviço (<strong>0%</strong>).</p>
-                        <button onclick="assinarPro('tier3')">Assinar Ouro</button>
-                    </div>
-                </div>
-            </div>
-        `;
+    } catch (e) {
+        console.error("Erro ao verificar PRO:", e);
+        return false;
     }
-    abrirModal('modalVipPro');
 }
-
-/**
- * Processa a assinatura PRO, descontando do saldo.
- */
-
 
 function isVipAtivo(perfilUsuario) {
     // Se não tiver a flag vip ou a data, retorna falso
