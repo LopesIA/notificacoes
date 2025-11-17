@@ -1510,6 +1510,11 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
           </div>
         </div>
 
+<div class="popup-section hidden" id="secaoVirarProfissional">
+  <h4>🚀 Evoluir Conta</h4>
+  <button onclick="solicitarVirarProfissional()" style="background: linear-gradient(45deg, var(--cor-destaque), #ffeb3b); color: var(--cor-fundo);">Quero ser um Profissional</button>
+</div>
+
 <div class="popup-section">
   <h4>🔒 Encerrar Conta</h4>
   <button onclick="prepararDeletarConta()" style="background-color: #c0392b; border: 1px solid #e74c3c;">Excluir Minha Conta Permanentemente</button>
@@ -3718,63 +3723,6 @@ auth.onAuthStateChanged(async user => {
 
     // --- LÓGICA EXECUTADA APENAS NO PRIMEIRO CARREGAMENTO DO LISTENER ---
     if (isInitialLoad) {
-if (perfil.tipo !== 'cliente') {
-        
-        // 1. Listener para o POPUP PERSISTENTE de novo agendamento
-        // Adiciona um delay de 10 segundos como solicitado
-        setTimeout(() => {
-            console.log("Iniciando listener de novos agendamentos (10s delay)...");
-            db.collection("agendamentos")
-              .where("barbeiroUid", "==", user.uid)
-              .where("status", "in", ["pendente", "imediato"])
-              .orderBy("ts", "asc") // Pega o mais antigo primeiro
-              .limit(1)
-              .onSnapshot(snapshot => {
-                  if (!snapshot.empty) {
-                      const primeiroAgendamentoPendente = snapshot.docs[0];
-                      // Chama o popup
-                      exibirPopupNovoAgendamento(primeiroAgendamentoPendente);
-                  } else {
-                      // Se não há pendentes, garante que o popup feche caso estivesse aberto
-                      if (popupAgendamentoAberto) {
-                          fecharModalAtual();
-                          popupAgendamentoAberto = false;
-                      }
-                  }
-              });
-        }, 10000); // 10 segundos de delay
-
-        // 2. Listener para LEMBRETE DE CONCLUSÃO (Verificação a cada 1 min)
-        setInterval(() => {
-            checkLembretesConclusao(user.uid);
-        }, 60000); // 1 minuto
-    }
-// 3. Listener para POPUP DE STATUS (Cliente)
-    if (perfil.tipo === 'cliente') {
-        console.log("Iniciando listener de status de agendamentos (Cliente)...");
-        db.collection("agendamentos")
-          .where("clienteUid", "==", user.uid)
-          .where("clienteNotificado", "==", false)
-          .where("status", "in", ["conclusão pendente", "cancelado"])
-          .onSnapshot(snapshot => {
-              snapshot.docChanges().forEach(change => {
-                  if (change.type === 'added' || change.type === 'modified') {
-                      const ag = change.doc.data();
-                      
-                      if (ag.status === "conclusão pendente") {
-                          // Só exibe se TIVER horário (ou seja, não é vaga imediata)
-                          if (ag.horario) {
-                              exibirPopup("Agendamento Aceito!", `Seu agendamento com ${ag.barbeiroNome} às ${ag.horario} foi aceito. Você receberá um lembrete 30 minutos antes.`);
-                              change.doc.ref.update({ clienteNotificado: true });
-                          }
-                      } else if (ag.status === "cancelado") {
-                          exibirPopup("Agendamento Recusado", `Seu agendamento com ${ag.barbeiroNome} (serviço: ${ag.servico}) foi recusado pelo profissional.`);
-                          change.doc.ref.update({ clienteNotificado: true });
-                      }
-                  }
-              });
-          });
-    }
         console.log("Carregamento inicial do perfil via listener concluído.");
         previousTipo = perfil.tipo; // Define o tipo inicial para a próxima comparação
 
@@ -3786,36 +3734,23 @@ if (perfil.tipo !== 'cliente') {
         renderCurrentView(); // Renderiza a view correta
 
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
-                // MODIFICAÇÃO: Removida a lógica de reload forçado com sessionStorage.
-                if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
-            
-                    // Se a configuração inicial é necessária, chamamos o fluxo com um pequeno delay.
-                    console.log("Fluxo de onboarding inicial detectado. Iniciando com delay...");
-                    
-                    // Adicionamos um pequeno delay (500ms) para permitir que a UI do login/cadastro
-                    // termine de carregar/fechar modais antes de abrir o de onboarding.
-                    setTimeout(() => {
-                        // Verifica se um modal de onboarding já não está aberto (evita loop)
-                        const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
-                        if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
-                           console.log("Iniciando fluxo de configuração inicial do profissional...");
-                           iniciarFluxoDeConfiguracaoProfissional(); 
-                        }
-                    }, 2000); // 2000ms de atraso é geralmente suficiente.
-        
-                } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
-             // Onboarding concluído, faz a verificação de rotina de pendências
-             
-             // Adiciona um delay para não sobrepor outros popups (ex: atualização)
+        if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
+            setTimeout(() => {
+                const onboardingAberto = document.querySelector('#modalOnboardingServicos, #modalOnboardingPromocoes, #modalOnboardingAgenda, #modalOnboardingLogomarca, #modalOnboardingPortfolio');
+                if (!onboardingAberto || !onboardingAberto.classList.contains('show')) {
+                   console.log("Iniciando fluxo de configuração inicial do profissional...");
+                   iniciarFluxoDeConfiguracaoProfissional(); 
+                }
+            }, 2000);
+        } else if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === false) {
              setTimeout(() => {
                 verificarPendenciasEssenciaisProfissional(user.uid);
-             }, 3000); // 3 segundos de delay
+             }, 3000); 
         }
         // --- !! FIM DO BLOCO DE ONBOARDING ATUALIZADO !! ---
 
         // --- Demais inicializações ---
         if (!updateLastSeenInterval) {
-            // Lógica do lastSeen
             const updateFn = () => {
                 if(auth.currentUser) {
                     db.collection('usuarios').doc(auth.currentUser.uid).update({
@@ -3823,16 +3758,17 @@ if (perfil.tipo !== 'cliente') {
                     }).catch(err => console.warn("Falha ao atualizar lastSeen:", err.code));
                 }
             };
-            updateFn(); // Chama uma vez imediatamente
-            updateLastSeenInterval = setInterval(updateFn, 60 * 1000); // Atualiza a cada 60s
+            updateFn(); 
+            updateLastSeenInterval = setInterval(updateFn, 60 * 1000);
         }
         setupFCM(user.uid);
         exibirVersaoApp();
         iniciarVerificacaoDePendencias(user.uid);
-        setTimeout(() => { document.getElementById("btnSair")?.classList.remove("hidden"); }, 15000); // Adicionado '?' para segurança
+        setTimeout(() => { document.getElementById("btnSair")?.classList.remove("hidden"); }, 15000); 
 
         // --- Listeners adicionais ---
-        // Listener de Avisos
+
+        // Listener de Avisos (Sininho)
         db.collection("avisos").where("usuarioUid", "==", user.uid).where("lido", "==", false)
             .onSnapshot(snapshot => {
                 // (lógica de avisos existente)
@@ -3865,16 +3801,94 @@ if (perfil.tipo !== 'cliente') {
             .onSnapshot(snapshot => {
                 // (lógica modal confirmação comprador existente)
             });
-        // --- Fim dos Listeners Adicionais ---
+            
+        // --- INÍCIO DOS LISTENERS DA SOLICITAÇÃO ATUAL ---
+
+        // LÓGICA DO PROFISSIONAL
+        if (perfil.tipo !== 'cliente') {
+            
+            // 1. Listener para o POPUP PERSISTENTE de novo agendamento
+            setTimeout(() => {
+                console.log("Iniciando listener de novos agendamentos (10s delay)...");
+                db.collection("agendamentos")
+                  .where("barbeiroUid", "==", user.uid)
+                  .where("status", "in", ["pendente", "imediato"])
+                  .orderBy("ts", "asc")
+                  .limit(1)
+                  .onSnapshot(snapshot => {
+                      if (!snapshot.empty) {
+                          const primeiroAgendamentoPendente = snapshot.docs[0];
+                          exibirPopupNovoAgendamento(primeiroAgendamentoPendente);
+                      } else {
+                          if (popupAgendamentoAberto) {
+                              fecharModalAtual();
+                              popupAgendamentoAberto = false;
+                          }
+                      }
+                  });
+            }, 10000); // 10 segundos de delay
+
+            // 2. Listener para LEMBRETE DE CONCLUSÃO (Verificação a cada 1 min)
+            setInterval(() => {
+                checkLembretesConclusao(user.uid);
+            }, 60000); // 1 minuto
+        }
+
+        // LÓGICA DO CLIENTE
+        if (perfil.tipo === 'cliente') {
+            
+            // 3. Listener para POPUP DE STATUS (Aceito/Recusado)
+            console.log("Iniciando listener de status de agendamentos (Cliente)...");
+            db.collection("agendamentos")
+              .where("clienteUid", "==", user.uid)
+              .where("clienteNotificado", "==", false)
+              .where("status", "in", ["conclusão pendente", "cancelado"])
+              .onSnapshot(snapshot => {
+                  snapshot.docChanges().forEach(change => {
+                      if (change.type === 'added' || change.type === 'modified') {
+                          const ag = change.doc.data();
+                          
+                          if (ag.status === "conclusão pendente") {
+                              if (ag.horario) { // Só exibe se NÃO for vaga imediata
+                                  exibirPopup("Agendamento Aceito!", `Seu agendamento com ${ag.barbeiroNome} às ${ag.horario} foi aceito. Você receberá um lembrete 30 minutos antes.`);
+                                  change.doc.ref.update({ clienteNotificado: true });
+                              }
+                          } else if (ag.status === "cancelado") {
+                              exibirPopup("Agendamento Recusado", `Seu agendamento com ${ag.barbeiroNome} (serviço: ${ag.servico}) foi recusado pelo profissional.`);
+                              change.doc.ref.update({ clienteNotificado: true });
+                          }
+                      }
+                  });
+              });
+
+            // 4. Listener para POPUP DE AVALIAÇÃO (Concluído)
+            console.log("Iniciando listener de conclusão de agendamentos (Cliente)...");
+            db.collection("agendamentos")
+              .where("clienteUid", "==", user.uid)
+              .where("status", "==", "concluido")
+              .where("avisoAvaliacaoEnviado", "==", false) // Flag para não repetir
+              .onSnapshot(snapshot => {
+                  snapshot.docChanges().forEach(change => {
+                      if (change.type === 'added' || change.type === 'modified') {
+                          const ag = change.doc.data();
+                          exibirPopup("Serviço Concluído!", `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído. Você já pode ir em "Histórico" para avaliar, ganhar pontos e manter a comunidade segura!`);
+                          change.doc.ref.update({ avisoAvaliacoEnviado: true }); // Atualiza o nome do campo
+                      }
+                  });
+              });
+        }
+        
+        // --- FIM DOS LISTENERS DA SOLICITAÇÃO ATUAL ---
+        
         console.log("Inicialização no primeiro load concluída.");
     }
     // --- FIM DA LÓGICA DO PRIMEIRO CARREGAMENTO ---
 
-  }, error => { // Tratamento de erro para o listener principal
+  }, error => { 
       console.error("Erro CRÍTICO no listener do perfil:", error);
       exibirPopup("Erro Crítico", "Não foi possível carregar seus dados. Tente recarregar a página ou contate o suporte.", "erro");
-      cleanupListeners(); // Limpa listeners em caso de erro grave
-      auth.signOut(); // Desloga
+      cleanupListeners(); 
+      auth.signOut(); 
   });
   // --- Fim do Listener Principal ---
 
@@ -4439,6 +4453,7 @@ function confirmarAgendamento() {
             avaliado: false, lembreteEnviado: false,
             clienteNotificado: false, // <-- REQUERIDO PARA O POPUP DO CLIENTE
             lembreteConcluirEnviado: false // <-- REQUERIDO PARA O LEMBRETE DO PROFISSIONAL
+            avisoAvaliacaoEnviado: false
         };
         if (horario !== 'imediato') agendamentoData.horario = horario;
 
@@ -6023,7 +6038,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         const agendamentoDoc = await t.get(agendamentoRef);
         if (agendamentoDoc.data().status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
         t.update(barbeiroRef, { cortesSemana: firebase.firestore.FieldValue.increment(1), clientesAtendidos: firebase.firestore.FieldValue.increment(1) });
-        t.update(agendamentoRef, { status: "concluido" });
+        t.update(agendamentoRef, { status: "concluido", avisoAvaliacaoEnviado: false });
         t.update(clienteRef, { cortesRealizados: firebase.firestore.FieldValue.increment(1) });
     });
     await verificarConquistas(clienteUid);
@@ -6033,7 +6048,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     setTimeout(() => location.reload(), 4000); // 4 segundos
 
     exibirPopup("Serviço concluído!");
-    criarAviso(clienteUid, `Agendamento concluído! Você já pode avaliar o serviço.`);
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
     const clienteDoc = await clienteRef.get();
     const clienteData = clienteDoc.data();
@@ -7476,6 +7490,41 @@ async function adminModificarPontos(uid) {
         exibirPopup("Erro ao modificar pontos: " + error.message);
     }
 }
+
+function solicitarVirarProfissional() {
+    fecharModalAtual(); // Fecha o modal de config
+    exibirConfirmacao("Virar Profissional?", 
+    "Tem certeza que deseja se tornar um profissional? Seu painel será alterado e você precisará configurar seus serviços, agenda e portfólio para começar a receber agendamentos. Esta ação não pode ser desfeita facilmente pelo app.", 
+    () => {
+        // Callback a ser executado se o usuário clicar "Sim"
+        executarVirarProfissional();
+    });
+}
+
+async function executarVirarProfissional() {
+    if (perfil.tipo !== 'cliente') return;
+    
+    exibirAguarde("Atualizando seu perfil...");
+    try {
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+            tipo: perfil.interesse_principal || 'barbeiro', // Usa o interesse principal ou 'barbeiro' como padrão
+            precisaConfiguracaoInicial: true, // Força o onboarding de profissional
+            onboarding_profissional_concluido: false // Garante que o onboarding não foi concluído
+        });
+        
+        fecharTodosOsModais();
+        exibirPopup("Sucesso!", "Seu perfil foi atualizado para Profissional. O app será reiniciado para aplicar as mudanças.", 'sucesso', () => {
+            // A página será recarregada automaticamente pelo onAuthStateChanged
+            // Mas forçamos aqui após o delay para garantir
+            setTimeout(() => location.reload(), 4000); 
+        });
+        
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro", "Não foi possível atualizar seu perfil: " + e.message, 'erro');
+    }
+}
+
 
 async function adminMudarTipoUsuario(uid, novoTipo) {
     // Validação removida para permitir 'admin'
@@ -10778,27 +10827,28 @@ async function registrarSincronizacaoDeMensagem(mensagemData) {
 }
 
 function setupConfiguracoes() {
-    carregarEstados('config');
-    setTimeout(() => { // Garante que os estados carregaram
-        document.getElementById('configEstado').value = perfil.estado;
-        carregarCidades('config');
-        setTimeout(() => {
-            document.getElementById('configCidade').value = perfil.cidade;
-        }, 100);
-    }, 100);
+    // carregarEstados('config'); // Removido - não estamos mais usando select de estado/cidade aqui
+    // setTimeout(() => { ... }, 100); // Removido
 
-// ADICIONAR ESTAS DUAS LINHAS
-configurarBotoesGuest();
-carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
+    configurarBotoesGuest();
+    carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
 
     const btnSolicitarLoja = document.getElementById('btnSolicitarAcessoLoja');
     const msgLojaLiberada = document.getElementById('msgLojaJaLiberada');
 
-    if (btnSolicitarLoja && msgLojaLiberada && perfil) { // Verifica se elementos e perfil existem
+    if (btnSolicitarLoja && msgLojaLiberada && perfil) {
         const mostrarBotao = !perfil.lojaLiberada && perfil.tipo !== 'admin';
         btnSolicitarLoja.classList.toggle('hidden', !mostrarBotao);
-        msgLojaLiberada.classList.toggle('hidden', mostrarBotao); // Mostra a mensagem se o botão estiver escondido
+        msgLojaLiberada.classList.toggle('hidden', mostrarBotao);
     }
+
+    // --- INÍCIO DA MODIFICAÇÃO: Lógica "Virar Profissional" ---
+    const secaoVirarProfissional = document.getElementById('secaoVirarProfissional');
+    if (secaoVirarProfissional && perfil) {
+        // Mostra o botão APENAS se o usuário for 'cliente'
+        secaoVirarProfissional.classList.toggle('hidden', perfil.tipo !== 'cliente');
+    }
+    // --- FIM DA MODIFICAÇÃO ---
 
     const interesseContainer = document.getElementById('configInteresseContainer');
     const buttons = interesseContainer.querySelectorAll('button');
@@ -10810,10 +10860,11 @@ carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
             buttons.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             exibirPopup("Interesse atualizado!");
-            location.reload(); // Recarrega para aplicar as mudanças de filtro
+            location.reload(); 
         }
     });
 }
+
 async function salvarLocalizacaoConfig() {
     const estado = document.getElementById('configEstado').value;
     const cidade = document.getElementById('configCidade').value;
