@@ -1505,6 +1505,30 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
+<div id="modalDepositoPlayStore" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💰 Adicionar Saldo (Play Store)</h3>
+    <p>Selecione um valor para adicionar à sua carteira com segurança através do Google Play.</p>
+    
+    <div class="metodos-grid" style="margin-top: 10px;">
+        <button onclick="comprarComPlayStore('deposito_10', 10.00)">
+            Adicionar R$ 10,00
+        </button>
+        <button onclick="comprarComPlayStore('deposito_25', 25.00)">
+            Adicionar R$ 25,00
+        </button>
+        <button onclick="comprarComPlayStore('deposito_50', 50.00)">
+            Adicionar R$ 50,00
+        </button>
+         <button onclick="comprarComPlayStore('deposito_100', 100.00)">
+            Adicionar R$ 100,00
+        </button>
+    </div>
+    
+    <button data-modal-id="modalDepositoPlayStore" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Voltar</button>
+  </div>
+</div>
+
 <div id="modalDepositoFormulario" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>📝 Informações para Depósito</h3>
@@ -2566,6 +2590,27 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
 const storage = firebase.storage();
 
 const messaging = firebase.messaging(); 
+
+// ADICIONE ESTAS LINHAS ABAIXO (Linha ~2241)
+let isTwa = false; // Variável global para o ambiente
+
+/**
+ * Verifica se o app está rodando como TWA (da Play Store)
+ * procurando por ?source=twa na URL.
+ */
+function detectarAmbiente() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('source') === 'twa') {
+        isTwa = true;
+        console.log("Ambiente detectado: TWA (Play Store)");
+    } else {
+        isTwa = false;
+        console.log("Ambiente detectado: Web (Navegador)");
+    }
+}
+
+// Chama a função para definir a variável 'isTwa' na inicialização
+detectarAmbiente(); 
 const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.05, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
 const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
@@ -5862,16 +5907,24 @@ function abrirAvaliacoesBarbeiro() {
 // --- NOVAS FUNÇÕES DE PAGAMENTO (APRIMORADO) ---
 // ======================================================================
 
+// SUBSTITUA a função 'iniciarDeposito' inteira (Linha ~4661) por esta:
+
 function iniciarDeposito() {
-    abrirModal('modalDepositoFormulario');
-    const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
-    const btn = document.getElementById('btnContinuarDeposito');
-    inputs.forEach(id => {
-        document.getElementById(id).oninput = () => {
-            const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
-            btn.disabled = !allFilled;
-        };
-    });
+    if (isTwa) {
+        // Ambiente TWA (Play Store): Abre o modal de depósito do Google Play
+        abrirModal('modalDepositoPlayStore');
+    } else {
+        // Ambiente Web (Navegador): Abre o formulário de depósito (PIX/Cartão)
+        abrirModal('modalDepositoFormulario');
+        const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
+        const btn = document.getElementById('btnContinuarDeposito');
+        inputs.forEach(id => {
+            document.getElementById(id).oninput = () => {
+                const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
+                btn.disabled = !allFilled;
+            };
+        });
+    }
 }
 
 async function criarSolicitacaoDeposito() {
