@@ -6503,31 +6503,41 @@ async function abrirModalGerenciarUsuario(uid) {
         </div>
          <div class="popup-section">
             <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
+            
             <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
-            <input id="adminModificarSaldo" type="number" placeholder="Valor a adicionar/remover (-)">
-            <button onclick="adminModificarSaldo('${uid}')">Modificar Saldo</button>
-            <hr style="border-color: var(--cor-borda); margin: 15px 0;">
+            <div style="display:flex; gap:5px; margin-bottom: 10px;">
+                <input id="adminModificarSaldo" type="number" placeholder="Valor (+ ou -)" style="margin:0;">
+                <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
+            </div>
+            <hr style="border-color: var(--cor-borda); margin: 10px 0;">
 
-            <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? 'Sim ✅' : 'Não ❌'}</p>
-            <button onclick="adminToggleVip('${uid}', ${!isVipAtivo(u)})">${isVipAtivo(u) ? 'Remover VIP' : 'Conceder VIP (6 meses)'}</button>
-            <hr style="border-color: var(--cor-borda); margin: 15px 0;">
+            <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? '<span style="color:#2ecc71; font-weight:bold;">Sim ✅</span>' : '<span style="color:#e74c3c">Não ❌</span>'}</p>
+            ${isVipAtivo(u) 
+                ? `<button onclick="adminToggleVip('${uid}', false)" style="background-color: #c0392b; border: 1px solid red;">🚫 Remover VIP</button>` 
+                : `<button onclick="adminToggleVip('${uid}', true)" style="background-color: var(--cor-destaque);">👑 Conceder VIP (6 meses)</button>`
+            }
+            <hr style="border-color: var(--cor-borda); margin: 10px 0;">
 
-            <p><strong>PRO Ativo:</strong> ${isProAtivo(u) ? `Sim ✅ (Tier: ${u.proTier || 'N/A'})` : 'Não ❌'}</p>
+            <p><strong>PRO Ativo:</strong> ${isProAtivo(u) ? `<span style="color:#00c6ff; font-weight:bold;">Sim ✅ (Tier: ${u.proTier || 'N/A'})</span>` : '<span style="color:#e74c3c">Não ❌</span>'}</p>
             ${!isProAtivo(u) ? `
-                <select id="adminConcederProTier">
-                    <option value="tier1">Conceder PRO Tier 1 (30 dias)</option>
-                    <option value="tier2">Conceder PRO Tier 2 (30 dias)</option>
-                    <option value="tier3">Conceder PRO Tier 3 (30 dias)</option>
-                </select>
-                <button onclick="adminTogglePro('${uid}', true)">Conceder PRO</button>
+                <div style="display:flex; gap:5px; flex-direction: column;">
+                    <select id="adminConcederProTier" style="margin:0;">
+                        <option value="tier1">Bronze (4%) - 30 dias</option>
+                        <option value="tier2">Prata (2%) - 30 dias</option>
+                        <option value="tier3">Ouro (0%) - 30 dias</option>
+                    </select>
+                    <button onclick="adminTogglePro('${uid}', true)" style="background-color: var(--cor-destaque-azul);">🌟 Conceder PRO</button>
+                </div>
             ` : `
-                <button onclick="adminTogglePro('${uid}', false)">Remover PRO</button>
+                <button onclick="adminTogglePro('${uid}', false)" style="background-color: #c0392b; border: 1px solid red;">🚫 Remover PRO</button>
             `}
-            <hr style="border-color: var(--cor-borda); margin: 15px 0;">
+            <hr style="border-color: var(--cor-borda); margin: 10px 0;">
 
              <p><strong>Pontos Fidelidade:</strong> ${u.pontosFidelidade || 0}</p>
-             <input id="adminModificarPontos" type="number" placeholder="Pontos a adicionar/remover (-)">
-             <button onclick="adminModificarPontos('${uid}')">Modificar Pontos</button>
+             <div style="display:flex; gap:5px;">
+                <input id="adminModificarPontos" type="number" placeholder="Pontos (+ ou -)" style="margin:0;">
+                <button onclick="adminModificarPontos('${uid}')" style="width:auto;">Aplicar</button>
+             </div>
         </div>
 
         <div class="popup-section">
