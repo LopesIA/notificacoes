@@ -4585,39 +4585,6 @@ function confirmarTurbinar() {
 /**
  * Verifica se a assinatura PRO do profissional está ativa.
  */
-function isProAtivo(perfilUsuario) {
-    if (!perfilUsuario) return false;
-    
-    // Se a data de expiração não existe, não é PRO
-    if (!perfilUsuario.proExpirationDate) return false;
-
-    let expiracao;
-    const dateData = perfilUsuario.proExpirationDate;
-
-    try {
-        // Lógica robusta para converter qualquer formato de data vindo do banco
-        if (typeof dateData.toDate === 'function') {
-            expiracao = dateData.toDate();
-        } else if (dateData instanceof Date) {
-            expiracao = dateData;
-        } else if (typeof dateData === 'string') {
-            expiracao = new Date(dateData);
-        } else if (typeof dateData === 'object' && (dateData.seconds || dateData._seconds)) {
-            const seconds = dateData.seconds || dateData._seconds;
-            expiracao = new Date(seconds * 1000);
-        } else {
-            return false;
-        }
-
-        // Se a data é válida e está no futuro, retorna TRUE
-        if (expiracao instanceof Date && !isNaN(expiracao)) {
-            return expiracao > new Date();
-        }
-        return false;
-    } catch (e) {
-        return false;
-    }
-}
 
 function isVipAtivo(perfilUsuario) {
     // Se não tiver a flag vip ou a data, retorna falso
@@ -4657,7 +4624,8 @@ function isVipAtivo(perfilUsuario) {
     }
 }
 
-// ADICIONE esta versão segura para isProAtivo também (boa prática)
+// ADICIONE ESTA ÚNICA VERSÃO CORRETA (e delete as 3 antigas)
+
 function isProAtivo(perfilUsuario) {
     // Se não tiver a flag proAtivo ou a data, retorna falso
     if (!perfilUsuario || !perfilUsuario.proAtivo || !perfilUsuario.proExpirationDate) {
@@ -4668,25 +4636,26 @@ function isProAtivo(perfilUsuario) {
     const dateData = perfilUsuario.proExpirationDate;
 
     try {
-        // Caso 1: Timestamp do Firebase
+        // Caso 1: Timestamp do Firebase (tem a função toDate)
         if (typeof dateData.toDate === 'function') {
             expiracao = dateData.toDate();
         }
-        // Caso 2: Objeto Date
+        // Caso 2: Objeto Date do JS
         else if (dateData instanceof Date) {
             expiracao = dateData;
         }
-        // Caso 3: String ISO (JSON da API)
+        // Caso 3: String ISO (formato que o admin envia)
         else if (typeof dateData === 'string') {
             expiracao = new Date(dateData);
         }
-        // Caso 4: Objeto Timestamp serializado
+        // Caso 4: Objeto Timestamp serializado (pode vir de algum cache)
         else if (dateData.seconds || dateData._seconds) {
             expiracao = new Date((dateData.seconds || dateData._seconds) * 1000);
         } else {
-            return false;
+            return false; // Formato desconhecido
         }
 
+        // Verifica se a data de expiração é maior que agora
         return expiracao > new Date();
 
     } catch (e) {
@@ -4695,22 +4664,6 @@ function isProAtivo(perfilUsuario) {
     }
 }
 
-
-// ADICIONE esta versão segura para isProAtivo também (boa prática)
-function isProAtivo(perfilUsuario) {
-    if (!perfilUsuario || !perfilUsuario.proAtivo || !perfilUsuario.proExpirationDate) {
-        return false;
-    }
-    if (perfilUsuario.proExpirationDate && typeof perfilUsuario.proExpirationDate.toDate === 'function') {
-        try {
-            return perfilUsuario.proExpirationDate.toDate() > new Date();
-        } catch (e) {
-            console.error("Erro ao processar proExpirationDate:", e, perfilUsuario.proExpirationDate);
-            return false;
-        }
-    }
-    return false;
-}
 
 // FUNÇÃO DO CHAT ATUALIZADA
 let chatAtual = 'global';
@@ -6797,6 +6750,7 @@ async function adminToggleVip(uid, conceder) {
     }
 }
 
+// SUBSTITUA a função 'abrirModalVipPro' inteira por esta:
 function abrirModalVipPro() {
     const container = document.getElementById('vipProContentContainer');
     // Garante que usa o perfil global atualizado
@@ -6843,25 +6797,25 @@ function abrirModalVipPro() {
                 
                 <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; max-height: 60vh; overflow-y: auto;">
                     
-                    <div class="card" style="border: 1px solid #cd7f32; padding: 15px;">
+                    <div class="card" style="border: 1px solid #cd7f32; padding: 15px; cursor: pointer;" onclick="assinarPro('tier1')">
                         <h4 style="color: #cd7f32; margin:0;">🥉 Bronze</h4>
                         <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}</p>
                         <p style="font-size: 14px;">Taxa cai para <strong>4%</strong></p>
-                        <button onclick="assinarPro('tier1')" style="background-color: #cd7f32; width: 100%; margin-top: 10px;">Assinar Bronze</button>
+                        <button style="background-color: #cd7f32; width: 100%; margin-top: 10px; pointer-events: none;">Assinar Bronze</button>
                     </div>
 
-                    <div class="card" style="border: 1px solid #c0c0c0; padding: 15px;">
+                    <div class="card" style="border: 1px solid #c0c0c0; padding: 15px; cursor: pointer;" onclick="assinarPro('tier2')">
                         <h4 style="color: #c0c0c0; margin:0;">🥈 Prata</h4>
                         <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}</p>
                         <p style="font-size: 14px;">Taxa cai para <strong>2%</strong></p>
-                        <button onclick="assinarPro('tier2')" style="background-color: #555; color: white; width: 100%; margin-top: 10px;">Assinar Prata</button>
+                        <button style="background-color: #555; color: white; width: 100%; margin-top: 10px; pointer-events: none;">Assinar Prata</button>
                     </div>
 
-                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-azul);">
+                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-azul); cursor: pointer;" onclick="assinarPro('tier3')">
                         <h4 style="color: var(--cor-destaque-azul); margin:0;">🥇 Ouro (Melhor)</h4>
                         <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}</p>
                         <p style="font-size: 14px;">Taxa de serviço: <strong>0% (ZERO)</strong></p>
-                        <button onclick="assinarPro('tier3')" style="width: 100%; margin-top: 10px;">Assinar Ouro</button>
+                        <button style="width: 100%; margin-top: 10px; pointer-events: none;">Assinar Ouro</button>
                     </div>
                 </div>
             </div>
@@ -6895,7 +6849,7 @@ async function adminToggleLoja(uid, deveAtivar) {
     }
 }
 
-// ADICIONE ESTA NOVA FUNÇÃO PARA GERENCIAR O PRO
+// SUBSTITUA a função 'adminTogglePro' inteira por esta:
 async function adminTogglePro(uid, conceder) {
     exibirAguarde(conceder ? "Concedendo PRO..." : "Removendo PRO...");
     
@@ -6944,20 +6898,24 @@ async function adminTogglePro(uid, conceder) {
 
         fecharTodosOsModais(); // Fecha o aguarde
         
+        // --- MUDANÇA AQUI ---
+        // Define a função de callback que reabre o modal
+        const reabrirModalAdmin = () => {
+            abrirModalGerenciarUsuario(uid);
+        };
+
         // Feedback visual
         if (conceder) {
-            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado com sucesso.`);
             notifyUser(uid, "🌟 PRO Ativado!", `Admin ativou seu plano ${updates.proTier}.`);
+            // Exibe o popup e passa o callback para o botão "OK"
+            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado com sucesso.`, "sucesso", reabrirModalAdmin);
         } else {
-            exibirPopup("Sucesso!", "Plano PRO removido.");
             notifyUser(uid, "ℹ️ PRO Removido", "Seu plano PRO foi cancelado pelo admin.");
+            // Exibe o popup e passa o callback para o botão "OK"
+            exibirPopup("Sucesso!", "Plano PRO removido.", "sucesso", reabrirModalAdmin);
         }
-        
-        // REABRE O MODAL DO USUÁRIO PARA ATUALIZAR OS BOTÕES (Conceder -> Remover)
-        // Adicionamos um pequeno delay para garantir que o Firestore processou
-        setTimeout(() => {
-            abrirModalGerenciarUsuario(uid);
-        }, 500);
+        // O setTimeout foi removido e substituído pela lógica de callback
+        // --- FIM DA MUDANÇA ---
 
     } catch (error) {
         fecharTodosOsModais();
