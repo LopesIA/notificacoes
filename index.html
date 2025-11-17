@@ -4562,8 +4562,13 @@ function confirmarTurbinar() {
  * Verifica se a assinatura PRO do profissional está ativa.
  */
 function isProAtivo(perfilUsuario) {
-    // 1. Verificação básica de existência
+    // Se o perfil for nulo ou não tiver a data, retorna falso
     if (!perfilUsuario || !perfilUsuario.proExpirationDate) {
+        return false;
+    }
+
+    // Se tiver a flag 'proAtivo' como false explicitamente, respeita ela
+    if (perfilUsuario.proAtivo === false) {
         return false;
     }
 
@@ -4571,37 +4576,29 @@ function isProAtivo(perfilUsuario) {
     const dateData = perfilUsuario.proExpirationDate;
 
     try {
-        // 2. Tentativas de converter a data (cobre todos os formatos possíveis)
+        // Tenta converter todos os formatos possíveis que o Firebase/API podem retornar
         if (typeof dateData.toDate === 'function') {
-            // Formato Timestamp do Firebase (SDK Cliente)
-            expiracao = dateData.toDate();
+            expiracao = dateData.toDate(); // Timestamp do SDK
         } else if (dateData instanceof Date) {
-            // Já é um objeto Date
-            expiracao = dateData;
+            expiracao = dateData; // Objeto Date JS
         } else if (typeof dateData === 'string') {
-            // Formato Texto ISO (Vindo do JSON/Admin)
-            expiracao = new Date(dateData);
+            expiracao = new Date(dateData); // String ISO
         } else if (typeof dateData === 'object' && (dateData.seconds || dateData._seconds)) {
-            // Formato Timestamp serializado (Objeto JSON com seconds)
+            // Objeto serializado { _seconds: ... }
             const seconds = dateData.seconds || dateData._seconds;
             expiracao = new Date(seconds * 1000);
         } else {
-            // Formato desconhecido
-            console.warn("Formato de data PRO desconhecido:", dateData);
             return false;
         }
 
-        // 3. VERIFICAÇÃO FINAL (A Lógica de Ouro)
-        // Se a data convertida é válida e é maior que agora, é PRO.
-        // Ignoramos a flag 'proAtivo' se a data for válida, para garantir que apareça.
+        // Verifica se a data é válida e está no futuro
         if (expiracao instanceof Date && !isNaN(expiracao)) {
-             return expiracao > new Date();
+            return expiracao > new Date();
         }
-        
         return false;
 
     } catch (e) {
-        console.error("Erro ao verificar PRO:", e);
+        console.error("Erro PRO:", e);
         return false;
     }
 }
@@ -6516,17 +6513,19 @@ async function abrirModalGerenciarUsuario(uid) {
             <hr style="border-color: var(--cor-borda); margin: 10px 0;">
 
             <p><strong>PRO Ativo:</strong> ${isProAtivo(u) ? `<span style="color:#00c6ff; font-weight:bold;">Sim ✅ (Tier: ${u.proTier || 'N/A'})</span>` : '<span style="color:#e74c3c">Não ❌</span>'}</p>
+            
             ${!isProAtivo(u) ? `
-                <div style="display:flex; gap:5px; flex-direction: column;">
-                    <select id="adminConcederProTier" style="margin:0;">
-                        <option value="tier1">Bronze (4%) - 30 dias</option>
-                        <option value="tier2">Prata (2%) - 30 dias</option>
-                        <option value="tier3">Ouro (0%) - 30 dias</option>
+                <div style="display:flex; gap:5px; flex-direction: column; margin-top:5px;">
+                    <label style="font-size:12px;">Selecione o Plano:</label>
+                    <select id="adminConcederProTier" style="margin:0; padding: 8px;">
+                        <option value="tier1">Bronze (4%)</option>
+                        <option value="tier2">Prata (2%)</option>
+                        <option value="tier3">Ouro (0%)</option>
                     </select>
-                    <button onclick="adminTogglePro('${uid}', true)" style="background-color: var(--cor-destaque-azul);">🌟 Conceder PRO</button>
+                    <button onclick="adminTogglePro('${uid}', true)" style="background-color: var(--cor-destaque-azul); margin-top:5px;">🌟 Conceder PRO</button>
                 </div>
             ` : `
-                <button onclick="adminTogglePro('${uid}', false)" style="background-color: #c0392b; border: 1px solid red;">🚫 Remover PRO</button>
+                <button onclick="adminTogglePro('${uid}', false)" style="background-color: #c0392b; border: 1px solid red; margin-top:5px;">🚫 Remover PRO</button>
             `}
             <hr style="border-color: var(--cor-borda); margin: 10px 0;">
 
@@ -6773,27 +6772,40 @@ async function adminToggleLoja(uid, deveAtivar) {
 // ADICIONE ESTA NOVA FUNÇÃO PARA GERENCIAR O PRO
 async function adminTogglePro(uid, conceder) {
     exibirAguarde(conceder ? "Concedendo PRO..." : "Removendo PRO...");
+    
     try {
         let updates = {};
+        
         if (conceder) {
-            const tierSelecionado = document.getElementById('adminConcederProTier').value;
+            // Busca o elemento do select
+            const selectElement = document.getElementById('adminConcederProTier');
+            
+            // Validação de segurança: se o elemento não existir, para tudo.
+            if (!selectElement) {
+                throw new Error("Elemento de seleção de Tier não encontrado na tela.");
+            }
+            
+            const tierSelecionado = selectElement.value;
             if (!tierSelecionado) throw new Error("Selecione um nível PRO.");
+            
             const expiracao = new Date();
             expiracao.setDate(expiracao.getDate() + 30); // 30 dias de PRO
+            
             updates = {
                 proAtivo: true,
                 proTier: tierSelecionado,
-                proExpirationDate: expiracao.toISOString() // Envia como string ISO
+                // Envia como String ISO para garantir compatibilidade com o JSON da API
+                proExpirationDate: expiracao.toISOString() 
             };
         } else {
             updates = {
                 proAtivo: false,
-                proTier: null, // Define como null (seu backend e a função isProAtivo já tratam isso)
-                proExpirationDate: null // Define como null
+                proTier: null,
+                proExpirationDate: null
             };
         }
         
-        // CHAMA O BACKEND SEGURO
+        // CHAMA O BACKEND
         const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -6810,18 +6822,21 @@ async function adminTogglePro(uid, conceder) {
         fecharTodosOsModais();
         
         if (conceder) {
-            exibirPopup(`PRO ${updates.proTier} concedido por 30 dias!`);
-            notifyUser(uid, "🌟 PRO Ativado!", `Um administrador concedeu a você o plano PRO ${updates.proTier} por 30 dias.`);
+            exibirPopup("Sucesso!", `PRO ${updates.proTier} concedido por 30 dias!`);
+            // Envia notificação silenciosa (sem travar a tela)
+            notifyUser(uid, "🌟 PRO Ativado!", `Um administrador concedeu o plano PRO ${updates.proTier}.`);
         } else {
-            exibirPopup("Assinatura PRO removida.");
-            notifyUser(uid, "ℹ️ PRO Removido", "Sua assinatura PRO foi removida por um administrador.");
+            exibirPopup("Sucesso!", "Assinatura PRO removida.");
+            notifyUser(uid, "ℹ️ PRO Removido", "Sua assinatura PRO foi removida.");
         }
         
-        abrirModalGerenciarUsuario(uid); // Reabre para atualizar a UI
+        // Reabre o modal para atualizar a visualização (os botões vão mudar agora)
+        abrirModalGerenciarUsuario(uid); 
 
     } catch (error) {
         fecharTodosOsModais();
-        exibirPopup("Erro ao gerenciar PRO: " + error.message);
+        console.error("Erro PRO:", error);
+        exibirPopup("Erro ao gerenciar PRO", error.message);
     }
 }
 
