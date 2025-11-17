@@ -1779,6 +1779,16 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
+<div id="modalConfirmacaoGenerica" class="modal" style="z-index: 25;">
+  <div class="modal-content" onclick="event.stopPropagation()" style="text-align: center;">
+    <h3 id="confirmacaoGenericaTitulo" style="margin-top: 0;"></h3>
+    <p id="confirmacaoGenericaMensagem" style="margin-bottom: 20px;"></p>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button id="btnConfirmacaoGenericaNao" style="background-color: #555; flex-grow: 1;">Não</button>
+        <button id="btnConfirmacaoGenericaSim" style="flex-grow: 1;">Sim</button>
+    </div>
+  </div>
+</div>
 
 <div id="modalCriarPromocao" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -2596,6 +2606,7 @@ let modalOriginalIdParaConfirmar = null;
 let fluxoPosCadastroAtivo = false;
 let lastReloadTimestamp = null; // Variável para controlar o reload forçado
 let previousTipo = null;
+let onConfirmCallback = null;
 
 let userView = {
     originalType: null,
@@ -4476,7 +4487,8 @@ function assinarVip() {
     });
 }
 
-// 2. ADICIONE (ou SUBSTITUA) A FUNÇÃO 'assinarPro' POR ESTA NOVA VERSÃO
+// SUBSTITUA a função 'assinarPro' inteira por esta:
+
 function assinarPro(tier) {
     const plano = PRECOS_PRO[tier];
     if (!plano) {
@@ -4484,49 +4496,61 @@ function assinarPro(tier) {
     }
     const sku = `pro_${tier}`; // Ex: pro_tier1, pro_tier2
 
+    // 1. Lógica da Play Store (já estava correta)
     if (playStoreService) {
+        // A Play Store tem seu próprio popup de confirmação, então chamamos direto.
         comprarComPlayStore(sku, plano.preco);
         return;
     }
 
+    // 2. Lógica da Carteira (Fallback)
     if (perfil.saldo < plano.preco) {
-        exibirPopup("Saldo insuficiente para assinar este plano PRO. Por favor, deposite fundos na sua carteira.");
-        return abrirModal('modalCarteira');
-    }
-    if (!confirm(`Deseja assinar o plano PRO por R$ ${plano.preco.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`)) return;
-
-    exibirAguarde("Ativando PRO...");
-
-    db.runTransaction(async t => {
-        const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
-        const financeiroRef = db.collection("config").doc("financeiro");
-        const proDoc = await t.get(proRef);
-
-        if (isProAtivo(proDoc.data())) {
-            throw "Você já é um membro PRO ativo.";
-        }
-
-        const expiracao = new Date();
-        expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
-
-        t.update(proRef, {
-            saldo: firebase.firestore.FieldValue.increment(-plano.preco),
-            proAtivo: true,
-            proTier: tier, // Salva o nível do plano
-            proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+        exibirPopup("Saldo insuficiente", "Saldo insuficiente para assinar este plano PRO. Por favor, deposite fundos na sua carteira.", "aviso", () => {
+            abrirModal('modalCarteira');
         });
+        return;
+    }
+    
+    // --- ESTA É A MUDANÇA: Usando o novo popup de confirmação ---
+    const titulo = `Confirmar Assinatura PRO`;
+    const mensagem = `Deseja assinar o plano PRO (Tier ${tier.replace('tier', '')}) por R$ ${plano.preco.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo da carteira.`;
+    
+    exibirConfirmacao(titulo, mensagem, () => {
+        // O código abaixo só executa se o usuário clicar "Sim"
+        exibirAguarde("Ativando PRO...");
 
-        t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(plano.preco) }, { merge: true });
+        db.runTransaction(async t => {
+            const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
+            const financeiroRef = db.collection("config").doc("financeiro");
+            const proDoc = await t.get(proRef);
 
-    }).then(() => {
-        fecharTodosOsModais();
-        exibirPopup("Parabéns! Você agora é um Profissional PRO!");
-        notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
-        fecharModalAtual();
-    }).catch(e => {
-        fecharTodosOsModais();
-        exibirPopup("Erro ao assinar PRO: " + e.message);
+            if (isProAtivo(proDoc.data())) {
+                throw "Você já é um membro PRO ativo.";
+            }
+
+            const expiracao = new Date();
+            expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
+
+            t.update(proRef, {
+                saldo: firebase.firestore.FieldValue.increment(-plano.preco),
+                proAtivo: true,
+                proTier: tier, // Salva o nível do plano
+                proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
+            });
+
+            t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(plano.preco) }, { merge: true });
+
+        }).then(() => {
+            fecharTodosOsModais();
+            exibirPopup("Sucesso!", "Parabéns! Você agora é um Profissional PRO!", "sucesso");
+            notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
+            fecharModalAtual(); // Fecha o modal 'modalVipPro'
+        }).catch(e => {
+            fecharTodosOsModais();
+            exibirPopup("Erro ao assinar PRO", e.message, "erro");
+        });
     });
+    // --- FIM DA MUDANÇA ---
 }
 
 // 3. SUBSTITUA A SUA FUNÇÃO 'confirmarTurbinar' ANTIGA POR ESTA COMPLETA
@@ -5320,6 +5344,43 @@ function abrirAgenda() {
         container.insertBefore(btnFerias, painelManual);
     }
     carregarAgenda();
+}
+
+/**
+ * Exibe um popup de confirmação customizado.
+ * @param {string} titulo O título do popup.
+ * @param {string} mensagem A pergunta ou mensagem.
+ * @param {function} onConfirm A função a ser executada se o usuário clicar "Sim".
+ */
+function exibirConfirmacao(titulo, mensagem, onConfirm) {
+    document.getElementById('confirmacaoGenericaTitulo').textContent = titulo;
+    document.getElementById('confirmacaoGenericaMensagem').textContent = mensagem;
+
+    onConfirmCallback = onConfirm; // Armazena a ação
+
+    document.getElementById('btnConfirmacaoGenericaSim').onclick = () => {
+        if (onConfirmCallback) {
+            onConfirmCallback();
+        }
+        fecharModalAtual();
+        onConfirmCallback = null;
+    };
+
+    document.getElementById('btnConfirmacaoGenericaNao').onclick = () => {
+        fecharModalAtual();
+        onConfirmCallback = null;
+    };
+
+    // Adiciona listener para fechar no fundo
+    const modal = document.getElementById('modalConfirmacaoGenerica');
+    modal.onclick = (event) => {
+         if (event.target.id === 'modalConfirmacaoGenerica') {
+             fecharModalAtual();
+             onConfirmCallback = null;
+         }
+    };
+
+    abrirModal('modalConfirmacaoGenerica');
 }
 
 // SUBSTITUA A FUNÇÃO 'carregarAgenda' INTEIRA EM index.html
