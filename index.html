@@ -3837,7 +3837,25 @@ auth.onAuthStateChanged(async user => {
         // LÓGICA DO CLIENTE
         if (perfil.tipo === 'cliente') {
             
-            // 3. Listener para POPUP DE STATUS (Aceito/Recusado)
+            // 1. Listener de AVISOS (Para Vaga Imediata Aprovada)
+            // Este listener captura o aviso do profissional e abre o modal de vaga imediata
+            db.collection("avisos")
+              .where("usuarioUid", "==", user.uid)
+              .where("lido", "==", false)   
+              .where("tipo", "==", "vaga-aprovada") // Filtro específico
+              .onSnapshot(snapshot => {
+                  snapshot.docChanges().forEach(change => {
+                      if (change.type === 'added' || change.type === 'modified') {
+                          const aviso = change.doc.data();
+                          // Abre o modal de vaga imediata (que já é persistente)
+                          abrirModalVagaAprovada(aviso.agendamentoId); 
+                          // Marca o aviso como lido para não reabrir
+                          change.doc.ref.update({ lido: true });
+                      }
+                  });
+              });
+
+            // 2. Listener para POPUP DE STATUS (Aceito/Recusado - Horário Marcado)
             console.log("Iniciando listener de status de agendamentos (Cliente)...");
             db.collection("agendamentos")
               .where("clienteUid", "==", user.uid)
@@ -3849,19 +3867,23 @@ auth.onAuthStateChanged(async user => {
                           const ag = change.doc.data();
                           
                           if (ag.status === "conclusão pendente") {
-                              if (ag.horario) { // Só exibe se NÃO for vaga imediata
-                                  exibirPopup("Agendamento Aceito!", `Seu agendamento com ${ag.barbeiroNome} às ${ag.horario} foi aceito. Você receberá um lembrete 30 minutos antes.`);
+                              if (ag.horario) { // Só exibe se for horário marcado (vaga imediata é tratada acima)
+                                  // Popup mais detalhado, como pedido
+                                  exibirPopup("Agendamento Aceito!", 
+                                    `Boas notícias! Seu agendamento foi aceito:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario}\nValor: R$ ${ag.valor.toFixed(2)}\n\nPor favor, não se atrase!`);
                                   change.doc.ref.update({ clienteNotificado: true });
                               }
                           } else if (ag.status === "cancelado") {
-                              exibirPopup("Agendamento Recusado", `Seu agendamento com ${ag.barbeiroNome} (serviço: ${ag.servico}) foi recusado pelo profissional.`);
+                              // Popup mais detalhado
+                              exibirPopup("Agendamento Recusado", 
+                                `Infelizmente, seu pedido de agendamento foi recusado:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario || 'Vaga Imediata'}\n\nVocê não foi cobrado. Sinta-se à vontade para tentar outro horário ou profissional.`);
                               change.doc.ref.update({ clienteNotificado: true });
                           }
                       }
                   });
               });
 
-            // 4. Listener para POPUP DE AVALIAÇÃO (Concluído)
+            // 3. Listener para POPUP DE AVALIAÇÃO (Concluído)
             console.log("Iniciando listener de conclusão de agendamentos (Cliente)...");
             db.collection("agendamentos")
               .where("clienteUid", "==", user.uid)
@@ -3871,11 +3893,41 @@ auth.onAuthStateChanged(async user => {
                   snapshot.docChanges().forEach(change => {
                       if (change.type === 'added' || change.type === 'modified') {
                           const ag = change.doc.data();
-                          exibirPopup("Serviço Concluído!", `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído. Você já pode ir em "Histórico" para avaliar, ganhar pontos e manter a comunidade segura!`);
-                          change.doc.ref.update({ avisoAvaliacaoEnviado: true }); // Atualiza o nome do campo
+                          // Popup como pedido
+                          exibirPopup("Serviço Concluído!", `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído. Você já pode ir em "Histórico" para avaliar, ganhar pontos de fidelidade e manter a comunidade segura!`);
+                          change.doc.ref.update({ avisoAvaliacaoEnviado: true });
                       }
                   });
               });
+
+            // 4. Verificação de AVALIAÇÃO PENDENTE (Uma vez por dia)
+            const hoje = new Date().toISOString().split('T')[0]; // Formato 'AAAA-MM-DD'
+            const ultimoAvisoAvaliacao = localStorage.getItem('ultimoAvisoAvaliacao');
+            
+            if (ultimoAvisoAvaliacao !== hoje) {
+                console.log("Verificando avaliações pendentes (primeiro login do dia)...");
+                db.collection('agendamentos')
+                    .where('clienteUid', '==', user.uid)
+                    .where('status', '==', 'concluido')
+                    .where('avaliado', '==', false)
+                    .limit(1)
+                    .get()
+                    .then(snap => {
+                        if (!snap.empty) {
+                            // Encontrou avaliação pendente
+                            // Usamos um timeout para não sobrepor outros popups de login
+                            setTimeout(() => {
+                               exibirPopup("Avaliação Pendente", 
+                                "Olá! Vimos que você tem um ou mais serviços concluídos que ainda não foram avaliados. Por favor, vá ao seu Histórico e deixe sua avaliação para ganhar pontos de fidelidade!");
+                            }, 5000); // Mostra 5 segundos após o login
+                        }
+                        // Marca como checado para hoje, mesmo se não houver pendências
+                        localStorage.setItem('ultimoAvisoAvaliacao', hoje);
+                    })
+                    .catch(err => {
+                        console.error("Erro ao checar avaliações pendentes:", err);
+                    });
+            }
         }
         
         // --- FIM DOS LISTENERS DA SOLICITAÇÃO ATUAL ---
