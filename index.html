@@ -3872,7 +3872,7 @@ auth.onAuthStateChanged(async user => {
                       if (change.type === 'added' || change.type === 'modified') {
                           const ag = change.doc.data();
                           exibirPopup("Serviço Concluído!", `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído. Você já pode ir em "Histórico" para avaliar, ganhar pontos e manter a comunidade segura!`);
-                          change.doc.ref.update({ avisoAvaliacoEnviado: true }); // Atualiza o nome do campo
+                          change.doc.ref.update({ avisoAvaliacaoEnviado: true }); // Atualiza o nome do campo
                       }
                   });
               });
