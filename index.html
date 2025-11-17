@@ -4562,43 +4562,35 @@ function confirmarTurbinar() {
  * Verifica se a assinatura PRO do profissional está ativa.
  */
 function isProAtivo(perfilUsuario) {
-    // Se o perfil for nulo ou não tiver a data, retorna falso
-    if (!perfilUsuario || !perfilUsuario.proExpirationDate) {
-        return false;
-    }
-
-    // Se tiver a flag 'proAtivo' como false explicitamente, respeita ela
-    if (perfilUsuario.proAtivo === false) {
-        return false;
-    }
+    if (!perfilUsuario) return false;
+    
+    // Se a data de expiração não existe, não é PRO
+    if (!perfilUsuario.proExpirationDate) return false;
 
     let expiracao;
     const dateData = perfilUsuario.proExpirationDate;
 
     try {
-        // Tenta converter todos os formatos possíveis que o Firebase/API podem retornar
+        // Lógica robusta para converter qualquer formato de data vindo do banco
         if (typeof dateData.toDate === 'function') {
-            expiracao = dateData.toDate(); // Timestamp do SDK
+            expiracao = dateData.toDate();
         } else if (dateData instanceof Date) {
-            expiracao = dateData; // Objeto Date JS
+            expiracao = dateData;
         } else if (typeof dateData === 'string') {
-            expiracao = new Date(dateData); // String ISO
+            expiracao = new Date(dateData);
         } else if (typeof dateData === 'object' && (dateData.seconds || dateData._seconds)) {
-            // Objeto serializado { _seconds: ... }
             const seconds = dateData.seconds || dateData._seconds;
             expiracao = new Date(seconds * 1000);
         } else {
             return false;
         }
 
-        // Verifica se a data é válida e está no futuro
+        // Se a data é válida e está no futuro, retorna TRUE
         if (expiracao instanceof Date && !isNaN(expiracao)) {
             return expiracao > new Date();
         }
         return false;
-
     } catch (e) {
-        console.error("Erro PRO:", e);
         return false;
     }
 }
@@ -6512,12 +6504,12 @@ async function abrirModalGerenciarUsuario(uid) {
             }
             <hr style="border-color: var(--cor-borda); margin: 10px 0;">
 
-            <p><strong>PRO Ativo:</strong> ${isProAtivo(u) ? `<span style="color:#00c6ff; font-weight:bold;">Sim ✅ (Tier: ${u.proTier || 'N/A'})</span>` : '<span style="color:#e74c3c">Não ❌</span>'}</p>
+            <p><strong>PRO Ativo:</strong> ${isProAtivo(u) ? `<span style="color:#00c6ff; font-weight:bold;">Sim ✅ (Tier: ${u.proTier || '?'})</span>` : '<span style="color:#e74c3c">Não ❌</span>'}</p>
             
             ${!isProAtivo(u) ? `
                 <div style="display:flex; gap:5px; flex-direction: column; margin-top:5px;">
                     <label style="font-size:12px;">Selecione o Plano:</label>
-                    <select id="adminConcederProTier" style="margin:0; padding: 8px;">
+                    <select id="adminConcederProTier" style="margin:0; padding: 8px; background:#222; color:white; border:1px solid #555;">
                         <option value="tier1">Bronze (4%)</option>
                         <option value="tier2">Prata (2%)</option>
                         <option value="tier3">Ouro (0%)</option>
@@ -6744,6 +6736,79 @@ async function adminToggleVip(uid, conceder) {
     }
 }
 
+function abrirModalVipPro() {
+    const container = document.getElementById('vipProContentContainer');
+    // Garante que usa o perfil global atualizado
+    const proAtivo = isProAtivo(perfil);
+
+    if (proAtivo) {
+        let dataFormatada = "Indefinido";
+        if (perfil.proExpirationDate) {
+             try {
+                 // Tenta converter Timestamp ou String
+                 const dateObj = typeof perfil.proExpirationDate.toDate === 'function' 
+                    ? perfil.proExpirationDate.toDate() 
+                    : new Date(perfil.proExpirationDate);
+                 dataFormatada = dateObj.toLocaleDateString('pt-BR');
+             } catch (e) { console.log(e); }
+        }
+        
+        let taxaAtual = (TAXA * 100); // Taxa padrão (ex: 5%)
+        // Se tiver tier definido, usa a taxa do tier
+        if (perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+            taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
+        }
+
+        container.innerHTML = `
+            <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
+                <h3 style="color: var(--cor-destaque-azul);">🌟 Você é PRO ${perfil.proTier ? perfil.proTier.toUpperCase() : ''}!</h3>
+                <p>Validade: <strong>${dataFormatada}</strong></p>
+                <p style="font-size: 1.2em; margin: 15px 0;">Sua taxa atual: <b style="color: #2ecc71;">${taxaAtual.toFixed(1)}%</b></p>
+                <div class="vantagens" style="text-align: left; margin-top: 20px;">
+                    <ul>
+                        <li>Selo de destaque no chat e lista.</li>
+                        <li>Taxa reduzida em todos os serviços.</li>
+                        <li>Acesso prioritário a novas funções.</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    } else {
+        // Mostra os Planos para assinar
+        container.innerHTML = `
+            <div style="text-align: center;">
+                <h3 style="color: var(--cor-destaque-azul);">🌟 Seja um Profissional PRO</h3>
+                <p style="font-size:14px; opacity:0.8;">Reduza suas taxas e aumente seus lucros.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; max-height: 60vh; overflow-y: auto;">
+                    
+                    <div class="card" style="border: 1px solid #cd7f32; padding: 15px;">
+                        <h4 style="color: #cd7f32; margin:0;">🥉 Bronze</h4>
+                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}</p>
+                        <p style="font-size: 14px;">Taxa cai para <strong>4%</strong></p>
+                        <button onclick="assinarPro('tier1')" style="background-color: #cd7f32; width: 100%; margin-top: 10px;">Assinar Bronze</button>
+                    </div>
+
+                    <div class="card" style="border: 1px solid #c0c0c0; padding: 15px;">
+                        <h4 style="color: #c0c0c0; margin:0;">🥈 Prata</h4>
+                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}</p>
+                        <p style="font-size: 14px;">Taxa cai para <strong>2%</strong></p>
+                        <button onclick="assinarPro('tier2')" style="background-color: #555; color: white; width: 100%; margin-top: 10px;">Assinar Prata</button>
+                    </div>
+
+                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-azul);">
+                        <h4 style="color: var(--cor-destaque-azul); margin:0;">🥇 Ouro (Melhor)</h4>
+                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}</p>
+                        <p style="font-size: 14px;">Taxa de serviço: <strong>0% (ZERO)</strong></p>
+                        <button onclick="assinarPro('tier3')" style="width: 100%; margin-top: 10px;">Assinar Ouro</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    abrirModal('modalVipPro');
+}
+
 async function adminDeletarUsuario(uid, nome) {
   if (prompt(`TEM CERTEZA? Para deletar ${nome}, digite "DELETAR":`) === "DELETAR") {
     await db.collection("usuarios").doc(uid).delete();
@@ -6777,27 +6842,24 @@ async function adminTogglePro(uid, conceder) {
         let updates = {};
         
         if (conceder) {
-            // Busca o elemento do select
+            // SÓ tenta ler o select se estiver CONCEDENDO
             const selectElement = document.getElementById('adminConcederProTier');
-            
-            // Validação de segurança: se o elemento não existir, para tudo.
-            if (!selectElement) {
-                throw new Error("Elemento de seleção de Tier não encontrado na tela.");
-            }
+            if (!selectElement) throw new Error("Erro na interface: Select não encontrado.");
             
             const tierSelecionado = selectElement.value;
-            if (!tierSelecionado) throw new Error("Selecione um nível PRO.");
             
+            // Define expiração para 30 dias
             const expiracao = new Date();
-            expiracao.setDate(expiracao.getDate() + 30); // 30 dias de PRO
+            expiracao.setDate(expiracao.getDate() + 30); 
             
             updates = {
                 proAtivo: true,
                 proTier: tierSelecionado,
-                // Envia como String ISO para garantir compatibilidade com o JSON da API
+                // Envia como ISO String para garantir compatibilidade total
                 proExpirationDate: expiracao.toISOString() 
             };
         } else {
+            // Para remover, limpamos os campos
             updates = {
                 proAtivo: false,
                 proTier: null,
@@ -6805,7 +6867,7 @@ async function adminTogglePro(uid, conceder) {
             };
         }
         
-        // CHAMA O BACKEND
+        // Envia para o backend
         const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -6819,24 +6881,26 @@ async function adminTogglePro(uid, conceder) {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Erro no backend');
 
-        fecharTodosOsModais();
+        fecharTodosOsModais(); // Fecha o aguarde
         
+        // Feedback visual
         if (conceder) {
-            exibirPopup("Sucesso!", `PRO ${updates.proTier} concedido por 30 dias!`);
-            // Envia notificação silenciosa (sem travar a tela)
-            notifyUser(uid, "🌟 PRO Ativado!", `Um administrador concedeu o plano PRO ${updates.proTier}.`);
+            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado com sucesso.`);
+            notifyUser(uid, "🌟 PRO Ativado!", `Admin ativou seu plano ${updates.proTier}.`);
         } else {
-            exibirPopup("Sucesso!", "Assinatura PRO removida.");
-            notifyUser(uid, "ℹ️ PRO Removido", "Sua assinatura PRO foi removida.");
+            exibirPopup("Sucesso!", "Plano PRO removido.");
+            notifyUser(uid, "ℹ️ PRO Removido", "Seu plano PRO foi cancelado pelo admin.");
         }
         
-        // Reabre o modal para atualizar a visualização (os botões vão mudar agora)
-        abrirModalGerenciarUsuario(uid); 
+        // REABRE O MODAL DO USUÁRIO PARA ATUALIZAR OS BOTÕES (Conceder -> Remover)
+        // Adicionamos um pequeno delay para garantir que o Firestore processou
+        setTimeout(() => {
+            abrirModalGerenciarUsuario(uid);
+        }, 500);
 
     } catch (error) {
         fecharTodosOsModais();
-        console.error("Erro PRO:", error);
-        exibirPopup("Erro ao gerenciar PRO", error.message);
+        exibirPopup("Erro", error.message);
     }
 }
 
