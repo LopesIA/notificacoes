@@ -4640,49 +4640,79 @@ function abrirModalVipPro() {
 
 
 function isVipAtivo(perfilUsuario) {
+    // Se não tiver a flag vip ou a data, retorna falso
     if (!perfilUsuario || !perfilUsuario.vip || !perfilUsuario.vipExpirationDate) {
         return false;
     }
-    // Verifica se é um objeto Timestamp antes de chamar toDate()
-    // E verifica se toDate é realmente uma função
-    if (perfilUsuario.vipExpirationDate && typeof perfilUsuario.vipExpirationDate.toDate === 'function') {
-        try {
-            // Compara diretamente os timestamps ou datas, se possível
-            const agora = new Date();
-            const expiracao = perfilUsuario.vipExpirationDate.toDate(); // Converte para Date
-            return expiracao > agora;
-        } catch (e) {
-            console.error("Erro ao processar vipExpirationDate:", e, perfilUsuario.vipExpirationDate);
-            return false; // Trata como inativo se houver erro
+    
+    let expiracao;
+    const dateData = perfilUsuario.vipExpirationDate;
+
+    try {
+        // Caso 1: É um Timestamp do Firebase (tem a função toDate)
+        if (typeof dateData.toDate === 'function') {
+            expiracao = dateData.toDate();
         }
-    } else if (perfilUsuario.vipExpirationDate instanceof Date) {
-         // Caso já seja um objeto Date (menos comum vindo do Firestore, mas seguro verificar)
-         return perfilUsuario.vipExpirationDate > new Date();
+        // Caso 2: Já é um objeto Date do JS
+        else if (dateData instanceof Date) {
+            expiracao = dateData;
+        }
+        // Caso 3: É uma String (formato ISO vindo do JSON da API)
+        else if (typeof dateData === 'string') {
+            expiracao = new Date(dateData);
+        }
+        // Caso 4: É um objeto Timestamp serializado (tem seconds/nanoseconds mas não a função)
+        else if (dateData.seconds || dateData._seconds) {
+            expiracao = new Date((dateData.seconds || dateData._seconds) * 1000);
+        } else {
+            return false; // Formato desconhecido
+        }
+
+        // Verifica se a data de expiração é maior que agora
+        return expiracao > new Date();
+
+    } catch (e) {
+        console.error("Erro ao verificar VIP:", e);
+        return false;
     }
-    // Se não for Timestamp nem Date, assume que não é válido
-    console.warn("vipExpirationDate não é um Timestamp ou Date válido:", perfilUsuario.vipExpirationDate);
-    return false;
 }
 
 // ADICIONE esta versão segura para isProAtivo também (boa prática)
 function isProAtivo(perfilUsuario) {
+    // Se não tiver a flag proAtivo ou a data, retorna falso
     if (!perfilUsuario || !perfilUsuario.proAtivo || !perfilUsuario.proExpirationDate) {
         return false;
     }
-    if (perfilUsuario.proExpirationDate && typeof perfilUsuario.proExpirationDate.toDate === 'function') {
-        try {
-            const agora = new Date();
-            const expiracao = perfilUsuario.proExpirationDate.toDate();
-            return expiracao > agora;
-        } catch (e) {
-            console.error("Erro ao processar proExpirationDate:", e, perfilUsuario.proExpirationDate);
+
+    let expiracao;
+    const dateData = perfilUsuario.proExpirationDate;
+
+    try {
+        // Caso 1: Timestamp do Firebase
+        if (typeof dateData.toDate === 'function') {
+            expiracao = dateData.toDate();
+        }
+        // Caso 2: Objeto Date
+        else if (dateData instanceof Date) {
+            expiracao = dateData;
+        }
+        // Caso 3: String ISO (JSON da API)
+        else if (typeof dateData === 'string') {
+            expiracao = new Date(dateData);
+        }
+        // Caso 4: Objeto Timestamp serializado
+        else if (dateData.seconds || dateData._seconds) {
+            expiracao = new Date((dateData.seconds || dateData._seconds) * 1000);
+        } else {
             return false;
         }
-    } else if (perfilUsuario.proExpirationDate instanceof Date) {
-         return perfilUsuario.proExpirationDate > new Date();
+
+        return expiracao > new Date();
+
+    } catch (e) {
+        console.error("Erro ao verificar PRO:", e);
+        return false;
     }
-    console.warn("proExpirationDate não é um Timestamp ou Date válido:", perfilUsuario.proExpirationDate);
-    return false;
 }
 
 
