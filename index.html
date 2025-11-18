@@ -1293,7 +1293,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     }
 .card-action-btn { /* Classe base para ações no card */
         position: absolute;
-        top: 10px;
+        bottom: 10px;
         background: rgba(0,0,0,0.6);
         border: none;
         border-radius: 50%;
@@ -4362,6 +4362,7 @@ lista.innerHTML += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon}
                   ${favoriteBtn}
+                  ${shareBtn}
                   <div class="card-header">
                       ${logoHtml}
                       <div class="card-header-info">
