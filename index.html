@@ -3989,6 +3989,20 @@ auth.onAuthStateChanged(async user => {
     }
     // --- FIM DA LÓGICA DO PRIMEIRO CARREGAMENTO ---
 
+else {
+        // Este é um update subsequente (não o primeiro load)
+        // O perfil (global 'perfil') já foi atualizado no início deste listener
+        
+        // Verifica se a view atual é a do cliente ou do profissional e recarrega a lista
+        if (userView.currentType === 'cliente') {
+            console.log("Perfil atualizado (favorito?), recarregando lista de clientes.");
+            carregarBarbeirosPrincipal('listaBarbeirosPrincipalCliente', false);
+        } else if (userView.currentType === 'barbeiro') {
+            console.log("Perfil atualizado, recarregando lista de profissionais.");
+            carregarBarbeirosPrincipal('listaBarbeirosPrincipalBarbeiro', false);
+        }
+    }
+
   }, error => { 
       console.error("Erro CRÍTICO no listener do perfil:", error);
       exibirPopup("Erro Crítico", "Não foi possível carregar seus dados. Tente recarregar a página ou contate o suporte.", "erro");
@@ -10991,20 +11005,12 @@ async function toggleFavorito(barbeiroUid) {
             await userRef.update({
                 favoritos: firebase.firestore.FieldValue.arrayRemove(barbeiroUid)
             });
-            // Atualiza localmente para feedback rápido
-            perfil.favoritos = perfil.favoritos.filter(uid => uid !== barbeiroUid);
         } else {
             await userRef.update({
                 favoritos: firebase.firestore.FieldValue.arrayUnion(barbeiroUid)
             });
-            // Atualiza localmente
-            if(!perfil.favoritos) perfil.favoritos = [];
-            perfil.favoritos.push(barbeiroUid);
         }
-        // Não precisa recarregar tudo, o listener do Firestore (onSnapshot em carregarBarbeirosPrincipal)
-        // pode não disparar se mudamos apenas o perfil do usuário e não a coleção de barbeiros.
-        // Então forçamos uma atualização visual:
-        carregarBarbeirosPrincipal('listaBarbeirosPrincipalCliente', false);
+        // O listener principal (auth.onAuthStateChanged) vai cuidar de atualizar a tela.
         
     } catch (error) {
         console.error("Erro ao favoritar:", error);
