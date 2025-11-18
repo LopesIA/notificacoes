@@ -5924,7 +5924,8 @@ function carregarAgenda() {
     const btnVagaImediata = document.getElementById("btnVagaImediata");
     const btnAgendaManual = document.getElementById("btnAgendaManual");
     const agendaManualPainel = document.getElementById("agendaManualPainel");
-    const horariosContainer = document.getElementById("horariosContainer");
+    const horariosContainer = document.ge
+tElementById("horariosContainer");
 
     db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
         perfil = doc.data(); 
