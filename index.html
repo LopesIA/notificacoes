@@ -1482,6 +1482,14 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
      <hr style="border-color: var(--cor-borda); margin: 20px 0;">
     <div id="listaBarbeirosPrincipalBarbeiro" class="barbeiro-list-container"></div>
   </div>
+</div> 
+
+    <div style="text-align:center;margin-top:20px;margin-bottom:15px; border-top: 1px solid var(--cor-borda); padding-top: 15px;">
+        <button id="btnMostrarFavoritos" onclick="toggleFavoritos()" style="background: transparent; border: 1px solid var(--cor-borda); width: auto; font-size: 1.2em; padding: 8px 20px;"> ♡ Mostrar Favoritos </button>
+    </div>
+    <div id="listaBarbeirosPrincipalBarbeiro" class="barbeiro-list-container"></div>
+    <button onclick="abrirModal('modalAdmin')" style="background-color: darkred; color: white;">🛡️ Admin</button>
+</div>
 
   <div id="adminView" class="hidden card">
     <h2>🧠 Painel do Admin</h2>
@@ -7923,6 +7931,38 @@ async function abrirModalRankingUnificado() {
     }
 }
 
+function toggleFavoritos() {
+    // 1. Referência ao botão (que tem o mesmo ID nas duas views)
+    const btn = document.getElementById('btnMostrarFavoritos'); 
+    
+    // 2. Determina qual container de lista usar baseado no tipo de usuário ativo
+    let listId;
+    if (userView.currentType === 'cliente') {
+        // Se for cliente, usa o container do cliente
+        listId = 'listaBarbeirosPrincipalCliente';
+    } else if (['barbeiro', 'manicure_pedicure', 'designer_cilios'].includes(userView.currentType)) {
+        // Se for qualquer tipo de profissional, usa o novo container
+        listId = 'listaBarbeirosPrincipalBarbeiro'; 
+    } else {
+        // Se não for nenhum dos dois, não faz nada
+        return;
+    }
+    
+    // 3. Verifica o estado atual e alterna a ação
+    const isShowingFavorites = btn.textContent.includes('Esconder Favoritos');
+    
+    // Se está mostrando favoritos, vamos esconder e mostrar todos
+    if (isShowingFavorites) {
+        btn.innerHTML = '♡ Mostrar Favoritos';
+        // Chama a função para carregar todos os profissionais (filtrar = false)
+        carregarBarbeirosPrincipal(listId, false);
+    } else {
+        // Se está mostrando todos, vamos filtrar pelos favoritos
+        btn.innerHTML = 'X Esconder Favoritos';
+        // Chama a função para carregar APENAS os favoritos (filtrar = true)
+        carregarBarbeirosPrincipal(listId, true); 
+    }
+}
 
 function obterIconeMaiorConquista(conquistas, tipo) {
     if (!conquistas || conquistas.length === 0) return '';
