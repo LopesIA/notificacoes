@@ -1457,9 +1457,6 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     <h2>💈 Painel do Profissional</h2>
     <button onclick="toggleFuncoes('barbeiroFuncoesContainer')" class="blinking-button closed">⚙️ Funções do Profissional</button>
     <div id="barbeiroFuncoesContainer" class="hidden">
-<div style="text-align:center;margin-top:20px;margin-bottom:15px; border-top: 1px solid var(--cor-borda); padding-top: 15px;">
-        <button id="btnMostrarFavoritos" onclick="toggleFavoritos()" style="background: transparent; border: 1px solid var(--cor-borda); width: auto; font-size: 1.2em; padding: 8px 20px;"> ♡ Mostrar Favoritos </button>
-    </div>
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
           <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
           <button onclick="abrirAgenda()" style="width:45%">📅 Agenda</button>
@@ -1481,7 +1478,10 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
           
           <button id="btnVipPro" onclick="abrirModalVipPro()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-azul), #00c6ff);">🌟 Seja PRO (R$ 29,99/mês)</button>
         </div>
+    <div style="text-align:center;margin-top:20px;margin-bottom:15px; border-top: 1px solid var(--cor-borda); padding-top: 15px;">
+        <button id="btnMostrarFavoritos" onclick="toggleFavoritos()" style="background: transparent; border: 1px solid var(--cor-borda); width: auto; font-size: 1.2em; padding: 8px 20px;"> ♡ Mostrar Favoritos </button>
     </div>
+</div>
      <hr style="border-color: var(--cor-borda); margin: 20px 0;">
     <div id="listaBarbeirosPrincipalBarbeiro" class="barbeiro-list-container"></div>
   </div>
