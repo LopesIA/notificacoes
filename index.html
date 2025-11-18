@@ -4354,7 +4354,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             
             // Botão de Favorito (Coração)
             const heartIcon = b.isFavorito ? '❤️' : '♡';
-            const favoriteBtn = isGuest ? '' : `<button class="card-favorite-btn" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
+            const favoriteBtn = isGuest ? '' : `<button class="card-action-btn card-favorite-btn" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
 
             const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
 
