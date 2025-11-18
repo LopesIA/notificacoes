@@ -1291,9 +1291,10 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
         opacity: 0.8;
         font-size: 0.9em;
     }
-.card-action-btn { /* Classe base para ações no card */
+.card-favorite-btn {
         position: absolute;
-        bottom: 10px;
+        top: 10px;
+        right: 10px;
         background: rgba(0,0,0,0.6);
         border: none;
         border-radius: 50%;
@@ -1306,19 +1307,9 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
         font-size: 16px;
         z-index: 5;
         transition: transform 0.2s;
-        color: var(--cor-texto-principal); /* Cor do ícone */
     }
-    .card-action-btn:hover {
+    .card-favorite-btn:hover {
         transform: scale(1.1);
-    }
-    
-    .card-favorite-btn {
-        right: 10px; /* Coração na direita */
-    }
-    
-    .card-share-btn {
-        right: 50px; /* Link ao lado do Coração */
-        font-size: 18px; 
     }
 #horariosContainer {
         display: flex; 
@@ -3784,8 +3775,6 @@ auth.onAuthStateChanged(async user => {
         }
         renderCurrentView(); // Renderiza a view correta
 
-        checarParametrosURL();
-
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
         if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
             setTimeout(() => {
@@ -3988,20 +3977,6 @@ auth.onAuthStateChanged(async user => {
         console.log("Inicialização no primeiro load concluída.");
     }
     // --- FIM DA LÓGICA DO PRIMEIRO CARREGAMENTO ---
-
-else {
-        // Este é um update subsequente (não o primeiro load)
-        // O perfil (global 'perfil') já foi atualizado no início deste listener
-        
-        // Verifica se a view atual é a do cliente ou do profissional e recarrega a lista
-        if (userView.currentType === 'cliente') {
-            console.log("Perfil atualizado (favorito?), recarregando lista de clientes.");
-            carregarBarbeirosPrincipal('listaBarbeirosPrincipalCliente', false);
-        } else if (userView.currentType === 'barbeiro') {
-            console.log("Perfil atualizado, recarregando lista de profissionais.");
-            carregarBarbeirosPrincipal('listaBarbeirosPrincipalBarbeiro', false);
-        }
-    }
 
   }, error => { 
       console.error("Erro CRÍTICO no listener do perfil:", error);
@@ -4368,15 +4343,12 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             
             // Botão de Favorito (Coração)
             const heartIcon = b.isFavorito ? '❤️' : '♡';
-            const favoriteBtn = isGuest ? '' : `<button class="card-action-btn card-favorite-btn" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
+            const favoriteBtn = isGuest ? '' : `<button class="card-favorite-btn" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
 
-            const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
-
-lista.innerHTML += `
+            lista.innerHTML += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon}
                   ${favoriteBtn}
-                  ${shareBtn}
                   <div class="card-header">
                       ${logoHtml}
                       <div class="card-header-info">
@@ -11005,69 +10977,25 @@ async function toggleFavorito(barbeiroUid) {
             await userRef.update({
                 favoritos: firebase.firestore.FieldValue.arrayRemove(barbeiroUid)
             });
+            // Atualiza localmente para feedback rápido
+            perfil.favoritos = perfil.favoritos.filter(uid => uid !== barbeiroUid);
         } else {
             await userRef.update({
                 favoritos: firebase.firestore.FieldValue.arrayUnion(barbeiroUid)
             });
+            // Atualiza localmente
+            if(!perfil.favoritos) perfil.favoritos = [];
+            perfil.favoritos.push(barbeiroUid);
         }
-        // O listener principal (auth.onAuthStateChanged) vai cuidar de atualizar a tela.
+        // Não precisa recarregar tudo, o listener do Firestore (onSnapshot em carregarBarbeirosPrincipal)
+        // pode não disparar se mudamos apenas o perfil do usuário e não a coleção de barbeiros.
+        // Então forçamos uma atualização visual:
+        carregarBarbeirosPrincipal('listaBarbeirosPrincipalCliente', false);
         
     } catch (error) {
         console.error("Erro ao favoritar:", error);
         exibirPopup("Erro ao salvar favorito.");
     }
-}
-
-function copiarParaClipboard(text, nome) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text)
-            .then(() => exibirPopup("Link Copiado", `O link para o perfil de ${nome} foi copiado! Cole no WhatsApp ou outras redes.`))
-            .catch(err => console.error('Erro ao copiar:', err));
-    } else {
-        // Fallback manual para navegadores muito antigos
-        exibirPopup("Link Manual", "Seu navegador não suporta cópia automática. Copie o link abaixo manualmente: <br><br>" + text, 8000);
-    }
-}
-
-// Função principal de compartilhamento
-function compartilharPerfil(nome, uid) {
-    // URL que direciona o usuário para a página principal com o parâmetro 'p' (profile)
-    const shareUrl = window.location.origin + window.location.pathname + '?p=' + uid; 
-
-    if (navigator.share) {
-        // Usa a API nativa do sistema operacional (mais elegante)
-        navigator.share({
-            title: 'Nova Versão - ' + nome,
-            text: 'Agende um horário com ' + nome + ' no app Nova Versão!',
-            url: shareUrl
-        }).catch(error => {
-            console.warn('Compartilhamento falhou, usando fallback de cópia.', error);
-            copiarParaClipboard(shareUrl, nome);
-        });
-    } else {
-        // Fallback: Copiar para área de transferência
-        copiarParaClipboard(shareUrl, nome);
-    }
-}
-
-// Verifica se há um parâmetro de perfil na URL e abre o perfil
-function checarParametrosURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const profileUid = urlParams.get('p'); // 'p' é o parâmetro de perfil
-    const homeHash = window.location.hash.includes('cliente') || window.location.hash.includes('barbeiro');
-
-    if (profileUid) {
-        // 1. Limpa o parâmetro da URL para que o link não recarregue o perfil se o usuário navegar
-        const newUrl = window.location.origin + window.location.pathname + (homeHash ? window.location.hash : '');
-        window.history.replaceState({}, document.title, newUrl);
-        
-        // 2. Abre o perfil do barbeiro. 
-        // Se o usuário estiver deslogado, isGuest será true, permitindo a visualização.
-        const isGuest = !auth.currentUser;
-        abrirBarbeiroPerfil(profileUid, isGuest); 
-        return true; // Indica que o deep link foi tratado
-    }
-    return false; // Indica que não havia deep link
 }
 
 function setupConfiguracoes() {
