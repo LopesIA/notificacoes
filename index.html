@@ -1406,89 +1406,84 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 /* Roleta Diária */
+/* --- ROLETA FINAL (Visual + Seta Corrigida) --- */
 .roleta-container {
-    background: #0f0f0f; /* Fundo bem escuro */
-    border: 4px solid #d4af37; /* Borda Dourada grossa */
+    background: #111;
+    border: 4px solid #d4af37;
     border-radius: 15px;
-    height: 100px; /* Altura fixa */
+    height: 100px; 
     margin: 20px auto;
-    position: relative;
-    overflow: hidden; /* ESSENCIAL: Corta o que sai da caixa */
+    position: relative; /* Importante para a seta */
+    overflow: hidden;   /* Corta o que sai da caixa */
     width: 100%;
-    max-width: 320px; /* Limita a largura para não esticar demais */
-    box-shadow: 
-        0 10px 20px rgba(0,0,0,0.5), /* Sombra externa */
-        inset 0 0 20px rgba(0,0,0,0.9); /* Sombra interna forte para profundidade */
+    max-width: 320px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,1); /* Sombra interna mais forte */
 }
 
+/* Sombras laterais (Fade) */
 .roleta-container::before, .roleta-container::after {
     content: '';
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 60px; /* Largura do degradê */
-    z-index: 2;
-    pointer-events: none;
+    top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none;
 }
-.roleta-container::before {
-    left: 0;
-    background: linear-gradient(to right, #0f0f0f, transparent);
+.roleta-container::before { left: 0; background: linear-gradient(to right, #000, transparent); }
+.roleta-container::after { right: 0; background: linear-gradient(to left, #000, transparent); }
+
+/* SETA INDICADORA: Centralizada e Visível */
+.seta-roleta {
+    position: absolute;
+    left: 50%;
+    top: 0; /* Encosta no teto da caixa, DENTRO dela */
+    transform: translateX(-50%); /* Centraliza exatamente no meio */
+    width: 0; 
+    height: 0; 
+    
+    /* Cria o triângulo vermelho apontando para baixo */
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 25px solid #ff0000; /* Vermelho bem vivo */
+    
+    z-index: 100; /* Garante que fique na frente dos números */
+    
+    /* Remove qualquer texto/emoji antigo que possa estar atrapalhando */
+    font-size: 0; 
+    color: transparent;
+    
+    /* Sombra para destacar do fundo preto */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,1));
+    pointer-events: none; /* Garante que não atrapalhe cliques */
 }
 
-.roleta-container::after {
-    right: 0;
-    background: linear-gradient(to left, #0f0f0f, transparent);
+.roleta-faixa {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    will-change: transform;
 }
+
 .roleta-item {
-    /* MEDIDAS CRÍTICAS PARA A MATEMÁTICA DO JS */
+    /* MEDIDA EXATA: 80px + 5px margem esq + 5px margem dir = 90px TOTAL */
     width: 80px; 
     height: 80px;
-    flex-shrink: 0; /* Não deixa encolher */
-    margin: 0 5px; /* Espaçamento lateral (Total item = 80 + 10 = 90px) */
-    
+    margin: 0 5px; 
+    flex-shrink: 0;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    font-weight: 800;
-    font-family: 'Courier New', Courier, monospace; /* Fonte monoespaçada fica melhor em roletas */
-    
-    /* Visual de "Ticket" ou Botão 3D */
-    box-shadow: 
-        inset 0 0 10px rgba(0,0,0,0.3),
-        0 4px 6px rgba(0,0,0,0.2);
-    border: 2px solid rgba(255,255,255,0.1);
-}
-.tema-barbearia .roleta-item:nth-child(odd) {
-    background: radial-gradient(circle, #ffd700, #b8860b); /* Dourado */
-    color: #000;
-    border-color: #ffd700;
-}
-.tema-barbearia .roleta-item:nth-child(even) {
-    background: radial-gradient(circle, #333, #000); /* Preto */
-    color: #ffd700;
-    border-color: #555;
+    font-size: 32px; /* Fonte maior */
+    font-weight: 900;
+    font-family: 'Arial Black', sans-serif;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.2);
 }
 
-.tema-feminino .roleta-item:nth-child(odd) {
-    background: radial-gradient(circle, #ff9a9e, #e57373); /* Rosa */
-    color: #fff;
-}
-.tema-feminino .roleta-item:nth-child(even) {
-    background: radial-gradient(circle, #333, #000);
-    color: #ff9a9e;
-}
-
-/* Item Especial (Caixa Surpresa) */
-.roleta-item.especial {
-    background: radial-gradient(circle, #fff, #ccc) !important;
-    color: #333 !important;
-    font-size: 32px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 15px rgba(255,255,255,0.8);
-    animation: pulse-glow 1s infinite alternate;
-}
+/* Cores Vivas */
+.tema-barbearia .roleta-item:nth-child(odd) { background: #ffcc00; color: #000; }
+.tema-barbearia .roleta-item:nth-child(even) { background: #1a1a1a; color: #ffcc00; border-color: #ffcc00; }
+.tema-feminino .roleta-item:nth-child(odd) { background: #ff6b81; color: #fff; }
+.tema-feminino .roleta-item:nth-child(even) { background: #1a1a1a; color: #ff6b81; border-color: #ff6b81; }
+.roleta-item.especial { background: #fff !important; color: #333 !important; border: 3px solid gold; }
 
 @keyframes pulse-glow {
     from { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
@@ -12051,14 +12046,14 @@ async function salvarNomePerfil() {
 function girarRoleta() {
     const hoje = new Date().toDateString();
     
-    // Verifica giros disponíveis
+    // Verifica giros
     let girosTotais = 1;
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
-    let girosUsados = (perfil.ultimoGiroRoleta === hoje && perfil.girosRealizadosHoje) ? perfil.girosRealizadosHoje : 0;
+    let girosRealizados = (perfil.ultimoGiroRoleta === hoje) ? (perfil.girosRealizadosHoje || 0) : 0;
     
-    if (girosUsados >= girosTotais) {
+    if (girosRealizados >= girosTotais) {
         return exibirPopup("Sem giros", "Você já usou seus giros de hoje! Volte amanhã ou assine PRO para mais chances.");
     }
 
@@ -12066,64 +12061,81 @@ function girarRoleta() {
     btnGirar.disabled = true;
     btnGirar.textContent = "Girando...";
 
-    // 1. Definir o Resultado (Sorteio)
+    // 2. Sorteio (Lógica)
+    // 90% Pontos (1-10), 10% Presente (11)
     const rand = Math.random();
-    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; // 1-10 (pontos) ou 11 (presente)
+    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
 
-    // 2. Configuração da Animação
-    const itemTotalWidth = 90; // 80px largura + 10px margem
-    const itensPorSet = 11; // 10 números + 1 presente
-    const voltas = 5; // Reduzido para 5 para ficar suave com o CSS
+    // 3. MATEMÁTICA DO GIRO (CORRIGIDA + COMPENSADA)
+    const LARGURA_ITEM_TOTAL = 90; // 80px + 10px margem
+    const itensPorSet = 11;
+    const voltas = 5; 
     
-    // O índice alvo no array gigante de HTML gerado
-    const indiceAlvo = (voltas * itensPorSet) + (resultado - 1);
+    // --- CORREÇÃO DO DESLOCAMENTO ---
+    // Adicionamos +2 ao índice alvo para compensar o erro visual relatado.
+    // Se o resultado é 3, miramos visualmente no 5 para que o 3 pare no centro.
+    const indiceNoConjunto = (resultado - 1) + 2; 
     
-    // Pega a largura visível da janela da roleta
-    const containerWidth = document.getElementById('roletaVisual').offsetWidth;
-    
-    // Cálculo para centralizar
-    const posicaoFinal = (indiceAlvo * itemTotalWidth) - (containerWidth / 2) + (itemTotalWidth / 2);
+    // Índice absoluto na faixa
+    const indiceFinalAbsoluto = (voltas * itensPorSet) + indiceNoConjunto;
 
+    // Elementos
     const faixa = document.getElementById('roletaFaixa');
+    const container = document.getElementById('roletaVisual');
     
-    // Adiciona um pequeno "ruído" aleatório (+/- 15px)
-    const jitter = Math.floor(Math.random() * 30) - 15; 
+    // Fallback de largura para garantir o cálculo do centro
+    const larguraContainer = container.offsetWidth || 320;
+
+    // Cálculo de Centralização Precisa
+    const centroDoItem = (indiceFinalAbsoluto * LARGURA_ITEM_TOTAL) + (LARGURA_ITEM_TOTAL / 2);
+    const centroDoContainer = larguraContainer / 2;
     
+    // Posição Final
+    let moveX = centroDoItem - centroDoContainer;
+    
+    // Jitter (Aleatoriedade) Reduzido e Seguro
+    // +/- 10px garante que não saia de cima do número (que tem 80px de largura)
+    const jitter = Math.floor(Math.random() * 20) - 10; 
+    moveX += jitter;
+
     // Animação
-    faixa.style.transition = `transform 5s cubic-bezier(0.25, 1, 0.5, 1)`; 
-    faixa.style.transform = `translateX(-${posicaoFinal + jitter}px)`;
+    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
+    faixa.style.transform = `translateX(-${moveX}px)`;
     
-    // 3. Processar Prêmio APÓS a animação
+    // 4. Entrega do Prêmio
     setTimeout(async () => {
         let premioTitulo = "";
         let premioDescricao = "";
         
         let updates = { 
             ultimoGiroRoleta: hoje,
-            girosRealizadosHoje: (perfil.ultimoGiroRoleta === hoje) ? firebase.firestore.FieldValue.increment(1) : 1
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(1)
         };
         
-        // --- LÓGICA DE EXPIRAÇÃO EM 24H ---
         const validade = new Date();
-        validade.setHours(validade.getHours() + 24); // Define validade para 24h a partir de agora
+        validade.setHours(validade.getHours() + 24); 
 
         if (resultado <= 10) {
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
-            premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas se não usados!`;
+            premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas!`;
             
-            // Soma no saldo atual
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
-            
-            // SALVA NO HISTÓRICO PARA O CRON REMOVER DEPOIS (Isso faltava no seu código)
             updates.historicoPontosRoleta = firebase.firestore.FieldValue.arrayUnion({
                 valor: resultado,
                 expiraEm: firebase.firestore.Timestamp.fromDate(validade)
             });
 
+            // Atualiza visualmente
+            const displayPontos = document.getElementById('pontosFidelidade');
+            if(displayPontos) {
+                let atuais = parseInt(displayPontos.textContent) || 0;
+                displayPontos.textContent = atuais + resultado;
+            }
+
         } else {
             premioTitulo = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
-                // Profissional ganha Boost
+                // Profissional: Boost
                 const exp = new Date(); 
                 const atualExp = perfil.boostExpiracao ? perfil.boostExpiracao.toDate() : new Date();
                 if (atualExp < new Date()) { atualExp.setTime(Date.now()); } 
@@ -12133,7 +12145,7 @@ function girarRoleta() {
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
                 premioDescricao = "Sorte GRANDE! Você ganhou 24 horas de Perfil Turbinado!";
             } else {
-                // Cliente ganha VIP
+                // Cliente: VIP
                 const exp = new Date();
                 const atualVipExp = (isVipAtivo(perfil) && perfil.vipExpirationDate) ? perfil.vipExpirationDate.toDate() : new Date();
                 if (atualVipExp < new Date()) { atualVipExp.setTime(Date.now()); }
@@ -12150,29 +12162,22 @@ function girarRoleta() {
             exibirPopupBloqueante(premioTitulo, premioDescricao, () => {});
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", premioDescricao);
             
-            // Atualiza localmente para feedback imediato nos pontos
-            if (resultado <= 10) {
-                 const pontosEl = document.getElementById('pontosFidelidade');
-                 if(pontosEl) {
-                     // Pequena lógica para não mostrar NaN se o perfil ainda não atualizou
-                     let atuais = parseInt(pontosEl.textContent) || 0;
-                     pontosEl.textContent = atuais + resultado;
-                 }
-            }
-
+            // Atualiza local
+            perfil.girosRealizadosHoje = (girosRealizados + 1);
+            perfil.ultimoGiroRoleta = hoje;
+            
         } catch (e) {
             console.error(e);
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
         }
 
-        // Resetar botão para próximo giro (se houver)
-        let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1; 
+        // Resetar botão
+        let novosGirosUsados = girosRealizados + 1;
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
         
         if(restantes > 0) {
             btnGirar.disabled = false;
-            // Reset visual suave
             setTimeout(() => {
                 faixa.style.transition = 'none';
                 faixa.style.transform = 'translateX(0px)';
@@ -12181,7 +12186,7 @@ function girarRoleta() {
             btnGirar.textContent = "Volte Amanhã";
         }
 
-    }, 5000); // Tempo sincronizado com a transição CSS (5s)
+    }, 6500); 
 }
 
 // Função para renderizar a lista (Adicionado o onclick visual)
