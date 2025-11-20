@@ -1510,7 +1510,11 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     transition: transform 0.1s, border-color 0.2s;
 }
 .moldura-item:active {
-    transform: scale(0.95);
+    transform: scale(0.98);
+}
+/* CORREÇÃO DO FUNDO: Garante que nenhum fundo padrão do navegador seja exibido ao clicar */
+.moldura-item:active::after {
+    content: none !important;
 }
 /* O checkmark agora é controlado por uma classe 'temp-selected' via JS para feedback instantâneo */
 .moldura-item.temp-selected .moldura-check {
