@@ -4933,32 +4933,34 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     if (barbeirosListener) barbeirosListener(); // Limpa listener anterior
     
     // =================================================================
-    // === 2. LÓGICA DE FILTRO DE BANCO DE DADOS (AQUI ESTÁ A CORREÇÃO) ===
+    // === CORREÇÃO DEFINITIVA: FILTRO DIRETO NO BANCO DE DADOS ===
     // =================================================================
     
-    // Lista de todos os tipos possíveis
-    const todosTipos = ["barbeiro", "manicure_pedicure", "designer_cilios"];
-    
-    // Por padrão (Admin, Guest ou Favoritos Ativos), buscamos TUDO
-    let tiposParaBuscar = todosTipos; 
+    // 1. Define o Universo de Busca Inicial
+    // Por padrão (Admin, Guest ou Favoritos Ativos), buscamos TUDO.
+    let tiposParaBuscar = ["barbeiro", "manicure_pedicure", "designer_cilios"];
 
-    // Lógica Restritiva (Só aplica se NÃO for Guest, NÃO for Admin e Favoritos estiver OFF)
+    // 2. Lógica Restritiva (Aplica APENAS se os Favoritos estiverem DESATIVADOS)
+    // Se eu quiser ver favoritos, preciso buscar tudo, pois posso ter favoritado uma manicure e um barbeiro.
+    // Se eu NÃO quiser ver favoritos, aplico o filtro rigoroso do meu tipo/interesse.
+    
     if (!isGuest && perfil && perfil.tipo !== 'admin' && !mostrarApenasFavoritos) {
         
         if (perfil.tipo === 'cliente') {
-            // CLIENTE: Vê apenas o interesse escolhido
-            // Se não tiver interesse, fallback para 'barbeiro'
+            // === CORREÇÃO AQUI PARA O CLIENTE ===
+            // Busca EXATAMENTE o interesse_principal.
+            // Se for null/undefined, usa 'barbeiro' como fallback.
             const meuInteresse = perfil.interesse_principal || 'barbeiro';
-            tiposParaBuscar = [meuInteresse];
+            tiposParaBuscar = [meuInteresse]; 
             
         } else {
-            // PROFISSIONAL: Vê apenas o seu próprio ramo (Barbeiro vê Barbeiro)
-            // Isso impede que barbeiro veja manicure
+            // === LÓGICA DO PROFISSIONAL (JÁ FUNCIONANDO) ===
+            // Profissional vê apenas colegas do mesmo ramo.
             tiposParaBuscar = [perfil.tipo];
         }
     }
 
-    // Executa a query com o filtro aplicado NA FONTE
+    // Executa a query blindada com o array definido acima
     let query = db.collection("usuarios").where("tipo", "in", tiposParaBuscar);
     
     // =================================================================
@@ -4969,11 +4971,13 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
              if (mostrarApenasFavoritos && !isGuest) {
                  lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Você ainda não tem favoritos.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
              } else {
-                 // Texto amigável para a categoria
+                 // Identifica qual categoria estamos tentando mostrar para exibir na mensagem
+                 let categoriaExibida = tiposParaBuscar[0]; 
                  let nomeCategoria = "nesta categoria";
-                 if(tiposParaBuscar[0] === 'barbeiro') nomeCategoria = "Barbearia";
-                 if(tiposParaBuscar[0] === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
-                 if(tiposParaBuscar[0] === 'designer_cilios') nomeCategoria = "Cílios";
+                 
+                 if(categoriaExibida === 'barbeiro') nomeCategoria = "Barbearia";
+                 if(categoriaExibida === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
+                 if(categoriaExibida === 'designer_cilios') nomeCategoria = "Cílios";
                  
                  lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>😔 Nenhum profissional de <b>${nomeCategoria}</b> encontrado no momento.</p></div>`;
              }
@@ -4988,14 +4992,14 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             b.uid = doc.id;
             b.isFavorito = favoritos.includes(b.uid);
 
-            // --- FILTRAGEM FINAL ---
-            // Se o botão favoritos está ATIVO, ignoramos qualquer outra regra e mostramos SÓ favoritos.
-            // Se está INATIVO, mostramos tudo que veio do banco (que já foi filtrado acima).
+            // --- FILTRAGEM DE FAVORITOS ---
+            // Se o botão favoritos está ATIVO, filtramos manualmente aqui.
+            // (A query buscou todos os tipos para garantir que achamos todos os favoritos,
+            // agora filtramos para mostrar SÓ os favoritos).
             if (mostrarApenasFavoritos && !isGuest) {
                 if (!b.isFavorito) return; // Pula se não for favorito
             }
 
-            // Cálculo de distância
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
             } else {
@@ -5005,14 +5009,13 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             barbeiros.push(b);
         });
 
-        // Se filtrou por favoritos e a lista ficou vazia
+        // Verificação final se a lista ficou vazia APÓS filtrar por favoritos
         if (barbeiros.length === 0 && mostrarApenasFavoritos) {
-             lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Nenhum favorito encontrado nesta visualização.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
+             lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Nenhum favorito encontrado.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
              return;
         }
 
         // --- ORDENAÇÃO ---
-        // 1. Favoritos -> 2. Disponibilidade -> 3. Boost -> 4. PRO -> 5. Distância
         barbeiros.sort((a, b) => {
             if (a.isFavorito && !b.isFavorito) return -1;
             if (!a.isFavorito && b.isFavorito) return 1;
