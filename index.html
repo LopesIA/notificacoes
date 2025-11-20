@@ -4485,12 +4485,10 @@ const barbeiroSafe = encodeURIComponent(JSON.stringify(barbeiro));
         // Se a função já foi corrigida no seu código, ignore esta nota.
         
         const cardHTML = `
-            <div class="card barbeiro-card"
-                 onclick='abrirModalBarbeiro(JSON.parse(decodeURIComponent("${barbeiroSafe}")))'>
-                
-                <button class="share-btn" onclick="event.stopPropagation(); compartilharBarbeiro('${barbeiro.nome.replace(/'/g, '\\\'')}')">
-                    <i class="fas fa-share-alt"></i>
-                </button>
+    <div class="card barbeiro-card"
+         onclick='abrirModalBarbeiro(JSON.parse(decodeURIComponent("${barbeiroSafe}")))' >  <button class="share-btn" onclick="event.stopPropagation(); compartilharBarbeiro('${barbeiro.nome.replace(/'/g, '\\\'')}')">
+            <i class="fas fa-share-alt"></i>
+        </button>
 
                 <div class="card-header">
                     <img src="${avatarUrl}" alt="Avatar de ${barbeiro.nome}" class="barbeiro-avatar ${tipoMembroClass}">
