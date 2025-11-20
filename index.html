@@ -1406,7 +1406,6 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 /* Roleta Diária */
-/* --- ROLETA CORRIGIDA --- */
 .roleta-container {
     background: #111;
     border: 4px solid #d4af37; /* Borda Dourada */
@@ -1420,7 +1419,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     box-shadow: inset 0 0 20px rgba(0,0,0,0.9); /* Sombra interna */
 }
 
-/* Sombra lateral para dar profundidade */
+/* Sombras laterais para dar profundidade */
 .roleta-container::before, .roleta-container::after {
     content: '';
     position: absolute;
@@ -1429,20 +1428,20 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .roleta-container::before { left: 0; background: linear-gradient(to right, #111, transparent); }
 .roleta-container::after { right: 0; background: linear-gradient(to left, #111, transparent); }
 
-/* SETA INDICADORA (CORRIGIDA) */
+/* SETA INDICADORA (AGORA VISÍVEL) */
 .seta-roleta {
     position: absolute;
     left: 50%;
-    top: 0; /* Encostada no topo */
+    top: 0; /* Encostada no topo, não fora */
     transform: translateX(-50%);
     width: 0; 
     height: 0; 
-    /* Triângulo apontando para baixo */
+    /* Triângulo vermelho apontando para baixo */
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
-    border-top: 25px solid #ff0000; /* Seta Vermelha bem visível */
+    border-top: 25px solid #ff0000; 
     z-index: 20; /* Acima de tudo */
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); /* Sombra para destacar do fundo */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
 }
 
 .roleta-faixa {
@@ -1453,10 +1452,10 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 .roleta-item {
-    /* LARGURA FIXA É CRUCIAL PARA A MATEMÁTICA */
+    /* LARGURA FIXA CRUCIAL PARA A MATEMÁTICA */
     width: 80px; 
     height: 80px;
-    margin: 0 5px; /* Total de largura por item = 90px (80+5+5) */
+    margin: 0 5px; /* Largura total real = 90px (80+5+5) */
     flex-shrink: 0;
     border-radius: 10px;
     display: flex;
@@ -1469,7 +1468,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     border: 2px solid rgba(255,255,255,0.1);
 }
 
-/* Cores dos itens */
+/* Temas de Cores */
 .tema-barbearia .roleta-item:nth-child(odd) { background: #ffd700; color: #000; }
 .tema-barbearia .roleta-item:nth-child(even) { background: #222; color: #ffd700; }
 .tema-feminino .roleta-item:nth-child(odd) { background: #ff9a9e; color: #fff; }
