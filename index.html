@@ -1433,16 +1433,25 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .seta-roleta {
     position: absolute;
     left: 50%;
-    top: 0; /* Encostada no topo DENTRO da caixa */
-    transform: translateX(-50%);
+    top: 0; /* Encosta no teto da caixa, DENTRO dela */
+    transform: translateX(-50%); /* Centraliza exatamente no meio */
     width: 0; 
     height: 0; 
-    /* Triângulo Vermelho Grande apontando para baixo */
+    
+    /* Cria o triângulo vermelho apontando para baixo */
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
-    border-top: 25px solid #ff0000; 
-    z-index: 50; /* Z-Index bem alto para ficar acima de tudo */
-    filter: drop-shadow(0 4px 2px rgba(0,0,0,0.8)); /* Sombra na seta */
+    border-top: 25px solid #ff0000; /* Vermelho bem vivo */
+    
+    z-index: 100; /* Garante que fique na frente dos números */
+    
+    /* Remove qualquer texto/emoji antigo que possa estar atrapalhando */
+    font-size: 0; 
+    color: transparent;
+    
+    /* Sombra para destacar do fundo preto */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,1));
+    pointer-events: none; /* Garante que não atrapalhe cliques */
 }
 
 .roleta-faixa {
