@@ -1519,19 +1519,6 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .tema-feminino .roleta-item:nth-child(even) { background: #000; color: var(--cor-destaque-rosa); }
 .roleta-item.especial { background: #fff !important; color: #000 !important; box-shadow: 0 0 15px #fff; }
 
-.seta-roleta {
-    position: absolute;
-    left: 50%;
-    top: 0; /* Fica no topo */
-    transform: translateX(-50%);
-    width: 0; 
-    height: 0; 
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-top: 20px solid #e74c3c; /* Triângulo vermelho apontando pra baixo */
-    z-index: 10;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-}
 
 /* Molduras */
 .moldura-item {
@@ -6490,6 +6477,119 @@ function removerServico(index) {
   db.collection("usuarios").doc(auth.currentUser.uid).update({
     listaServicos: firebase.firestore.FieldValue.arrayRemove(servicoParaRemover)
   }).then(() => exibirPopup("Serviço removido!")).catch(e => exibirPopup("Erro: " + e.message));
+}
+
+// Certifique-se de que a URL para a notificação está correta (ex: '/enviarNotificacao')
+const NOTIFICATION_ENDPOINT = '/enviarNotificacao/'; 
+
+// --- FUNÇÕES DE APROVAÇÃO E RECUSA ---
+
+async function aprovarAgendamento(agendamentoId, clienteUid, clienteNome) {
+    if (!agendamentoId) return;
+
+    try {
+        // 1. Atualiza o status no Firebase
+        await db.collection('agendamentos').doc(agendamentoId).update({
+            status: 'aprovado',
+            aprovadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // 2. Envia notificação PUSH/POPUP para o cliente
+        if (clienteUid) {
+            await fetch(NOTIFICATION_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUid: clienteUid,
+                    title: `✅ Agendamento Aprovado!`,
+                    body: `Seu agendamento com ${perfil.nome} foi confirmado. Te esperamos!`,
+                    // Ação no payload para o Service Worker disparar o popup no cliente
+                    data: { action: 'agendamento_status', status: 'aprovado', link: '#historico' } 
+                })
+            });
+        }
+
+        fecharModalAtual();
+        exibirPopup("Sucesso", `Agendamento de ${clienteNome} Aprovado! A notificação foi enviada ao cliente.`);
+        // Chamaria a função para recarregar a lista de agendamentos pendentes aqui.
+
+    } catch (error) {
+        console.error("Erro ao aprovar agendamento:", error);
+        exibirPopup("Erro", "Falha ao aprovar. Tente novamente.");
+    }
+}
+
+async function recusarAgendamento(agendamentoId, clienteUid, clienteNome) {
+    if (!agendamentoId) return;
+
+    try {
+        // 1. Atualiza o status no Firebase
+        await db.collection('agendamentos').doc(agendamentoId).update({
+            status: 'recusado',
+            recusadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. Envia notificação PUSH/POPUP para o cliente
+        if (clienteUid) {
+            await fetch(NOTIFICATION_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUid: clienteUid,
+                    title: `❌ Agendamento Recusado`,
+                    body: `Lamentamos, seu agendamento com ${perfil.nome} não pôde ser confirmado.`,
+                    data: { action: 'agendamento_status', status: 'recusado', link: '#historico' }
+                })
+            });
+        }
+
+        fecharModalAtual();
+        exibirPopup("Atenção", `Agendamento de ${clienteNome} Recusado.`);
+        // Chama a função para recarregar a lista de agendamentos pendentes.
+
+    } catch (error) {
+        console.error("Erro ao recusar agendamento:", error);
+        exibirPopup("Erro", "Falha ao recusar. Tente novamente.");
+    }
+}
+
+// --- FUNÇÃO DE CONCLUSÃO (AVALIAÇÃO E PONTOS) ---
+
+async function concluirAgendamento(agendamentoId, clienteUid, clienteNome, servicoNome) {
+    if (!agendamentoId) return;
+
+    try {
+        // 1. Atualiza o status para 'concluido' no Firebase
+        await db.collection('agendamentos').doc(agendamentoId).update({
+            status: 'concluido',
+            concluidoEm: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. Notifica o cliente para avaliar e receber pontos!
+        if (clienteUid) {
+            await fetch(NOTIFICATION_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUid: clienteUid,
+                    title: `✨ Serviço Concluído!`,
+                    body: `Como foi seu ${servicoNome}? Avalie para ganhar pontos e ajudar a comunidade!`,
+                    data: { 
+                        action: 'evaluate', 
+                        agendamentoId: agendamentoId, 
+                        modalId: 'modalAvaliacao' // Dispara modal de avaliação no cliente
+                    } 
+                })
+            });
+        }
+
+        fecharModalAtual();
+        exibirPopup("Sucesso", `Serviço com ${clienteNome} marcado como concluído!`);
+
+    } catch (error) {
+        console.error("Erro ao concluir agendamento:", error);
+        exibirPopup("Erro", "Falha ao concluir. Tente novamente.");
+    }
 }
 
 async function salvarLogomarca() {
