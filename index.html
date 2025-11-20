@@ -1406,21 +1406,21 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 /* Roleta Diária */
-/* --- ROLETA CORRIGIDA E PRECISA --- */
+/* --- CSS DA ROLETA CORRIGIDO (Substitua o antigo) --- */
 .roleta-container {
-    background: #111; /* Fundo escuro */
-    border: 4px solid #d4af37; /* Borda Dourada */
+    background: #111;
+    border: 4px solid #d4af37;
     border-radius: 15px;
-    height: 100px; /* Altura fixa */
+    height: 100px;
     margin: 20px auto;
-    position: relative; /* Importante para posicionar a seta */
-    overflow: hidden; /* Corta o que sai da caixa */
+    position: relative; /* Base para a seta */
+    overflow: hidden;   /* Corta os números laterais */
     width: 100%;
-    max-width: 320px; /* Largura padrão */
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.9); /* Sombra interna */
+    max-width: 320px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
 }
 
-/* Sombra lateral para dar profundidade (fade nas pontas) */
+/* Sombras laterais (Foco) */
 .roleta-container::before, .roleta-container::after {
     content: '';
     position: absolute;
@@ -1429,31 +1429,31 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .roleta-container::before { left: 0; background: linear-gradient(to right, #111, transparent); }
 .roleta-container::after { right: 0; background: linear-gradient(to left, #111, transparent); }
 
-/* SETA INDICADORA (AGORA VISÍVEL E NO TOPO) */
+/* SETA: Agora é um triângulo CSS puro (ignora o emoji) */
 .seta-roleta {
     position: absolute;
     left: 50%;
-    top: 0; /* Encostada no topo da caixa */
+    top: 0; /* Encostada no topo, DENTRO da caixa */
     transform: translateX(-50%);
     width: 0; 
     height: 0; 
-    /* Triângulo Vermelho apontando para baixo */
+    font-size: 0; /* Esconde o emoji antigo */
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
-    border-top: 25px solid #ff0000; 
-    z-index: 20; /* Acima de tudo */
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); /* Sombra para destacar */
+    border-top: 25px solid #e74c3c; /* Triângulo Vermelho */
+    z-index: 20; 
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
 }
 
 .roleta-faixa {
     display: flex;
     height: 100%;
     align-items: center;
-    will-change: transform; /* Otimização para celular */
+    will-change: transform;
 }
 
 .roleta-item {
-    /* LARGURA FIXA: 80px + 5px margem esq + 5px margem dir = 90px TOTAL */
+    /* MEDIDA EXATA: 80px + 5px margem esq + 5px margem dir = 90px */
     width: 80px; 
     height: 80px;
     margin: 0 5px; 
@@ -1463,13 +1463,13 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    font-weight: bold;
-    font-family: monospace; /* Fonte monoespaçada para números alinhados */
+    font-weight: 800;
+    font-family: monospace;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     border: 2px solid rgba(255,255,255,0.1);
 }
 
-/* Temas de Cores */
+/* Cores */
 .tema-barbearia .roleta-item:nth-child(odd) { background: #ffd700; color: #000; }
 .tema-barbearia .roleta-item:nth-child(even) { background: #222; color: #ffd700; }
 .tema-feminino .roleta-item:nth-child(odd) { background: #ff9a9e; color: #fff; }
@@ -12023,14 +12023,15 @@ async function salvarNomePerfil() {
 function girarRoleta() {
     const hoje = new Date().toDateString();
     
-    // 1. Verifica giros disponíveis
+    // 1. Verificação de Giros
     let girosTotais = 1;
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
-    let girosUsados = (perfil.ultimoGiroRoleta === hoje && perfil.girosRealizadosHoje) ? perfil.girosRealizadosHoje : 0;
+    // Proteção contra undefined
+    let girosRealizados = (perfil.ultimoGiroRoleta === hoje) ? (perfil.girosRealizadosHoje || 0) : 0;
     
-    if (girosUsados >= girosTotais) {
+    if (girosRealizados >= girosTotais) {
         return exibirPopup("Sem giros", "Você já usou seus giros de hoje! Volte amanhã ou assine PRO para mais chances.");
     }
 
@@ -12038,77 +12039,72 @@ function girarRoleta() {
     btnGirar.disabled = true;
     btnGirar.textContent = "Girando...";
 
-    // 2. Definir o Resultado (Sorteio)
-    // 1 a 10 = Pontos | 11 = Presente
+    // 2. Sorteio
+    // 90% Pontos (1-10), 10% Presente (11)
     const rand = Math.random();
     let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
 
-    // 3. MATEMÁTICA DO GIRO (CORRIGIDA)
-    // Largura Item (80) + Margens (5+5) = 90px
-    const LARGURA_ITEM_TOTAL = 90; 
+    // 3. Matemática da Animação
+    const LARGURA_ITEM_TOTAL = 90; // 80px item + 10px margem
+    const itensPorSet = 11;
+    const voltas = 5; // 5 voltas é o ideal para precisão e visual
     
-    // O índice do item (0 a 10)
-    const indiceNoConjunto = resultado - 1; 
+    // Índice do item sorteado (0 a 10)
+    const indiceNoConjunto = resultado - 1;
     
-    // Escolhemos um conjunto lá na frente para girar (Conjunto 45 de 60)
-    // Isso dá 5 voltas completas visuais aproximadamente
-    const conjuntoAlvo = 45; 
-    
-    // Índice absoluto na faixa HTML
-    const indiceFinalAbsoluto = (conjuntoAlvo * 11) + indiceNoConjunto;
+    // Índice absoluto na faixa longa
+    const indiceFinalAbsoluto = (voltas * itensPorSet) + indiceNoConjunto;
 
     // Elementos
     const faixa = document.getElementById('roletaFaixa');
     const container = document.getElementById('roletaVisual');
     
-    // Pega a largura do container (ou usa 320 como segurança se der zero)
+    // Cálculo do Centro: Garante que o MEIO do item pare no MEIO da caixa
+    // Se offsetWidth falhar, usa 320 como padrão
     const larguraContainer = container.offsetWidth || 320;
-
-    // CÁLCULO DO CENTRO:
-    // Queremos mover a faixa para a esquerda (translateX negativo)
-    // Quantos pixels temos que mover para o item alvo ficar no meio?
+    
     const centroDoItem = (indiceFinalAbsoluto * LARGURA_ITEM_TOTAL) + (LARGURA_ITEM_TOTAL / 2);
     const centroDoContainer = larguraContainer / 2;
     
     // Posição final exata
     let moveX = centroDoItem - centroDoContainer;
     
-    // Adiciona um "tempero" aleatório (+/- 20px) para não parecer robô, 
-    // mas sem sair de cima do número (o item tem 80px, 20px é seguro)
-    const jitter = Math.floor(Math.random() * 40) - 20; 
+    // Jitter: Pequena variação (+/- 20px) para realismo, 
+    // mas segura (o item tem 80px, então 20px não sai dele)
+    const jitter = Math.floor(Math.random() * 40) - 20;
     moveX += jitter;
 
-    // Aplica a animação
-    // cubic-bezier(0.1, 0, 0.1, 1) começa rápido e freia suavemente no final
+    // Aplica animação
     faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${moveX}px)`;
     
-    // 4. Processar Prêmio APÓS a animação (6s + 500ms folga)
+    // 4. Processar Prêmio (após 6.5s)
     setTimeout(async () => {
         let premioTitulo = "";
         let premioDescricao = "";
         
+        // Prepara dados
         let updates = { 
             ultimoGiroRoleta: hoje,
             girosRealizadosHoje: firebase.firestore.FieldValue.increment(1)
         };
         
-        // Expiração em 24h
+        // Validade de 24h para os pontos
         const validade = new Date();
         validade.setHours(validade.getHours() + 24); 
 
         if (resultado <= 10) {
-            // PRÊMIO: PONTOS
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
             premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas se não usados!`;
             
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
+            // ISSO É ESSENCIAL PARA O SEU CRON FUNCIONAR:
             updates.historicoPontosRoleta = firebase.firestore.FieldValue.arrayUnion({
                 valor: resultado,
                 expiraEm: firebase.firestore.Timestamp.fromDate(validade)
             });
 
-            // Atualiza visualmente agora
+            // Feedback Visual Imediato
             const displayPontos = document.getElementById('pontosFidelidade');
             if(displayPontos) {
                 let atuais = parseInt(displayPontos.textContent) || 0;
@@ -12116,10 +12112,9 @@ function girarRoleta() {
             }
 
         } else {
-            // PRÊMIO: PRESENTE
             premioTitulo = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
-                // Profissional
+                // Profissional: Boost
                 const exp = new Date(); 
                 const atualExp = perfil.boostExpiracao ? perfil.boostExpiracao.toDate() : new Date();
                 if (atualExp < new Date()) { atualExp.setTime(Date.now()); } 
@@ -12129,7 +12124,7 @@ function girarRoleta() {
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
                 premioDescricao = "Sorte GRANDE! Você ganhou 24 horas de Perfil Turbinado!";
             } else {
-                // Cliente
+                // Cliente: VIP
                 const exp = new Date();
                 const atualVipExp = (isVipAtivo(perfil) && perfil.vipExpirationDate) ? perfil.vipExpirationDate.toDate() : new Date();
                 if (atualVipExp < new Date()) { atualVipExp.setTime(Date.now()); }
@@ -12141,12 +12136,13 @@ function girarRoleta() {
             }
         }
         
+        // Salva no Banco
         try {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
             exibirPopupBloqueante(premioTitulo, premioDescricao, () => {});
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", premioDescricao);
             
-            // Atualiza o local
+            // Atualiza perfil local
             perfil.girosRealizadosHoje = (girosRealizados + 1);
             perfil.ultimoGiroRoleta = hoje;
             
@@ -12155,7 +12151,7 @@ function girarRoleta() {
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
         }
 
-        // Resetar botão
+        // Reseta Botão
         let novosGirosUsados = girosRealizados + 1;
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
