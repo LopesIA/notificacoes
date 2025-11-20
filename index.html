@@ -1482,8 +1482,10 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     display: inline-flex;
     gap: 10px;
     padding: 0 20px;
-    /* A transição será definida via JS para controlar o tempo dinamicamente */
+    /* A transição será definida via JS, mas garantimos o padrão aqui */
+    transition: transform 5s cubic-bezier(0.1, 0, 0.2, 1); /* Efeito de desaceleração suave */
     transform: translateX(0); 
+    will-change: transform; /* Otimização de performance */
 }
 
 /* Temas da Roleta */
@@ -1512,7 +1514,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 /* O checkmark agora é controlado por uma classe 'temp-selected' via JS para feedback instantâneo */
 .moldura-item.temp-selected .moldura-check {
-    display: flex !important; /* Força a exibição */
+    display: flex !important;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .moldura-item:not(.temp-selected):not(.selecionada) .moldura-check {
@@ -1526,6 +1528,11 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .moldura-item.comprada { border-color: #4CAF50; }
 .moldura-item.selecionada { background: rgba(212, 175, 55, 0.2); border-color: var(--cor-destaque); }
 
+.moldura-item.temp-selected {
+    background: rgba(212, 175, 55, 0.4) !important;
+    border-color: var(--cor-destaque) !important;
+    transform: scale(1.05);
+}
 /* Molduras Visuais */
 .avatar-frame-bronze { border: 3px solid #cd7f32; box-shadow: 0 0 5px #cd7f32; }
 .avatar-frame-prata { border: 3px solid #c0c0c0; box-shadow: 0 0 8px #c0c0c0; }
@@ -1634,6 +1641,27 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     animation: pulse-red 2s infinite;
 }
 
+#btnChat .notification-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    background-color: #e74c3c !important;
+    color: white !important;
+    border-radius: 50%;
+    padding: 4px 7px !important;
+    min-width: 18px; /* Garante bolinha redonda */
+    text-align: center;
+    font-size: 11px !important;
+    font-weight: bold;
+    border: 2px solid #fff;
+    z-index: 1002;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    display: none; /* Começa oculto */
+}
+#btnChat .notification-badge.visible {
+    display: block !important;
+    animation: pulse-red 2s infinite;
+}
 @keyframes pulse-red {
     0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
     70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
@@ -3297,6 +3325,7 @@ const MOLDURAS = {
 };
 
 let fcmSetupDone = false;
+let mensagensNaoLidasChat = 0; // Variável do contador agora é global
 let isSending = false;
 let perfil = null;
 let agendamentoListener = null;
@@ -3384,27 +3413,6 @@ function exibirAguarde(texto = "Aguarde...") {
         }
         aguardeTimeoutId = null; // Limpa o ID do timeout
     }, 10000); // 10000 milissegundos = 10 segundos
-}
-
-/* === Onboarding Tela 2 - Funções de Seleção === */
-function toggleOnboardOption(element) {
-    const parent = element.closest('.onboard-screen');
-    // Remove 'selected' de todos os irmãos
-    parent.querySelectorAll('.onboard-option').forEach(op => {
-        op.classList.remove('selected');
-    });
-    // Adiciona 'selected' ao item clicado
-    element.classList.add('selected');
-
-    // Salva a seleção no localStorage
-    const valor = element.getAttribute('data-value');
-    localStorage.setItem('onboard_tipo_uso', valor);
-    
-    // Habilita o botão 'Continuar' (se houver)
-    const btnContinuar = parent.querySelector('.btn-primary');
-    if (btnContinuar) {
-        btnContinuar.disabled = false;
-    }
 }
 
 function fecharAguarde(event) {
@@ -4311,12 +4319,54 @@ auth.onAuthStateChanged(async user => {
                 // (lógica de avisos existente)
             });
 
-        // Listener do Chat Global
+        // Listener do Chat Global (Com contador de mensagens não lidas)
         if (globalChatListener) globalChatListener();
+        // (Variável removida daqui pois agora é global) 
+        
         globalChatListener = db.collection("chats").doc(CHAT_GLOBAL_ID).collection("mensagens")
             .orderBy("ts", "desc").limit(1)
             .onSnapshot(snapshot => {
-                 // (lógica de chat preview existente)
+                 if (!snapshot.empty) {
+                     const msg = snapshot.docs[0].data();
+                     const chatPreview = document.getElementById('chatPreview');
+                     
+                     // Lógica de Preview (existente)
+                     if (chatPreview) {
+                         const textoPreview = `${msg.remetenteNome}: ${msg.texto.substring(0, 30)}${msg.texto.length > 30 ? '...' : ''}`;
+                         chatPreview.textContent = textoPreview;
+                         chatPreview.classList.add('show');
+                         
+                         if (chatPreviewTimeout) clearTimeout(chatPreviewTimeout);
+                         chatPreviewTimeout = setTimeout(() => {
+                             chatPreview.classList.remove('show');
+                         }, 4000);
+                     }
+
+                     // --- NOVA LÓGICA DO CONTADOR ---
+                     const janelaChat = document.getElementById('janelaChat');
+                     const usuarioLogado = auth.currentUser ? auth.currentUser.uid : null;
+                     
+                     // Incrementa SE: 
+                     // 1. A janela do chat NÃO tem a classe 'show' (está fechada/minimizada)
+                     // 2. A mensagem NÃO foi enviada por mim mesmo
+                     if (janelaChat && !janelaChat.classList.contains('show') && msg.remetenteUid !== usuarioLogado) {
+                         // Verifica se é uma mensagem nova (comparando timestamp ou apenas incrementando no evento 'added')
+                         // Como o snapshot limit(1) pode disparar na carga inicial, uma verificação simples
+                         // é checar se a página já carregou (usando um flag) ou simplesmente aceitar que
+                         // a primeira carga não incrementa se fizermos isso:
+                         
+                         const change = snapshot.docChanges()[0];
+                         if (change && change.type === 'added') {
+                             mensagensNaoLidasChat++;
+                             
+                             const badge = document.querySelector('#btnChat .notification-badge'); // Seleciona a bolinha dentro do botão
+                             if (badge) {
+                                 badge.textContent = mensagensNaoLidasChat;
+                                 badge.classList.add('visible'); // Mostra a bolinha (classe CSS definida no passo 1)
+                             }
+                         }
+                     }
+                 }
             });
 
         // Listener de Vendas para Vendedores
@@ -4738,7 +4788,8 @@ async function executarResgateCodigo() {
 // Funções do Cliente
 function abrirBarbeiros() {
   abrirModal('modalBarbeariasCliente');
-  carregarBarbeiros();
+  // Correção: Chama a função principal que já existe no seu código
+  carregarBarbeirosPrincipal('listaBarbeiros', false); 
 }
 
 function filtrarBarbeiros() {
@@ -5679,10 +5730,13 @@ function isProAtivo(perfilUsuario) {
 // FUNÇÃO DO CHAT ATUALIZADA
 let chatAtual = 'global';
 function abrirChatGlobal() {
+    // Reseta o contador visualmente e a variável global
     const badge = document.querySelector('.notification-badge');
-    newMessagesCount = 0;
-    badge.textContent = '0';
-    badge.classList.add('hidden');
+    if(badge) {
+        badge.textContent = '0';
+        badge.classList.remove('visible'); // Esconde a bolinha
+    }
+    mensagensNaoLidasChat = 0; // Zera a contagem na memória
     
     abrirModal('janelaChat');
     alternarChat('global'); // Começa sempre no global
@@ -11758,11 +11812,14 @@ function abrirModalPerfil() {
         infoPremios.innerHTML = '🎁 <b>Caixa Surpresa:</b> Pode conter 24h de Topo ou 5 dias de VIP!';
     }
 
-    // 4. Gera Itens da Roleta (Quadrados)
+    // 4. Gera Itens da Roleta (AUMENTADO PARA 60 CONJUNTOS PARA PERMITIR GIROS LONGOS)
     const faixa = document.getElementById('roletaFaixa');
+    faixa.style.transition = 'none'; // Reseta transição para posicionar no início
+    faixa.style.transform = 'translateX(0px)';
     faixa.innerHTML = '';
-    // Gera 3 conjuntos para efeito visual infinito
-    for(let i=0; i<3; i++) {
+    
+    // Gera muitos conjuntos para garantir que haja faixa suficiente para 5 voltas
+    for(let i=0; i<60; i++) {
         for(let n=1; n<=10; n++) {
             faixa.innerHTML += `<div class="roleta-item">${n}</div>`;
         }
@@ -11771,23 +11828,12 @@ function abrirModalPerfil() {
 
     // 5. Lógica de Giros Disponíveis
     const hoje = new Date().toDateString();
-    
-    // Calcula giros totais baseados no plano
-    let girosTotais = 1; // Base
+    let girosTotais = 1; 
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
-    
-    // Verifica quantos já usou hoje
     const girosUsadosHoje = (perfil.ultimoGiroRoleta === hoje && perfil.girosRealizadosHoje) ? perfil.girosRealizadosHoje : 0;
-    
-    // Se mudou o dia, reseta (apenas visualmente aqui, o DB atualiza ao girar)
-    let girosRestantes = 0;
-    if (perfil.ultimoGiroRoleta !== hoje) {
-        girosRestantes = girosTotais;
-    } else {
-        girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
-    }
+    let girosRestantes = (perfil.ultimoGiroRoleta !== hoje) ? girosTotais : Math.max(0, girosTotais - girosUsadosHoje);
 
     const btnGirar = document.getElementById('btnGirarRoleta');
     btnGirar.textContent = `🎲 GIRAR (${girosRestantes} Restantes)`;
@@ -11852,34 +11898,46 @@ function girarRoleta() {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
     
-    // Verifica estado atual
     let girosUsados = (perfil.ultimoGiroRoleta === hoje && perfil.girosRealizadosHoje) ? perfil.girosRealizadosHoje : 0;
     
     if (girosUsados >= girosTotais) {
         return exibirPopup("Sem giros", "Você já usou todos os seus giros de hoje! Volte amanhã ou assine um plano PRO para ter mais.");
     }
 
-    // Bloqueia botão durante o giro
     const btnGirar = document.getElementById('btnGirarRoleta');
     btnGirar.disabled = true;
     btnGirar.textContent = "Girando...";
 
-    // Sorteio: 90% numeros, 10% caixa
+    // Sorteio do Resultado (1-10 ou 11 para presente)
     const rand = Math.random();
-    let resultado = rand < 0.9 ? Math.ceil(Math.random() * 10) : 11; // 11 = Caixa
+    let resultado = rand < 0.9 ? Math.ceil(Math.random() * 10) : 11; // 11 = Caixa/Presente
     
-    // Animação CSS (Quadrados têm 70px + 8px margem + borda ~ 84px)
+    // --- LÓGICA DE GIRO FORTE (2 a 5 Voltas) ---
+    // Sorteia entre 2 e 5 voltas completas
+    const voltasCompletas = Math.floor(Math.random() * 4) + 2; // Gera 2, 3, 4 ou 5
+    
+    // Configuração física dos itens (largura 70px + margens/bordas ~ 84px)
     const itemWidth = 84; 
-    const offsetBase = itemWidth * 11; // Pula o primeiro set
-    const posicaoFinal = offsetBase + ((resultado - 1) * itemWidth);
-    // Variação para parar no meio do quadrado
-    const randomOffset = Math.floor(Math.random() * 10) - 5; 
+    const itensPorSet = 11; // 10 números + 1 presente
+    
+    // Calcula o índice final no array de elementos HTML
+    // Pula 'voltasCompletas' sets inteiros e soma a posição do resultado
+    // Adiciona um offset inicial para não começar do zero absoluto visualmente
+    const setFinal = voltasCompletas + 2; // Garante que gira bastante visualmente
+    const indiceFinal = (setFinal * itensPorSet) + (resultado - 1);
+    
+    const posicaoFinal = indiceFinal * itemWidth;
+    // Variação aleatória para o ponteiro parar no meio do quadrado (não na linha)
+    const randomOffset = Math.floor(Math.random() * 40) - 20; 
     
     const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = "transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+    // Tempo de animação baseado nas voltas (quanto mais voltas, um pouco mais de tempo)
+    const tempoAnimacao = 4 + (voltasCompletas * 0.5); 
+    
+    faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.2, 0.8, 0.2, 1)`; // Curva suave com parada firme
     faixa.style.transform = `translateX(-${posicaoFinal + randomOffset}px)`;
     
-    // Processa prêmio após 4s
+    // Processa prêmio após a animação terminar
     setTimeout(async () => {
         let premioTitulo = "";
         let premioDescricao = "";
@@ -11889,55 +11947,60 @@ function girarRoleta() {
         };
         
         if (resultado <= 10) {
-            premioTitulo = `+${resultado} Pontos!`;
-            premioDescricao = "Pontos de fidelidade adicionados à sua conta.";
+            // --- POPUP ESPECÍFICO PARA PONTOS (1 a 10) ---
+            premioTitulo = `🎉 Ganhou ${resultado} Ponto${resultado > 1 ? 's' : ''}!`;
+            premioDescricao = `Parabéns! Você acaba de ganhar ${resultado} ponto${resultado > 1 ? 's' : ''} de fidelidade.`;
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
         } else {
-            // Caixa Surpresa
-            premioTitulo = "🎁 CAIXA SURPRESA!";
+            // --- POPUP ESPECÍFICO PARA O PRESENTE ---
+            premioTitulo = "🎁 CAIXA SURPRESA ABERTA!";
+            
             if (perfil.tipo !== 'cliente') {
+                // Prêmios para Profissionais
                 const premioCaixa = Math.random() > 0.5 ? 'top' : 'vip';
                 if (premioCaixa === 'top') {
                     const exp = new Date(); exp.setHours(exp.getHours() + 24);
                     updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(exp);
-                    premioDescricao = "Você ganhou 24h de Perfil Turbinado!";
+                    premioDescricao = "Você ganhou: 🚀 24 horas de Perfil Turbinado!";
                 } else {
                     const exp = new Date(); exp.setDate(exp.getDate() + 5);
                     updates.vip = true; 
                     updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(exp);
-                    premioDescricao = "Você ganhou 5 Dias de VIP grátis!";
+                    premioDescricao = "Você ganhou: 👑 5 Dias de VIP Grátis!";
                 }
             } else {
-                premioDescricao = "Você ganhou 50 Pontos de Fidelidade!"; 
+                // Prêmios para Clientes
+                premioDescricao = "Você ganhou: 🏆 50 Pontos de Fidelidade!"; 
                 updates.pontosFidelidade = firebase.firestore.FieldValue.increment(50);
             }
         }
         
         await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
         
-        // Reset visual
-        setTimeout(() => {
-             faixa.style.transition = "none";
-             faixa.style.transform = "translateX(0px)";
-             // Atualiza UI do botão chamando abrirModalPerfil novamente ou atualizando texto
-             // Mas como estamos dentro do modal, melhor atualizar apenas o texto do botão se possível
-             // Por simplicidade, fechamos e mostramos o prêmio
-             // fecharModalAtual(); <-- Não fecha, deixa o usuário ver e girar dnv se tiver mais
-             
-             // Atualiza botão
-             let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1;
-             let restantes = Math.max(0, girosTotais - novosGirosUsados);
-             btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
-             if(restantes > 0) btnGirar.disabled = false;
-             
-        }, 1000);
-        
-        // POPUP DO PRÊMIO (NOVO REQUISITO)
+        // POPUP DO PRÊMIO
         exibirPopup(premioTitulo, premioDescricao, 'sucesso');
 
-    }, 4100);
+        // Reset visual (opcional, recarrega modal para resetar posição ou atualiza botão)
+        // Atualiza botão de girar
+        let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1;
+        let restantes = Math.max(0, girosTotais - novosGirosUsados);
+        btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
+        
+        if(restantes > 0) {
+            btnGirar.disabled = false;
+            // Reset silencioso da faixa para o início (para próximo giro)
+            setTimeout(() => {
+                faixa.style.transition = 'none';
+                faixa.style.transform = 'translateX(0px)';
+            }, 2000);
+        } else {
+            btnGirar.textContent = "Volte Amanhã";
+        }
+
+    }, tempoAnimacao * 1000 + 100); // Aguarda animação + 100ms
 }
 
+// Função para renderizar a lista (Adicionado o onclick visual)
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
     container.innerHTML = '';
@@ -11948,12 +12011,14 @@ function renderizarMolduras() {
         const tem = minhasMolduras.includes(key);
         const selecionada = perfil.molduraSelecionada === key;
         
-        // Adiciona checkmark se selecionada
-        const checkmark = selecionada ? `<div class="moldura-check">✅</div>` : '';
+        // O checkmark é gerado, mas controlado por CSS (classes .selecionada e .temp-selected)
+        const checkmark = `<div class="moldura-check">✅</div>`;
 
+        // Adicionado: id único para manipulação e chamada para selecionarMolduraVisualmente
         container.innerHTML += `
-            <div class="moldura-item ${tem ? 'comprada' : ''} ${selecionada ? 'selecionada' : ''}" 
-                 onclick="gerenciarMoldura('${key}')" style="flex-direction:column;">
+            <div id="moldura_${key}" class="moldura-item ${tem ? 'comprada' : ''} ${selecionada ? 'selecionada' : ''}" 
+                 onclick="gerenciarMoldura('${key}', this)" 
+                 style="flex-direction:column; position:relative;">
                 ${checkmark}
                 <div class="${m.classe}" style="width: 45px; height: 45px; border-radius: 50%;"></div>
                 <span style="font-size:10px; margin-top:5px;">${m.nome}</span>
@@ -11962,17 +12027,39 @@ function renderizarMolduras() {
     });
 }
 
-async function gerenciarMoldura(key) {
+// NOVA FUNÇÃO: Aplica o visual instantaneamente
+function selecionarMolduraVisualmente(element) {
+    // Remove seleção visual de todas as outras
+    document.querySelectorAll('.moldura-item').forEach(item => {
+        item.classList.remove('temp-selected');
+        item.classList.remove('selecionada'); // Remove a classe persistente antiga visualmente
+    });
+    
+    // Adiciona a classe temporária ao clicado (que força o check a aparecer via CSS)
+    element.classList.add('temp-selected');
+}
+
+// Função Gerenciar Atualizada
+async function gerenciarMoldura(key, element) {
     const m = MOLDURAS[key];
     const minhas = perfil.moldurasAdquiridas || [];
     
     if (minhas.includes(key)) {
-        // Selecionar
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
-        exibirPopup("Moldura aplicada com sucesso!");
-        // Atualização visual imediata via listener do perfil
+        // --- MUDANÇA INSTANTÂNEA ---
+        // Aplica o visual imediatamente antes de chamar o banco de dados
+        selecionarMolduraVisualmente(element);
+
+        // Atualiza no banco em segundo plano
+        try {
+            await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
+            // Não precisamos de popup de sucesso aqui, o feedback visual já basta e é mais fluido
+            console.log("Moldura atualizada no banco.");
+        } catch (e) {
+            exibirPopup("Erro", "Falha ao salvar moldura. Verifique sua conexão.");
+            // Se der erro, o listener do perfil vai recarregar o estado antigo eventualmente
+        }
     } else {
-        // Comprar
+        // Lógica de Compra (Mantida)
         if (perfil.saldo < m.preco) return exibirPopup("Saldo insuficiente para comprar esta moldura.");
         
         if (!confirm(`Deseja comprar a moldura ${m.nome} por R$${m.preco}?`)) return;
@@ -11985,6 +12072,7 @@ async function gerenciarMoldura(key) {
             });
             fecharTodosOsModais();
             exibirPopup("Compra realizada! Agora você pode selecionar a moldura.");
+            // A lista será renderizada novamente pelo listener, mostrando como 'comprada'
         } catch(e) {
             fecharTodosOsModais();
             exibirPopup("Erro na compra: " + e.message);
