@@ -2969,7 +2969,7 @@ detectarAmbiente();
 const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.20, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
 const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
-const PRECO_VIP = 100;
+const PRECO_VIP = 49.90; // Agora é 49,90
 const PRECO_TURBINAR = 9.99;
 
 // SUBSTITUA AS CONSTANTES DE PREÇO POR ESTAS (NOVOS VALORES E REGRA DA ROLETA)
@@ -4967,8 +4967,8 @@ function abrirModalVip() {
         container.innerHTML = `
             <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque);">💎 Torne-se um Membro VIP!</h3>
-                <p>Eleve sua experiência por 6 meses e apoie o desenvolvimento do app.</p>
-                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)}</p>
+                <p>Eleve sua experiência e apoie o desenvolvimento do app.</p>
+                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Mensal: R$ ${PRECO_VIP.toFixed(2)}</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Vantagens Exclusivas para Clientes VIP:</h4>
                     <ul>
@@ -4989,9 +4989,10 @@ function abrirModalVip() {
 // --- LÓGICA DE PAGAMENTO GOOGLE PLAY STORE (DIGITAL GOODS API) ---
 
 const SKUS = {
-    VIP: 'adesao_vip_6_meses',
-    PRO: 'assinatura_pro_mensal',
-    TURBINAR: 'turbinar_perfil_24h'
+    VIP: 'assinatura_vip_mensal', // Crie este ID na Play Store
+    TURBINAR: 'turbinar_perfil_24h',
+    // Os planos PRO usam IDs dinâmicos: 'pro_tier1', 'pro_tier2', etc.
+    // Os depósitos usam: 'deposito_10', 'deposito_25', etc.
 };
 
 let playStoreService = null;
@@ -5063,17 +5064,14 @@ async function comprarComPlayStore(sku, precoEstimado) {
     }
 }
 
-// 1. SUBSTITUA A SUA FUNÇÃO 'assinarVip' ANTIGA POR ESTA COMPLETA
 function assinarVip() {
-    // 1. Lógica da Play Store (permanece igual)
+    // 1. Lógica da Play Store
     if (playStoreService) {
         comprarComPlayStore(SKUS.VIP, PRECO_VIP);
         return;
     }
 
     // 2. Lógica da Carteira (Fallback)
-    
-    // Verificação de saldo (melhorada com o popup de callback, igual fizemos no PRO)
     if (perfil.saldo < PRECO_VIP) {
         exibirPopup("Saldo insuficiente", "Saldo insuficiente para assinar o VIP. Por favor, deposite fundos na sua carteira.", "aviso", () => {
             abrirModal('modalCarteira');
@@ -5081,13 +5079,10 @@ function assinarVip() {
         return;
     }
 
-    // --- ESTA É A MUDANÇA: Trocando o 'confirm' pelo 'exibirConfirmacao' ---
     const titulo = `Confirmar Assinatura VIP`;
-    const mensagem = `Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)? O valor será descontado do seu saldo da carteira.`;
+    const mensagem = `Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`;
     
     exibirConfirmacao(titulo, mensagem, () => {
-        // O código abaixo (que antes vinha depois do 'confirm') só executa se o usuário clicar "Sim"
-        
         exibirAguarde("Ativando VIP...");
         db.runTransaction(async t => {
             const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
@@ -5096,7 +5091,7 @@ function assinarVip() {
             if (isVipAtivo(clienteDoc.data())) throw "Você já é um membro VIP ativo.";
 
             const expiracao = new Date();
-            expiracao.setDate(expiracao.getDate() + 180); // Adiciona 180 dias
+            expiracao.setDate(expiracao.getDate() + 30); // MUDADO PARA 30 DIAS
 
             t.update(clienteRef, {
                 saldo: firebase.firestore.FieldValue.increment(-PRECO_VIP),
@@ -5107,14 +5102,13 @@ function assinarVip() {
         }).then(() => {
             fecharTodosOsModais();
             exibirPopup("Sucesso!", "Parabéns! Você agora é um membro VIP!", "sucesso");
-            notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 6 meses!");
-            fecharModalAtual(); // Fecha o modal 'modalVip'
+            notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 30 dias!");
+            fecharModalAtual(); 
         }).catch(e => {
             fecharTodosOsModais();
             exibirPopup("Erro ao assinar VIP", e.message, "erro");
         });
     });
-    // --- FIM DA MUDANÇA ---
 }
 
 // SUBSTITUA a função 'assinarPro' inteira por esta:
@@ -5532,31 +5526,62 @@ async function createMessageDiv(msg, docId) {
     const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
     
+    if (docId) {
+        messageDiv.dataset.docId = docId;
+        if (perfil && perfil.tipo === 'admin' && msg.tipo !== 'bot' && msg.tipo !== 'ai_suporte') {
+            messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto);
+            messageDiv.title = 'Admin: Clique para deletar';
+            messageDiv.classList.add('admin-deletable');
+        }
+    }
+
     let remetenteData = null;
-    if (!isCurrentUser && msg.remetenteUid) {
-        // Cache simples ou busca
-        const doc = await db.collection('usuarios').doc(msg.remetenteUid).get();
-        if (doc.exists) remetenteData = doc.data();
-    } else if (isCurrentUser) {
+    // Otimização: Se for o próprio usuário, usa a variável global 'perfil' para evitar delay
+    if (isCurrentUser) {
         remetenteData = perfil;
+    } else if (msg.remetenteUid) {
+        // Busca dados do remetente (cache seria ideal, mas get direto funciona para MVP)
+        try {
+            const doc = await db.collection('usuarios').doc(msg.remetenteUid).get();
+            if (doc.exists) remetenteData = doc.data();
+        } catch(e) { console.log('Erro chat user', e); }
     }
 
     let fotoHtml = '';
     if (remetenteData && remetenteData.fotoPerfil) {
-        // Moldura
-        const molduraStyle = remetenteData.moldura ? `border: 3px solid ${getCorMoldura(remetenteData.moldura)};` : '';
-        fotoHtml = `<img src="${remetenteData.fotoPerfil}" class="chat-avatar" style="${molduraStyle}">`;
+        // Usa molduraAtiva para a borda
+        const corBorda = remetenteData.molduraAtiva ? getCorMoldura(remetenteData.molduraAtiva) : 'transparent';
+        const borderStyle = remetenteData.molduraAtiva ? `border: 3px solid ${corBorda}; padding: 1px;` : '';
+        
+        fotoHtml = `<img src="${remetenteData.fotoPerfil}" class="chat-avatar" style="${borderStyle}">`;
     } else {
-        fotoHtml = `<span class="chat-avatar" style="display:inline-block; background:#555; text-align:center;">👤</span>`;
+        fotoHtml = `<span class="chat-avatar" style="display:inline-block; background:#555; text-align:center; line-height:24px;">👤</span>`;
     }
 
-    // Nome clicável
-    const nomeHtml = `<span style="cursor:pointer; font-weight:bold;" onclick="abrirPerfilPublico('${msg.remetenteUid}')">${remetenteData ? remetenteData.nome : msg.remetenteNome}</span>`;
+    // Nome com função de clique para abrir perfil
+    const nomeExibido = remetenteData ? remetenteData.nome : (msg.remetenteNome || "Usuário");
+    const nomeHtml = `<span style="cursor:pointer; font-weight:bold; margin-right:5px;" onclick="abrirPerfilPublico('${msg.remetenteUid}')">${nomeExibido}</span>`;
 
-    messageDiv.innerHTML = `<div>${fotoHtml} ${nomeHtml}: ${msg.texto}</div>`;
+    // Verifica conquistas para exibir ícone (opcional)
+    // (Lógica de medalhas existente pode ser mantida ou mesclada aqui se desejar)
+
+    // Renderiza a mensagem
+    messageDiv.innerHTML = `
+        <div style="display:flex; align-items:center; margin-bottom:4px;">
+            ${fotoHtml} ${nomeHtml}
+        </div>
+        <div>${msg.texto}</div>
+    `;
+    
+    if (msg.ts && msg.ts.toDate) {
+        const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        messageDiv.innerHTML += ` <small style="opacity: 0.5; font-size: 0.7em; float:right; margin-top:5px;">${timeString}</small>`;
+    }
+    
     return messageDiv;
 }
 
+// Função auxiliar para cores das molduras
 function getCorMoldura(tipo) {
     if(tipo === 'bronze') return '#cd7f32';
     if(tipo === 'prata') return '#c0c0c0';
@@ -8945,10 +8970,24 @@ async function carregarProdutos() {
 function renderProdutoCard(p, pJson) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
     const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
-    // Usa a primeira imagem do array 'imageUrls' ou a 'imagemUrl' antiga, ou um placeholder
     const imageUrlPrincipal = (p.imageUrls && p.imageUrls.length > 0) ? p.imageUrls[0] : p.imagemUrl;
-    const placeholder = 'https://via.placeholder.com/150x150?text=Nova+Versao'; // Placeholder atualizado
+    const placeholder = 'https://via.placeholder.com/150x150?text=Nova+Versao';
 
+    // LÓGICA PREMIUM ADICIONADA
+    if (p.isPremium) {
+        return `
+            <div class="produto-premium" onclick='handleProdutoClick(${pJson})'>
+                <img src="${imageUrlPrincipal || placeholder}" alt="${p.nome}" onerror="this.onerror=null; this.src='${placeholder}';">
+                <div class="produto-info">
+                    <div class="produto-nome">💎 ${p.nome}</div>
+                    <div class="produto-preco">${precoHtml}</div>
+                    <div style="font-size: 12px; color: #ccc; margin-top:5px;">Toque para detalhes</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Card Comum
     return `
         <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
             <img src="${imageUrlPrincipal || placeholder}" alt="${p.nome}" onerror="this.onerror=null; this.src='${placeholder}';">
@@ -9435,7 +9474,9 @@ async function salvarProdutoVendedor() {
     const progressBar = modal.querySelector('#produtoUploadProgress');
     const btnSalvar = modal.querySelector('#btnSalvarProduto');
 
-    // Validação de campos obrigatórios
+    // Verifica se é Premium (definido pela função adicionarProdutoPremium)
+    const isPremium = modal.dataset.isPremium === "true";
+
     if (!nome || isNaN(preco) || preco <= 0 || !descricao || tamanhosSelecionados.length === 0) {
         return exibirPopup('Preencha todos os campos obrigatórios (*): Nome, Preço, Descrição e pelo menos um Tamanho.');
     }
@@ -9445,20 +9486,14 @@ async function salvarProdutoVendedor() {
 
     const files = fileInput.files;
     const imagensExistentesParaManter = [];
-    // Pega URLs das imagens existentes que NÃO estão marcadas para excluir
     modal.querySelectorAll('#produtoPreviewsExistentes div[data-url]:not(.marcada-para-excluir)').forEach(div => {
         imagensExistentesParaManter.push(div.dataset.url);
     });
-    // O array `imagensMarcadasParaExcluir` já contém as URLs a serem deletadas do Storage
 
     const totalImagensFinais = imagensExistentesParaManter.length + (files ? files.length : 0);
 
-    if (totalImagensFinais === 0) {
-        return exibirPopup('O produto precisa ter pelo menos uma imagem.');
-    }
-    if (totalImagensFinais > 5) {
-        return exibirPopup(`O produto pode ter no máximo 5 imagens. Você está tentando salvar ${totalImagensFinais}. Remova algumas existentes ou selecione menos arquivos novos.`);
-    }
+    if (totalImagensFinais === 0) return exibirPopup('O produto precisa ter pelo menos uma imagem.');
+    if (totalImagensFinais > 5) return exibirPopup(`O limite é 5 imagens.`);
 
     exibirAguarde("Salvando produto...");
     btnSalvar.disabled = true;
@@ -9467,105 +9502,81 @@ async function salvarProdutoVendedor() {
 
     const uploadPromises = [];
     const newImageUrls = [];
-    let totalBytesUpload = 0;
-    const uploadTasksInfo = []; // Para progresso
-
+    
     if (files && files.length > 0) {
-        totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+        const totalBytes = Array.from(files).reduce((acc, f) => acc + f.size, 0);
+        let bytesTransferredTotal = 0;
+
         Array.from(files).forEach((file, index) => {
-            // Garante um nome de pasta único se for um novo produto
             const productIdForPath = produtoEmEdicaoId || `new_${auth.currentUser.uid}_${Date.now()}`;
             const filePath = `products/${auth.currentUser.uid}/${productIdForPath}/${Date.now()}_${index}_${file.name}`;
-            const uploadPromise = new Promise((resolve, reject) => {
-                const storageRef = storage.ref(filePath);
-                const uploadTask = storageRef.put(file);
-                const taskInfo = { task: uploadTask, bytesTransferred: 0 };
-                uploadTasksInfo.push(taskInfo);
-
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        taskInfo.bytesTransferred = snapshot.bytesTransferred;
-                        let totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0);
-                        const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0;
-                        progressBar.value = progress;
-                    },
-                    (error) => reject(error),
-                    async () => {
-                        try {
-                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                            newImageUrls.push(downloadURL); // Adiciona a nova URL
+            
+            const task = storage.ref(filePath).put(file);
+            uploadPromises.push(
+                new Promise((resolve, reject) => {
+                    task.on('state_changed', 
+                        snap => {
+                            // Cálculo simplificado de progresso global
+                            progressBar.value = (snap.bytesTransferred / snap.totalBytes) * 100; 
+                        },
+                        reject,
+                        async () => {
+                            const url = await task.snapshot.ref.getDownloadURL();
+                            newImageUrls.push(url);
                             resolve();
-                        } catch(urlError) { reject(urlError); }
-                    }
-                );
-            });
-            uploadPromises.push(uploadPromise);
+                        }
+                    );
+                })
+            );
         });
     }
 
     try {
-        // Espera todos os uploads terminarem, se houver algum
         await Promise.all(uploadPromises);
 
-        // Deleta imagens marcadas do Storage ANTES de salvar no Firestore
+        // Deletar imagens removidas
         const deletePromises = imagensMarcadasParaExcluir.map(async url => {
-            try {
-                const decodedUrl = decodeURIComponent(url);
-                const pathRegex = /\/o\/(.+)\?alt=media/;
-                const match = decodedUrl.match(pathRegex);
-                if (match && match[1]) {
-                    const filePath = match[1];
-                    await storage.ref(filePath).delete();
-                    console.log("Imagem marcada deletada do Storage:", filePath);
-                } else {
-                    console.warn("Não foi possível deletar imagem marcada do Storage (path não extraído):", url);
-                }
-            } catch (e) {
-                console.warn("Erro ao deletar imagem marcada do Storage:", e.message, url);
-            }
+            try { await storage.refFromURL(url).delete(); } catch(e) { console.warn(e); }
         });
-        await Promise.all(deletePromises); // Espera as exclusões terminarem
+        await Promise.all(deletePromises);
 
-        // Combina imagens existentes mantidas com as novas
         const finalImageUrls = [...imagensExistentesParaManter, ...newImageUrls];
 
         const productData = {
-            nome,
-            preco,
-            desconto: desconto !== null ? desconto : firebase.firestore.FieldValue.delete(), // Remove se estiver vazio
-            descricao,
-            tamanhos: tamanhosSelecionados,
-            imageUrls: finalImageUrls, // Salva o array atualizado
-            imagemUrl: finalImageUrls[0] || null, // Primeira imagem como principal (compatibilidade)
+            nome, preco, descricao, tamanhos: tamanhosSelecionados,
+            desconto: desconto !== null ? desconto : firebase.firestore.FieldValue.delete(),
+            imageUrls: finalImageUrls,
+            imagemUrl: finalImageUrls[0] || null,
             vendedorUid: auth.currentUser.uid,
             vendedorNome: perfil.nome,
             isOficial: perfil.tipo === 'admin',
-            // Não atualiza ts nem vendasRealizadas ao editar
+            isPremium: isPremium // SALVA A FLAG PREMIUM
         };
 
         if (produtoEmEdicaoId) {
             await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(productData);
         } else {
-            // Adiciona campos específicos de criação
             productData.ts = firebase.firestore.FieldValue.serverTimestamp();
             productData.vendasRealizadas = 0;
-            // Salva e obtém o ID do novo documento
-            const newProdRef = await db.collection('loja_produtos').add(productData);
-            console.log("Novo produto criado com ID:", newProdRef.id);
-             // Se houve uploads, pode ser necessário renomear a pasta no storage se usou 'new_'
-             // Isso é mais complexo e pode ser deixado como está por simplicidade inicial
+            await db.collection('loja_produtos').add(productData);
         }
 
         fecharTodosOsModais();
         exibirPopup('Produto salvo com sucesso!');
-        abrirGerenciarLoja(); // Recarrega a lista de produtos do vendedor
+        
+        // Limpa a flag premium para não afetar próximos produtos
+        modal.dataset.isPremium = "false"; 
+        
+        if(perfil.tipo === 'admin') {
+             mostrar('lojaView'); carregarProdutos(); // Recarrega loja se for admin
+        } else {
+             abrirGerenciarLoja();
+        }
 
     } catch (error) {
         fecharTodosOsModais();
-        exibirPopup('Erro ao salvar produto: ' + (error.message || error));
-        // Reabilita o botão em caso de erro
+        exibirPopup('Erro ao salvar produto: ' + error.message);
         btnSalvar.disabled = false;
-        progressBar.style.display = 'none';
     }
 }
 
@@ -11016,14 +11027,93 @@ function girarRoleta() {
 }
 
 async function comprarMoldura(tipo, preco) {
+    const moldurasUsuario = perfil.molduras || [];
+
+    // SE JÁ TIVER A MOLDURA, APENAS SELECIONA
+    if (moldurasUsuario.includes(tipo)) {
+        exibirAguarde("Selecionando moldura...");
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({
+            molduraAtiva: tipo // Salva qual está em uso
+        });
+        fecharTodosOsModais(); // Fecha aguarde
+        
+        // Atualiza visualmente sem fechar o modal de perfil
+        document.querySelectorAll('.moldura-opcao').forEach(el => el.style.border = '2px solid #333');
+        // Encontra o elemento clicado (simplificado) ou recarrega o modal
+        exibirPopup("Moldura Selecionada!", `A moldura ${tipo} agora está sendo exibida no seu perfil e chat.`);
+        abrirPerfilUsuario(); // Recarrega para atualizar a foto com moldura
+        return;
+    }
+
+    // SE NÃO TIVER, COMPRA
     if (perfil.saldo < preco) return exibirPopup("Saldo insuficiente.");
+    
     if (confirm(`Comprar moldura ${tipo} por R$${preco}?`)) {
+        exibirAguarde("Comprando...");
         await db.collection('usuarios').doc(auth.currentUser.uid).update({
             saldo: firebase.firestore.FieldValue.increment(-preco),
-            molduras: firebase.firestore.FieldValue.arrayUnion(tipo)
+            molduras: firebase.firestore.FieldValue.arrayUnion(tipo),
+            molduraAtiva: tipo // Já seleciona automaticamente ao comprar
         });
-        exibirPopup("Moldura comprada! Selecione-a clicando novamente.");
+        fecharTodosOsModais();
+        exibirPopup("Moldura comprada!", "Ela já foi aplicada ao seu perfil.");
+        abrirPerfilUsuario();
     }
+}
+
+function abrirPerfilUsuario() {
+    abrirModal('modalPerfilUsuario');
+    document.getElementById('inputNomePerfil').value = perfil.nome;
+    const imgPerfil = document.getElementById('imgPerfilAtual');
+    const containerFoto = document.getElementById('perfilFotoContainer');
+    
+    if (perfil.fotoPerfil) imgPerfil.src = perfil.fotoPerfil;
+
+    // Remove moldura antiga visualmente
+    const oldFrame = containerFoto.querySelector('.moldura-ativa-visual');
+    if(oldFrame) oldFrame.remove();
+
+    // Adiciona moldura ativa visualmente no modal
+    if (perfil.molduraAtiva) {
+        const cor = getCorMoldura(perfil.molduraAtiva);
+        imgPerfil.style.border = `4px solid ${cor}`;
+    } else {
+        imgPerfil.style.border = 'none';
+    }
+
+    // Atualiza estilo dos botões de compra (indica quais já tem)
+    const moldurasUsuario = perfil.molduras || [];
+    const opcoes = document.querySelectorAll('.moldura-opcao');
+    
+    // Limpa estilos antigos
+    opcoes.forEach(div => {
+        const texto = div.textContent.toLowerCase();
+        let tipo = '';
+        if(texto.includes('bronze')) tipo = 'bronze';
+        else if(texto.includes('prata')) tipo = 'prata';
+        else if(texto.includes('ouro')) tipo = 'ouro';
+        else if(texto.includes('diamante')) tipo = 'diamante';
+
+        if (moldurasUsuario.includes(tipo)) {
+            div.style.backgroundColor = '#2ecc71'; // Verde para comprado
+            div.style.color = '#000';
+            div.textContent = div.textContent.split('(')[0] + ' (Adquirido - Clique para Usar)';
+            
+            if (perfil.molduraAtiva === tipo) {
+                div.style.border = '3px solid #fff'; // Destaque para a ativa
+                div.textContent = "✅ " + div.textContent;
+            } else {
+                div.style.border = '2px solid #333';
+            }
+        } else {
+             // Reseta estilo se não tiver
+             div.style.backgroundColor = '';
+             div.style.color = '';
+             div.style.border = '2px solid #333';
+        }
+    });
+
+    // Carrega Roleta (se existir lógica de carregar estado visual da roleta)
 }
 
 async function abrirPerfilPublico(uid) {
