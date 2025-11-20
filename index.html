@@ -1429,27 +1429,54 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .roleta-container::before { left: 0; background: linear-gradient(to right, #000, transparent); }
 .roleta-container::after { right: 0; background: linear-gradient(to left, #000, transparent); }
 
-/* SETA INDICADORA: Centralizada e Visível */
 .seta-roleta {
     position: absolute;
+    top: 0; /* Cola no topo */
     left: 50%;
-    top: 0; /* Encostado no teto, DENTRO da caixa */
     transform: translateX(-50%);
     width: 0; 
     height: 0; 
-    
-    /* Desenha o triângulo vermelho com bordas */
+    /* Triângulo apontando para baixo */
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
-    border-top: 25px solid #ff0000; /* Vermelho vivo */
-    
-    z-index: 100; /* Garante que fique na frente de tudo */
-    filter: drop-shadow(0 2px 2px black);
-    
-    /* IMPORTANTE: Esconde o emoji antigo se ele estiver no HTML */
-    font-size: 0; 
-    color: transparent;
-    text-shadow: none;
+    border-top: 25px solid #e74c3c; /* Vermelho bem visível */
+    z-index: 10; /* Acima da faixa */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+    pointer-events: none; /* Não interfere no clique/toque */
+}
+
+/* --- COROAS NAS MOLDURAS --- */
+/* Wrapper necessário para posicionar a coroa sobre a imagem */
+.avatar-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+/* Desenha a coroa usando CSS puro para poder pintar da cor da moldura */
+.coroa-topo::after {
+    content: '';
+    position: absolute;
+    top: -14px; /* Ajuste a altura da coroa */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 12px;
+    /* Formato de coroa simplificado */
+    clip-path: polygon(0% 100%, 20% 30%, 50% 0%, 80% 30%, 100% 100%);
+    z-index: 5;
+}
+
+/* Cores das Coroas combinando com as molduras */
+.avatar-wrapper.bronze .coroa-topo::after { background-color: #cd7f32; box-shadow: 0 0 5px #cd7f32; }
+.avatar-wrapper.prata .coroa-topo::after { background-color: #c0c0c0; box-shadow: 0 0 5px #c0c0c0; }
+.avatar-wrapper.ouro .coroa-topo::after { background-color: #ffd700; box-shadow: 0 0 5px #ffd700; }
+.avatar-wrapper.diamante .coroa-topo::after { background-color: #b9f2ff; box-shadow: 0 0 5px #b9f2ff; }
+
+/* Ajuste fino para a moldura no chat */
+.chat-user-photo {
+    /* Garante que a borda da imagem não brigue com a coroa */
+    position: relative;
+    z-index: 1; 
 }
 
 .roleta-faixa {
@@ -3155,9 +3182,9 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 </div>
 
 <!-- Modal POPUP PERSISTENTE Novo Agendamento (Profissional) -->
-<div id="modalNovoAgendamento" class="modal" style="z-index: 98;">
-  <div class="modal-content" style="border: 3px solid var(--cor-destaque);">
-    <h3 style="color: var(--cor-destaque);">🔔 Novo Agendamento Recebido!</h3>
+<div id="modalNovoAgendamento" class="modal" style="z-index: 9999; background: rgba(0,0,0,0.9);">
+  <div class="modal-content" style="border: 3px solid var(--cor-destaque); pointer-events: auto;" onclick="event.stopPropagation()">
+    <h3 style="color: var(--cor-destaque); animation: flash-red 2s infinite;">🔔 Novo Agendamento!</h3>
     <div id="modalNovoAgendamentoInfo" style="text-align: left; margin-bottom: 20px;">
       <p><b>Cliente:</b> <span id="popupClienteNome"></span></p>
       <p><b>Serviço:</b> <span id="popupServicoNome"></span></p>
@@ -3169,7 +3196,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
       <button id="btnAceitarAgendamentoPopup" style="background-color: #2ecc71; flex: 1;">✅ Aceitar</button>
     </div>
     <a id="btnWhatsAppPopup" href="#" target="_blank" style="margin-top: 10px; display: block;">
-      <button style="background-color: #25D366; width: 100%;">💬 Chamar Cliente no WhatsApp</button>
+      <button style="background-color: #25D366; width: 100%;">💬 WhatsApp do Cliente</button>
     </a>
   </div>
 </div>
@@ -4537,27 +4564,32 @@ auth.onAuthStateChanged(async user => {
                   });
               });
 
-            // 3. Listener para POPUP DE AVALIAÇÃO (Concluído)
-            console.log("Iniciando listener de conclusão de agendamentos (Cliente)...");
-            db.collection("agendamentos")
-              .where("clienteUid", "==", user.uid)
-              .where("status", "==", "concluido")
-              .where("avisoAvaliacaoEnviado", "==", false) 
-              .onSnapshot(snapshot => {
-                  snapshot.docChanges().forEach(change => {
-                      if (change.type === 'added' || change.type === 'modified') {
-                          const ag = change.doc.data();
-                          // USANDO POPUP BLOQUEANTE COM AVALIAÇÃO
-                          exibirPopupBloqueante("Serviço Concluído!", 
-                            `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído.\n\nVocê pode avaliar o profissional, ajudando a manter a comunidade segura e como bônus ganhando pontos de fidelidade!`,
-                            () => {
-                                change.doc.ref.update({ avisoAvaliacaoEnviado: true });
-                                abrirModalAvaliacao(change.doc.id, ag.barbeiroUid);
-                            }
-                          );
-                      }
-                  });
-              });
+            // Listener para POPUP DE AVALIAÇÃO (Concluído)
+console.log("Iniciando listener de conclusão (Cliente)...");
+db.collection("agendamentos")
+  .where("clienteUid", "==", user.uid)
+  .where("status", "==", "concluido")
+  .where("avisoAvaliacaoEnviado", "==", false) // Flag que controla se o popup aparece
+  .onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(change => {
+          if (change.type === 'added' || change.type === 'modified') {
+              const ag = change.doc.data();
+              
+              // POPUP BLOQUEANTE
+              exibirPopupBloqueante(
+                "✅ Serviço Concluído!", 
+                `O serviço <b>${ag.servico}</b> com <b>${ag.barbeiroNome}</b> foi finalizado.\n\nAjude a comunidade e ganhe pontos avaliando agora!`,
+                () => {
+                    // Ação ao clicar em OK:
+                    // 1. Marca como aviso enviado no banco (para parar de aparecer o bloqueante)
+                    change.doc.ref.update({ avisoAvaliacaoEnviado: true });
+                    // 2. Abre imediatamente o modal de avaliação
+                    abrirModalAvaliacao(change.doc.id, ag.barbeiroUid);
+                }
+              );
+          }
+      });
+  });
 
             // 4. Verificação de AVALIAÇÃO PENDENTE (Uma vez por dia)
             const hoje = new Date().toISOString().split('T')[0]; // Formato 'AAAA-MM-DD'
@@ -6090,7 +6122,26 @@ async function createMessageDiv(msg, docId) {
                 }
 
                 // HTML da Foto
-                const imgHtml = `<img src="${fotoUrl}" class="chat-user-photo ${molduraClass}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
+                // Foto e Moldura
+                const fotoUrl = remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
+                let molduraClass = '';
+                let wrapperClass = '';
+                let coroaHtml = '';
+
+                if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
+                    molduraClass = MOLDURAS[remetenteData.molduraSelecionada].classe;
+                    // Adiciona classe para a cor da coroa e o HTML da coroa
+                    wrapperClass = `avatar-wrapper ${remetenteData.molduraSelecionada}`;
+                    coroaHtml = `<div class="coroa-topo"></div>`;
+                }
+
+                // HTML da Foto com Wrapper para Coroa
+                // Usamos display inline-flex para alinhar com o texto
+                const imgHtml = `
+                    <div class="${wrapperClass}" style="display: inline-block; vertical-align: middle; margin-right: 5px;">
+                        ${coroaHtml}
+                        <img src="${fotoUrl}" class="chat-user-photo ${molduraClass}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">
+                    </div>`;
 
                 // Nome Clicável
                 const nomeClicavel = `<span class="${classeCSS}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; text-decoration: underline;">${remetenteData.nome}</span>`;
@@ -8562,7 +8613,8 @@ async function adminMudarTipoUsuario(uid, novoTipo) {
 }
 
 function exibirPopupNovoAgendamento(agendamentoDoc) {
-    if (popupAgendamentoAberto) return; 
+    // Se já estiver aberto, apenas atualiza os dados, não recria
+    if (popupAgendamentoAberto && document.getElementById('modalNovoAgendamento').style.display === 'flex') return; 
 
     const ag = agendamentoDoc.data();
     
@@ -8571,48 +8623,44 @@ function exibirPopupNovoAgendamento(agendamentoDoc) {
     document.getElementById('popupHorario').textContent = ag.horario ? ag.horario : "Vaga Imediata";
     document.getElementById('popupValor').textContent = ag.valor.toFixed(2);
     
-    const whatsappLink = document.getElementById('btnWhatsAppPopup');
+    // Configura WhatsApp
+    const btnWpp = document.getElementById('btnWhatsAppPopup');
     if (ag.clienteTelefone) {
-        whatsappLink.href = `https://wa.me/55${ag.clienteTelefone.replace(/\D/g,'')}`;
-        whatsappLink.style.display = 'block';
+        btnWpp.href = `https://wa.me/55${ag.clienteTelefone.replace(/\D/g,'')}`;
+        btnWpp.style.display = 'block';
     } else {
-        whatsappLink.style.display = 'none';
+        btnWpp.style.display = 'none';
     }
 
     const btnAceitar = document.getElementById('btnAceitarAgendamentoPopup');
     const btnRecusar = document.getElementById('btnRecusarAgendamentoPopup');
 
-    // MUDANÇA: Usa popup customizado 'exibirConfirmacao' em vez de confirm()
-    if (ag.status === 'imediato') {
-        btnAceitar.onclick = () => {
-            exibirConfirmacao("Aprovar Vaga?", "Confirmar a vaga imediata para este cliente?", () => {
-                popupAgendamentoAberto = false;
-                fecharModal('modalNovoAgendamento');
-                aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
-            });
-        };
-    } else { 
-        btnAceitar.onclick = () => {
-            exibirConfirmacao("Aprovar Agendamento?", "Confirmar este horário na sua agenda?", () => {
-                popupAgendamentoAberto = false;
-                fecharModal('modalNovoAgendamento');
-                aprovarAgendamento(agendamentoDoc.id, ag.clienteUid, ag.valor, ag.horario);
-            });
-        };
-    }
+    // Define ações dos botões
+    btnAceitar.onclick = () => {
+        if(!confirm("Confirmar aprovação?")) return;
+        // Só fecha se a função de backend for chamada com sucesso, mas para UI rápida:
+        fecharModalAtual(true); // Força fechar
+        popupAgendamentoAberto = false;
+        
+        if (ag.status === 'imediato') {
+            aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
+        } else {
+            aprovarAgendamento(agendamentoDoc.id, ag.clienteUid, ag.valor, ag.horario);
+        }
+    };
 
     btnRecusar.onclick = () => {
-        exibirConfirmacao("Recusar Agendamento?", "Tem certeza que deseja recusar? O cliente será avisado.", () => {
-            popupAgendamentoAberto = false;
-            fecharModal('modalNovoAgendamento');
-            recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
-        });
+        if(!confirm("Tem certeza que deseja recusar?")) return;
+        fecharModalAtual(true); // Força fechar
+        popupAgendamentoAberto = false;
+        recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
     };
 
     popupAgendamentoAberto = true;
-    // Abre o modal sem usar abrirModal para evitar conflito de ID na pilha se precisar
     const modal = document.getElementById('modalNovoAgendamento');
+    // Força display flex e remove listener de clique fora (garantia extra)
     modal.style.display = 'flex';
+    modal.onclick = null; // Remove qualquer evento de fechar no fundo
     setTimeout(() => modal.classList.add('show'), 10);
 }
 
@@ -11005,22 +11053,26 @@ async function ativarModoFerias() {
     }
 }
 
+// Certifique-se que esta função está assim no seu código:
 function exibirPopupBloqueante(titulo, mensagem, onOk) {
     const modal = document.getElementById('modalBloqueante');
+    
+    // Remove onclick do fundo para impedir fechamento
+    modal.onclick = null; 
+    
     document.getElementById('tituloBloqueante').textContent = titulo;
-    document.getElementById('msgBloqueante').textContent = mensagem;
+    document.getElementById('msgBloqueante').innerHTML = mensagem.replace(/\n/g, '<br>'); // Permite quebra de linha
     
     const btnOk = document.getElementById('btnOkBloqueante');
     
-    // Clona para remover listeners antigos
+    // Clone para limpar eventos anteriores
     const novoBtn = btnOk.cloneNode(true);
     btnOk.parentNode.replaceChild(novoBtn, btnOk);
     
     novoBtn.onclick = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.style.display = 'none', 300);
-        // Executa ação de callback (ex: marcar como lido)
-        if (onOk) onOk();
+        if (onOk) onOk(); // Executa a ação (ex: marcar como notificado)
     };
     
     modal.style.display = 'flex';
@@ -12053,13 +12105,20 @@ function abrirModalPerfil() {
         infoPremios.innerHTML = '🎁 <b>Caixa Surpresa:</b> Pode conter 24h de Topo ou 5 dias de VIP!';
     }
 
-    // 4. Gera Itens da Roleta (AUMENTADO PARA 60 CONJUNTOS PARA PERMITIR GIROS LONGOS)
-    const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = 'none'; // Reseta transição para posicionar no início
-    faixa.style.transform = 'translateX(0px)';
-    faixa.innerHTML = '';
+    // 4. Gera Itens da Roleta
+    // ADIÇÃO: Injetamos a seta dentro do container visual
+    const roletaVisual = document.getElementById('roletaVisual');
+    // Limpa e reconstrói a estrutura para garantir que a seta esteja lá
+    roletaVisual.innerHTML = `
+        <div class="seta-roleta"></div>
+        <div class="roleta-faixa" id="roletaFaixa"></div>
+    `;
     
-    // Gera muitos conjuntos para garantir que haja faixa suficiente para 5 voltas
+    const faixa = document.getElementById('roletaFaixa');
+    faixa.style.transition = 'none';
+    faixa.style.transform = 'translateX(0px)';
+    
+    // Gera os números (Mantido igual ao seu código)
     for(let i=0; i<60; i++) {
         for(let n=1; n<=10; n++) {
             faixa.innerHTML += `<div class="roleta-item">${n}</div>`;
@@ -12276,7 +12335,6 @@ function girarRoleta() {
     }, 6500); 
 }
 
-// Função para renderizar a lista (Adicionado o onclick visual)
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
     container.innerHTML = '';
@@ -12287,16 +12345,18 @@ function renderizarMolduras() {
         const tem = minhasMolduras.includes(key);
         const selecionada = perfil.molduraSelecionada === key;
         
-        // O checkmark é gerado, mas controlado por CSS (classes .selecionada e .temp-selected)
-        const checkmark = `<div class="moldura-check">✅</div>`;
-
-        // Adicionado: id único para manipulação e chamada para selecionarMolduraVisualmente
+        // Mapeia o nome da chave (bronze, prata) para a classe da coroa
+        // Ex: key 'ouro' -> class 'ouro'
+        
         container.innerHTML += `
             <div id="moldura_${key}" class="moldura-item ${tem ? 'comprada' : ''} ${selecionada ? 'selecionada' : ''}" 
                  onclick="gerenciarMoldura('${key}', this)" 
-                 style="flex-direction:column; position:relative;">
-                ${checkmark}
-                <div class="${m.classe}" style="width: 45px; height: 45px; border-radius: 50%;"></div>
+                 style="flex-direction:column; position:relative; margin-top: 15px;"> <div class="moldura-check">✅</div>
+                
+                <div class="avatar-wrapper ${key}">
+                    <div class="coroa-topo"></div> <div class="${m.classe}" style="width: 45px; height: 45px; border-radius: 50%;"></div>
+                </div>
+
                 <span style="font-size:10px; margin-top:5px;">${m.nome}</span>
                 ${!tem ? `<span style="font-size:10px; color:#ff9800;">R$${m.preco}</span>` : ''}
             </div>`;
