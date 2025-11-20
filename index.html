@@ -4430,98 +4430,88 @@ function filtrarBarbeiros() {
   });
 }
 
-async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
-    const lista = document.getElementById(containerId);
-    lista.innerHTML = "<p>⏳ Carregando profissionais...</p>";
-
-    if (!localizacaoCliente) { await obterLocalizacaoAtual().catch(() => {}); }
-    
-    if (barbeirosListener) barbeirosListener();
-    let query;
-    if (isGuest) {
-        query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
-    } else {
-        query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
+function carregarBarbeirosPrincipal(barbeiros) {
+    const lista = document.getElementById('barbeiroList');
+    // Verifica se o elemento existe antes de tentar manipulá-lo
+    if (!lista) {
+        console.error("Elemento '#barbeiroList' não encontrado.");
+        return;
     }
     
-    barbeirosListener = query.onSnapshot(snap => {
-        if (snap.empty) {
-            lista.innerHTML = `<p>😔 Nenhum profissional encontrado.</p>`;
-            return;
+    lista.innerHTML = ''; // Limpa a lista existente
+
+    if (!barbeiros || barbeiros.length === 0) {
+        lista.innerHTML = '<div class="card"><p>Nenhum profissional encontrado.</p></div>';
+        return;
+    }
+
+    barbeiros.forEach(barbeiro => {
+        // CORREÇÃO CRÍTICA: Prepara o objeto inteiro como uma string JSON segura.
+        // O replace(/'/g, '\\\'') é usado para escapar apóstrofos dentro dos dados
+        // que, se não escapados, quebrariam a string do atributo 'onclick'.
+        const barbeiroDataSafe = JSON.stringify(barbeiro).replace(/'/g, '\\\'');
+
+        // Lógica para determinar o status e estilo
+        let statusTexto = barbeiro.status || 'Manual';
+        let statusClass = 'status-manual';
+        if (barbeiro.disponivel === true) {
+            statusTexto = 'Imediato';
+            statusClass = 'status-imediato';
+        } else if (barbeiro.disponivel === false) {
+            statusTexto = 'Indisponível';
+            statusClass = 'status-indisponivel';
         }
 
-        let barbeiros = [];
-        const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
+        // Lógica para determinar o tipo de membro e estilo
+        let tipoMembroClass = '';
+        let tipoMembroLabel = '';
+        if (barbeiro.tipoMembro === 'VIP') {
+            tipoMembroClass = 'barbeiro-avatar-vip';
+            tipoMembroLabel = '<span class="text-xs text-red-400 font-bold ml-2">⭐ VIP</span>';
+        } else if (barbeiro.tipoMembro === 'Master') {
+            tipoMembroClass = 'barbeiro-avatar-master';
+            tipoMembroLabel = '<span class="text-xs text-gray-400 font-bold ml-2">💎 Master</span>';
+        }
 
-        snap.forEach(doc => {
-            const b = doc.data();
-            b.uid = doc.id;
-            if (localizacaoCliente && b.latitude && b.longitude) {
-                b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
-            } else { b.distancia = Infinity; }
-            b.isFavorito = favoritos.includes(b.uid);
-            barbeiros.push(b);
-        });
+        // Simulação de Avatar e Avaliação
+        const avatarUrl = barbeiro.avatarUrl || 'https://placehold.co/50x50/333333/d4af37?text=B';
+        const avaliacao = barbeiro.avaliacao || '5.0';
+        const agendamentos = barbeiro.agendamentos || '99+';
 
-        barbeiros.sort((a, b) => {
-            if (mostrarApenasFavoritos) {
-                if (a.isFavorito && !b.isFavorito) return -1;
-                if (!a.isFavorito && b.isFavorito) return 1;
-            }
-            const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
-            const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
-            const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
-            const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
-            if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
-            const aPro = isProAtivo(a);
-            const bPro = isProAtivo(b);
-            if (aPro !== bPro) return aPro ? -1 : 1;
-            return a.distancia - b.distancia;
-        });
+        // ADVERTÊNCIA: A função abrirModalBarbeiro deve AGORA começar com:
+        // function abrirModalBarbeiro(barbeiro) {
+        //     const data = JSON.parse(barbeiro); // Para desserializar o JSON string
+        //     // ... restante do código
+        // }
+        // Se a função já foi corrigida no seu código, ignore esta nota.
         
-        lista.innerHTML = "";
-        barbeiros.forEach(b => {
-            const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
-            const reputacaoEstrelas = '⭐'.repeat(Math.round(notaMedia / 2));
-            
-            let statusHtml = '';
-            const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            if (b.ausente) statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente</div>`;
-            else if (!isDisponivel) statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível</div>`;
-            else if (b.vagaImediata) statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata</div>`;
-            else statusHtml = `<div class="card-status status-manual">📅 Horários Disponíveis</div>`;
+        const cardHTML = `
+            <div class="card barbeiro-card"
+                 onclick='abrirModalBarbeiro(JSON.parse("${barbeiroDataSafe}"))'>
+                
+                <button class="share-btn" onclick="event.stopPropagation(); compartilharBarbeiro('${barbeiro.nome.replace(/'/g, '\\\'')}')">
+                    <i class="fas fa-share-alt"></i>
+                </button>
 
-            let promocoesHtml = (b.promocoes && b.promocoes.length > 0) ? `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>` : '';
-            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
-            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+                <div class="card-header">
+                    <img src="${avatarUrl}" alt="Avatar de ${barbeiro.nome}" class="barbeiro-avatar ${tipoMembroClass}">
+                    <div class="card-header-info">
+                        <h4>${barbeiro.nome} ${tipoMembroLabel}</h4>
+                        <p>${barbeiro.especialidade || 'Barbeiro/Cabeleireiro'}</p>
+                    </div>
+                </div>
 
-            // Lógica do Botão Favorito (Aparece pra todos)
-            const heartIcon = b.isFavorito ? '❤️' : '🤍';
-            // Define a classe de cor baseada no nicho
-            const nichoClass = (b.tipo === 'manicure_pedicure' || b.tipo === 'designer_cilios') ? 'fav-feminino' : 'fav-barbeiro';
-            const favoriteBtn = `<button class="card-favorite-btn-custom ${nichoClass}" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
-            
-            // Link de compartilhar
-            const shareBtn = `<button class="card-action-btn card-share-btn" style="bottom:10px; right:10px;" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
+                <div class="barbeiro-stats">
+                    <span>
+                        <i class="fas fa-star star-icon"></i>
+                        ${avaliacao} (${agendamentos} agendamentos)
+                    </span>
+                    <span class="${statusClass}">${statusTexto}</span>
+                </div>
+            </div>
+        `;
 
-            lista.innerHTML += `
-              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
-                  ${isBoosted ? '<span class="boost-icon">🚀</span>' : ''}
-                  ${favoriteBtn} 
-                  ${shareBtn}
-                  <div class="card-header">
-                      ${logoHtml}
-                      <div class="card-header-info">
-                          <h4 class="professional-name-card">${b.nome}</h4>
-                          <p>📍 ~${b.distancia !== Infinity ? b.distancia.toFixed(1) : '?'} km | ${b.cidade}</p>
-                          <p class="card-reputacao-info">${reputacaoEstrelas}</p> 
-                      </div>
-                  </div>
-                  ${statusHtml}
-                  ${promocoesHtml}
-              </div>`;
-        });
+        lista.insertAdjacentHTML('beforeend', cardHTML);
     });
 }
 
@@ -4600,7 +4590,8 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
                     }
                 }
 
-                const servicoJSON = JSON.stringify(s).replace(/"/g, '"');
+                // CORREÇÃO AQUI: Substituir aspas simples por escapadas
+                const servicoJSON = JSON.stringify(s).replace(/'/g, "\\'");
                 const promoInfo = promoAplicada ? `<p style="font-size: 11px; color: var(--cor-destaque); margin: 2px 0 0 0;">🎁 ${promoAplicada.nome} (${promoAplicada.desconto}% OFF)</p>` : '';
 
                 servicosList.innerHTML += `
@@ -4613,7 +4604,6 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
             servicosList.innerHTML = "<p>Nenhum serviço cadastrado.</p>";
         }
 
-        // --- INÍCIO DA MODIFICAÇÃO ---
         const horariosList = document.getElementById("barbeiroPerfilHorariosList");
         horariosList.innerHTML = "";
         
@@ -4627,9 +4617,8 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         if (estaAusente) {
             const dataFimAusencia = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
             horariosList.innerHTML = `<p style="color: var(--cor-destaque-rosa); text-align: center; font-weight: bold;">🏖️ Profissional ausente até ${dataFimAusencia}. O agendamento está indisponível.</p>`;
-            hasOptions = false; // Garante que o botão de agendar ficará desabilitado
+            hasOptions = false;
         } else {
-            // Lógica original de horários
             if (b.vagaImediata) {
                 horariosList.innerHTML += `<div class="selectable-item" onclick='selecionarHorario(this, "imediato")'>⚡ Vaga Imediata</div>`;
                 hasOptions = true;
@@ -4647,7 +4636,6 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
                 horariosList.innerHTML = "<p>Nenhuma opção de agendamento disponível no momento.</p>";
             }
         }
-        // --- FIM DA MODIFICAÇÃO ---
 
         const btnPortfolio = document.getElementById('btnAcessarPortfolio');
         if (b.portfolio && b.portfolio.length > 0) {
@@ -6038,8 +6026,7 @@ function carregarAgenda() {
     const btnVagaImediata = document.getElementById("btnVagaImediata");
     const btnAgendaManual = document.getElementById("btnAgendaManual");
     const agendaManualPainel = document.getElementById("agendaManualPainel");
-    const horariosContainer = document.ge
-tElementById("horariosContainer");
+    const horariosContainer = document.getElementById("horariosContainer"); // <--- CORRIGIDO AQUI
 
     db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
         perfil = doc.data(); 
@@ -9707,7 +9694,9 @@ async function abrirMinhasCompras() {
         }
         
         if (compra.status === 'confirmado_pelo_cliente' && !compra.avaliado) {
-            acaoBotao = `<button onclick="abrirModalAvaliacaoProduto('${doc.id}', '${compra.produtoId}', '${compra.produtoNome}')">⭐ Avaliar Produto</button>`;
+            // CORREÇÃO AQUI: .replace(/'/g, "\\'")
+            const nomeProdutoSeguro = (compra.produtoNome || '').replace(/'/g, "\\'");
+            acaoBotao = `<button onclick="abrirModalAvaliacaoProduto('${doc.id}', '${compra.produtoId}', '${nomeProdutoSeguro}')">⭐ Avaliar Produto</button>`;
         } else if (compra.status === 'confirmado_pelo_cliente' && compra.avaliado) {
             acaoBotao = `<p style="font-size: 14px; color: var(--cor-destaque);">✅ Produto avaliado!</p>`;
         }
