@@ -12022,7 +12022,7 @@ async function salvarNomePerfil() {
 function girarRoleta() {
     const hoje = new Date().toDateString();
     
-    // Verifica giros disponíveis
+    // 1. Verifica giros disponíveis
     let girosTotais = 1;
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
@@ -12037,64 +12037,82 @@ function girarRoleta() {
     btnGirar.disabled = true;
     btnGirar.textContent = "Girando...";
 
-    // 1. Definir o Resultado (Sorteio)
+    // 2. Definir o Resultado (Sorteio)
     const rand = Math.random();
     let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; // 1-10 (pontos) ou 11 (presente)
 
-    // 2. Configuração da Animação
-    const itemTotalWidth = 90; // 80px largura + 10px margem
-    const itensPorSet = 11; // 10 números + 1 presente
-    const voltas = 5; // Reduzido para 5 para ficar suave com o CSS
+    // 3. MATEMÁTICA PRECISA DO GIRO
+    // Baseado no CSS: item width 80px + margin-left 5px + margin-right 5px = 90px TOTAL
+    const LARGURA_ITEM_TOTAL = 90; 
     
-    // O índice alvo no array gigante de HTML gerado
-    const indiceAlvo = (voltas * itensPorSet) + (resultado - 1);
+    // O índice do item sorteado dentro do conjunto (0 a 10)
+    // Se resultado for 1, índice é 0. Se for 11, índice é 10.
+    const indiceNoConjunto = resultado - 1; 
     
-    // Pega a largura visível da janela da roleta
-    const containerWidth = document.getElementById('roletaVisual').offsetWidth;
+    // Escolhemos um conjunto lá na frente (ex: conjunto 45 de 60) para dar bastante giro
+    const conjuntoAlvo = 45; 
     
-    // Cálculo para centralizar
-    const posicaoFinal = (indiceAlvo * itemTotalWidth) - (containerWidth / 2) + (itemTotalWidth / 2);
+    // Índice absoluto na faixa HTML gigante
+    const indiceFinalAbsoluto = (conjuntoAlvo * 11) + indiceNoConjunto;
 
+    // Elementos do DOM
     const faixa = document.getElementById('roletaFaixa');
+    const container = document.getElementById('roletaVisual');
     
-    // Adiciona um pequeno "ruído" aleatório (+/- 15px)
-    const jitter = Math.floor(Math.random() * 30) - 15; 
+    // CORREÇÃO PRINCIPAL: Se offsetWidth falhar (modal animando), usa 320px (largura padrão CSS)
+    const larguraContainer = container.offsetWidth || 320;
+
+    // CÁLCULO DE CENTRALIZAÇÃO:
+    // Queremos que o CENTRO do item pare no CENTRO do container.
+    // Posição = (Índice * 90) - (Metade da Tela) + (Metade do Item)
+    const centroDoItem = (indiceFinalAbsoluto * LARGURA_ITEM_TOTAL) + (LARGURA_ITEM_TOTAL / 2);
+    const centroDoContainer = larguraContainer / 2;
+    let moveX = centroDoItem - centroDoContainer;
     
-    // Animação
-    faixa.style.transition = `transform 5s cubic-bezier(0.25, 1, 0.5, 1)`; 
-    faixa.style.transform = `translateX(-${posicaoFinal + jitter}px)`;
+    // Adiciona um pequeno efeito aleatório (+/- 20px) para não parecer robô, 
+    // mas mantendo dentro da área do item (que tem 80px de largura visual)
+    const jitter = Math.floor(Math.random() * 40) - 20; 
+    moveX += jitter;
+
+    // Aplica a animação
+    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; // Começa rápido, freia lento
+    faixa.style.transform = `translateX(-${moveX}px)`;
     
-    // 3. Processar Prêmio APÓS a animação
+    // 4. Processar Prêmio APÓS a animação (6s + 500ms folga)
     setTimeout(async () => {
         let premioTitulo = "";
         let premioDescricao = "";
         
         let updates = { 
             ultimoGiroRoleta: hoje,
-            girosRealizadosHoje: (perfil.ultimoGiroRoleta === hoje) ? firebase.firestore.FieldValue.increment(1) : 1
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(1)
         };
         
-        // --- LÓGICA DE EXPIRAÇÃO EM 24H ---
+        // Expiração em 24h
         const validade = new Date();
-        validade.setHours(validade.getHours() + 24); // Define validade para 24h a partir de agora
+        validade.setHours(validade.getHours() + 24); 
 
         if (resultado <= 10) {
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
             premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas se não usados!`;
             
-            // Soma no saldo atual
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
-            
-            // SALVA NO HISTÓRICO PARA O CRON REMOVER DEPOIS (Isso faltava no seu código)
             updates.historicoPontosRoleta = firebase.firestore.FieldValue.arrayUnion({
                 valor: resultado,
                 expiraEm: firebase.firestore.Timestamp.fromDate(validade)
             });
 
+            // Atualiza visualmente
+            const displayPontos = document.getElementById('pontosFidelidade');
+            if(displayPontos) {
+                let atuais = parseInt(displayPontos.textContent) || 0;
+                displayPontos.textContent = atuais + resultado;
+            }
+
         } else {
             premioTitulo = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
-                // Profissional ganha Boost
+                // Profissional
                 const exp = new Date(); 
                 const atualExp = perfil.boostExpiracao ? perfil.boostExpiracao.toDate() : new Date();
                 if (atualExp < new Date()) { atualExp.setTime(Date.now()); } 
@@ -12104,7 +12122,7 @@ function girarRoleta() {
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
                 premioDescricao = "Sorte GRANDE! Você ganhou 24 horas de Perfil Turbinado!";
             } else {
-                // Cliente ganha VIP
+                // Cliente
                 const exp = new Date();
                 const atualVipExp = (isVipAtivo(perfil) && perfil.vipExpirationDate) ? perfil.vipExpirationDate.toDate() : new Date();
                 if (atualVipExp < new Date()) { atualVipExp.setTime(Date.now()); }
@@ -12121,23 +12139,17 @@ function girarRoleta() {
             exibirPopupBloqueante(premioTitulo, premioDescricao, () => {});
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", premioDescricao);
             
-            // Atualiza localmente para feedback imediato nos pontos
-            if (resultado <= 10) {
-                 const pontosEl = document.getElementById('pontosFidelidade');
-                 if(pontosEl) {
-                     // Pequena lógica para não mostrar NaN se o perfil ainda não atualizou
-                     let atuais = parseInt(pontosEl.textContent) || 0;
-                     pontosEl.textContent = atuais + resultado;
-                 }
-            }
-
+            // Atualiza o local para refletir que o giro foi gasto
+            perfil.girosRealizadosHoje = (girosRealizados + 1);
+            perfil.ultimoGiroRoleta = hoje;
+            
         } catch (e) {
             console.error(e);
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
         }
 
-        // Resetar botão para próximo giro (se houver)
-        let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1; 
+        // Resetar botão
+        let novosGirosUsados = girosRealizados + 1;
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
         
@@ -12152,7 +12164,7 @@ function girarRoleta() {
             btnGirar.textContent = "Volte Amanhã";
         }
 
-    }, 5000); // Tempo sincronizado com a transição CSS (5s)
+    }, 6500); 
 }
 
 // Função para renderizar a lista (Adicionado o onclick visual)
