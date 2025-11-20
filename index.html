@@ -1482,7 +1482,8 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     display: inline-flex;
     gap: 10px;
     padding: 0 20px;
-    transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* A transição será definida via JS para controlar o tempo dinamicamente */
+    transform: translateX(0); 
 }
 
 /* Temas da Roleta */
@@ -1504,14 +1505,23 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 
 /* Molduras */
 .moldura-item {
-    width: 80px; height: 80px;
-    position: relative;
-    display: flex;
-    align-items: center; justify-content: center;
-    cursor: pointer;
-    border-radius: 10px;
-    background: #222;
-    border: 2px solid transparent;
+    transition: transform 0.1s, border-color 0.2s;
+}
+.moldura-item:active {
+    transform: scale(0.95);
+}
+/* O checkmark agora é controlado por uma classe 'temp-selected' via JS para feedback instantâneo */
+.moldura-item.temp-selected .moldura-check {
+    display: flex !important; /* Força a exibição */
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.moldura-item:not(.temp-selected):not(.selecionada) .moldura-check {
+    display: none;
+}
+
+@keyframes popIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
 }
 .moldura-item.comprada { border-color: #4CAF50; }
 .moldura-item.selecionada { background: rgba(212, 175, 55, 0.2); border-color: var(--cor-destaque); }
@@ -1608,14 +1618,26 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     position: absolute !important;
     top: -5px !important;
     right: -5px !important;
-    background-color: red !important;
+    background-color: #e74c3c !important; /* Vermelho forte */
     color: white !important;
     border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 10px;
+    padding: 4px 7px !important;
+    font-size: 11px !important;
     font-weight: bold;
     border: 2px solid #fff;
-    z-index: 1001;
+    z-index: 1002; /* Acima do botão do chat */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    display: none; /* Começa oculto */
+}
+.notification-badge.visible {
+    display: block !important;
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
 }
 
 /* Botão Admin Premium */
