@@ -4446,12 +4446,14 @@ function carregarBarbeirosPrincipal(barbeiros) {
     }
 
     barbeiros.forEach(barbeiro => {
-        // CORREÇÃO CRÍTICA: Prepara o objeto inteiro como uma string JSON segura.
-        // O replace(/'/g, '\\\'') é usado para escapar apóstrofos dentro dos dados
-        // que, se não escapados, quebrariam a string do atributo 'onclick'.
-        const barbeiroDataSafe = JSON.stringify(barbeiro).replace(/'/g, '\\\'');
+        // --- CORREÇÃO AQUI ---
+        // Escapa aspas duplas (") para \" E aspas simples (') para \'
+        const barbeiroDataSafe = JSON.stringify(barbeiro)
+            .replace(/\\/g, '\\\\') // Escapa barras invertidas
+            .replace(/"/g, '\\"')   // Escapa aspas duplas para o JSON.parse
+            .replace(/'/g, "\\'");  // Escapa aspas simples para o HTML onclick
+        // ---------------------
 
-        // Lógica para determinar o status e estilo
         let statusTexto = barbeiro.status || 'Manual';
         let statusClass = 'status-manual';
         if (barbeiro.disponivel === true) {
@@ -7973,8 +7975,7 @@ function abrirModalConquistas() {
     for (const id in definicoes) {
         const c = definicoes[id];
         const unlocked = conquistasDoUsuario.includes(id);
-        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon
-">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
+        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
     }
 }
 
@@ -8571,9 +8572,11 @@ function obterLocalizacaoCadastro() {
 
 function abrirRota(barbeiroLat, barbeiroLon) {
     if (localizacaoCliente) {
-        window.open(`https://www.google.com/maps/dir/?api=1&origin=${localizacaoCliente.latitude},${localizacaoCliente.longitude}&destination=${barbeiroLat},${barbeiroLon}`, '_blank');
+        // Adicionado o $ antes de {localizacaoCliente
+        window.open(`http://googleusercontent.com/maps.google.com/dir/?api=1&origin=${localizacaoCliente.latitude},${localizacaoCliente.longitude}&destination=${barbeiroLat},${barbeiroLon}`, '_blank');
     } else {
-        window.open(`https://www.google.com/maps/search/?api=1&query=${barbeiroLat},${barbeiroLon}`, '_blank');
+        // Adicionado o $ antes de {barbeiroLat
+        window.open(`http://googleusercontent.com/maps.google.com/dir/?api=1&destination=${barbeiroLat},${barbeiroLon}`, '_blank');
     }
 }
 
