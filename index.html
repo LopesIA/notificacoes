@@ -1407,62 +1407,92 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 
 /* Roleta Diária */
 .roleta-container {
-    background: #1a1a1a;
-    border: 2px solid #333;
-    border-radius: 8px; /* Cantos levemente arredondados, mas quadrado */
-    padding: 20px 0;
-    margin: 15px 0;
+    background: #0f0f0f; /* Fundo bem escuro */
+    border: 4px solid #d4af37; /* Borda Dourada grossa */
+    border-radius: 15px;
+    height: 100px; /* Altura fixa */
+    margin: 20px auto;
     position: relative;
-    box-shadow: inset 0 0 20px #000;
+    overflow: hidden; /* ESSENCIAL: Corta o que sai da caixa */
+    width: 100%;
+    max-width: 320px; /* Limita a largura para não esticar demais */
+    box-shadow: 
+        0 10px 20px rgba(0,0,0,0.5), /* Sombra externa */
+        inset 0 0 20px rgba(0,0,0,0.9); /* Sombra interna forte para profundidade */
 }
 
+.roleta-container::before, .roleta-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 60px; /* Largura do degradê */
+    z-index: 2;
+    pointer-events: none;
+}
+.roleta-container::before {
+    left: 0;
+    background: linear-gradient(to right, #0f0f0f, transparent);
+}
+
+.roleta-container::after {
+    right: 0;
+    background: linear-gradient(to left, #0f0f0f, transparent);
+}
 .roleta-item {
-    /* MEDIDAS EXATAS PARA O CÁLCULO JS (80 + 6 + 4 = 90px total) */
+    /* MEDIDAS CRÍTICAS PARA A MATEMÁTICA DO JS */
     width: 80px; 
     height: 80px;
-    border: 3px solid rgba(255,255,255,0.1); /* 3px borda esquerda + 3px borda direita = 6px */
-    margin: 0 2px; /* 2px margem esquerda + 2px margem direita = 4px */
-    box-sizing: content-box; /* Garante que width 80 seja o conteúdo, borda e margem somam fora */
+    flex-shrink: 0; /* Não deixa encolher */
+    margin: 0 5px; /* Espaçamento lateral (Total item = 80 + 10 = 90px) */
     
-    border-radius: 8px; 
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 28px;
     font-weight: 800;
-    font-size: 24px;
-    flex-shrink: 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    color: #fff;
+    font-family: 'Courier New', Courier, monospace; /* Fonte monoespaçada fica melhor em roletas */
+    
+    /* Visual de "Ticket" ou Botão 3D */
+    box-shadow: 
+        inset 0 0 10px rgba(0,0,0,0.3),
+        0 4px 6px rgba(0,0,0,0.2);
+    border: 2px solid rgba(255,255,255,0.1);
 }
 .tema-barbearia .roleta-item:nth-child(odd) {
-    background: linear-gradient(135deg, #ffd700, #b8860b); /* Dourado Luxo */
-    border-color: #ffd700;
+    background: radial-gradient(circle, #ffd700, #b8860b); /* Dourado */
     color: #000;
+    border-color: #ffd700;
 }
 .tema-barbearia .roleta-item:nth-child(even) {
-    background: linear-gradient(135deg, #2c2c2c, #000000); /* Preto Luxo */
-    border-color: #444;
+    background: radial-gradient(circle, #333, #000); /* Preto */
     color: #ffd700;
+    border-color: #555;
 }
 
 .tema-feminino .roleta-item:nth-child(odd) {
-    background: linear-gradient(135deg, #ff9a9e, #fecfef); /* Rosa Luxo */
-    border-color: #ff9a9e;
-    color: #4a0000;
+    background: radial-gradient(circle, #ff9a9e, #e57373); /* Rosa */
+    color: #fff;
 }
 .tema-feminino .roleta-item:nth-child(even) {
-    background: linear-gradient(135deg, #2c2c2c, #000000); /* Preto Luxo */
-    border-color: #444;
+    background: radial-gradient(circle, #333, #000);
     color: #ff9a9e;
 }
 
+/* Item Especial (Caixa Surpresa) */
 .roleta-item.especial {
-    background: linear-gradient(135deg, #fff, #e0e0e0) !important; /* Branco Brilhante */
-    color: #000 !important;
-    border-color: #fff !important;
-    box-shadow: 0 0 15px rgba(255,255,255,0.6);
-    font-size: 26px;
+    background: radial-gradient(circle, #fff, #ccc) !important;
+    color: #333 !important;
+    font-size: 32px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 15px rgba(255,255,255,0.8);
+    animation: pulse-glow 1s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    from { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+    to { box-shadow: 0 0 20px rgba(255,255,255,1); }
 }
 
 /* Indicador de Seleção na Moldura */
@@ -1483,13 +1513,10 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     z-index: 2;
 }
 .roleta-faixa {
-    display: inline-flex;
-    gap: 10px;
-    padding: 0 20px;
-    /* A transição será definida via JS, mas garantimos o padrão aqui */
-    transition: transform 5s cubic-bezier(0.1, 0, 0.2, 1); /* Efeito de desaceleração suave */
-    transform: translateX(0); 
-    will-change: transform; /* Otimização de performance */
+    display: flex; /* Flexbox para alinhar os itens */
+    height: 100%;
+    align-items: center; /* Centraliza verticalmente */
+    will-change: transform; /* Otimiza performance */
 }
 
 /* Temas da Roleta */
@@ -1502,11 +1529,15 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .seta-roleta {
     position: absolute;
     left: 50%;
-    top: -5px;
+    top: 0; /* Fica no topo */
     transform: translateX(-50%);
-    font-size: 24px;
-    z-index: 5;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    width: 0; 
+    height: 0; 
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 20px solid #e74c3c; /* Triângulo vermelho apontando pra baixo */
+    z-index: 10;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 /* Molduras */
