@@ -2003,10 +2003,11 @@ body {
 
         <div class="popup-section config-section">
           <h4>❤️ Meu Interesse Principal</h4>
-          <div id="configInteresseContainer" style="display:flex; gap:10px;">
-              <button data-interesse="barbeiro">Barbearias</button>
-              <button data-interesse="manicure_pedicure">Unhas</button>
-              <button data-interesse="designer_cilios">Cílios</button>
+          <p style="font-size: 12px; opacity: 0.7;">Ao mudar, o app será recarregado.</p>
+          <div id="configInteresseContainer" style="display:flex; gap:10px; flex-wrap: wrap; justify-content: center;">
+              <button data-interesse="barbeiro" style="flex: 1; min-width: 100px;">Barbearias</button>
+              <button data-interesse="manicure_pedicure" style="flex: 1; min-width: 100px;">Unhas</button>
+              <button data-interesse="designer_cilios" style="flex: 1; min-width: 100px;">Cílios</button>
           </div>
         </div>
 
@@ -4103,10 +4104,10 @@ function criarConta() {
   const senhaConfirm = document.getElementById("senha-confirm").value;
   const tipo = document.getElementById("tipo").value; // Lê o tipo selecionado
   const telefone = document.getElementById("telefone").value.trim();
-  const estadoInput = document.getElementById("estado").value.trim(); // INPUT do estado
-  const cidadeInput = document.getElementById("cidade").value.trim(); // INPUT da cidade
-  const estado = formatarNomeProprio(estadoInput); // Nome próprio do estado
-  const cidade = formatarNomeProprio(cidadeInput); // Nome próprio da cidade
+  const estadoInput = document.getElementById("estado").value.trim(); 
+  const cidadeInput = document.getElementById("cidade").value.trim(); 
+  const estado = formatarNomeProprio(estadoInput); 
+  const cidade = formatarNomeProprio(cidadeInput); 
   const nome = document.getElementById("nomeExibido").value.trim();
   const indicadorEmail = document.getElementById("indicador").value.trim();
   let rua, numero;
@@ -4124,6 +4125,9 @@ function criarConta() {
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
   const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
+  
+  // Define o interesse: Se for profissional, o interesse é o próprio nicho. Se for cliente, vem do onboarding.
+  const interesseFinal = (tipoFinal !== 'cliente' && tipoFinal !== 'admin') ? tipoFinal : (onboardingState.interesse_principal || 'barbeiro');
 
   auth.createUserWithEmailAndPassword(email, senha)
     .then(async cred => {
@@ -4149,20 +4153,20 @@ function criarConta() {
         clientesAtendidos: 0,
         somaAvaliacoes: 0, numAvaliacoes: 0,
         ultimoBoostComprado: null,
-        interesse_principal: onboardingState.interesse_principal || 'barbeiro',
-        onboarding_profissional_concluido: tipoFinal === 'cliente', // Define inicial
         
-        // --- LINHA ADICIONADA ---
-        precisaConfiguracaoInicial: tipoFinal !== 'cliente', // Define como true se for profissional
-        // -------------------------
+        // --- AQUI ESTÁ A CORREÇÃO DO INTERESSE ---
+        interesse_principal: interesseFinal, 
+        // -----------------------------------------
 
+        onboarding_profissional_concluido: tipoFinal === 'cliente', 
+        precisaConfiguracaoInicial: tipoFinal !== 'cliente', 
         lastSeen: firebase.firestore.FieldValue.serverTimestamp()
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
 
-          })
+    })
     .catch(e => {
         fecharTodosOsModais();
         if (e.code === 'auth/email-already-in-use') {
@@ -4889,75 +4893,151 @@ function filtrarBarbeiros() {
 
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
-    lista.innerHTML = "<p>⏳ Carregando profissionais...</p>";
+    const divPai = lista.parentElement;
+    
+    // --- 1. BOTÃO DE FAVORITOS (UI) ---
+    let btnFavoritos = divPai.querySelector('#btnFiltroFavoritosLuxo');
+    if (!btnFavoritos) {
+        const divBtn = document.createElement('div');
+        divBtn.style.display = 'flex'; 
+        divBtn.style.justifyContent = 'center'; 
+        divBtn.style.width = '100%';
+        divBtn.style.marginBottom = '15px';
+        
+        btnFavoritos = document.createElement('button');
+        btnFavoritos.id = 'btnFiltroFavoritosLuxo';
+        btnFavoritos.className = 'btn-favoritos-luxo';
+        
+        btnFavoritos.onclick = () => {
+            if (isGuest) {
+                exibirPopup("Recurso exclusivo", "Crie uma conta ou faça login para salvar seus favoritos!");
+                mostrar('authView');
+            } else {
+                alternarFiltroFavoritos();
+            }
+        };
+        
+        divBtn.appendChild(btnFavoritos);
+        divPai.insertBefore(divBtn, lista);
+    }
 
-    if (!localizacaoCliente) {
-       await obterLocalizacaoAtual().catch(() => {});
-    }
-    
-    if (barbeirosListener) barbeirosListener();
-    let query;
-    if (isGuest) {
-        query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
+    // Atualiza visual do botão
+    if (mostrarApenasFavoritos && !isGuest) {
+        btnFavoritos.innerHTML = "❤️ Ver Todos";
+        btnFavoritos.classList.add('ativo'); // Estilo de "limpar filtro"
     } else {
-        query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
+        btnFavoritos.innerHTML = "⭐ Meus Favoritos";
+        btnFavoritos.classList.remove('ativo');
     }
+
+    lista.innerHTML = "<p>⏳ Carregando...</p>";
+
+    if (!localizacaoCliente) { await obterLocalizacaoAtual().catch(() => {}); }
     
+    if (barbeirosListener) barbeirosListener(); // Limpa listener anterior
+    
+    // =================================================================
+    // === LÓGICA DE NICHO/RAMO (CORRIGIDA) ===
+    // =================================================================
+    
+    // 1. Lista completa de tipos possíveis
+    const todosTipos = ["barbeiro", "manicure_pedicure", "designer_cilios"];
+    let tiposParaBuscar = todosTipos; // Padrão: busca tudo (Admin ou Favoritos Ativos)
+
+    // 2. Aplica filtro APENAS se NÃO for Admin, NÃO for Visitante e Favoritos estiver DESATIVADO
+    if (!isGuest && perfil && perfil.tipo !== 'admin' && !mostrarApenasFavoritos) {
+        
+        if (perfil.tipo === 'cliente') {
+            // CLIENTE: Vê baseado no interesse escolhido (fallback para 'barbeiro')
+            const meuInteresse = perfil.interesse_principal || 'barbeiro';
+            tiposParaBuscar = [meuInteresse]; 
+            
+        } else {
+            // PROFISSIONAL: Vê apenas colegas do mesmo nicho/ramo
+            tiposParaBuscar = [perfil.tipo];
+        }
+    }
+
+    // Executa a query blindada com o array definido acima
+    let query = db.collection("usuarios").where("tipo", "in", tiposParaBuscar);
+    
+    // =================================================================
+
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-            lista.innerHTML = `<p>😔 Nenhum profissional encontrado para esta categoria.</p>`;
-            return;
+             // Mensagens personalizadas para lista vazia
+             if (mostrarApenasFavoritos && !isGuest) {
+                 lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Você ainda não tem favoritos.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
+             } else {
+                 // Formata o nome da categoria para exibir bonitinho
+                 let categoriaExibida = tiposParaBuscar[0]; 
+                 let nomeCategoria = "nesta categoria";
+                 if(categoriaExibida === 'barbeiro') nomeCategoria = "Barbearias";
+                 if(categoriaExibida === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
+                 if(categoriaExibida === 'designer_cilios') nomeCategoria = "Design de Cílios";
+                 
+                 lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>😔 Nenhum profissional de <b>${nomeCategoria}</b> encontrado na sua região ou filtro.</p></div>`;
+             }
+             return;
         }
 
         let barbeiros = [];
-        // Lista de favoritos do usuário atual (se existir)
         const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
 
         snap.forEach(doc => {
             const b = doc.data();
             b.uid = doc.id;
+            b.isFavorito = favoritos.includes(b.uid);
+
+            // --- FILTRAGEM DE FAVORITOS ---
+            // Se o botão favoritos está ATIVO, filtramos manualmente aqui.
+            if (mostrarApenasFavoritos && !isGuest) {
+                if (!b.isFavorito) return; // Pula se não for favorito
+            }
+
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
             } else {
                 b.distancia = Infinity;
             }
-            // Marca se é favorito ou não para facilitar a ordenação
-            b.isFavorito = favoritos.includes(b.uid);
+            
             barbeiros.push(b);
         });
 
+        // Verificação final se a lista ficou vazia APÓS filtrar por favoritos
+        if (barbeiros.length === 0 && mostrarApenasFavoritos) {
+             lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Nenhum favorito encontrado.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
+             return;
+        }
+
+        // --- ORDENAÇÃO ---
         barbeiros.sort((a, b) => {
-            // 1. Se o filtro estiver ATIVO, favoritos vêm primeiro
-            if (mostrarApenasFavoritos) {
-                if (a.isFavorito && !b.isFavorito) return -1;
-                if (!a.isFavorito && b.isFavorito) return 1;
-            }
+            // Favoritos sempre primeiro
+            if (a.isFavorito && !b.isFavorito) return -1;
+            if (!a.isFavorito && b.isFavorito) return 1;
+
+            // Disponíveis/Vaga Imediata primeiro
+            const aDisp = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
+            const bDisp = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+            if (aDisp !== bDisp) return aDisp ? -1 : 1;
+
+            // Turbinados primeiro
+            const aBoost = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
+            const bBoost = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            if (aBoost !== bBoost) return aBoost ? -1 : 1;
             
-            // 2. Lógica padrão (Disponibilidade > Boost > Pro > Distância)
-            const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
-            const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
-
-            const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
-            const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
-            if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
-
-            const aPro = isProAtivo(a);
-            const bPro = isProAtivo(b);
-            if (aPro !== bPro) return aPro ? -1 : 1;
-
+            // Distância por último
             return a.distancia - b.distancia;
         });
         
+        // --- RENDERIZAÇÃO ---
         lista.innerHTML = "";
         barbeiros.forEach(b => {
-            // Lógica de Estrelas
             const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
             const estrelas = Math.round(notaMedia / 2); 
             const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
             const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
 
-            // Status HTML
             let statusHtml = '';
             const agora = new Date();
             const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim && agora >= b.ausenciaInicio.toDate() && agora <= b.ausenciaFim.toDate();
@@ -4972,24 +5052,16 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
                 statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata</div>`;
             } else if (b.usaAgendaManual) {
                 const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
-                statusHtml = horarios.length > 0 
-                    ? `<div class="card-status status-manual">📅 Horários Disponíveis</div>` 
-                    : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
-            }
-
-            // Promoções
-            let promocoesHtml = '';
-            if (b.promocoes && b.promocoes.length > 0) {
-              promocoesHtml = `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>`;
+                statusHtml = horarios.length > 0 ? `<div class="card-status status-manual">📅 Horários Disponíveis</div>` : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
             }
             
-            // HTML da Logo e Distância
+            let promocoesHtml = (b.promocoes && b.promocoes.length > 0) ? `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>` : '';
             const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
             
-            // Botão de Favorito (Coração)
+            const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
             const heartIcon = b.isFavorito ? '❤️' : '♡';
             
             const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
@@ -11848,9 +11920,7 @@ function checarParametrosURL() {
 }
 
 function setupConfiguracoes() {
-    // carregarEstados('config'); // Removido - não estamos mais usando select de estado/cidade aqui
-    // setTimeout(() => { ... }, 100); // Removido
-
+    // Configura botões de visitante
     configurarBotoesGuest();
     carregarBarbeirosPrincipal('listaBarbeirosPrincipalGuest', true);
 
@@ -11863,25 +11933,44 @@ function setupConfiguracoes() {
         msgLojaLiberada.classList.toggle('hidden', mostrarBotao);
     }
 
-    // --- INÍCIO DA MODIFICAÇÃO: Lógica "Virar Profissional" ---
     const secaoVirarProfissional = document.getElementById('secaoVirarProfissional');
     if (secaoVirarProfissional && perfil) {
-        // Mostra o botão APENAS se o usuário for 'cliente'
         secaoVirarProfissional.classList.toggle('hidden', perfil.tipo !== 'cliente');
     }
-    // --- FIM DA MODIFICAÇÃO ---
 
+    // --- LÓGICA DE ALTERAÇÃO DE INTERESSE (NICHO) ---
     const interesseContainer = document.getElementById('configInteresseContainer');
     const buttons = interesseContainer.querySelectorAll('button');
+    
     buttons.forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.interesse === perfil.interesse_principal);
+        // Marca visualmente o botão atual
+        const isActive = btn.dataset.interesse === (perfil.interesse_principal || 'barbeiro');
+        btn.classList.toggle('selected', isActive);
+        
         btn.onclick = async () => {
             const novoInteresse = btn.dataset.interesse;
-            await db.collection('usuarios').doc(auth.currentUser.uid).update({ interesse_principal: novoInteresse });
-            buttons.forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            exibirPopup("Interesse atualizado!");
-            location.reload(); 
+            
+            // Se clicar no que já está selecionado, não faz nada
+            if (novoInteresse === perfil.interesse_principal) return;
+
+            exibirAguarde("Alterando interesse...");
+            try {
+                await db.collection('usuarios').doc(auth.currentUser.uid).update({ 
+                    interesse_principal: novoInteresse 
+                });
+                
+                fecharTodosOsModais();
+                exibirPopup("Sucesso", "Seu interesse foi atualizado! O app será recarregado para aplicar as mudanças.", "sucesso");
+                
+                // Recarrega para aplicar tema e listas novas corretamente
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+
+            } catch (error) {
+                fecharTodosOsModais();
+                exibirPopup("Erro", "Não foi possível alterar o interesse: " + error.message);
+            }
         }
     });
 }
