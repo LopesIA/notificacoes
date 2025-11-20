@@ -4932,7 +4932,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     
     if (barbeirosListener) barbeirosListener();
     
-    // Query base: busca todos os profissionais
+    // Query: Busca TODOS os tipos de profissionais primeiro
     let query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
     
     barbeirosListener = query.onSnapshot(snap => {
@@ -4944,29 +4944,24 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         let barbeiros = [];
         const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
         
-        // Define o interesse do usuário logado (se houver)
-        const interesseUsuario = (perfil && perfil.interesse_principal) ? perfil.interesse_principal : null;
+        // Define o interesse do usuário logado com segurança
+        // Se não tiver interesse definido, assume 'barbeiro' como padrão
+        const interesseUsuario = (perfil && perfil.interesse_principal) ? perfil.interesse_principal : 'barbeiro';
 
         snap.forEach(doc => {
             const b = doc.data();
             b.uid = doc.id;
             
-            // --- FILTRO DE INTERESSE (Rígido) ---
-            // Lógica: 
-            // 1. Se eu sou Admin ou Guest (Visitante), vejo tudo.
-            // 2. Se sou Profissional, vejo tudo (para ver concorrentes/colegas).
-            // 3. Se sou Cliente:
-            //    a. Se estou no modo "Mostrar Favoritos", ignoro o filtro de interesse (mostro quem eu favoritei).
-            //    b. Se NÃO estou nos favoritos, aplico o filtro RIGOROSO do meu interesse_principal.
-            
+            // --- LÓGICA DE FILTRO RIGOROSA ---
+            // Regra 1: Se sou Cliente e NÃO estou no modo "Ver Favoritos"
             if (!isGuest && perfil.tipo === 'cliente' && !mostrarApenasFavoritos) {
-                // Se o cliente não tem interesse definido, define padrão 'barbeiro'
-                const meuInteresse = interesseUsuario || 'barbeiro';
-                
-                // Se o tipo do profissional (b.tipo) for diferente do meu interesse, PULA.
-                if (b.tipo !== meuInteresse) return; 
+                // O tipo do profissional TEM que ser igual ao meu interesse.
+                // Se meu interesse é 'barbeiro' e o profissional é 'manicure_pedicure', eu ignoro (return).
+                if (b.tipo !== interesseUsuario) {
+                    return; // Pula este profissional e vai para o próximo
+                }
             }
-            // -------------------------------------
+            // Nota: Se for Admin, Profissional ou Guest, ou se estiver vendo Favoritos, passa direto.
 
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
@@ -4977,46 +4972,44 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             barbeiros.push(b);
         });
 
-        // --- FILTRO DE FAVORITOS (BOTÃO ATIVO) ---
-        if (mostrarApenasFavoritos && !isGuest) {
-            barbeiros = barbeiros.filter(b => b.isFavorito);
-            if (barbeiros.length === 0) {
+        // --- EXIBIÇÃO ---
+        // Se depois de filtrar não sobrou ninguém (ex: cliente escolheu Cílios mas não tem ninguém de Cílios)
+        if(barbeiros.length === 0) {
+             // Mensagem personalizada baseada no contexto
+             if (mostrarApenasFavoritos) {
                  lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Você ainda não tem favoritos.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
-                 return;
-            }
+             } else {
+                 let nomeCategoria = "nesta categoria";
+                 if(interesseUsuario === 'barbeiro') nomeCategoria = "Barbearia";
+                 if(interesseUsuario === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
+                 if(interesseUsuario === 'designer_cilios') nomeCategoria = "Cílios";
+                 
+                 lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>😔 Nenhum profissional de <b>${nomeCategoria}</b> encontrado na sua região no momento.</p></div>`;
+             }
+             return;
         }
 
         // --- ORDENAÇÃO ---
-        // Prioridade: Favoritos no Topo > Disponibilidade > Boost > PRO > Distância
         barbeiros.sort((a, b) => {
-            // 1. Favoritos sempre primeiro (mesmo na lista geral)
             if (a.isFavorito && !b.isFavorito) return -1;
             if (!a.isFavorito && b.isFavorito) return 1;
 
-            // 2. Disponibilidade
             const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
             const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
             if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
 
-            // 3. Boost (Pago)
             const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
             const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
             
-            // 4. PRO (Assinatura)
             const aPro = isProAtivo(a);
             const bPro = isProAtivo(b);
             if (aPro !== bPro) return aPro ? -1 : 1;
 
-            // 5. Distância
             return a.distancia - b.distancia;
         });
         
         lista.innerHTML = "";
-        if(barbeiros.length === 0) {
-             lista.innerHTML = `<p>Nenhum profissional encontrado para ${interesseUsuario ? interesseUsuario.replace('_', ' e ') : 'sua busca'}.</p>`;
-             return;
-        }
 
         barbeiros.forEach(b => {
             const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
@@ -5047,9 +5040,8 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
             
-            const heartIcon = b.isFavorito ? '❤️' : '♡';
-            // Cor do coração favorita: Dourado se selecionado, branco se não
             const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
+            const heartIcon = b.isFavorito ? '❤️' : '♡';
             
             const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
             const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
@@ -12066,36 +12058,31 @@ function girarRoleta() {
 
     // 1. Definir o Resultado (Sorteio)
     const rand = Math.random();
-    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; // 1-10 ou 11 (Caixa)
+    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
 
-    // 2. Configuração da Animação (Matemática precisa)
-    // CSS: width 80px + 3px borda esq + 3px borda dir + 2px margem esq + 2px margem dir = 90px TOTAL
+    // 2. Configuração da Animação
+    // A largura do item + margens + bordas deve ser EXATAMENTE 90px no CSS para isso funcionar perfeitamente
     const itemFullWidth = 90; 
-    const itensPorSet = 11; // 10 números + 1 presente
+    const itensPorSet = 11; 
+    const voltas = 50; 
     
-    const voltas = 50; // Voltas para dar efeito de velocidade
-    
-    // O índice alvo na longa fita. (Resultado - 1) ajusta para índice base 0.
     const indiceAlvo = (voltas * itensPorSet) + (resultado - 1);
-    
     const containerWidth = document.getElementById('roletaVisual').offsetWidth;
     
-    // CÁLCULO DE PRECISÃO:
-    // Queremos que o CENTRO do item alvo fique no CENTRO do container.
-    // Posição = (Distância até o início do item) - (Metade do container) + (Metade do item)
+    // Centraliza o alvo sob a seta
     const posicaoFinal = (indiceAlvo * itemFullWidth) - (containerWidth / 2) + (itemFullWidth / 2);
 
     const faixa = document.getElementById('roletaFaixa');
-    const tempoAnimacao = 6; // Segundos
+    const tempoAnimacao = 6; // Segundos de giro
     
-    // Adiciona um pequeno ruído aleatório (+/- 15px) para não parecer robótico,
-    // mas garante que não pule para o vizinho (limite seguro é +/- 40px num item de 90px)
+    // Pequeno ajuste aleatório para realismo (+/- 15px), mas mantendo dentro do quadrado
     const jitter = Math.floor(Math.random() * 30) - 15; 
     
     faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${posicaoFinal + jitter}px)`;
     
-    // 3. Processar Prêmio APÓS a animação
+    // 3. Processar Prêmio APÓS a animação + DELAY
+    // O delay foi aumentado para 2000ms (2 segundos) após o fim da animação
     setTimeout(async () => {
         let premioTitulo = "";
         let premioDescricao = "";
@@ -12139,6 +12126,7 @@ function girarRoleta() {
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
         }
 
+        // Só agora (depois do delay) atualizamos o botão para permitir (ou não) novo giro
         let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1; 
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
@@ -12148,12 +12136,12 @@ function girarRoleta() {
             setTimeout(() => {
                 faixa.style.transition = 'none';
                 faixa.style.transform = 'translateX(0px)';
-            }, 2000);
+            }, 1000);
         } else {
             btnGirar.textContent = "Volte Amanhã";
         }
 
-    }, tempoAnimacao * 1000 + 200);
+    }, tempoAnimacao * 1000 + 1000); // <--- AQUI ESTÁ O DELAY DE 1 SEGUNDO
 }
 
 // Função para renderizar a lista (Adicionado o onclick visual)
