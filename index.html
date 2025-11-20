@@ -1508,13 +1508,12 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 /* Molduras */
 .moldura-item {
     transition: transform 0.1s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent; /* Remove o fundo azul/cinza no mobile */
+    outline: none; /* Remove borda de foco */
+    user-select: none; /* Impede seleção de texto */
 }
-.moldura-item:active {
-    transform: scale(0.98);
-}
-/* CORREÇÃO DO FUNDO: Garante que nenhum fundo padrão do navegador seja exibido ao clicar */
-.moldura-item:active::after {
-    content: none !important;
+.moldura-item:active, .moldura-item:focus {
+    background-color: transparent !important; /* Garante que não tenha fundo */
 }
 /* O checkmark agora é controlado por uma classe 'temp-selected' via JS para feedback instantâneo */
 .moldura-item.temp-selected .moldura-check {
@@ -1533,7 +1532,6 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .moldura-item.selecionada { background: rgba(212, 175, 55, 0.2); border-color: var(--cor-destaque); }
 
 .moldura-item.temp-selected {
-    background: rgba(212, 175, 55, 0.4) !important;
     border-color: var(--cor-destaque) !important;
     transform: scale(1.05);
 }
@@ -4840,32 +4838,53 @@ function filtrarBarbeiros() {
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
     
-    // --- LÓGICA BOTÃO FAVORITOS UNIVERSAL ---
+    // --- LÓGICA BOTÃO FAVORITOS UNIVERSAL E LUXUOSO ---
     const divPai = lista.parentElement;
     let btnFavoritos = divPai.querySelector('#btnFiltroFavoritos');
     
-    // Cria o botão se não existir
-    if (!btnFavoritos && !isGuest) { 
+    // Remove botão antigo se estiver no lugar errado ou duplicado para garantir estilo novo
+    if (btnFavoritos) {
+        // Opcional: remover para recriar se quiser forçar atualização, 
+        // mas vamos apenas atualizar as classes abaixo.
+    } else if (!isGuest) { 
+        // Cria o botão se não existir e não for visitante
         const divBtn = document.createElement('div');
-        divBtn.style.display = 'flex'; divBtn.style.justifyContent = 'center'; divBtn.style.margin = '10px 0';
+        divBtn.style.display = 'flex'; 
+        divBtn.style.justifyContent = 'center'; 
+        divBtn.style.margin = '15px 0'; // Margem um pouco maior para destaque
+        
         btnFavoritos = document.createElement('button');
         btnFavoritos.id = 'btnFiltroFavoritos';
         btnFavoritos.onclick = alternarFiltroFavoritos;
         btnFavoritos.textContent = '♡ Mostrar Favoritos';
+        
         divBtn.appendChild(btnFavoritos);
-        divPai.insertBefore(divBtn, lista);
+        divPai.insertBefore(divBtn, lista); // Insere antes da lista
     }
 
-    // Aplica o estilo baseado no nicho
+    // APLICA O ESTILO LUXUOSO (PARA TODOS: CLIENTES E PROFISSIONAIS)
     if (btnFavoritos) {
-        btnFavoritos.className = 'btn-favoritos-estilo'; // Reseta classe base
+        btnFavoritos.className = 'btn-favoritos-estilo'; // Classe base CSS que você já tem
+        
+        // Define o tema baseado no interesse do usuário logado
         const interesse = perfil?.interesse_principal || 'barbeiro';
+        
         if (interesse === 'manicure_pedicure' || interesse === 'designer_cilios') {
             btnFavoritos.classList.add('estilo-pink');
             btnFavoritos.classList.remove('estilo-gold');
         } else {
+            // Padrão (Barbeiro ou Admin ou Outros)
             btnFavoritos.classList.add('estilo-gold');
             btnFavoritos.classList.remove('estilo-pink');
+        }
+        
+        // Atualiza texto/estado visual se já estiver filtrado
+        if (mostrarApenasFavoritos) {
+            btnFavoritos.textContent = "❤️ Ver Todos";
+            btnFavoritos.style.boxShadow = "inset 0 0 10px rgba(0,0,0,0.5)"; // Efeito pressionado
+        } else {
+            btnFavoritos.textContent = "♡ Mostrar Favoritos";
+            btnFavoritos.style.boxShadow = "";
         }
     }
     // -----------------------------------------
@@ -4877,16 +4896,22 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     }
     
     if (barbeirosListener) barbeirosListener();
+    
     let query;
     if (isGuest) {
+        // Visitante vê uma mistura ou padrão
         query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
     } else {
-        query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
+        // Lógica de filtro baseada no interesse do usuário
+        // Se for profissional, ele pode querer ver colegas da mesma área ou todos?
+        // Assumindo que vê o mesmo nicho que ele escolheu no cadastro/config
+        const tipoAlvo = perfil?.interesse_principal || 'barbeiro';
+        query = db.collection("usuarios").where("tipo", "==", tipoAlvo);
     }
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-            lista.innerHTML = `<p>😔 Nenhum profissional encontrado para esta categoria.</p>`;
+            lista.innerHTML = `<p>😔 Nenhum profissional encontrado nesta categoria.</p>`;
             return;
         }
 
@@ -4896,6 +4921,9 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         snap.forEach(doc => {
             const b = doc.data();
             b.uid = doc.id;
+            // Evita mostrar o próprio usuário na lista se ele for profissional
+            if (auth.currentUser && b.uid === auth.currentUser.uid) return; 
+
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
             } else {
@@ -4905,11 +4933,26 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             barbeiros.push(b);
         });
 
+        // Filtra se o botão estiver ativo
+        if (mostrarApenasFavoritos) {
+            barbeiros = barbeiros.filter(b => b.isFavorito);
+        }
+
+        if (mostrarApenasFavoritos && barbeiros.length === 0) {
+             lista.innerHTML = `<div style="text-align:center; padding:20px;">
+                <p>💔 Você ainda não tem favoritos nesta categoria.</p>
+                <button onclick="alternarFiltroFavoritos()" style="margin-top:10px; width:auto;">Ver Todos</button>
+             </div>`;
+             return;
+        }
+
         barbeiros.sort((a, b) => {
-            if (mostrarApenasFavoritos) {
-                if (a.isFavorito && !b.isFavorito) return -1;
-                if (!a.isFavorito && b.isFavorito) return 1;
+            // Ordenação: Favoritos primeiro (se não estiver filtrado), depois Disponíveis, depois Boosted, depois Distância
+            if (!mostrarApenasFavoritos) {
+                 if (a.isFavorito && !b.isFavorito) return -1;
+                 if (!a.isFavorito && b.isFavorito) return 1;
             }
+            
             const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
             const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
             if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
@@ -4918,15 +4961,12 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
 
-            const aPro = isProAtivo(a);
-            const bPro = isProAtivo(b);
-            if (aPro !== bPro) return aPro ? -1 : 1;
-
             return a.distancia - b.distancia;
         });
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
+            // ... (Renderização do Card - Igual ao original) ...
             const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
             const estrelas = Math.round(notaMedia / 2); 
             const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
@@ -4962,8 +5002,8 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
             
             const heartIcon = b.isFavorito ? '❤️' : '♡';
+            // Botão de favorito aparece para todos (exceto guest)
             const favoriteBtn = isGuest ? '' : `<button class="card-action-btn card-favorite-btn" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
-
             const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
 
             lista.innerHTML += `
@@ -7816,6 +7856,13 @@ async function abrirModalGerenciarUsuario(uid) {
                 <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
             </div>
             <hr style="border-color: var(--cor-borda); margin: 10px 0;">
+            <p><strong>Roleta Diária:</strong></p>
+            <div style="display:flex; gap:5px; align-items: center;">
+                <input id="adminInputGiros" type="number" placeholder="Qtd Giros" style="margin:0; width: 80px;">
+                <button onclick="adminAdicionarGiros('${uid}')" style="background-color: var(--cor-destaque-ouro); color: #000;">🎲 Dar Giros</button>
+            </div>
+            <p style="font-size:10px; opacity:0.7; margin-top:5px;">Adiciona giros extras para hoje.</p>
+            <hr style="border-color: var(--cor-borda); margin: 10px 0;">
 
             <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? '<span style="color:#2ecc71; font-weight:bold;">Sim ✅</span>' : '<span style="color:#e74c3c">Não ❌</span>'}</p>
             ${isVipAtivo(u) 
@@ -9787,6 +9834,37 @@ async function confirmarCompraLoja(dadosEntrega) {
     }
 }
 
+// Nova Função para Admin Adicionar Giros na Roleta
+async function adminAdicionarGiros(uid) {
+    const inputGiros = document.getElementById('adminInputGiros');
+    const qtde = parseInt(inputGiros.value);
+
+    if (isNaN(qtde) || qtde <= 0) {
+        return exibirPopup("Valor inválido", "Digite uma quantidade válida de giros (ex: 1, 5, 10).");
+    }
+
+    if (!confirm(`Deseja adicionar ${qtde} giros extras para este usuário hoje?`)) return;
+
+    exibirAguarde("Adicionando giros...");
+
+    try {
+        // A lógica é: Se 'girosRealizadosHoje' ficar negativo, o cálculo (Total - Realizados) aumenta.
+        // Ex: Limite 1. Usou 1. Resta 0. 
+        // Admin dá 5. 'girosRealizadosHoje' vira 1 - 5 = -4.
+        // Novo Restante: 1 - (-4) = 5. Funciona perfeitamente.
+        
+        await db.collection('usuarios').doc(uid).update({
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde)
+        });
+
+        fecharTodosOsModais();
+        exibirPopup("Sucesso", `${qtde} giros adicionados ao usuário!`);
+        abrirModalGerenciarUsuario(uid); // Reabre para atualizar
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro", "Não foi possível adicionar giros: " + e.message);
+    }
+}
 
 async function abrirGerenciarLoja() {
     abrirModal('modalGerenciarLoja');
@@ -11942,32 +12020,22 @@ function girarRoleta() {
     const rand = Math.random();
     let resultado = rand < 0.9 ? Math.ceil(Math.random() * 10) : 11; // 11 = Caixa/Presente
     
-    // --- LÓGICA DE GIRO FORTE (2 a 5 Voltas) ---
-    // Sorteia entre 2 e 5 voltas completas
-    const voltasCompletas = Math.floor(Math.random() * 4) + 2; // Gera 2, 3, 4 ou 5
-    
-    // Configuração física dos itens (largura 70px + margens/bordas ~ 84px)
+    // Animação visual
+    const voltasCompletas = Math.floor(Math.random() * 4) + 2;
     const itemWidth = 84; 
-    const itensPorSet = 11; // 10 números + 1 presente
-    
-    // Calcula o índice final no array de elementos HTML
-    // Pula 'voltasCompletas' sets inteiros e soma a posição do resultado
-    // Adiciona um offset inicial para não começar do zero absoluto visualmente
-    const setFinal = voltasCompletas + 2; // Garante que gira bastante visualmente
+    const itensPorSet = 11;
+    const setFinal = voltasCompletas + 2;
     const indiceFinal = (setFinal * itensPorSet) + (resultado - 1);
-    
     const posicaoFinal = indiceFinal * itemWidth;
-    // Variação aleatória para o ponteiro parar no meio do quadrado (não na linha)
     const randomOffset = Math.floor(Math.random() * 40) - 20; 
     
     const faixa = document.getElementById('roletaFaixa');
-    // Tempo de animação baseado nas voltas (quanto mais voltas, um pouco mais de tempo)
     const tempoAnimacao = 4 + (voltasCompletas * 0.5); 
     
-    faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.2, 0.8, 0.2, 1)`; // Curva suave com parada firme
+    faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.2, 0.8, 0.2, 1)`;
     faixa.style.transform = `translateX(-${posicaoFinal + randomOffset}px)`;
     
-    // Processa prêmio após a animação terminar
+    // Processa prêmio após a animação
     setTimeout(async () => {
         let premioTitulo = "";
         let premioDescricao = "";
@@ -11977,48 +12045,58 @@ function girarRoleta() {
         };
         
         if (resultado <= 10) {
-            // --- POPUP ESPECÍFICO PARA PONTOS (1 a 10) ---
+            // --- NÚMEROS = PONTOS ---
             premioTitulo = `🎉 Ganhou ${resultado} Ponto${resultado > 1 ? 's' : ''}!`;
-            premioDescricao = `Parabéns! Você acaba de ganhar ${resultado} ponto${resultado > 1 ? 's' : ''} de fidelidade.`;
+            premioDescricao = `Parabéns! Você ganhou ${resultado} pontos de fidelidade. Eles foram adicionados à sua conta.`;
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
         } else {
-            // --- POPUP ESPECÍFICO PARA O PRESENTE ---
-            premioTitulo = "🎁 CAIXA SURPRESA ABERTA!";
+            // --- CAIXA SURPRESA ---
+            premioTitulo = "🎁 CAIXA SURPRESA!";
             
             if (perfil.tipo !== 'cliente') {
-                // Prêmios para Profissionais
-                const premioCaixa = Math.random() > 0.5 ? 'top' : 'vip';
-                if (premioCaixa === 'top') {
-                    const exp = new Date(); exp.setHours(exp.getHours() + 24);
-                    updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(exp);
-                    premioDescricao = "Você ganhou: 🚀 24 horas de Perfil Turbinado!";
-                } else {
-                    const exp = new Date(); exp.setDate(exp.getDate() + 5);
-                    updates.vip = true; 
-                    updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(exp);
-                    premioDescricao = "Você ganhou: 👑 5 Dias de VIP Grátis!";
-                }
+                // PREMIO PROFISSIONAL: 24h de Topo (Boost)
+                const exp = new Date(); 
+                // Se já tiver boost, adiciona 24h ao final, senão começa agora
+                const atualExp = perfil.boostExpiracao ? perfil.boostExpiracao.toDate() : new Date();
+                if (atualExp < new Date()) { atualExp.setTime(Date.now()); } // Se já venceu, reseta para agora
+                
+                atualExp.setHours(atualExp.getHours() + 24);
+                
+                updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(atualExp);
+                updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
+                
+                premioDescricao = "Incrível! Você ganhou 24 horas de Perfil Turbinado (Topo da Lista)!";
             } else {
-                // Prêmios para Clientes
-                premioDescricao = "Você ganhou: 🏆 50 Pontos de Fidelidade!"; 
-                updates.pontosFidelidade = firebase.firestore.FieldValue.increment(50);
+                // PREMIO CLIENTE: 5 Dias de VIP
+                const exp = new Date();
+                // Se já é VIP, estende. Se não, começa agora.
+                const atualVipExp = (isVipAtivo(perfil) && perfil.vipExpirationDate) ? perfil.vipExpirationDate.toDate() : new Date();
+                if (atualVipExp < new Date()) { atualVipExp.setTime(Date.now()); }
+
+                atualVipExp.setDate(atualVipExp.getDate() + 5); // Adiciona 5 dias
+                
+                updates.vip = true; 
+                updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(atualVipExp);
+                
+                premioDescricao = "Sorte Grande! Você ganhou 5 Dias de VIP Grátis (Descontos e Pontos em Dobro)!";
             }
         }
         
-        await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
-        
-        // POPUP DO PRÊMIO
-        exibirPopup(premioTitulo, premioDescricao, 'sucesso');
+        try {
+            await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+            // Exibe o popup com o prêmio
+            exibirPopup(premioTitulo, premioDescricao, 'sucesso');
+        } catch (e) {
+            exibirPopup("Erro", "Erro ao salvar seu prêmio. Contate o suporte.");
+        }
 
-        // Reset visual (opcional, recarrega modal para resetar posição ou atualiza botão)
-        // Atualiza botão de girar
+        // Atualiza botão
         let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1;
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
         
         if(restantes > 0) {
             btnGirar.disabled = false;
-            // Reset silencioso da faixa para o início (para próximo giro)
             setTimeout(() => {
                 faixa.style.transition = 'none';
                 faixa.style.transform = 'translateX(0px)';
@@ -12027,7 +12105,7 @@ function girarRoleta() {
             btnGirar.textContent = "Volte Amanhã";
         }
 
-    }, tempoAnimacao * 1000 + 100); // Aguarda animação + 100ms
+    }, tempoAnimacao * 1000 + 100);
 }
 
 // Função para renderizar a lista (Adicionado o onclick visual)
@@ -12069,44 +12147,47 @@ function selecionarMolduraVisualmente(element) {
     element.classList.add('temp-selected');
 }
 
-// Função Gerenciar Atualizada
 async function gerenciarMoldura(key, element) {
     const m = MOLDURAS[key];
     const minhas = perfil.moldurasAdquiridas || [];
     
     if (minhas.includes(key)) {
-        // --- MUDANÇA INSTANTÂNEA ---
-        // Aplica o visual imediatamente antes de chamar o banco de dados
+        // Seleciona visualmente instantaneamente
         selecionarMolduraVisualmente(element);
 
-        // Atualiza no banco em segundo plano
+        // Atualiza no banco
         try {
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
-            // Não precisamos de popup de sucesso aqui, o feedback visual já basta e é mais fluido
-            console.log("Moldura atualizada no banco.");
+            console.log("Moldura atualizada.");
         } catch (e) {
-            exibirPopup("Erro", "Falha ao salvar moldura. Verifique sua conexão.");
-            // Se der erro, o listener do perfil vai recarregar o estado antigo eventualmente
+            exibirPopup("Erro", "Falha ao salvar moldura.");
         }
     } else {
-        // Lógica de Compra (Mantida)
-        if (perfil.saldo < m.preco) return exibirPopup("Saldo insuficiente para comprar esta moldura.");
-        
-        if (!confirm(`Deseja comprar a moldura ${m.nome} por R$${m.preco}?`)) return;
-        
-        exibirAguarde("Comprando...");
-        try {
-            await db.collection('usuarios').doc(auth.currentUser.uid).update({
-                saldo: firebase.firestore.FieldValue.increment(-m.preco),
-                moldurasAdquiridas: firebase.firestore.FieldValue.arrayUnion(key)
-            });
-            fecharTodosOsModais();
-            exibirPopup("Compra realizada! Agora você pode selecionar a moldura.");
-            // A lista será renderizada novamente pelo listener, mostrando como 'comprada'
-        } catch(e) {
-            fecharTodosOsModais();
-            exibirPopup("Erro na compra: " + e.message);
+        // Lógica de Compra com POPUP
+        if (perfil.saldo < m.preco) {
+            return exibirPopup("Saldo insuficiente", "Você não tem saldo suficiente para comprar esta moldura.");
         }
+        
+        // Substituição do confirm() pelo exibirConfirmacao()
+        exibirConfirmacao(
+            "Comprar Moldura?", 
+            `Deseja adquirir a moldura "${m.nome}" por R$ ${m.preco.toFixed(2)}?`, 
+            () => {
+                // Callback executado ao clicar em SIM
+                exibirAguarde("Comprando...");
+                db.collection('usuarios').doc(auth.currentUser.uid).update({
+                    saldo: firebase.firestore.FieldValue.increment(-m.preco),
+                    moldurasAdquiridas: firebase.firestore.FieldValue.arrayUnion(key)
+                }).then(() => {
+                    fecharTodosOsModais();
+                    exibirPopup("Sucesso!", "Compra realizada! Agora você pode selecionar a moldura.", "sucesso");
+                    // A UI será atualizada pelo listener do perfil
+                }).catch(e => {
+                    fecharTodosOsModais();
+                    exibirPopup("Erro na compra: " + e.message);
+                });
+            }
+        );
     }
 }
 
