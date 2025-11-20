@@ -1917,11 +1917,6 @@ body {
         </div>
     </div>
     <hr style="border-color: var(--cor-borda); margin: 20px 0;">
-    <div style="display: flex; justify-content: center; margin: 10px 0;">
-        <button id="btnFiltroFavoritos" onclick="alternarFiltroFavoritos()" style="background: transparent; border: 1px solid var(--cor-borda); width: auto; font-size: 1.2em; padding: 8px 20px;">
-            ♡ Mostrar Favoritos
-        </button>
-    </div>
 <div id="listaBarbeirosPrincipalCliente" class="barbeiro-list-container"></div>
   </div>
 
@@ -12026,7 +12021,7 @@ async function salvarNomePerfil() {
     }
 }
 
-// Função Roleta Corrigida (Prêmios exatos e Popup no final)
+// Função Roleta Corrigida (Cálculo exato de pixels para alinhar o ponteiro)
 function girarRoleta() {
     const hoje = new Date().toDateString();
     
@@ -12045,38 +12040,38 @@ function girarRoleta() {
     btnGirar.disabled = true;
     btnGirar.textContent = "Girando...";
 
-    // 1. Definir o Resultado (Lógica do Servidor simulada)
-    // 1 a 10 = Pontos exatos. 11 = Caixa Surpresa.
+    // 1. Definir o Resultado (1 a 10 = Pontos, 11 = Caixa)
     const rand = Math.random();
-    // 10% de chance de cair na caixa (11), senão cai entre 1 e 10
     let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
 
-    // 2. Configuração da Animação
-    // A roleta tem itens de largura fixa. Precisamos calcular onde parar.
-    // CSS: width 70px + 4px margin-left + 4px margin-right + 6px bordas = 84px total por item (aprox)
-    // Ajuste fino: Se o CSS for 70px width + 3px borda cada lado + 4px margem cada lado = 84px.
-    const itemWidth = 84; 
-    const itensPorSet = 11; // 1 a 10 + Presente
+    // 2. Configuração da Animação com Precisão de Pixels
+    const faixa = document.getElementById('roletaFaixa');
     
-    // Queremos que pare longe para dar efeito de giro (ex: volta 50)
-    const voltas = 50; 
-    // O índice alvo é: (Voltas * ItensPorSet) + (Resultado - 1)
-    // Ex: Resultado 1 (indice 0). Posição = 50 * 11 + 0 = 550º item.
+    // --- CORREÇÃO: Detectar largura exata do item ---
+    const itemExemplo = faixa.querySelector('.roleta-item');
+    if (!itemExemplo) return; // Segurança
+    
+    const style = window.getComputedStyle(itemExemplo);
+    // Largura total = width + margens
+    const itemWidth = itemExemplo.offsetWidth + parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+    const itensPorSet = 11; // 1 a 10 + Presente (conforme gerado em abrirModalPerfil)
+    
+    // Queremos parar longe para dar efeito de giro (Ex: na volta 45)
+    const voltas = 45; 
+    // O índice alvo é onde o item 'resultado' está.
+    // Como os itens são gerados em ordem (1, 2, ... 10, 11), o resultado 1 está no índice 0.
     const indiceAlvo = (voltas * itensPorSet) + (resultado - 1);
     
-    // Cálculo para centralizar o item sob a seta (que está no meio da div pai)
-    // containerWidth / 2 - itemWidth / 2
+    // Cálculo para centralizar o item sob a seta
     const containerWidth = document.getElementById('roletaVisual').offsetWidth;
     const centroOffset = (containerWidth / 2) - (itemWidth / 2);
     
-    // Posição final = (Indice * Largura) - Offset para centralizar
-    // Adicionamos um pequeno random dentro do próprio item para realismo (opcional, mantive fixo para precisão)
+    // Posição final exata em pixels
     const posicaoFinal = (indiceAlvo * itemWidth) - centroOffset;
 
-    const faixa = document.getElementById('roletaFaixa');
     const tempoAnimacao = 5; // 5 segundos
     
-    faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.15, 0, 0.10, 1)`; // Efeito desaceleração suave
+    faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.15, 0, 0.10, 1)`; 
     faixa.style.transform = `translateX(-${posicaoFinal}px)`;
     
     // 3. Processar Prêmio APÓS a animação
@@ -12088,64 +12083,48 @@ function girarRoleta() {
             girosRealizadosHoje: (perfil.ultimoGiroRoleta === hoje) ? firebase.firestore.FieldValue.increment(1) : 1
         };
         
-        // LÓGICA DE PRÊMIOS CORRIGIDA
+        // LÓGICA DE PRÊMIOS (Agora pareada com o visual)
         if (resultado <= 10) {
-            // Caiu no número: Ganha EXATAMENTE o número em pontos
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
-            premioDescricao = `A sorte sorriu! Você ganhou ${resultado} pontos de fidelidade.`;
+            premioDescricao = `A sorte sorriu! O ponteiro parou no ${resultado} e você ganhou ${resultado} pontos de fidelidade.`;
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
         } else {
-            // Caiu no 11 (Caixa Surpresa)
             premioTitulo = "🎁 CAIXA MISTERIOSA!";
-            
             if (perfil.tipo !== 'cliente') {
-                // PROFISSIONAL: Ganha Turbinar (Boost)
-                const exp = new Date(); 
                 const atualExp = perfil.boostExpiracao ? perfil.boostExpiracao.toDate() : new Date();
                 if (atualExp < new Date()) { atualExp.setTime(Date.now()); } 
                 
-                atualExp.setHours(atualExp.getHours() + 24); // +24h de boost
+                atualExp.setHours(atualExp.getHours() + 24);
                 updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(atualExp);
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
-                
-                premioDescricao = "Sorte GRANDE! Você ganhou 24 horas de Perfil Turbinado (Topo da Lista)!";
+                premioDescricao = "Sorte GRANDE! Você ganhou 24 horas de Perfil Turbinado!";
             } else {
-                // CLIENTE: Ganha VIP
-                const exp = new Date();
                 const atualVipExp = (isVipAtivo(perfil) && perfil.vipExpirationDate) ? perfil.vipExpirationDate.toDate() : new Date();
                 if (atualVipExp < new Date()) { atualVipExp.setTime(Date.now()); }
 
-                atualVipExp.setDate(atualVipExp.getDate() + 5); // +5 dias VIP
+                atualVipExp.setDate(atualVipExp.getDate() + 5);
                 updates.vip = true; 
                 updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(atualVipExp);
-                
-                premioDescricao = "Incrível! Você ganhou 5 Dias de VIP Grátis (Descontos e Pontos em Dobro)!";
+                premioDescricao = "Incrível! O ponteiro parou no Presente! Você ganhou 5 Dias de VIP Grátis!";
             }
         }
         
         try {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
-            
-            // Exibe o Popup BLOQUEANTE para garantir que o usuário veja o prêmio
-            exibirPopupBloqueante(premioTitulo, premioDescricao, () => {
-                // Callback ao fechar o popup
-            });
-            
-            // Notificação interna
+            exibirPopupBloqueante(premioTitulo, premioDescricao, () => {});
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", premioDescricao);
-
         } catch (e) {
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
         }
 
-        // Atualiza botão e reseta posição visualmente (sem transição) para o próximo giro
-        let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1; // +1 localmente pois o listener demora
+        // Atualiza botão e reseta posição visualmente para o próximo giro
+        let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1;
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
         
         if(restantes > 0) {
             btnGirar.disabled = false;
-            // Reseta a faixa para o início (sem o usuário perceber) para permitir novo giro
+            // Reseta a faixa para o início (sem o usuário perceber)
             setTimeout(() => {
                 faixa.style.transition = 'none';
                 faixa.style.transform = 'translateX(0px)';
@@ -12154,7 +12133,7 @@ function girarRoleta() {
             btnGirar.textContent = "Volte Amanhã";
         }
 
-    }, tempoAnimacao * 1000 + 500); // Espera a animação + 0.5s de delay dramático
+    }, tempoAnimacao * 1000 + 500);
 }
 
 // Função para renderizar a lista (Adicionado o onclick visual)
