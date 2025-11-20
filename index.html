@@ -351,19 +351,29 @@
       margin: 0;
     }
     #btnChat, #btnDenuncia {
-      /* Mantém estilo base */
-      font-size: 26px; background: none; border: none; padding: 0; margin: 0; cursor: pointer;
-      width: auto; height: auto; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-      position: fixed;
-      bottom: 72px; /* Denúncia sobe */
-      left: 12px;
-      z-index: 15;
+      font-size: 26px;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      width: auto;
+      height: auto;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+      position: relative; /* Para o contador de notificação */
     }
     #btnSair {
-      font-size: 20px; background: none; border: none; padding: 0; margin: 0; cursor: pointer;
-      width: auto; height: auto; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+      font-size: 20px; /* Reduzido */
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      width: auto;
+      height: auto;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
       position: fixed;
-      bottom: 25px; /* Sair desce */
+      bottom: 72px; /* Posição alterada para ficar acima do botão de denúncia */
       left: 12px;
       z-index: 15;
     }
@@ -1334,171 +1344,6 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
         background: var(--cor-fundo);
         border-radius: 5px;
     }
-.card-favorite-btn-custom {
-    position: absolute;
-    top: 10px; /* Movido para o topo para não atrapalhar botões de ação */
-    right: 10px;
-    border: none;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    z-index: 6;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    transition: transform 0.2s;
-}
-.card-favorite-btn-custom:hover { transform: scale(1.1); }
-
-/* Estilos por Nicho */
-.fav-barbeiro {
-    background: linear-gradient(135deg, #d4af37, #c0c0c0); /* Dourado e Prata */
-    color: #000;
-}
-.fav-feminino {
-    background: linear-gradient(135deg, #ff69b4, #ffc0cb); /* Tons de Rosa */
-    color: #fff;
-}
-
-/* Produto Premium na Loja */
-.produto-premium {
-    grid-column: 1 / -1; /* Ocupa toda a largura */
-    background: linear-gradient(45deg, #000, #1a1a1a);
-    border: 2px solid #d4af37;
-    position: relative;
-    display: flex;
-    flex-direction: row; /* Layout horizontal */
-    align-items: center;
-    padding: 15px;
-    overflow: visible;
-    margin-bottom: 20px;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-}
-.produto-premium::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.2), transparent);
-    z-index: 0;
-    pointer-events: none;
-}
-.produto-premium img {
-    width: 120px;
-    height: 120px;
-    border-radius: 10px;
-    border: 2px solid #d4af37;
-    z-index: 1;
-    object-fit: cover;
-}
-.produto-premium .produto-info {
-    text-align: left;
-    padding-left: 20px;
-    z-index: 1;
-}
-.produto-premium .produto-nome {
-    font-size: 1.4em;
-    color: #d4af37;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-}
-.produto-premium .produto-preco {
-    font-size: 1.3em;
-    color: #fff;
-    font-weight: bold;
-    text-shadow: 0 0 5px #d4af37;
-}
-
-/* Foto no Chat */
-.chat-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-    vertical-align: middle;
-    margin-right: 5px;
-    border: 1px solid var(--cor-destaque);
-}
-
-/* Roleta Horizontal */
-.roleta-container {
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-    background: #222;
-    border-radius: 10px;
-    border: 2px solid var(--cor-destaque);
-    height: 80px;
-    margin: 15px 0;
-    display: flex;
-    align-items: center;
-}
-.roleta-faixa {
-    display: flex;
-    transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1); /* Efeito de desaceleração */
-    will-change: transform;
-}
-.roleta-item {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: bold;
-    flex-shrink: 0;
-    border-right: 1px solid rgba(0,0,0,0.5);
-}
-.roleta-marcador {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: red;
-    transform: translateX(-50%);
-    z-index: 5;
-    box-shadow: 0 0 5px black;
-}
-
-/* Molduras de Perfil */
-.moldura-wrapper {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-    margin: 5px;
-}
-.moldura-img {
-    position: absolute;
-    top: -5px; left: -5px;
-    width: calc(100% + 10px);
-    height: calc(100% + 10px);
-    pointer-events: none;
-    z-index: 2;
-}
-/* Cores da Roleta (Barbearia) */
-.roleta-item.amarelo { background-color: #d4af37; color: #000; }
-.roleta-item.preto { background-color: #000; color: #fff; }
-/* Cores da Roleta (Feminino) */
-.roleta-item.rosa { background-color: #ff69b4; color: #000; }
-.roleta-item.branco { background-color: #fff; color: #000; border: 2px solid gold; } /* O 10 */
-.roleta-item.surpresa { background: linear-gradient(45deg, purple, blue); color: #fff; }
-
-/* Molduras Loja */
-.moldura-opcao {
-    border: 2px solid #333;
-    padding: 10px;
-    border-radius: 10px;
-    text-align: center;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-.moldura-opcao:hover { border-color: var(--cor-destaque); }
-.moldura-opcao.comprada { border-color: #2ecc71; opacity: 0.6; pointer-events: none; }
 
   </style>
 </head>
@@ -1588,17 +1433,16 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     <button onclick="toggleFuncoes('clienteFuncoesContainer')" class="blinking-button closed">⚙️ Funções do Cliente</button>
     <div id="clienteFuncoesContainer" class="hidden">
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
-    <button onclick="abrirPerfilUsuario()" style="width:92%; background: linear-gradient(45deg, #333, #555);">👤 Meu Perfil & Roleta</button> <!-- NOVO -->
-    <button id="btnHistoricoCliente" onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
-    <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
-    <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-    <button onclick="abrirModalFidelidade()" style="width:45%">🏆 Fidelidade</button>
-    <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
-    <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
-    <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
-    <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Minha Loja</button>
-    <button id="btnMinhasCompras" onclick="abrirMinhasCompras()" style="width:45%">🛍️ Minhas Compras</button>
-</div>
+          <button id="btnHistoricoCliente" onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
+          <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
+          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+          <button onclick="abrirModalFidelidade()" style="width:45%">🏆 Fidelidade</button>
+          <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
+          <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
+          <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
+          <button id="btnGerenciarLojaCliente" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Minha Loja</button>
+          <button id="btnMinhasCompras" onclick="abrirMinhasCompras()" style="width:45%">🛍️ Minhas Compras</button>
+        </div>
     </div>
     <hr style="border-color: var(--cor-borda); margin: 20px 0;">
     <div style="display: flex; justify-content: center; margin: 10px 0;">
@@ -1614,26 +1458,26 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     <button onclick="toggleFuncoes('barbeiroFuncoesContainer')" class="blinking-button closed">⚙️ Funções do Profissional</button>
     <div id="barbeiroFuncoesContainer" class="hidden">
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
-    <button onclick="abrirPerfilUsuario()" style="width:92%; background: linear-gradient(45deg, #333, #555);">👤 Meu Perfil & Roleta</button> <!-- NOVO -->
-    <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
-    <button onclick="abrirAgenda()" style="width:45%">📅 Agenda</button>
-    <button id="btnAgendamentosBarbeiro" onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
-    <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
-    <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
-    <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
-    <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
-    <button id="btnAvaliacoesBarbeiro" onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
-    <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
-    <button onclick="abrirModal('modalLogomarca')" style="width:45%">🎨 Logomarca</button>
-    <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
-    <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
-    <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
-    <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
-    <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
-    <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
-    <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
-    <button id="btnVipPro" onclick="abrirModalVipPro()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-azul), #00c6ff);">🌟 Seja PRO (R$ 29,99/mês)</button>
-</div>
+          <button onclick="abrirServicos()" style="width:45%">✂️ Serviços</button>
+          <button onclick="abrirAgenda()" style="width:45%">📅 Agenda</button>
+          <button id="btnAgendamentosBarbeiro" onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
+          <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
+          <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
+          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+          <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
+          <button id="btnAvaliacoesBarbeiro" onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
+          <button onclick="abrirModalPortfolioBarbeiro()" style="width:45%">🖼️ Portfólio</button>
+          <button onclick="abrirModal('modalLogomarca')" style="width:45%">🎨 Logomarca</button>
+          <button onclick="abrirModal('modalAlterarEnderecoBarbeiro')" style="width:45%">📍 Alterar Endereço</button>
+          <button onclick="abrirModalDashboardBarbeiro()" style="width:45%">🚀 Desempenho</button>
+          <button onclick="abrirModalConquistasBarbeiro()" style="width:45%">🏅 Conquistas</button>
+          <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
+          <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
+          <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
+          <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
+          
+          <button id="btnVipPro" onclick="abrirModalVipPro()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-azul), #00c6ff);">🌟 Seja PRO (R$ 29,99/mês)</button>
+        </div>
     </div>
      <hr style="border-color: var(--cor-borda); margin: 20px 0;">
     <div id="listaBarbeirosPrincipalBarbeiro" class="barbeiro-list-container"></div>
@@ -1668,16 +1512,15 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
   <button id="btnResgatar" onclick="abrirPortaSecreta()">✨ Resgatar Código</button>
 </div>
 
-<button id="btnDenuncia" onclick="abrirModal('modalDenuncia')">🚨</button>
-<button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
-
 <div class="bottom-buttons-container hidden" id="bottomButtons">
-  <!-- Apenas o Chat fica aqui agora, à direita -->
+  <button id="btnDenuncia" onclick="abrirModal('modalDenuncia')">🚨</button>
   <button id="btnChat" onclick="abrirChatGlobal()">
     <span>💬</span>
     <span class="notification-badge hidden">0</span>
   </button>
 </div>
+
+<button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
 
 <div id="modalConfiguracoes" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
@@ -2966,18 +2809,16 @@ function detectarAmbiente() {
 
 // Chama a função para definir a variável 'isTwa' na inicialização
 detectarAmbiente(); 
-const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.20, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
+const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.05, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
 const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737";
-const PRECO_VIP = 49.90; // Agora é 49,90
+const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
-
-// SUBSTITUA AS CONSTANTES DE PREÇO POR ESTAS (NOVOS VALORES E REGRA DA ROLETA)
-const PRECOS_PRO = { 
-    tier1: { nome: 'Bronze', preco: 29.90, taxa: 0.15, giros: 2 }, // 15%
-    tier2: { nome: 'Prata', preco: 59.90, taxa: 0.10, giros: 3 },  // 10%
-    tier3: { nome: 'Ouro', preco: 99.90, taxa: 0.05, giros: 4 },   // 5%
-    tier4: { nome: 'Diamante', preco: 199.90, taxa: 0.00, giros: 5 } // 0% (NOVO)
+// SUBSTITUA AS CONSTANTES DE PREÇO POR ESTAS
+const PRECOS_PRO = { // Nossos 3 novos níveis
+    tier1: { preco: 29.90, taxa: 0.04 }, // 4%
+    tier2: { preco: 59.90, taxa: 0.02 }, // 2%
+    tier3: { preco: 99.90, taxa: 0.00 }  // 0%
 };
 
 let fcmSetupDone = false;
@@ -4067,7 +3908,8 @@ auth.onAuthStateChanged(async user => {
                   });
               });
 
-            // 1. Listener para POPUP OBRIGATÓRIO (Aceito/Recusado)
+            // 2. Listener para POPUP DE STATUS (Aceito/Recusado - Horário Marcado)
+            console.log("Iniciando listener de status de agendamentos (Cliente)...");
             db.collection("agendamentos")
               .where("clienteUid", "==", user.uid)
               .where("clienteNotificado", "==", false)
@@ -4076,48 +3918,40 @@ auth.onAuthStateChanged(async user => {
                   snapshot.docChanges().forEach(change => {
                       if (change.type === 'added' || change.type === 'modified') {
                           const ag = change.doc.data();
-                          let titulo, msg;
                           
-                          if (ag.status === "conclusão pendente" && ag.horario) {
-                              titulo = "✅ Agendamento Aprovado!";
-                              msg = `O profissional ${ag.barbeiroNome} confirmou seu horário para ${ag.horario}.`;
-                          } else if (ag.status === "cancelado") {
-                              titulo = "❌ Agendamento Recusado/Cancelado";
-                              msg = `O agendamento com ${ag.barbeiroNome} foi cancelado ou recusado. O valor foi estornado.`;
-                          }
-
-                          if (titulo) {
-                              // Abre modal obrigatório
-                              exibirPopupObrigatorio(titulo, msg, () => {
-                                  // Só marca como lido ao clicar em OK
+                          if (ag.status === "conclusão pendente") {
+                              if (ag.horario) { // Só exibe se for horário marcado (vaga imediata é tratada acima)
+                                  // Popup mais detalhado, como pedido
+                                  exibirPopup("Agendamento Aceito!", 
+                                    `Boas notícias! Seu agendamento foi aceito:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario}\nValor: R$ ${ag.valor.toFixed(2)}\n\nPor favor, não se atrase!`);
                                   change.doc.ref.update({ clienteNotificado: true });
-                              });
+                              }
+                          } else if (ag.status === "cancelado") {
+                              // Popup mais detalhado
+                              exibirPopup("Agendamento Recusado", 
+                                `Infelizmente, seu pedido de agendamento foi recusado:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario || 'Vaga Imediata'}\n\nVocê não foi cobrado. Sinta-se à vontade para tentar outro horário ou profissional.`);
+                              change.doc.ref.update({ clienteNotificado: true });
                           }
                       }
                   });
               });
 
-            // 2. Listener para POPUP OBRIGATÓRIO DE AVALIAÇÃO (Concluído)
+            // 3. Listener para POPUP DE AVALIAÇÃO (Concluído)
+            console.log("Iniciando listener de conclusão de agendamentos (Cliente)...");
             db.collection("agendamentos")
               .where("clienteUid", "==", user.uid)
               .where("status", "==", "concluido")
-              .where("avisoAvaliacaoEnviado", "==", false)
+              .where("avisoAvaliacaoEnviado", "==", false) // Flag para não repetir
               .onSnapshot(snapshot => {
                   snapshot.docChanges().forEach(change => {
                       if (change.type === 'added' || change.type === 'modified') {
                           const ag = change.doc.data();
-                          
-                          exibirPopupObrigatorio("⭐ Serviço Concluído!", 
-                              `O serviço com ${ag.barbeiroNome} foi finalizado! Avalie agora para ajudar a comunidade e ganhar pontos de fidelidade.`, 
-                              () => {
-                                  change.doc.ref.update({ avisoAvaliacaoEnviado: true });
-                                  abrirModalAvaliacao(change.doc.id, ag.barbeiroUid); // Abre avaliação direto
-                              }
-                          );
+                          // Popup como pedido
+                          exibirPopup("Serviço Concluído!", `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído. Você já pode ir em "Histórico" para avaliar, ganhar pontos de fidelidade e manter a comunidade segura!`);
+                          change.doc.ref.update({ avisoAvaliacaoEnviado: true });
                       }
                   });
               });
-        }
 
             // 4. Verificação de AVALIAÇÃO PENDENTE (Uma vez por dia)
             const hoje = new Date().toISOString().split('T')[0]; // Formato 'AAAA-MM-DD'
@@ -4430,85 +4264,131 @@ function filtrarBarbeiros() {
   });
 }
 
-function carregarBarbeirosPrincipal(barbeiros) {
-    const lista = document.getElementById('barbeiroList');
-    // Verifica se o elemento existe antes de tentar manipulá-lo
-    if (!lista) {
-        console.error("Elemento '#barbeiroList' não encontrado.");
-        return;
+async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
+    const lista = document.getElementById(containerId);
+    lista.innerHTML = "<p>⏳ Carregando profissionais...</p>";
+
+    if (!localizacaoCliente) {
+       await obterLocalizacaoAtual().catch(() => {});
     }
     
-    lista.innerHTML = ''; // Limpa a lista existente
-
-    if (!barbeiros || barbeiros.length === 0) {
-        lista.innerHTML = '<div class="card"><p>Nenhum profissional encontrado.</p></div>';
-        return;
+    if (barbeirosListener) barbeirosListener();
+    let query;
+    if (isGuest) {
+        query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
+    } else {
+        query = db.collection("usuarios").where("tipo", "==", perfil?.interesse_principal || 'barbeiro');
     }
-
-    barbeiros.forEach(barbeiro => {
-        // --- CORREÇÃO AQUI ---
-        // Escapa aspas duplas (") para \" E aspas simples (') para \'
-        // Codifica o objeto para uma string segura para HTML
-const barbeiroSafe = encodeURIComponent(JSON.stringify(barbeiro));
-
-        let statusTexto = barbeiro.status || 'Manual';
-        let statusClass = 'status-manual';
-        if (barbeiro.disponivel === true) {
-            statusTexto = 'Imediato';
-            statusClass = 'status-imediato';
-        } else if (barbeiro.disponivel === false) {
-            statusTexto = 'Indisponível';
-            statusClass = 'status-indisponivel';
+    
+    barbeirosListener = query.onSnapshot(snap => {
+        if (snap.empty) {
+            lista.innerHTML = `<p>😔 Nenhum profissional encontrado para esta categoria.</p>`;
+            return;
         }
 
-        // Lógica para determinar o tipo de membro e estilo
-        let tipoMembroClass = '';
-        let tipoMembroLabel = '';
-        if (barbeiro.tipoMembro === 'VIP') {
-            tipoMembroClass = 'barbeiro-avatar-vip';
-            tipoMembroLabel = '<span class="text-xs text-red-400 font-bold ml-2">⭐ VIP</span>';
-        } else if (barbeiro.tipoMembro === 'Master') {
-            tipoMembroClass = 'barbeiro-avatar-master';
-            tipoMembroLabel = '<span class="text-xs text-gray-400 font-bold ml-2">💎 Master</span>';
-        }
+        let barbeiros = [];
+        // Lista de favoritos do usuário atual (se existir)
+        const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
 
-        // Simulação de Avatar e Avaliação
-        const avatarUrl = barbeiro.avatarUrl || 'https://placehold.co/50x50/333333/d4af37?text=B';
-        const avaliacao = barbeiro.avaliacao || '5.0';
-        const agendamentos = barbeiro.agendamentos || '99+';
+        snap.forEach(doc => {
+            const b = doc.data();
+            b.uid = doc.id;
+            if (localizacaoCliente && b.latitude && b.longitude) {
+                b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
+            } else {
+                b.distancia = Infinity;
+            }
+            // Marca se é favorito ou não para facilitar a ordenação
+            b.isFavorito = favoritos.includes(b.uid);
+            barbeiros.push(b);
+        });
 
-        // ADVERTÊNCIA: A função abrirModalBarbeiro deve AGORA começar com:
-        // function abrirModalBarbeiro(barbeiro) {
-        //     const data = JSON.parse(barbeiro); // Para desserializar o JSON string
-        //     // ... restante do código
-        // }
-        // Se a função já foi corrigida no seu código, ignore esta nota.
+        barbeiros.sort((a, b) => {
+            // 1. Se o filtro estiver ATIVO, favoritos vêm primeiro
+            if (mostrarApenasFavoritos) {
+                if (a.isFavorito && !b.isFavorito) return -1;
+                if (!a.isFavorito && b.isFavorito) return 1;
+            }
+            
+            // 2. Lógica padrão (Disponibilidade > Boost > Pro > Distância)
+            const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
+            const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+            if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
+
+            const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
+            const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
+
+            const aPro = isProAtivo(a);
+            const bPro = isProAtivo(b);
+            if (aPro !== bPro) return aPro ? -1 : 1;
+
+            return a.distancia - b.distancia;
+        });
         
-        const cardHTML = `
-    <div class="card barbeiro-card"
-         onclick='abrirModalBarbeiro(JSON.parse(decodeURIComponent("${barbeiroSafe}")))' >  <button class="share-btn" onclick="event.stopPropagation(); compartilharBarbeiro('${barbeiro.nome.replace(/'/g, '\\\'')}')">
-            <i class="fas fa-share-alt"></i>
-        </button>
+        lista.innerHTML = "";
+        barbeiros.forEach(b => {
+            // Lógica de Estrelas
+            const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
+            const estrelas = Math.round(notaMedia / 2); 
+            const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
+            const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
 
-                <div class="card-header">
-                    <img src="${avatarUrl}" alt="Avatar de ${barbeiro.nome}" class="barbeiro-avatar ${tipoMembroClass}">
-                    <div class="card-header-info">
-                        <h4>${barbeiro.nome} ${tipoMembroLabel}</h4>
-                        <p>${barbeiro.especialidade || 'Barbeiro/Cabeleireiro'}</p>
-                    </div>
-                </div>
+            // Status HTML
+            let statusHtml = '';
+            const agora = new Date();
+            const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim && agora >= b.ausenciaInicio.toDate() && agora <= b.ausenciaFim.toDate();
+            const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+            
+            if (estaAusente) {
+                const dataFim = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
+                statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente (Volta ${dataFim})</div>`;
+            } else if (!isDisponivel) {
+                 statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível</div>`;
+            } else if (b.vagaImediata) {
+                statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata</div>`;
+            } else if (b.usaAgendaManual) {
+                const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
+                statusHtml = horarios.length > 0 
+                    ? `<div class="card-status status-manual">📅 Horários Disponíveis</div>` 
+                    : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
+            }
 
-                <div class="barbeiro-stats">
-                    <span>
-                        <i class="fas fa-star star-icon"></i>
-                        ${avaliacao} (${agendamentos} agendamentos)
-                    </span>
-                    <span class="${statusClass}">${statusTexto}</span>
-                </div>
-            </div>
-        `;
+            // Promoções
+            let promocoesHtml = '';
+            if (b.promocoes && b.promocoes.length > 0) {
+              promocoesHtml = `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>`;
+            }
+            
+            // HTML da Logo e Distância
+            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
+            const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
+            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
+            
+            // Botão de Favorito (Coração)
+            const heartIcon = b.isFavorito ? '❤️' : '♡';
+            const favoriteBtn = isGuest ? '' : `<button class="card-action-btn card-favorite-btn" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
 
-        lista.insertAdjacentHTML('beforeend', cardHTML);
+            const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
+
+lista.innerHTML += `
+              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
+                  ${boostIcon}
+                  ${favoriteBtn}
+                  ${shareBtn}
+                  <div class="card-header">
+                      ${logoHtml}
+                      <div class="card-header-info">
+                          <h4 class="professional-name-card">${b.nome}</h4>
+                          ${distanciaTexto}
+                          <p class="card-reputacao-info">${reputacaoEstrelas} <span>(${reputacaoTexto})</span></p> 
+                      </div>
+                  </div>
+                  ${statusHtml}
+                  ${promocoesHtml}
+              </div>`;
+        });
     });
 }
 
@@ -4587,12 +4467,11 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
                     }
                 }
 
-                // CORREÇÃO AQUI: Substituir aspas simples por escapadas
-                const servicoSafe = encodeURIComponent(JSON.stringify(s));
+                const servicoJSON = JSON.stringify(s).replace(/"/g, '"');
                 const promoInfo = promoAplicada ? `<p style="font-size: 11px; color: var(--cor-destaque); margin: 2px 0 0 0;">🎁 ${promoAplicada.nome} (${promoAplicada.desconto}% OFF)</p>` : '';
 
                 servicosList.innerHTML += `
-                    <div class="selectable-item" onclick='selecionarServico(this, JSON.parse(decodeURIComponent("${servicoSafe}")))' 
+                    <div class="selectable-item" onclick='selecionarServico(this, ${servicoJSON})'>
                         ${s.nome} - ${precoHtml}${s.duracao ? ` - ${s.duracao} min` : ''}
                         ${promoInfo}
                     </div>`;
@@ -4601,6 +4480,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
             servicosList.innerHTML = "<p>Nenhum serviço cadastrado.</p>";
         }
 
+        // --- INÍCIO DA MODIFICAÇÃO ---
         const horariosList = document.getElementById("barbeiroPerfilHorariosList");
         horariosList.innerHTML = "";
         
@@ -4614,8 +4494,9 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         if (estaAusente) {
             const dataFimAusencia = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
             horariosList.innerHTML = `<p style="color: var(--cor-destaque-rosa); text-align: center; font-weight: bold;">🏖️ Profissional ausente até ${dataFimAusencia}. O agendamento está indisponível.</p>`;
-            hasOptions = false;
+            hasOptions = false; // Garante que o botão de agendar ficará desabilitado
         } else {
+            // Lógica original de horários
             if (b.vagaImediata) {
                 horariosList.innerHTML += `<div class="selectable-item" onclick='selecionarHorario(this, "imediato")'>⚡ Vaga Imediata</div>`;
                 hasOptions = true;
@@ -4633,6 +4514,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
                 horariosList.innerHTML = "<p>Nenhuma opção de agendamento disponível no momento.</p>";
             }
         }
+        // --- FIM DA MODIFICAÇÃO ---
 
         const btnPortfolio = document.getElementById('btnAcessarPortfolio');
         if (b.portfolio && b.portfolio.length > 0) {
@@ -4952,8 +4834,8 @@ function abrirModalVip() {
         container.innerHTML = `
             <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque);">💎 Torne-se um Membro VIP!</h3>
-                <p>Eleve sua experiência e apoie o desenvolvimento do app.</p>
-                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Mensal: R$ ${PRECO_VIP.toFixed(2)}</p>
+                <p>Eleve sua experiência por 6 meses e apoie o desenvolvimento do app.</p>
+                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)}</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Vantagens Exclusivas para Clientes VIP:</h4>
                     <ul>
@@ -4974,10 +4856,9 @@ function abrirModalVip() {
 // --- LÓGICA DE PAGAMENTO GOOGLE PLAY STORE (DIGITAL GOODS API) ---
 
 const SKUS = {
-    VIP: 'assinatura_vip_mensal', // Crie este ID na Play Store
-    TURBINAR: 'turbinar_perfil_24h',
-    // Os planos PRO usam IDs dinâmicos: 'pro_tier1', 'pro_tier2', etc.
-    // Os depósitos usam: 'deposito_10', 'deposito_25', etc.
+    VIP: 'adesao_vip_6_meses',
+    PRO: 'assinatura_pro_mensal',
+    TURBINAR: 'turbinar_perfil_24h'
 };
 
 let playStoreService = null;
@@ -5049,14 +4930,17 @@ async function comprarComPlayStore(sku, precoEstimado) {
     }
 }
 
+// 1. SUBSTITUA A SUA FUNÇÃO 'assinarVip' ANTIGA POR ESTA COMPLETA
 function assinarVip() {
-    // 1. Lógica da Play Store
+    // 1. Lógica da Play Store (permanece igual)
     if (playStoreService) {
         comprarComPlayStore(SKUS.VIP, PRECO_VIP);
         return;
     }
 
     // 2. Lógica da Carteira (Fallback)
+    
+    // Verificação de saldo (melhorada com o popup de callback, igual fizemos no PRO)
     if (perfil.saldo < PRECO_VIP) {
         exibirPopup("Saldo insuficiente", "Saldo insuficiente para assinar o VIP. Por favor, deposite fundos na sua carteira.", "aviso", () => {
             abrirModal('modalCarteira');
@@ -5064,10 +4948,13 @@ function assinarVip() {
         return;
     }
 
+    // --- ESTA É A MUDANÇA: Trocando o 'confirm' pelo 'exibirConfirmacao' ---
     const titulo = `Confirmar Assinatura VIP`;
-    const mensagem = `Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo.`;
+    const mensagem = `Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)? O valor será descontado do seu saldo da carteira.`;
     
     exibirConfirmacao(titulo, mensagem, () => {
+        // O código abaixo (que antes vinha depois do 'confirm') só executa se o usuário clicar "Sim"
+        
         exibirAguarde("Ativando VIP...");
         db.runTransaction(async t => {
             const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
@@ -5076,7 +4963,7 @@ function assinarVip() {
             if (isVipAtivo(clienteDoc.data())) throw "Você já é um membro VIP ativo.";
 
             const expiracao = new Date();
-            expiracao.setDate(expiracao.getDate() + 30); // MUDADO PARA 30 DIAS
+            expiracao.setDate(expiracao.getDate() + 180); // Adiciona 180 dias
 
             t.update(clienteRef, {
                 saldo: firebase.firestore.FieldValue.increment(-PRECO_VIP),
@@ -5087,13 +4974,14 @@ function assinarVip() {
         }).then(() => {
             fecharTodosOsModais();
             exibirPopup("Sucesso!", "Parabéns! Você agora é um membro VIP!", "sucesso");
-            notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 30 dias!");
-            fecharModalAtual(); 
+            notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 6 meses!");
+            fecharModalAtual(); // Fecha o modal 'modalVip'
         }).catch(e => {
             fecharTodosOsModais();
             exibirPopup("Erro ao assinar VIP", e.message, "erro");
         });
     });
+    // --- FIM DA MUDANÇA ---
 }
 
 // SUBSTITUA a função 'assinarPro' inteira por esta:
@@ -5507,73 +5395,86 @@ async function enviarMensagem() {
  }
 
 async function createMessageDiv(msg, docId) {
+    let remetenteNome = msg.remetenteNome || "Desconhecido";
+    let classeCSS = "", iconeBase = "", medalhaIcone = "", itemExclusivoIcone = "";
     const messageDiv = document.createElement('div');
     const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     messageDiv.className = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
-    
+
     if (docId) {
         messageDiv.dataset.docId = docId;
+        
+        // Lógica de exclusão para Admin (no clique da MENSAGEM)
         if (perfil && perfil.tipo === 'admin' && msg.tipo !== 'bot' && msg.tipo !== 'ai_suporte') {
             messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto);
-            messageDiv.title = 'Admin: Clique para deletar';
+            messageDiv.title = 'Admin: Clique para deletar esta mensagem';
             messageDiv.classList.add('admin-deletable');
         }
     }
 
-    let remetenteData = null;
-    // Otimização: Se for o próprio usuário, usa a variável global 'perfil' para evitar delay
-    if (isCurrentUser) {
-        remetenteData = perfil;
-    } else if (msg.remetenteUid) {
-        // Busca dados do remetente (cache seria ideal, mas get direto funciona para MVP)
-        try {
-            const doc = await db.collection('usuarios').doc(msg.remetenteUid).get();
-            if (doc.exists) remetenteData = doc.data();
-        } catch(e) { console.log('Erro chat user', e); }
-    }
+    let nomeSpanHtml = ''; // String para o span do nome
 
-    let fotoHtml = '';
-    if (remetenteData && remetenteData.fotoPerfil) {
-        // Usa molduraAtiva para a borda
-        const corBorda = remetenteData.molduraAtiva ? getCorMoldura(remetenteData.molduraAtiva) : 'transparent';
-        const borderStyle = remetenteData.molduraAtiva ? `border: 3px solid ${corBorda}; padding: 1px;` : '';
-        
-        fotoHtml = `<img src="${remetenteData.fotoPerfil}" class="chat-avatar" style="${borderStyle}">`;
+    if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
+        nomeSpanHtml = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
+    
     } else {
-        fotoHtml = `<span class="chat-avatar" style="display:inline-block; background:#555; text-align:center; line-height:24px;">👤</span>`;
+        try {
+            let remetenteData;
+            if (isCurrentUser) {
+                remetenteData = perfil; 
+            } else {
+                const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
+                if (remetenteDoc.exists) {
+                    remetenteData = remetenteDoc.data();
+                }
+            }
+
+            if(remetenteData) {
+                if (remetenteData.possuiItemExclusivo) itemExclusivoIcone = '👕✨';
+                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, remetenteData.tipo === 'cliente' ? 'cliente' : 'profissional');
+
+                if (remetenteData.tipo === "admin") {
+                    classeCSS = `admin-chat-red`; iconeBase = `🧠`;
+                    messageDiv.style.textShadow = '0 0 5px #000';
+                } else if (remetenteData.tipo !== "cliente") { 
+                    classeCSS = `barbeiro-chat`;
+                    iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`;
+                } else { 
+                    classeCSS = `cliente-chat`;
+                    iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
+                }
+
+                // --- INÍCIO DA LÓGICA DO POPUP DE INFO ---
+                let nomeOnclick = '';
+                let nomeStyle = '';
+                let nomeTitle = '';
+                if (perfil && perfil.tipo === 'admin' && !isCurrentUser) {
+                    // Adiciona o onclick para abrir o popup de info
+                    nomeOnclick = `onclick="event.stopPropagation(); adminAbrirInfoChat('${msg.remetenteUid}')"`;
+                    nomeStyle = 'style="cursor: pointer; text-decoration: underline;"';
+                    nomeTitle = `title="Ver info de ${remetenteData.nome}"`;
+                }
+                // --- FIM DA LÓGICA ---
+
+                nomeSpanHtml = `<span class="${classeCSS}" ${nomeOnclick} ${nomeStyle} ${nomeTitle}>${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+
+            } else {
+                 nomeSpanHtml = `<span class="cliente-chat">👻 Usuário Excluído</span>`;
+            }
+        } catch (error) {
+             console.error("Erro ao buscar dados do remetente:", error);
+             nomeSpanHtml = `<span class="cliente-chat">❓ Erro ao Carregar</span>`;
+        }
     }
 
-    // Nome com função de clique para abrir perfil
-    const nomeExibido = remetenteData ? remetenteData.nome : (msg.remetenteNome || "Usuário");
-    const nomeHtml = `<span style="cursor:pointer; font-weight:bold; margin-right:5px;" onclick="abrirPerfilPublico('${msg.remetenteUid}')">${nomeExibido}</span>`;
-
-    // Verifica conquistas para exibir ícone (opcional)
-    // (Lógica de medalhas existente pode ser mantida ou mesclada aqui se desejar)
-
-    // Renderiza a mensagem
-    messageDiv.innerHTML = `
-        <div style="display:flex; align-items:center; margin-bottom:4px;">
-            ${fotoHtml} ${nomeHtml}
-        </div>
-        <div>${msg.texto}</div>
-    `;
+    messageDiv.innerHTML = `<b>${nomeSpanHtml}:</b> ${msg.texto}`;
     
     if (msg.ts && msg.ts.toDate) {
         const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        messageDiv.innerHTML += ` <small style="opacity: 0.5; font-size: 0.7em; float:right; margin-top:5px;">${timeString}</small>`;
+        messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em;">(${timeString})</small>`;
     }
-    
     return messageDiv;
-}
-
-// Função auxiliar para cores das molduras
-function getCorMoldura(tipo) {
-    if(tipo === 'bronze') return '#cd7f32';
-    if(tipo === 'prata') return '#c0c0c0';
-    if(tipo === 'ouro') return '#ffd700';
-    if(tipo === 'diamante') return '#b9f2ff';
-    return 'transparent';
-}
+ }
 
 async function adminAbrirInfoChat(uid) {
     exibirAguarde("Buscando dados do usuário...");
@@ -6023,7 +5924,8 @@ function carregarAgenda() {
     const btnVagaImediata = document.getElementById("btnVagaImediata");
     const btnAgendaManual = document.getElementById("btnAgendaManual");
     const agendaManualPainel = document.getElementById("agendaManualPainel");
-    const horariosContainer = document.getElementById("horariosContainer"); // <--- CORRIGIDO AQUI
+    const horariosContainer = document.ge
+tElementById("horariosContainer");
 
     db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
         perfil = doc.data(); 
@@ -6178,61 +6080,65 @@ setTimeout(() => location.reload(), 4000); // 4 segundos
 }
 
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
-  exibirConfirmacao("Aprovar Agendamento?", "Tem certeza que deseja confirmar este horário?", async () => {
-      exibirAguarde("Aprovando...");
-      // Lógica de cálculo de taxa dinâmica (mantida)
-      let taxaAplicada = TAXA;
-      if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-          taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
+  if (!confirm("Aprovar este agendamento?")) return;
+  exibirAguarde("Aprovando...");
+  
+  // Lógica de cálculo de taxa dinâmica
+  let taxaAplicada = TAXA;
+  if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+      taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
+  }
+  const valorComTaxa = valor * (1 - taxaAplicada);
+  const valorAdmin = valor * taxaAplicada;
+
+  db.runTransaction(async t => {
+      const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
+      const clienteRef = db.collection("usuarios").doc(clienteUid);
+      const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
+      const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+      if (agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada.";
+      if (!clienteDoc.exists) throw "Cliente não encontrado.";
+      if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
+
+      t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
+      t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
+      t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), lembreteConcluirEnviado: false });
+
+      if (barbeiroDoc.data().usaAgendaManual && horario) {
+          const agendaAtual = barbeiroDoc.data().agenda || {};
+          if (agendaAtual[horario]) { delete agendaAtual[horario]; t.update(barbeiroRef, { agenda: agendaAtual }); }
       }
-      const valorComTaxa = valor * (1 - taxaAplicada);
-      const valorAdmin = valor * taxaAplicada;
+      const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
+      if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
+      t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
+  }).then(() => {
+      setTimeout(() => location.reload(), 4000); // 4 segundos
 
-      try {
-          await db.runTransaction(async t => {
-              const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
-              const clienteRef = db.collection("usuarios").doc(clienteUid);
-              const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
-              const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
-              
-              if (agendamentoDoc.data().status !== 'pendente') throw "Já processado.";
-              if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
+      
+      notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
+      exibirPopup("Agendamento aprovado!");
+  }).catch(e => {
+      exibirPopup("Erro ao aprovar: " + e);
+setTimeout(() => location.reload(), 4000); // 4 segundos
 
-              t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
-              t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
-              t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp() });
-
-              if (barbeiroDoc.data().usaAgendaManual && horario) {
-                  const agendaAtual = barbeiroDoc.data().agenda || {};
-                  if (agendaAtual[horario]) { delete agendaAtual[horario]; t.update(barbeiroRef, { agenda: agendaAtual }); }
-              }
-              
-              // Atualiza Admin
-              const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
-              if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
-          });
-          
-          fecharTodosOsModais();
-          exibirPopup("Sucesso!", "Agendamento aprovado.");
-          notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário foi confirmado.`);
-      } catch(e) {
-          fecharTodosOsModais();
-          exibirPopup("Erro", e);
-      }
   });
 }
 
 function recusarAgendamento(agendamentoId, clienteUid) {
-  exibirConfirmacao("Recusar Agendamento?", "Deseja recusar este pedido? O valor não será cobrado do cliente.", () => {
-      db.runTransaction(async t => {
-          const ref = db.collection("agendamentos").doc(agendamentoId);
-          t.update(ref, { status: "cancelado" });
-      }).then(() => {
-          fecharTodosOsModais();
-          exibirPopup("Agendamento recusado.");
-          notifyUser(clienteUid, "❌ Recusado", "O profissional recusou o agendamento.");
-      }).catch(e => exibirPopup("Erro: " + e));
-  });
+  if (!confirm("Recusar este agendamento?")) return;
+  db.runTransaction(async t => {
+      const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
+      const agendamentoDoc = await t.get(agendamentoRef);
+      const status = agendamentoDoc.data().status;
+      if (status !== 'pendente' && status !== 'imediato') throw "Solicitação já processada.";
+      t.update(agendamentoRef, { status: "cancelado" });
+  }).then(() => {
+      setTimeout(() => location.reload(), 4000); // 4 segundos
+
+      
+      notifyUser(clienteUid, "❌ Agendamento Recusado", `O profissional ${perfil.nome} não pôde aceitar seu pedido.`);
+      exibirPopup("Agendamento recusado.");
+  }).catch(e => exibirPopup("Erro ao recusar: " + e));
 }
 
 async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) {
@@ -7970,7 +7876,8 @@ function abrirModalConquistas() {
     for (const id in definicoes) {
         const c = definicoes[id];
         const unlocked = conquistasDoUsuario.includes(id);
-        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
+        container.innerHTML += `<div class="conquista-item ${unlocked ? 'unlocked' : 'locked'}"><div class="conquista-icon
+">${c.icone}</div><div><b>${c.nome}</b><p style="font-size:12px; margin:0;">${c.descricao}</p></div></div>`;
     }
 }
 
@@ -8567,11 +8474,9 @@ function obterLocalizacaoCadastro() {
 
 function abrirRota(barbeiroLat, barbeiroLon) {
     if (localizacaoCliente) {
-        // Adicionado o $ antes de {localizacaoCliente
-        window.open(`http://googleusercontent.com/maps.google.com/dir/?api=1&origin=${localizacaoCliente.latitude},${localizacaoCliente.longitude}&destination=${barbeiroLat},${barbeiroLon}`, '_blank');
+        window.open(`https://www.google.com/maps/dir/?api=1&origin=${localizacaoCliente.latitude},${localizacaoCliente.longitude}&destination=${barbeiroLat},${barbeiroLon}`, '_blank');
     } else {
-        // Adicionado o $ antes de {barbeiroLat
-        window.open(`http://googleusercontent.com/maps.google.com/dir/?api=1&destination=${barbeiroLat},${barbeiroLon}`, '_blank');
+        window.open(`https://www.google.com/maps/search/?api=1&query=${barbeiroLat},${barbeiroLon}`, '_blank');
     }
 }
 
@@ -8905,12 +8810,12 @@ async function carregarProdutos() {
 
         produtosSnap.forEach(doc => {
             const produto = { ...doc.data(), id: doc.id };
-            const produtoSafe = encodeURIComponent(JSON.stringify(produto));
+            const produtoJSON = JSON.stringify(produto).replace(/'/g, "\\'");
             if (produto.isOficial) {
-                officialHtml += renderProdutoCard(produto, produtoSafe);
+                officialHtml += renderProdutoCard(produto, produtoJSON);
                 officialProductsFound = true;
             } else {
-                communityProducts.push({ data: produto, json: produtoSafe });
+                communityProducts.push({ data: produto, json: produtoJSON });
             }
         });
 
@@ -8952,31 +8857,15 @@ async function carregarProdutos() {
 }
 
 
-function renderProdutoCard(p, pSafe) { // Alterado de pJson para pSafe para bater com o uso interno
+function renderProdutoCard(p, pJson) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
-    const precoHtml = p.desconto ? 
-        `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : 
-        `R$ ${p.preco.toFixed(2)}`;
+    const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
+    // Usa a primeira imagem do array 'imageUrls' ou a 'imagemUrl' antiga, ou um placeholder
     const imageUrlPrincipal = (p.imageUrls && p.imageUrls.length > 0) ? p.imageUrls[0] : p.imagemUrl;
-    const placeholder = 'https://via.placeholder.com/150x150?text=Nova+Versao';
+    const placeholder = 'https://via.placeholder.com/150x150?text=Nova+Versao'; // Placeholder atualizado
 
-    // LÓGICA PREMIUM ADICIONADA
-    if (p.isPremium) {
-        return `
-            <div class="produto-premium" onclick='handleProdutoClick(JSON.parse(decodeURIComponent("${pSafe}")))'>
-                <img src="${imageUrlPrincipal || placeholder}" alt="${p.nome}" onerror="this.onerror=null; this.src='${placeholder}';">
-                <div class="produto-info">
-                    <div class="produto-nome">💎 ${p.nome}</div>
-                    <div class="produto-preco">${precoHtml}</div>
-                    <div style="font-size: 12px; color: #ccc; margin-top:5px;">Toque para detalhes</div>
-                </div>
-            </div>
-        `;
-    }
-
-    // Card Comum
     return `
-        <div class="produto-card" onclick='handleProdutoClick(JSON.parse(decodeURIComponent("${pSafe}")))'>
+        <div class="produto-card" onclick='handleProdutoClick(${pJson})'>
             <img src="${imageUrlPrincipal || placeholder}" alt="${p.nome}" onerror="this.onerror=null; this.src='${placeholder}';">
             <div class="produto-info">
                 <div class="produto-nome">${p.nome}</div>
@@ -9352,30 +9241,6 @@ async function abrirFormularioProduto(produtoId = null) {
     abrirModal('modalAddEditProduto');
 }
 
-function exibirPopupObrigatorio(titulo, mensagem, callbackOk) {
-    // Usa o modal genérico mas remove a capacidade de fechar clicando fora
-    const tituloEl = document.getElementById('popupGenericoTitulo');
-    const mensagemEl = document.getElementById('popupGenericoMensagem');
-    const btnOk = document.querySelector('#modalPopupGenerico button');
-    const modal = document.getElementById('modalPopupGenerico');
-
-    tituloEl.textContent = titulo;
-    mensagemEl.textContent = mensagem;
-    
-    // Remove atributos de fechar padrão
-    modal.onclick = null; 
-    btnOk.onclick = () => {
-        if (callbackOk) callbackOk();
-        fecharModalAtual();
-        // Restaura comportamento padrão se necessário (ou recarrega pag)
-    };
-
-    // Força abertura
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
-    modalStack.push(modal);
-}
-
 // Função auxiliar para marcar/desmarcar imagem de PRODUTO para exclusão
 function marcarImagemProdutoParaExcluir(buttonElement, imageUrl) {
     const imgContainer = buttonElement.parentElement;
@@ -9461,9 +9326,7 @@ async function salvarProdutoVendedor() {
     const progressBar = modal.querySelector('#produtoUploadProgress');
     const btnSalvar = modal.querySelector('#btnSalvarProduto');
 
-    // Verifica se é Premium (definido pela função adicionarProdutoPremium)
-    const isPremium = modal.dataset.isPremium === "true";
-
+    // Validação de campos obrigatórios
     if (!nome || isNaN(preco) || preco <= 0 || !descricao || tamanhosSelecionados.length === 0) {
         return exibirPopup('Preencha todos os campos obrigatórios (*): Nome, Preço, Descrição e pelo menos um Tamanho.');
     }
@@ -9473,14 +9336,20 @@ async function salvarProdutoVendedor() {
 
     const files = fileInput.files;
     const imagensExistentesParaManter = [];
+    // Pega URLs das imagens existentes que NÃO estão marcadas para excluir
     modal.querySelectorAll('#produtoPreviewsExistentes div[data-url]:not(.marcada-para-excluir)').forEach(div => {
         imagensExistentesParaManter.push(div.dataset.url);
     });
+    // O array `imagensMarcadasParaExcluir` já contém as URLs a serem deletadas do Storage
 
     const totalImagensFinais = imagensExistentesParaManter.length + (files ? files.length : 0);
 
-    if (totalImagensFinais === 0) return exibirPopup('O produto precisa ter pelo menos uma imagem.');
-    if (totalImagensFinais > 5) return exibirPopup(`O limite é 5 imagens.`);
+    if (totalImagensFinais === 0) {
+        return exibirPopup('O produto precisa ter pelo menos uma imagem.');
+    }
+    if (totalImagensFinais > 5) {
+        return exibirPopup(`O produto pode ter no máximo 5 imagens. Você está tentando salvar ${totalImagensFinais}. Remova algumas existentes ou selecione menos arquivos novos.`);
+    }
 
     exibirAguarde("Salvando produto...");
     btnSalvar.disabled = true;
@@ -9489,81 +9358,105 @@ async function salvarProdutoVendedor() {
 
     const uploadPromises = [];
     const newImageUrls = [];
-    
-    if (files && files.length > 0) {
-        const totalBytes = Array.from(files).reduce((acc, f) => acc + f.size, 0);
-        let bytesTransferredTotal = 0;
+    let totalBytesUpload = 0;
+    const uploadTasksInfo = []; // Para progresso
 
+    if (files && files.length > 0) {
+        totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
         Array.from(files).forEach((file, index) => {
+            // Garante um nome de pasta único se for um novo produto
             const productIdForPath = produtoEmEdicaoId || `new_${auth.currentUser.uid}_${Date.now()}`;
             const filePath = `products/${auth.currentUser.uid}/${productIdForPath}/${Date.now()}_${index}_${file.name}`;
-            
-            const task = storage.ref(filePath).put(file);
-            uploadPromises.push(
-                new Promise((resolve, reject) => {
-                    task.on('state_changed', 
-                        snap => {
-                            // Cálculo simplificado de progresso global
-                            progressBar.value = (snap.bytesTransferred / snap.totalBytes) * 100; 
-                        },
-                        reject,
-                        async () => {
-                            const url = await task.snapshot.ref.getDownloadURL();
-                            newImageUrls.push(url);
+            const uploadPromise = new Promise((resolve, reject) => {
+                const storageRef = storage.ref(filePath);
+                const uploadTask = storageRef.put(file);
+                const taskInfo = { task: uploadTask, bytesTransferred: 0 };
+                uploadTasksInfo.push(taskInfo);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        taskInfo.bytesTransferred = snapshot.bytesTransferred;
+                        let totalBytesTransferidosAcumulados = uploadTasksInfo.reduce((acc, info) => acc + info.bytesTransferred, 0);
+                        const progress = totalBytesUpload > 0 ? (totalBytesTransferidosAcumulados / totalBytesUpload) * 100 : 0;
+                        progressBar.value = progress;
+                    },
+                    (error) => reject(error),
+                    async () => {
+                        try {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            newImageUrls.push(downloadURL); // Adiciona a nova URL
                             resolve();
-                        }
-                    );
-                })
-            );
+                        } catch(urlError) { reject(urlError); }
+                    }
+                );
+            });
+            uploadPromises.push(uploadPromise);
         });
     }
 
     try {
+        // Espera todos os uploads terminarem, se houver algum
         await Promise.all(uploadPromises);
 
-        // Deletar imagens removidas
+        // Deleta imagens marcadas do Storage ANTES de salvar no Firestore
         const deletePromises = imagensMarcadasParaExcluir.map(async url => {
-            try { await storage.refFromURL(url).delete(); } catch(e) { console.warn(e); }
+            try {
+                const decodedUrl = decodeURIComponent(url);
+                const pathRegex = /\/o\/(.+)\?alt=media/;
+                const match = decodedUrl.match(pathRegex);
+                if (match && match[1]) {
+                    const filePath = match[1];
+                    await storage.ref(filePath).delete();
+                    console.log("Imagem marcada deletada do Storage:", filePath);
+                } else {
+                    console.warn("Não foi possível deletar imagem marcada do Storage (path não extraído):", url);
+                }
+            } catch (e) {
+                console.warn("Erro ao deletar imagem marcada do Storage:", e.message, url);
+            }
         });
-        await Promise.all(deletePromises);
+        await Promise.all(deletePromises); // Espera as exclusões terminarem
 
+        // Combina imagens existentes mantidas com as novas
         const finalImageUrls = [...imagensExistentesParaManter, ...newImageUrls];
 
         const productData = {
-            nome, preco, descricao, tamanhos: tamanhosSelecionados,
-            desconto: desconto !== null ? desconto : firebase.firestore.FieldValue.delete(),
-            imageUrls: finalImageUrls,
-            imagemUrl: finalImageUrls[0] || null,
+            nome,
+            preco,
+            desconto: desconto !== null ? desconto : firebase.firestore.FieldValue.delete(), // Remove se estiver vazio
+            descricao,
+            tamanhos: tamanhosSelecionados,
+            imageUrls: finalImageUrls, // Salva o array atualizado
+            imagemUrl: finalImageUrls[0] || null, // Primeira imagem como principal (compatibilidade)
             vendedorUid: auth.currentUser.uid,
             vendedorNome: perfil.nome,
             isOficial: perfil.tipo === 'admin',
-            isPremium: isPremium // SALVA A FLAG PREMIUM
+            // Não atualiza ts nem vendasRealizadas ao editar
         };
 
         if (produtoEmEdicaoId) {
             await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(productData);
         } else {
+            // Adiciona campos específicos de criação
             productData.ts = firebase.firestore.FieldValue.serverTimestamp();
             productData.vendasRealizadas = 0;
-            await db.collection('loja_produtos').add(productData);
+            // Salva e obtém o ID do novo documento
+            const newProdRef = await db.collection('loja_produtos').add(productData);
+            console.log("Novo produto criado com ID:", newProdRef.id);
+             // Se houve uploads, pode ser necessário renomear a pasta no storage se usou 'new_'
+             // Isso é mais complexo e pode ser deixado como está por simplicidade inicial
         }
 
         fecharTodosOsModais();
         exibirPopup('Produto salvo com sucesso!');
-        
-        // Limpa a flag premium para não afetar próximos produtos
-        modal.dataset.isPremium = "false"; 
-        
-        if(perfil.tipo === 'admin') {
-             mostrar('lojaView'); carregarProdutos(); // Recarrega loja se for admin
-        } else {
-             abrirGerenciarLoja();
-        }
+        abrirGerenciarLoja(); // Recarrega a lista de produtos do vendedor
 
     } catch (error) {
         fecharTodosOsModais();
-        exibirPopup('Erro ao salvar produto: ' + error.message);
+        exibirPopup('Erro ao salvar produto: ' + (error.message || error));
+        // Reabilita o botão em caso de erro
         btnSalvar.disabled = false;
+        progressBar.style.display = 'none';
     }
 }
 
@@ -9694,9 +9587,7 @@ async function abrirMinhasCompras() {
         }
         
         if (compra.status === 'confirmado_pelo_cliente' && !compra.avaliado) {
-            // CORREÇÃO AQUI: .replace(/'/g, "\\'")
-            const nomeProdutoSeguro = (compra.produtoNome || '').replace(/'/g, "\\'");
-            acaoBotao = `<button onclick="abrirModalAvaliacaoProduto('${doc.id}', '${compra.produtoId}', '${nomeProdutoSeguro}')">⭐ Avaliar Produto</button>`;
+            acaoBotao = `<button onclick="abrirModalAvaliacaoProduto('${doc.id}', '${compra.produtoId}', '${compra.produtoNome}')">⭐ Avaliar Produto</button>`;
         } else if (compra.status === 'confirmado_pelo_cliente' && compra.avaliado) {
             acaoBotao = `<p style="font-size: 14px; color: var(--cor-destaque);">✅ Produto avaliado!</p>`;
         }
@@ -10039,15 +9930,6 @@ function abrirModalAvaliacaoProduto(pedidoId, produtoId, produtoNome) {
     
     abrirModal('modalAvaliarProduto');
 }
-
-function adicionarProdutoPremium() {
-    // Reutiliza o modal de produto, mas seta flag
-    abrirFormularioProduto();
-    document.getElementById('formProdutoTitulo').textContent = "💎 Adicionar Produto PREMIUM";
-    // Adiciona um atributo oculto ou global para saber que é premium ao salvar
-    document.getElementById('modalAddEditProduto').dataset.isPremium = "true";
-}
-// Nota: Modifique 'salvarProdutoVendedor' para ler esse dataset e salvar 'isPremium: true' no banco.
 
 async function salvarAvaliacaoProduto(pedidoId, produtoId, nota, comentario) {
     try {
@@ -10916,205 +10798,6 @@ async function salvarOnboardingPortfolioLembrete() {
     }
 }
 
-// --- LÓGICA DE PERFIL E ROLETA ---
-
-function abrirPerfilUsuario() {
-    abrirModal('modalPerfilUsuario');
-    document.getElementById('inputNomePerfil').value = perfil.nome;
-    if (perfil.fotoPerfil) document.getElementById('imgPerfilAtual').src = perfil.fotoPerfil;
-    
-    // Carrega Molduras compradas e Roleta
-    carregarRoleta();
-}
-
-async function uploadFotoPerfil() {
-    const file = document.getElementById('inputFotoPerfil').files[0];
-    if (!file) return;
-    exibirAguarde("Enviando foto...");
-    const url = await uploadImage(file, `perfis/${auth.currentUser.uid}`);
-    await db.collection('usuarios').doc(auth.currentUser.uid).update({ fotoPerfil: url });
-    fecharTodosOsModais();
-    exibirPopup("Foto atualizada!");
-    abrirPerfilUsuario();
-}
-
-function girarRoleta() {
-    const hoje = new Date().toISOString().split('T')[0];
-    // Validação de giros baseada no plano PRO
-    const girosMax = (perfil.proAtivo && perfil.proTier && PRECOS_PRO[perfil.proTier]) ? PRECOS_PRO[perfil.proTier].giros : 1;
-    const girosHoje = perfil.girosData === hoje ? perfil.girosContagem : 0;
-
-    if (girosHoje >= girosMax) {
-        return exibirPopup("Limite Atingido", `Você já usou seus ${girosMax} giros de hoje. Seja PRO para girar mais!`);
-    }
-
-    const roletaFaixa = document.getElementById('roletaFaixa');
-    roletaFaixa.innerHTML = '';
-    
-    // Gera itens aleatórios (1 a 10 e caixa surpresa)
-    const itens = [];
-    const coresBarbearia = ['amarelo', 'preto'];
-    const coresFeminino = ['rosa', 'preto'];
-    const cores = (perfil.interesse_principal === 'barbeiro') ? coresBarbearia : coresFeminino;
-
-    for(let i=0; i<50; i++) { // Gera 50 itens para o efeito visual
-        const valor = Math.floor(Math.random() * 10) + 1; // 1 a 10
-        let classe = (i % 2 === 0) ? cores[0] : cores[1];
-        let texto = valor;
-        
-        if (valor === 10) { classe = 'branco'; } // 10 é branco
-        
-        // Chance de caixa surpresa (ex: 2%)
-        if (Math.random() < 0.02) {
-            texto = '🎁';
-            classe = 'surpresa';
-        }
-        
-        const div = document.createElement('div');
-        div.className = `roleta-item ${classe}`;
-        div.textContent = texto;
-        roletaFaixa.appendChild(div);
-        itens.push({texto, classe});
-    }
-
-    // Animação
-    const itemWidth = 80;
-    const indexSorteado = 35 + Math.floor(Math.random() * 10); // Para no meio
-    const offset = -(indexSorteado * itemWidth) + (itemWidth * 1.5); // Centraliza
-
-    roletaFaixa.style.transform = `translateX(${offset}px)`;
-    
-    // Processa prêmio após 4s
-    setTimeout(async () => {
-        const premio = itens[indexSorteado];
-        let msg = "";
-        let updateData = {
-            girosData: hoje,
-            girosContagem: girosHoje + 1
-        };
-
-        if (premio.classe === 'surpresa') {
-            // Lógica surpresa
-            const isTop = Math.random() > 0.5;
-            if (isTop && perfil.tipo !== 'cliente') {
-                msg = "🎁 PARABÉNS! Você ganhou 1 dia de TOPO!";
-                updateData.boostExpiracao = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 24*60*60*1000));
-            } else {
-                msg = "🎁 PARABÉNS! Você ganhou 5 dias de VIP!";
-                // Lógica de adicionar dias VIP...
-            }
-        } else {
-            const pontos = parseInt(premio.texto);
-            msg = `Você ganhou ${pontos} pontos de fidelidade!`;
-            updateData.pontosFidelidade = firebase.firestore.FieldValue.increment(pontos);
-        }
-        
-        await db.collection('usuarios').doc(auth.currentUser.uid).update(updateData);
-        document.getElementById('resultadoRoleta').textContent = msg;
-        exibirPopup("Resultado", msg);
-    }, 4000);
-}
-
-async function comprarMoldura(tipo, preco) {
-    const moldurasUsuario = perfil.molduras || [];
-
-    // SE JÁ TIVER A MOLDURA, APENAS SELECIONA
-    if (moldurasUsuario.includes(tipo)) {
-        exibirAguarde("Selecionando moldura...");
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({
-            molduraAtiva: tipo // Salva qual está em uso
-        });
-        fecharTodosOsModais(); // Fecha aguarde
-        
-        // Atualiza visualmente sem fechar o modal de perfil
-        document.querySelectorAll('.moldura-opcao').forEach(el => el.style.border = '2px solid #333');
-        // Encontra o elemento clicado (simplificado) ou recarrega o modal
-        exibirPopup("Moldura Selecionada!", `A moldura ${tipo} agora está sendo exibida no seu perfil e chat.`);
-        abrirPerfilUsuario(); // Recarrega para atualizar a foto com moldura
-        return;
-    }
-
-    // SE NÃO TIVER, COMPRA
-    if (perfil.saldo < preco) return exibirPopup("Saldo insuficiente.");
-    
-    if (confirm(`Comprar moldura ${tipo} por R$${preco}?`)) {
-        exibirAguarde("Comprando...");
-        await db.collection('usuarios').doc(auth.currentUser.uid).update({
-            saldo: firebase.firestore.FieldValue.increment(-preco),
-            molduras: firebase.firestore.FieldValue.arrayUnion(tipo),
-            molduraAtiva: tipo // Já seleciona automaticamente ao comprar
-        });
-        fecharTodosOsModais();
-        exibirPopup("Moldura comprada!", "Ela já foi aplicada ao seu perfil.");
-        abrirPerfilUsuario();
-    }
-}
-
-function abrirPerfilUsuario() {
-    abrirModal('modalPerfilUsuario');
-    document.getElementById('inputNomePerfil').value = perfil.nome;
-    const imgPerfil = document.getElementById('imgPerfilAtual');
-    const containerFoto = document.getElementById('perfilFotoContainer');
-    
-    if (perfil.fotoPerfil) imgPerfil.src = perfil.fotoPerfil;
-
-    // Remove moldura antiga visualmente
-    const oldFrame = containerFoto.querySelector('.moldura-ativa-visual');
-    if(oldFrame) oldFrame.remove();
-
-    // Adiciona moldura ativa visualmente no modal
-    if (perfil.molduraAtiva) {
-        const cor = getCorMoldura(perfil.molduraAtiva);
-        imgPerfil.style.border = `4px solid ${cor}`;
-    } else {
-        imgPerfil.style.border = 'none';
-    }
-
-    // Atualiza estilo dos botões de compra (indica quais já tem)
-    const moldurasUsuario = perfil.molduras || [];
-    const opcoes = document.querySelectorAll('.moldura-opcao');
-    
-    // Limpa estilos antigos
-    opcoes.forEach(div => {
-        const texto = div.textContent.toLowerCase();
-        let tipo = '';
-        if(texto.includes('bronze')) tipo = 'bronze';
-        else if(texto.includes('prata')) tipo = 'prata';
-        else if(texto.includes('ouro')) tipo = 'ouro';
-        else if(texto.includes('diamante')) tipo = 'diamante';
-
-        if (moldurasUsuario.includes(tipo)) {
-            div.style.backgroundColor = '#2ecc71'; // Verde para comprado
-            div.style.color = '#000';
-            div.textContent = div.textContent.split('(')[0] + ' (Adquirido - Clique para Usar)';
-            
-            if (perfil.molduraAtiva === tipo) {
-                div.style.border = '3px solid #fff'; // Destaque para a ativa
-                div.textContent = "✅ " + div.textContent;
-            } else {
-                div.style.border = '2px solid #333';
-            }
-        } else {
-             // Reseta estilo se não tiver
-             div.style.backgroundColor = '';
-             div.style.color = '';
-             div.style.border = '2px solid #333';
-        }
-    });
-
-    // Carrega Roleta (se existir lógica de carregar estado visual da roleta)
-}
-
-async function abrirPerfilPublico(uid) {
-    const doc = await db.collection('usuarios').doc(uid).get();
-    const dados = doc.data();
-    
-    // Reutiliza o modal de perfil mas em modo "Leitura"
-    // Aqui você deve criar lógica para exibir foto grande, nome e moldura em um popup simples
-    // Implementação simplificada:
-    exibirPopup(`Perfil de ${dados.nome}`, "Visualização de perfil estilizada em breve!");
-}
-
 // Salva e FINALIZA o fluxo
 async function salvarOnboardingPortfolio() {
     const fileInput = document.getElementById("onboardingPortfolioFilesInput");
@@ -11336,16 +11019,6 @@ async function toggleFavorito(barbeiroUid) {
     }
 }
 
-function abrirModalBarbeiro(barbeiroString) {
-        // ESSA LINHA É CRÍTICA SE VOCÊ USOU A FUNÇÃO CORRIGIDA!
-        const barbeiro = JSON.parse(barbeiroString);
-
-        // O resto da sua lógica de modal pode usar 'barbeiro' como um objeto JavaScript normal.
-        document.getElementById('modalBarbeiroNome').textContent = barbeiro.nome;
-        // ...
-        abrirModal('modalBarbeiroDetalhes');
-    }
-
 function copiarParaClipboard(text, nome) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text)
@@ -11436,57 +11109,6 @@ function setupConfiguracoes() {
         }
     });
 }
-
-<div id="modalPerfilUsuario" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()" style="max-height:90vh; overflow-y:auto;">
-    <h3>👤 Meu Perfil</h3>
-    
-    <div style="text-align:center; position:relative; width: 100px; margin: 0 auto;">
-        <div id="perfilFotoContainer" class="moldura-wrapper" onclick="document.getElementById('inputFotoPerfil').click()">
-            <img id="imgPerfilAtual" src="https://via.placeholder.com/100" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">
-            <!-- Moldura será injetada aqui via JS -->
-        </div>
-        <input type="file" id="inputFotoPerfil" accept="image/*" style="display:none;" onchange="uploadFotoPerfil()">
-        <p style="font-size:12px; opacity:0.7;">Clique na foto para alterar</p>
-    </div>
-
-    <div class="popup-section">
-        <label>Nome de Exibição:</label>
-        <div style="display:flex; gap:5px;">
-            <input id="inputNomePerfil" type="text">
-            <button onclick="salvarNomePerfil()" style="width:auto;">Salvar</button>
-        </div>
-    </div>
-
-    <div class="popup-section">
-        <h4>🎰 Roleta Diária</h4>
-        <p style="font-size:12px;">Gire 1x por dia para ganhar pontos! (PROs giram mais)</p>
-        <div class="roleta-container">
-            <div id="roletaFaixa" class="roleta-faixa"></div>
-            <div class="roleta-marcador"></div>
-        </div>
-        <button id="btnGirarRoleta" onclick="girarRoleta()">🎲 GIRAR ROLETA</button>
-        <p id="resultadoRoleta" style="text-align:center; font-weight:bold; color:var(--cor-destaque); margin-top:5px;"></p>
-    </div>
-
-    <div class="popup-section">
-        <h4>🖼️ Molduras de Perfil</h4>
-        <div style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center;">
-            <div class="moldura-opcao" onclick="comprarMoldura('bronze', 9.99)">🥉 Bronze (R$9,99)</div>
-            <div class="moldura-opcao" onclick="comprarMoldura('prata', 19.99)">🥈 Prata (R$19,99)</div>
-            <div class="moldura-opcao" onclick="comprarMoldura('ouro', 29.99)">🥇 Ouro (R$29,99)</div>
-            <div class="moldura-opcao" onclick="comprarMoldura('diamante', 39.99)">💎 Diamante (R$39,99)</div>
-        </div>
-    </div>
-
-    <div class="popup-section">
-        <h4>🏅 Exibir Conquista no Chat</h4>
-        <select id="selectConquistaChat" onchange="salvarConquistaExibida()"></select>
-    </div>
-
-    <button data-modal-id="modalPerfilUsuario" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
-</div>
 
 async function salvarLocalizacaoConfig() {
     const estado = document.getElementById('configEstado').value;
