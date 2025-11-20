@@ -1844,14 +1844,14 @@ body {
     
     <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 <span id="saldoHeader">0</span></button>
     
-    <div id="onlineUserCount" class="online-counter hidden">1 ON</div>
   </div>
 </div>
 
 <div class="content-container">
-  
-  <div id="chatPreview"></div> <div id="botaoExtra" class="hidden"></div>
+  <div id="onlineUserCount" class="online-counter hidden" style="margin: 10px auto 0 auto; cursor: pointer; width: fit-content;">🏆 0 Online</div>
 
+  <div id="chatPreview"></div> <div id="botaoExtra" class="hidden"></div>
+  
   <div id="authView" class="card hidden">
     <h2>🔐 Entrar ou Criar Conta</h2>
     <input id="email" type="email" placeholder="📧 Email">
@@ -4951,12 +4951,22 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const b = doc.data();
             b.uid = doc.id;
             
-            // --- FILTRO DE INTERESSE ---
-            // Se o usuário for cliente e tiver um interesse definido, pula quem não for desse tipo
-            // Exceto se estiver vendo a lista de favoritos (aí mostra tudo que ele favoritou)
-            if (!isGuest && perfil.tipo === 'cliente' && interesseUsuario && !mostrarApenasFavoritos) {
-                if (b.tipo !== interesseUsuario) return; 
+            // --- FILTRO DE INTERESSE (Rígido) ---
+            // Lógica: 
+            // 1. Se eu sou Admin ou Guest (Visitante), vejo tudo.
+            // 2. Se sou Profissional, vejo tudo (para ver concorrentes/colegas).
+            // 3. Se sou Cliente:
+            //    a. Se estou no modo "Mostrar Favoritos", ignoro o filtro de interesse (mostro quem eu favoritei).
+            //    b. Se NÃO estou nos favoritos, aplico o filtro RIGOROSO do meu interesse_principal.
+            
+            if (!isGuest && perfil.tipo === 'cliente' && !mostrarApenasFavoritos) {
+                // Se o cliente não tem interesse definido, define padrão 'barbeiro'
+                const meuInteresse = interesseUsuario || 'barbeiro';
+                
+                // Se o tipo do profissional (b.tipo) for diferente do meu interesse, PULA.
+                if (b.tipo !== meuInteresse) return; 
             }
+            // -------------------------------------
 
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
@@ -12056,36 +12066,31 @@ function girarRoleta() {
 
     // 1. Definir o Resultado (Sorteio)
     const rand = Math.random();
-    // 90% de chance de cair em número (1-10), 10% de chance na Caixa (11)
-    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
+    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; // 1-10 ou 11 (Caixa)
 
     // 2. Configuração da Animação (Matemática precisa)
-    // Baseado no CSS: Width 80 + Borda 6 (3+3) + Margem 4 (2+2) = 90px TOTAL POR ITEM
+    // CSS: width 80px + 3px borda esq + 3px borda dir + 2px margem esq + 2px margem dir = 90px TOTAL
     const itemFullWidth = 90; 
     const itensPorSet = 11; // 10 números + 1 presente
     
-    // Dá voltas suficientes para o efeito visual
-    const voltas = 50; 
+    const voltas = 50; // Voltas para dar efeito de velocidade
     
-    // O índice alvo na longa fita gerada
-    // Se resultado for 1, é o primeiro item. Se for 11, é o último do set.
-    // Subtraímos 1 porque array começa em 0.
+    // O índice alvo na longa fita. (Resultado - 1) ajusta para índice base 0.
     const indiceAlvo = (voltas * itensPorSet) + (resultado - 1);
     
-    // Cálculo de Centralização:
-    // Queremos que o centro do item alvo fique no centro do container.
     const containerWidth = document.getElementById('roletaVisual').offsetWidth;
     
-    // Posição = (Índice * LarguraTotal) - (MetadeContainer) + (MetadeItem)
-    // Isso coloca o meio do item exatamente sob a seta.
+    // CÁLCULO DE PRECISÃO:
+    // Queremos que o CENTRO do item alvo fique no CENTRO do container.
+    // Posição = (Distância até o início do item) - (Metade do container) + (Metade do item)
     const posicaoFinal = (indiceAlvo * itemFullWidth) - (containerWidth / 2) + (itemFullWidth / 2);
 
     const faixa = document.getElementById('roletaFaixa');
     const tempoAnimacao = 6; // Segundos
     
-    // Adiciona um pequeno "jitter" (ruído) aleatório de +/- 10px para não parecer robótico, 
-    // mas sem sair de cima do número (o item tem 80px de largura visual, 10px é seguro)
-    const jitter = Math.floor(Math.random() * 20) - 10; 
+    // Adiciona um pequeno ruído aleatório (+/- 15px) para não parecer robótico,
+    // mas garante que não pule para o vizinho (limite seguro é +/- 40px num item de 90px)
+    const jitter = Math.floor(Math.random() * 30) - 15; 
     
     faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${posicaoFinal + jitter}px)`;
@@ -12100,12 +12105,10 @@ function girarRoleta() {
         };
         
         if (resultado <= 10) {
-            // Caiu no número
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
             premioDescricao = `A sorte sorriu! Você ganhou ${resultado} pontos de fidelidade.`;
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
         } else {
-            // Caiu no 11 (Caixa Surpresa)
             premioTitulo = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
                 const exp = new Date(); 
