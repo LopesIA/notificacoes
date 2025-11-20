@@ -12056,27 +12056,26 @@ function girarRoleta() {
     const rand = Math.random();
     let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; // 1-10 (pontos) ou 11 (presente)
 
-    // 2. Configuração da Animação (Ajustado para o novo CSS)
-    // Item: 80px largura + 10px margem (5 esq + 5 dir) = 90px TOTAL
-    const itemTotalWidth = 90; 
+    // 2. Configuração da Animação
+    const itemTotalWidth = 90; // 80px largura + 10px margem
     const itensPorSet = 11; // 10 números + 1 presente
-    const voltas = 5; // Menos voltas para ser mais suave
+    const voltas = 5; // Reduzido para 5 para ficar suave com o CSS
     
     // O índice alvo no array gigante de HTML gerado
     const indiceAlvo = (voltas * itensPorSet) + (resultado - 1);
     
-    // Pega a largura visível da janela da roleta (container)
+    // Pega a largura visível da janela da roleta
     const containerWidth = document.getElementById('roletaVisual').offsetWidth;
     
-    // Cálculo para centralizar: 
+    // Cálculo para centralizar
     const posicaoFinal = (indiceAlvo * itemTotalWidth) - (containerWidth / 2) + (itemTotalWidth / 2);
 
     const faixa = document.getElementById('roletaFaixa');
     
-    // Adiciona um pequeno "ruído" aleatório (+/- 15px) para a seta não cair roboticamente no meio
+    // Adiciona um pequeno "ruído" aleatório (+/- 15px)
     const jitter = Math.floor(Math.random() * 30) - 15; 
     
-    // Animação Cubic-Bezier para efeito de "freio" realista
+    // Animação
     faixa.style.transition = `transform 5s cubic-bezier(0.25, 1, 0.5, 1)`; 
     faixa.style.transform = `translateX(-${posicaoFinal + jitter}px)`;
     
@@ -12085,7 +12084,6 @@ function girarRoleta() {
         let premioTitulo = "";
         let premioDescricao = "";
         
-        // Dados básicos de atualização
         let updates = { 
             ultimoGiroRoleta: hoje,
             girosRealizadosHoje: (perfil.ultimoGiroRoleta === hoje) ? firebase.firestore.FieldValue.increment(1) : 1
@@ -12099,9 +12097,10 @@ function girarRoleta() {
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
             premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas se não usados!`;
             
+            // Soma no saldo atual
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
             
-            // Adiciona ao "bolso" de pontos a expirar (O CRON do servidor vai limpar isso)
+            // SALVA NO HISTÓRICO PARA O CRON REMOVER DEPOIS (Isso faltava no seu código)
             updates.historicoPontosRoleta = firebase.firestore.FieldValue.arrayUnion({
                 valor: resultado,
                 expiraEm: firebase.firestore.Timestamp.fromDate(validade)
@@ -12138,9 +12137,13 @@ function girarRoleta() {
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", premioDescricao);
             
             // Atualiza localmente para feedback imediato nos pontos
-            if (resultado <= 10 && perfil.pontosFidelidade) {
+            if (resultado <= 10) {
                  const pontosEl = document.getElementById('pontosFidelidade');
-                 if(pontosEl) pontosEl.textContent = (perfil.pontosFidelidade + resultado);
+                 if(pontosEl) {
+                     // Pequena lógica para não mostrar NaN se o perfil ainda não atualizou
+                     let atuais = parseInt(pontosEl.textContent) || 0;
+                     pontosEl.textContent = atuais + resultado;
+                 }
             }
 
         } catch (e) {
