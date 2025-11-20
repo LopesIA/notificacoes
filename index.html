@@ -1417,21 +1417,25 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 .roleta-item {
-    width: 70px; /* Quadrado */
-    height: 70px;
-    border-radius: 8px; /* Leve arredondamento estilo app moderno */
+    /* MEDIDAS EXATAS PARA O CÁLCULO JS (80 + 6 + 4 = 90px total) */
+    width: 80px; 
+    height: 80px;
+    border: 3px solid rgba(255,255,255,0.1); /* 3px borda esquerda + 3px borda direita = 6px */
+    margin: 0 2px; /* 2px margem esquerda + 2px margem direita = 4px */
+    box-sizing: content-box; /* Garante que width 80 seja o conteúdo, borda e margem somam fora */
+    
+    border-radius: 8px; 
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 20px;
+    font-size: 24px;
     flex-shrink: 0;
-    border: 3px solid rgba(255,255,255,0.1);
-    margin: 0 4px; /* Espaço entre os quadrados */
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
     color: #fff;
-}.tema-barbearia .roleta-item:nth-child(odd) {
+}
+.tema-barbearia .roleta-item:nth-child(odd) {
     background: linear-gradient(135deg, #ffd700, #b8860b); /* Dourado Luxo */
     border-color: #ffd700;
     color: #000;
@@ -4887,7 +4891,6 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const divPai = lista.parentElement;
     
     // --- INJEÇÃO DO BOTÃO DE FAVORITOS LUXUOSO ---
-    // Verifica se o botão já existe para não duplicar, mas atualiza o estado
     let btnFavoritos = divPai.querySelector('#btnFiltroFavoritosLuxo');
     
     if (!btnFavoritos) {
@@ -4899,9 +4902,8 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         
         btnFavoritos = document.createElement('button');
         btnFavoritos.id = 'btnFiltroFavoritosLuxo';
-        btnFavoritos.className = 'btn-favoritos-luxo'; // Usa a nova classe CSS
+        btnFavoritos.className = 'btn-favoritos-luxo';
         
-        // Ação do botão
         btnFavoritos.onclick = () => {
             if (isGuest) {
                 exibirPopup("Recurso exclusivo", "Crie uma conta ou faça login para salvar seus favoritos!");
@@ -4912,10 +4914,9 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         };
         
         divBtn.appendChild(btnFavoritos);
-        divPai.insertBefore(divBtn, lista); // Insere antes da lista
+        divPai.insertBefore(divBtn, lista);
     }
 
-    // Atualiza o texto/estilo do botão baseado no estado
     if (mostrarApenasFavoritos && !isGuest) {
         btnFavoritos.innerHTML = "❤️ Ver Todos";
         btnFavoritos.classList.add('ativo');
@@ -4931,11 +4932,8 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     
     if (barbeirosListener) barbeirosListener();
     
-    // Query: Todos veem os profissionais relevantes
-    let query;
-    // Se for visitante ou cliente, vê todos os profissionais
-    // Se for profissional, vê colegas (para networking ou referência)
-    query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
+    // Query base: busca todos os profissionais
+    let query = db.collection("usuarios").where("tipo", "in", ["barbeiro", "manicure_pedicure", "designer_cilios"]);
     
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
@@ -4945,13 +4943,20 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
 
         let barbeiros = [];
         const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
+        
+        // Define o interesse do usuário logado (se houver)
+        const interesseUsuario = (perfil && perfil.interesse_principal) ? perfil.interesse_principal : null;
 
         snap.forEach(doc => {
             const b = doc.data();
             b.uid = doc.id;
             
-            // Filtro de Interesse (Opcional: Se quiser filtrar por tipo de profissional na lista principal)
-            // Por padrão mostra todos, ou você pode filtrar pelo interesse_principal do usuário aqui.
+            // --- FILTRO DE INTERESSE ---
+            // Se o usuário for cliente e tiver um interesse definido, pula quem não for desse tipo
+            // Exceto se estiver vendo a lista de favoritos (aí mostra tudo que ele favoritou)
+            if (!isGuest && perfil.tipo === 'cliente' && interesseUsuario && !mostrarApenasFavoritos) {
+                if (b.tipo !== interesseUsuario) return; 
+            }
 
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
@@ -4962,7 +4967,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             barbeiros.push(b);
         });
 
-        // --- APLICAÇÃO DO FILTRO DE FAVORITOS ---
+        // --- FILTRO DE FAVORITOS (BOTÃO ATIVO) ---
         if (mostrarApenasFavoritos && !isGuest) {
             barbeiros = barbeiros.filter(b => b.isFavorito);
             if (barbeiros.length === 0) {
@@ -4971,28 +4976,38 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             }
         }
 
-        // Ordenação: Favoritos > Disponibilidade > Boost > PRO > Distância
+        // --- ORDENAÇÃO ---
+        // Prioridade: Favoritos no Topo > Disponibilidade > Boost > PRO > Distância
         barbeiros.sort((a, b) => {
-            if (!mostrarApenasFavoritos && !isGuest) {
-                 if (a.isFavorito && !b.isFavorito) return -1;
-                 if (!a.isFavorito && b.isFavorito) return 1;
-            }
+            // 1. Favoritos sempre primeiro (mesmo na lista geral)
+            if (a.isFavorito && !b.isFavorito) return -1;
+            if (!a.isFavorito && b.isFavorito) return 1;
+
+            // 2. Disponibilidade
             const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
             const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
             if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
 
+            // 3. Boost (Pago)
             const aBoosted = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
             const bBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             if (aBoosted !== bBoosted) return aBoosted ? -1 : 1;
             
+            // 4. PRO (Assinatura)
             const aPro = isProAtivo(a);
             const bPro = isProAtivo(b);
             if (aPro !== bPro) return aPro ? -1 : 1;
 
+            // 5. Distância
             return a.distancia - b.distancia;
         });
         
         lista.innerHTML = "";
+        if(barbeiros.length === 0) {
+             lista.innerHTML = `<p>Nenhum profissional encontrado para ${interesseUsuario ? interesseUsuario.replace('_', ' e ') : 'sua busca'}.</p>`;
+             return;
+        }
+
         barbeiros.forEach(b => {
             const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
             const estrelas = Math.round(notaMedia / 2); 
@@ -5022,11 +5037,11 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
             
-            // Botões de Ação (Favorito e Share)
             const heartIcon = b.isFavorito ? '❤️' : '♡';
-            // Se for Guest, o clique no coração deve chamar popup de login, mas aqui chamamos a função toggleFavorito
-            // que tem verificação de auth dentro, ou podemos fazer direto no onclick.
-            const favoriteBtn = `<button class="card-action-btn card-favorite-btn" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
+            // Cor do coração favorita: Dourado se selecionado, branco se não
+            const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
+            
+            const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
             const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
 
             lista.innerHTML += `
@@ -12021,7 +12036,6 @@ async function salvarNomePerfil() {
     }
 }
 
-// Função Roleta Corrigida (Cálculo exato de pixels para alinhar o ponteiro)
 function girarRoleta() {
     const hoje = new Date().toDateString();
     
@@ -12040,39 +12054,41 @@ function girarRoleta() {
     btnGirar.disabled = true;
     btnGirar.textContent = "Girando...";
 
-    // 1. Definir o Resultado (1 a 10 = Pontos, 11 = Caixa)
+    // 1. Definir o Resultado (Sorteio)
     const rand = Math.random();
+    // 90% de chance de cair em número (1-10), 10% de chance na Caixa (11)
     let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
 
-    // 2. Configuração da Animação com Precisão de Pixels
-    const faixa = document.getElementById('roletaFaixa');
+    // 2. Configuração da Animação (Matemática precisa)
+    // Baseado no CSS: Width 80 + Borda 6 (3+3) + Margem 4 (2+2) = 90px TOTAL POR ITEM
+    const itemFullWidth = 90; 
+    const itensPorSet = 11; // 10 números + 1 presente
     
-    // --- CORREÇÃO: Detectar largura exata do item ---
-    const itemExemplo = faixa.querySelector('.roleta-item');
-    if (!itemExemplo) return; // Segurança
+    // Dá voltas suficientes para o efeito visual
+    const voltas = 50; 
     
-    const style = window.getComputedStyle(itemExemplo);
-    // Largura total = width + margens
-    const itemWidth = itemExemplo.offsetWidth + parseFloat(style.marginLeft) + parseFloat(style.marginRight);
-    const itensPorSet = 11; // 1 a 10 + Presente (conforme gerado em abrirModalPerfil)
-    
-    // Queremos parar longe para dar efeito de giro (Ex: na volta 45)
-    const voltas = 45; 
-    // O índice alvo é onde o item 'resultado' está.
-    // Como os itens são gerados em ordem (1, 2, ... 10, 11), o resultado 1 está no índice 0.
+    // O índice alvo na longa fita gerada
+    // Se resultado for 1, é o primeiro item. Se for 11, é o último do set.
+    // Subtraímos 1 porque array começa em 0.
     const indiceAlvo = (voltas * itensPorSet) + (resultado - 1);
     
-    // Cálculo para centralizar o item sob a seta
+    // Cálculo de Centralização:
+    // Queremos que o centro do item alvo fique no centro do container.
     const containerWidth = document.getElementById('roletaVisual').offsetWidth;
-    const centroOffset = (containerWidth / 2) - (itemWidth / 2);
     
-    // Posição final exata em pixels
-    const posicaoFinal = (indiceAlvo * itemWidth) - centroOffset;
+    // Posição = (Índice * LarguraTotal) - (MetadeContainer) + (MetadeItem)
+    // Isso coloca o meio do item exatamente sob a seta.
+    const posicaoFinal = (indiceAlvo * itemFullWidth) - (containerWidth / 2) + (itemFullWidth / 2);
 
-    const tempoAnimacao = 5; // 5 segundos
+    const faixa = document.getElementById('roletaFaixa');
+    const tempoAnimacao = 6; // Segundos
     
-    faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.15, 0, 0.10, 1)`; 
-    faixa.style.transform = `translateX(-${posicaoFinal}px)`;
+    // Adiciona um pequeno "jitter" (ruído) aleatório de +/- 10px para não parecer robótico, 
+    // mas sem sair de cima do número (o item tem 80px de largura visual, 10px é seguro)
+    const jitter = Math.floor(Math.random() * 20) - 10; 
+    
+    faixa.style.transition = `transform ${tempoAnimacao}s cubic-bezier(0.1, 0, 0.1, 1)`; 
+    faixa.style.transform = `translateX(-${posicaoFinal + jitter}px)`;
     
     // 3. Processar Prêmio APÓS a animação
     setTimeout(async () => {
@@ -12083,29 +12099,32 @@ function girarRoleta() {
             girosRealizadosHoje: (perfil.ultimoGiroRoleta === hoje) ? firebase.firestore.FieldValue.increment(1) : 1
         };
         
-        // LÓGICA DE PRÊMIOS (Agora pareada com o visual)
         if (resultado <= 10) {
+            // Caiu no número
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
-            premioDescricao = `A sorte sorriu! O ponteiro parou no ${resultado} e você ganhou ${resultado} pontos de fidelidade.`;
+            premioDescricao = `A sorte sorriu! Você ganhou ${resultado} pontos de fidelidade.`;
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
         } else {
+            // Caiu no 11 (Caixa Surpresa)
             premioTitulo = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
+                const exp = new Date(); 
                 const atualExp = perfil.boostExpiracao ? perfil.boostExpiracao.toDate() : new Date();
                 if (atualExp < new Date()) { atualExp.setTime(Date.now()); } 
                 
-                atualExp.setHours(atualExp.getHours() + 24);
+                atualExp.setHours(atualExp.getHours() + 24); 
                 updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(atualExp);
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
                 premioDescricao = "Sorte GRANDE! Você ganhou 24 horas de Perfil Turbinado!";
             } else {
+                const exp = new Date();
                 const atualVipExp = (isVipAtivo(perfil) && perfil.vipExpirationDate) ? perfil.vipExpirationDate.toDate() : new Date();
                 if (atualVipExp < new Date()) { atualVipExp.setTime(Date.now()); }
 
-                atualVipExp.setDate(atualVipExp.getDate() + 5);
+                atualVipExp.setDate(atualVipExp.getDate() + 5); 
                 updates.vip = true; 
                 updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(atualVipExp);
-                premioDescricao = "Incrível! O ponteiro parou no Presente! Você ganhou 5 Dias de VIP Grátis!";
+                premioDescricao = "Incrível! Você ganhou 5 Dias de VIP Grátis!";
             }
         }
         
@@ -12117,23 +12136,21 @@ function girarRoleta() {
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
         }
 
-        // Atualiza botão e reseta posição visualmente para o próximo giro
-        let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1;
+        let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1; 
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
         
         if(restantes > 0) {
             btnGirar.disabled = false;
-            // Reseta a faixa para o início (sem o usuário perceber)
             setTimeout(() => {
                 faixa.style.transition = 'none';
                 faixa.style.transform = 'translateX(0px)';
-            }, 1000);
+            }, 2000);
         } else {
             btnGirar.textContent = "Volte Amanhã";
         }
 
-    }, tempoAnimacao * 1000 + 500);
+    }, tempoAnimacao * 1000 + 200);
 }
 
 // Função para renderizar a lista (Adicionado o onclick visual)
