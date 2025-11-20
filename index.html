@@ -4486,7 +4486,7 @@ const barbeiroSafe = encodeURIComponent(JSON.stringify(barbeiro));
         
         const cardHTML = `
             <div class="card barbeiro-card"
-                 onclick='abrirModalBarbeiro(JSON.parse(decodeURIComponent("${barbeiroSafe}")))'
+                 onclick='abrirModalBarbeiro(JSON.parse(decodeURIComponent("${barbeiroSafe}")))'>
                 
                 <button class="share-btn" onclick="event.stopPropagation(); compartilharBarbeiro('${barbeiro.nome.replace(/'/g, '\\\'')}')">
                     <i class="fas fa-share-alt"></i>
@@ -8912,7 +8912,7 @@ async function carregarProdutos() {
                 officialHtml += renderProdutoCard(produto, produtoSafe);
                 officialProductsFound = true;
             } else {
-                communityProducts.push({ data: produto, json: produtoJSON });
+                communityProducts.push({ data: produto, json: produtoSafe });
             }
         });
 
@@ -8954,9 +8954,11 @@ async function carregarProdutos() {
 }
 
 
-function renderProdutoCard(p, pJson) {
+function renderProdutoCard(p, pSafe) { // Alterado de pJson para pSafe para bater com o uso interno
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
-    const precoHtml = p.desconto ? `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : `R$ ${p.preco.toFixed(2)}`;
+    const precoHtml = p.desconto ? 
+        `<span class="produto-preco-original">R$ ${p.preco.toFixed(2)}</span> R$ ${precoFinal.toFixed(2)}` : 
+        `R$ ${p.preco.toFixed(2)}`;
     const imageUrlPrincipal = (p.imageUrls && p.imageUrls.length > 0) ? p.imageUrls[0] : p.imagemUrl;
     const placeholder = 'https://via.placeholder.com/150x150?text=Nova+Versao';
 
