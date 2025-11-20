@@ -12023,12 +12023,11 @@ async function salvarNomePerfil() {
 function girarRoleta() {
     const hoje = new Date().toDateString();
     
-    // 1. Verificação de Giros
+    // Verifica giros
     let girosTotais = 1;
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
-    // Proteção contra undefined
     let girosRealizados = (perfil.ultimoGiroRoleta === hoje) ? (perfil.girosRealizadosHoje || 0) : 0;
     
     if (girosRealizados >= girosTotais) {
@@ -12039,72 +12038,71 @@ function girarRoleta() {
     btnGirar.disabled = true;
     btnGirar.textContent = "Girando...";
 
-    // 2. Sorteio
+    // 2. Sorteio (Lógica)
     // 90% Pontos (1-10), 10% Presente (11)
     const rand = Math.random();
     let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
 
-    // 3. Matemática da Animação
-    const LARGURA_ITEM_TOTAL = 90; // 80px item + 10px margem
+    // 3. MATEMÁTICA DO GIRO (CORRIGIDA + COMPENSADA)
+    const LARGURA_ITEM_TOTAL = 90; // 80px + 10px margem
     const itensPorSet = 11;
-    const voltas = 5; // 5 voltas é o ideal para precisão e visual
+    const voltas = 5; 
     
-    // Índice do item sorteado (0 a 10)
-    const indiceNoConjunto = resultado - 1;
+    // --- CORREÇÃO DO DESLOCAMENTO ---
+    // Adicionamos +2 ao índice alvo para compensar o erro visual relatado.
+    // Se o resultado é 3, miramos visualmente no 5 para que o 3 pare no centro.
+    const indiceNoConjunto = (resultado - 1) + 2; 
     
-    // Índice absoluto na faixa longa
+    // Índice absoluto na faixa
     const indiceFinalAbsoluto = (voltas * itensPorSet) + indiceNoConjunto;
 
     // Elementos
     const faixa = document.getElementById('roletaFaixa');
     const container = document.getElementById('roletaVisual');
     
-    // Cálculo do Centro: Garante que o MEIO do item pare no MEIO da caixa
-    // Se offsetWidth falhar, usa 320 como padrão
+    // Fallback de largura para garantir o cálculo do centro
     const larguraContainer = container.offsetWidth || 320;
-    
+
+    // Cálculo de Centralização Precisa
     const centroDoItem = (indiceFinalAbsoluto * LARGURA_ITEM_TOTAL) + (LARGURA_ITEM_TOTAL / 2);
     const centroDoContainer = larguraContainer / 2;
     
-    // Posição final exata
+    // Posição Final
     let moveX = centroDoItem - centroDoContainer;
     
-    // Jitter: Pequena variação (+/- 20px) para realismo, 
-    // mas segura (o item tem 80px, então 20px não sai dele)
-    const jitter = Math.floor(Math.random() * 40) - 20;
+    // Jitter (Aleatoriedade) Reduzido e Seguro
+    // +/- 10px garante que não saia de cima do número (que tem 80px de largura)
+    const jitter = Math.floor(Math.random() * 20) - 10; 
     moveX += jitter;
 
-    // Aplica animação
+    // Animação
     faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${moveX}px)`;
     
-    // 4. Processar Prêmio (após 6.5s)
+    // 4. Entrega do Prêmio
     setTimeout(async () => {
         let premioTitulo = "";
         let premioDescricao = "";
         
-        // Prepara dados
         let updates = { 
             ultimoGiroRoleta: hoje,
             girosRealizadosHoje: firebase.firestore.FieldValue.increment(1)
         };
         
-        // Validade de 24h para os pontos
         const validade = new Date();
         validade.setHours(validade.getHours() + 24); 
 
         if (resultado <= 10) {
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
-            premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas se não usados!`;
+            premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas!`;
             
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
-            // ISSO É ESSENCIAL PARA O SEU CRON FUNCIONAR:
             updates.historicoPontosRoleta = firebase.firestore.FieldValue.arrayUnion({
                 valor: resultado,
                 expiraEm: firebase.firestore.Timestamp.fromDate(validade)
             });
 
-            // Feedback Visual Imediato
+            // Atualiza visualmente
             const displayPontos = document.getElementById('pontosFidelidade');
             if(displayPontos) {
                 let atuais = parseInt(displayPontos.textContent) || 0;
@@ -12136,13 +12134,12 @@ function girarRoleta() {
             }
         }
         
-        // Salva no Banco
         try {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
             exibirPopupBloqueante(premioTitulo, premioDescricao, () => {});
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", premioDescricao);
             
-            // Atualiza perfil local
+            // Atualiza local
             perfil.girosRealizadosHoje = (girosRealizados + 1);
             perfil.ultimoGiroRoleta = hoje;
             
@@ -12151,14 +12148,13 @@ function girarRoleta() {
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
         }
 
-        // Reseta Botão
+        // Resetar botão
         let novosGirosUsados = girosRealizados + 1;
         let restantes = Math.max(0, girosTotais - novosGirosUsados);
         btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
         
         if(restantes > 0) {
             btnGirar.disabled = false;
-            // Reset visual suave
             setTimeout(() => {
                 faixa.style.transition = 'none';
                 faixa.style.transform = 'translateX(0px)';
