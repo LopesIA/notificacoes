@@ -1406,89 +1406,75 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 /* Roleta Diária */
+/* --- ROLETA CORRIGIDA --- */
 .roleta-container {
-    background: #0f0f0f; /* Fundo bem escuro */
-    border: 4px solid #d4af37; /* Borda Dourada grossa */
+    background: #111;
+    border: 4px solid #d4af37; /* Borda Dourada */
     border-radius: 15px;
     height: 100px; /* Altura fixa */
     margin: 20px auto;
-    position: relative;
-    overflow: hidden; /* ESSENCIAL: Corta o que sai da caixa */
+    position: relative; /* Importante para a seta */
+    overflow: hidden; /* Corta o que sai da caixa */
     width: 100%;
-    max-width: 320px; /* Limita a largura para não esticar demais */
-    box-shadow: 
-        0 10px 20px rgba(0,0,0,0.5), /* Sombra externa */
-        inset 0 0 20px rgba(0,0,0,0.9); /* Sombra interna forte para profundidade */
+    max-width: 320px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.9); /* Sombra interna */
 }
 
+/* Sombra lateral para dar profundidade */
 .roleta-container::before, .roleta-container::after {
     content: '';
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 60px; /* Largura do degradê */
-    z-index: 2;
-    pointer-events: none;
+    top: 0; bottom: 0; width: 50px; z-index: 2; pointer-events: none;
 }
-.roleta-container::before {
-    left: 0;
-    background: linear-gradient(to right, #0f0f0f, transparent);
+.roleta-container::before { left: 0; background: linear-gradient(to right, #111, transparent); }
+.roleta-container::after { right: 0; background: linear-gradient(to left, #111, transparent); }
+
+/* SETA INDICADORA (CORRIGIDA) */
+.seta-roleta {
+    position: absolute;
+    left: 50%;
+    top: 0; /* Encostada no topo */
+    transform: translateX(-50%);
+    width: 0; 
+    height: 0; 
+    /* Triângulo apontando para baixo */
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 25px solid #ff0000; /* Seta Vermelha bem visível */
+    z-index: 20; /* Acima de tudo */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); /* Sombra para destacar do fundo */
 }
 
-.roleta-container::after {
-    right: 0;
-    background: linear-gradient(to left, #0f0f0f, transparent);
+.roleta-faixa {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    will-change: transform; /* Otimização */
 }
+
 .roleta-item {
-    /* MEDIDAS CRÍTICAS PARA A MATEMÁTICA DO JS */
+    /* LARGURA FIXA É CRUCIAL PARA A MATEMÁTICA */
     width: 80px; 
     height: 80px;
-    flex-shrink: 0; /* Não deixa encolher */
-    margin: 0 5px; /* Espaçamento lateral (Total item = 80 + 10 = 90px) */
-    
-    border-radius: 12px;
+    margin: 0 5px; /* Total de largura por item = 90px (80+5+5) */
+    flex-shrink: 0;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    font-weight: 800;
-    font-family: 'Courier New', Courier, monospace; /* Fonte monoespaçada fica melhor em roletas */
-    
-    /* Visual de "Ticket" ou Botão 3D */
-    box-shadow: 
-        inset 0 0 10px rgba(0,0,0,0.3),
-        0 4px 6px rgba(0,0,0,0.2);
+    font-weight: bold;
+    font-family: monospace;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     border: 2px solid rgba(255,255,255,0.1);
 }
-.tema-barbearia .roleta-item:nth-child(odd) {
-    background: radial-gradient(circle, #ffd700, #b8860b); /* Dourado */
-    color: #000;
-    border-color: #ffd700;
-}
-.tema-barbearia .roleta-item:nth-child(even) {
-    background: radial-gradient(circle, #333, #000); /* Preto */
-    color: #ffd700;
-    border-color: #555;
-}
 
-.tema-feminino .roleta-item:nth-child(odd) {
-    background: radial-gradient(circle, #ff9a9e, #e57373); /* Rosa */
-    color: #fff;
-}
-.tema-feminino .roleta-item:nth-child(even) {
-    background: radial-gradient(circle, #333, #000);
-    color: #ff9a9e;
-}
-
-/* Item Especial (Caixa Surpresa) */
-.roleta-item.especial {
-    background: radial-gradient(circle, #fff, #ccc) !important;
-    color: #333 !important;
-    font-size: 32px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 15px rgba(255,255,255,0.8);
-    animation: pulse-glow 1s infinite alternate;
-}
+/* Cores dos itens */
+.tema-barbearia .roleta-item:nth-child(odd) { background: #ffd700; color: #000; }
+.tema-barbearia .roleta-item:nth-child(even) { background: #222; color: #ffd700; }
+.tema-feminino .roleta-item:nth-child(odd) { background: #ff9a9e; color: #fff; }
+.tema-feminino .roleta-item:nth-child(even) { background: #222; color: #ff9a9e; }
+.roleta-item.especial { background: #fff !important; color: #333 !important; border: 2px solid gold; }
 
 @keyframes pulse-glow {
     from { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
