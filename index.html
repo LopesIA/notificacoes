@@ -1345,6 +1345,191 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
         border-radius: 5px;
     }
 
+/* --- NOVOS ESTILOS (FAVORITOS, PREMIUM, PERFIL, MOLDURAS) --- */
+
+/* Botão Favoritos Estilizado */
+.btn-favoritos-estilo {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-weight: 600;
+    margin: 10px auto;
+    display: block;
+    width: fit-content !important;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.estilo-gold {
+    background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    color: #000 !important;
+    border: 1px solid #aa771c !important;
+    box-shadow: 0 0 10px rgba(191, 149, 63, 0.5);
+}
+
+.estilo-pink {
+    background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fad0c4);
+    color: #4a0000 !important;
+    border: 1px solid #ff9a9e !important;
+    box-shadow: 0 0 10px rgba(255, 154, 158, 0.5);
+}
+
+/* Produto Premium na Loja */
+.produto-premium {
+    grid-column: 1 / -1; /* Ocupa toda a largura */
+    background: radial-gradient(circle, #2c250e 0%, #000000 100%);
+    border: 2px solid var(--cor-destaque-ouro);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+    transform: scale(1.02);
+    margin-bottom: 20px;
+    animation: gold-pulse 2s infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.produto-premium .produto-nome {
+    font-size: 1.3em;
+    color: var(--cor-destaque-ouro);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+.produto-premium .produto-preco {
+    font-size: 1.5em;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 5px var(--cor-destaque-ouro);
+    margin-bottom: 10px;
+}
+
+/* Roleta Diária */
+.roleta-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    background: #222;
+    padding: 15px 0;
+    border-radius: 10px;
+    margin: 15px 0;
+    border: 1px solid var(--cor-borda);
+    position: relative;
+    min-height: 80px;
+}
+.roleta-faixa {
+    display: inline-flex;
+    gap: 10px;
+    padding: 0 20px;
+    transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.roleta-item {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    flex-shrink: 0;
+    border: 2px solid #fff;
+}
+/* Temas da Roleta */
+.tema-barbearia .roleta-item:nth-child(odd) { background: var(--cor-destaque-ouro); color: #000; }
+.tema-barbearia .roleta-item:nth-child(even) { background: #000; color: var(--cor-destaque-ouro); }
+.tema-feminino .roleta-item:nth-child(odd) { background: var(--cor-destaque-rosa); color: #000; }
+.tema-feminino .roleta-item:nth-child(even) { background: #000; color: var(--cor-destaque-rosa); }
+.roleta-item.especial { background: #fff !important; color: #000 !important; box-shadow: 0 0 15px #fff; }
+
+.seta-roleta {
+    position: absolute;
+    left: 50%;
+    top: -5px;
+    transform: translateX(-50%);
+    font-size: 24px;
+    z-index: 5;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+/* Molduras */
+.moldura-item {
+    width: 80px; height: 80px;
+    position: relative;
+    display: flex;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    border-radius: 10px;
+    background: #222;
+    border: 2px solid transparent;
+}
+.moldura-item.comprada { border-color: #4CAF50; }
+.moldura-item.selecionada { background: rgba(212, 175, 55, 0.2); border-color: var(--cor-destaque); }
+
+/* Molduras Visuais */
+.avatar-frame-bronze { border: 3px solid #cd7f32; box-shadow: 0 0 5px #cd7f32; }
+.avatar-frame-prata { border: 3px solid #c0c0c0; box-shadow: 0 0 8px #c0c0c0; }
+.avatar-frame-ouro { border: 3px solid #ffd700; box-shadow: 0 0 10px #ffd700; animation: gold-pulse 2s infinite; }
+.avatar-frame-diamante { border: 3px solid #b9f2ff; box-shadow: 0 0 12px #b9f2ff, inset 0 0 10px #b9f2ff; animation: flash-blue 1.5s infinite; }
+
+@keyframes flash-blue { 0%, 100% { box-shadow: 0 0 12px #b9f2ff; } 50% { box-shadow: 0 0 20px #fff; } }
+
+/* Foto no Chat */
+.chat-user-photo {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 5px;
+    object-fit: cover;
+    border: 1px solid #555;
+    cursor: pointer;
+}
+
+/* Popup Perfil Bonito */
+.perfil-visualizacao {
+    text-align: center;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+}
+.perfil-visualizacao::before {
+    content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.85); z-index: 0;
+}
+.perfil-visualizacao-content { position: relative; z-index: 1; padding: 20px; }
+.perfil-foto-grande {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+/* Inversão Botões Rodapé */
+.bottom-buttons-container {
+    display: flex;
+    flex-direction: column-reverse; /* Sair embaixo, Denuncia em cima */
+    align-items: flex-start;
+    position: fixed;
+    bottom: 12px; left: 12px;
+    gap: 15px;
+    z-index: 15;
+    width: auto;
+}
+/* Reset de posições antigas para funcionar no novo container */
+#btnSair { position: static !important; margin: 0 !important; }
+#btnDenuncia { position: static !important; margin: 0 !important; }
+/* Botão Chat Fixo na Direita */
+#btnChat { position: fixed; bottom: 12px; right: 12px; z-index: 15; }
+
+/* Botão Admin Premium */
+.btn-admin-premium {
+    background: linear-gradient(45deg, #000, #d4af37);
+    border: 1px solid #d4af37;
+    color: #fff;
+    width: 100%;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
   </style>
 </head>
 <body>
@@ -1366,11 +1551,12 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 <div class="topbar hidden" id="topbar">
   <div class="logo">Nova Versão</div>
   <div class="topbar-right">
+    <button onclick="abrirModalPerfil()" style="font-size:22px; background:none; border:none; margin-right: 10px;">👤</button>
     <button id="btnTema" onclick="alternarTema()">🌙</button>
     <button id="btnConfig" onclick="abrirModal('modalConfiguracoes')">⚙️</button>
     <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 R$ <span id="saldoHeader">0,00</span></button>
-<div id="onlineUserCount" class="online-counter hidden">🟢 0 Online</div>  </div>
-</div>
+    <div id="onlineUserCount" class="online-counter hidden">🟢 0 Online</div>
+  </div>
 
 <div class="content-container">
   
@@ -1513,12 +1699,13 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 </div>
 
 <div class="bottom-buttons-container hidden" id="bottomButtons">
+  <button id="btnSair" onclick="fazerLogout()">🚪</button>
   <button id="btnDenuncia" onclick="abrirModal('modalDenuncia')">🚨</button>
-  <button id="btnChat" onclick="abrirChatGlobal()">
+</div>
+<button id="btnChat" class="hidden" onclick="abrirChatGlobal()">
     <span>💬</span>
     <span class="notification-badge hidden">0</span>
-  </button>
-</div>
+</button>
 
 <button id="btnSair" class="hidden" onclick="fazerLogout()">🚪 Sair</button>
 
@@ -2754,6 +2941,70 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
+<div id="modalMeuPerfil" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 500px;">
+    <h3>👤 Meu Perfil</h3>
+    
+    <div style="text-align: center; margin-bottom: 15px;">
+        <div style="position: relative; display: inline-block;">
+            <img id="perfilFotoPreview" src="https://via.placeholder.com/100" class="perfil-foto-grande" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #333;">
+            <label for="perfilFotoInput" style="position: absolute; bottom: 0; right: 0; background: var(--cor-destaque); color: #000; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">📷</label>
+        </div>
+        <input type="file" id="perfilFotoInput" accept="image/*" style="display: none;" onchange="previewFotoPerfil()">
+    </div>
+
+    <label>Nome de Exibição:</label>
+    <div style="display: flex; gap: 5px;">
+        <input type="text" id="perfilNomeInput" placeholder="Seu nome">
+        <button onclick="salvarNomePerfil()" style="width: auto;">💾</button>
+    </div>
+
+    <div class="popup-section">
+        <h4>🎰 Roleta Diária</h4>
+        <p style="font-size: 12px;">Gire 1x por dia para ganhar pontos ou prêmios!</p>
+        <div id="roletaVisual" class="roleta-container">
+            <div class="seta-roleta">⬇️</div>
+            <div class="roleta-faixa" id="roletaFaixa"></div>
+        </div>
+        <button id="btnGirarRoleta" onclick="girarRoleta()">🎲 GIRAR</button>
+    </div>
+
+    <div class="popup-section">
+        <h4>🖼️ Molduras de Perfil</h4>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;" id="listaMolduras">
+            </div>
+    </div>
+
+    <div class="popup-section">
+        <h4>🏅 Exibir Conquistas no Chat (Máx 3)</h4>
+        <div id="listaSelecaoConquistas" class="scrollable-list" style="max-height: 150px;"></div>
+    </div>
+
+    <button data-modal-id="modalMeuPerfil" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
+<div id="modalVisualizarPerfilChat" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content perfil-visualizacao" onclick="event.stopPropagation()">
+    <div class="perfil-visualizacao-content">
+        <img id="visuPerfilFoto" src="" class="perfil-foto-grande">
+        <h3 id="visuPerfilNome" style="margin: 5px 0; color: var(--cor-destaque);"></h3>
+        <p id="visuPerfilTipo" style="font-size: 12px; opacity: 0.8; color: #fff;"></p>
+        
+        <div id="visuPerfilConquistas" style="display: flex; justify-content: center; gap: 10px; font-size: 24px; margin: 15px 0;"></div>
+        
+        <button data-modal-id="modalVisualizarPerfilChat" onclick="fecharModal(event)">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalBloqueante" class="modal" style="z-index: 9999; backdrop-filter: blur(5px);">
+    <div class="modal-content" style="text-align: center; border: 2px solid var(--cor-destaque);">
+        <h3 id="tituloBloqueante" style="color: var(--cor-destaque);">Atenção</h3>
+        <p id="msgBloqueante" style="font-size: 1.1em; margin: 20px 0;"></p>
+        <button id="btnOkBloqueante" style="width: 100%; padding: 12px; background: var(--cor-destaque); color: var(--cor-fundo); font-weight: bold;">OK</button>
+    </div>
+</div>
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
@@ -2809,16 +3060,33 @@ function detectarAmbiente() {
 
 // Chama a função para definir a variável 'isTwa' na inicialização
 detectarAmbiente(); 
-const ADMIN_EMAIL = "josiel70c@gmail.com", ADMIN_PASS = "Ja997640401", TAXA = 0.05, BONUS_INDICACAO = 100, PONTOS_POR_CORTE = 10, PONTOS_PARA_RESGATE = 100, VALOR_RESGATE = 5;
-const PONTOS_POR_DEPOSITO_NORMAL = 4, PONTOS_POR_DEPOSITO_VIP = 8;
-const WHATSAPP_ADM_PHONE = "5527995003737";
+const ADMIN_EMAIL = "josiel70c@gmail.com";
+const ADMIN_PASS = "Ja997640401";
+const TAXA = 0.20; // Atualizado para 20%
+const BONUS_INDICACAO = 100;
+const PONTOS_POR_CORTE = 10;
+const PONTOS_PARA_RESGATE = 100;
+const VALOR_RESGATE = 5;
+const PONTOS_POR_DEPOSITO_NORMAL = 4;
+const PONTOS_POR_DEPOSITO_VIP = 8;
+const WHATSAPP_ADM_PHONE = "5527995003737"; // Mantido
 const PRECO_VIP = 100;
 const PRECO_TURBINAR = 9.99;
-// SUBSTITUA AS CONSTANTES DE PREÇO POR ESTAS
-const PRECOS_PRO = { // Nossos 3 novos níveis
-    tier1: { preco: 29.90, taxa: 0.04 }, // 4%
-    tier2: { preco: 59.90, taxa: 0.02 }, // 2%
-    tier3: { preco: 99.90, taxa: 0.00 }  // 0%
+
+// Novos Planos PRO
+const PRECOS_PRO = { 
+    tier1: { nome: 'Bronze', preco: 29.90, taxa: 0.15, giros: 2 }, 
+    tier2: { nome: 'Prata', preco: 59.90, taxa: 0.10, giros: 3 }, 
+    tier3: { nome: 'Ouro', preco: 99.90, taxa: 0.05, giros: 4 }, 
+    tier4: { nome: 'Diamante', preco: 199.90, taxa: 0.00, giros: 5 }
+};
+
+// Novas Molduras
+const MOLDURAS = {
+    bronze: { nome: 'Bronze', preco: 9.99, classe: 'avatar-frame-bronze' },
+    prata: { nome: 'Prata', preco: 19.99, classe: 'avatar-frame-prata' },
+    ouro: { nome: 'Ouro', preco: 29.99, classe: 'avatar-frame-ouro' },
+    diamante: { nome: 'Diamante', preco: 39.99, classe: 'avatar-frame-diamante' }
 };
 
 let fcmSetupDone = false;
@@ -3920,17 +4188,19 @@ auth.onAuthStateChanged(async user => {
                           const ag = change.doc.data();
                           
                           if (ag.status === "conclusão pendente") {
-                              if (ag.horario) { // Só exibe se for horário marcado (vaga imediata é tratada acima)
-                                  // Popup mais detalhado, como pedido
-                                  exibirPopup("Agendamento Aceito!", 
-                                    `Boas notícias! Seu agendamento foi aceito:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario}\nValor: R$ ${ag.valor.toFixed(2)}\n\nPor favor, não se atrase!`);
-                                  change.doc.ref.update({ clienteNotificado: true });
+                              if (ag.horario) { 
+                                  // USANDO POPUP BLOQUEANTE
+                                  exibirPopupBloqueante("Agendamento Aceito!", 
+                                    `Boas notícias! Seu agendamento foi aceito:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario}\nValor: R$ ${ag.valor.toFixed(2)}\n\nPor favor, não se atrase!`,
+                                    () => change.doc.ref.update({ clienteNotificado: true })
+                                  );
                               }
                           } else if (ag.status === "cancelado") {
-                              // Popup mais detalhado
-                              exibirPopup("Agendamento Recusado", 
-                                `Infelizmente, seu pedido de agendamento foi recusado:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario || 'Vaga Imediata'}\n\nVocê não foi cobrado. Sinta-se à vontade para tentar outro horário ou profissional.`);
-                              change.doc.ref.update({ clienteNotificado: true });
+                              // USANDO POPUP BLOQUEANTE
+                              exibirPopupBloqueante("Agendamento Recusado", 
+                                `Infelizmente, seu pedido de agendamento foi recusado:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario || 'Vaga Imediata'}\n\nVocê não foi cobrado.`,
+                                () => change.doc.ref.update({ clienteNotificado: true })
+                              );
                           }
                       }
                   });
@@ -3941,14 +4211,19 @@ auth.onAuthStateChanged(async user => {
             db.collection("agendamentos")
               .where("clienteUid", "==", user.uid)
               .where("status", "==", "concluido")
-              .where("avisoAvaliacaoEnviado", "==", false) // Flag para não repetir
+              .where("avisoAvaliacaoEnviado", "==", false) 
               .onSnapshot(snapshot => {
                   snapshot.docChanges().forEach(change => {
                       if (change.type === 'added' || change.type === 'modified') {
                           const ag = change.doc.data();
-                          // Popup como pedido
-                          exibirPopup("Serviço Concluído!", `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído. Você já pode ir em "Histórico" para avaliar, ganhar pontos de fidelidade e manter a comunidade segura!`);
-                          change.doc.ref.update({ avisoAvaliacaoEnviado: true });
+                          // USANDO POPUP BLOQUEANTE COM AVALIAÇÃO
+                          exibirPopupBloqueante("Serviço Concluído!", 
+                            `O profissional ${ag.barbeiroNome} marcou seu serviço como concluído.\n\nVocê pode avaliar o profissional, ajudando a manter a comunidade segura e como bônus ganhando pontos de fidelidade!`,
+                            () => {
+                                change.doc.ref.update({ avisoAvaliacaoEnviado: true });
+                                abrirModalAvaliacao(change.doc.id, ag.barbeiroUid);
+                            }
+                          );
                       }
                   });
               });
@@ -4266,6 +4541,37 @@ function filtrarBarbeiros() {
 
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
+    
+    // --- LÓGICA BOTÃO FAVORITOS UNIVERSAL ---
+    const divPai = lista.parentElement;
+    let btnFavoritos = divPai.querySelector('#btnFiltroFavoritos');
+    
+    // Cria o botão se não existir
+    if (!btnFavoritos && !isGuest) { 
+        const divBtn = document.createElement('div');
+        divBtn.style.display = 'flex'; divBtn.style.justifyContent = 'center'; divBtn.style.margin = '10px 0';
+        btnFavoritos = document.createElement('button');
+        btnFavoritos.id = 'btnFiltroFavoritos';
+        btnFavoritos.onclick = alternarFiltroFavoritos;
+        btnFavoritos.textContent = '♡ Mostrar Favoritos';
+        divBtn.appendChild(btnFavoritos);
+        divPai.insertBefore(divBtn, lista);
+    }
+
+    // Aplica o estilo baseado no nicho
+    if (btnFavoritos) {
+        btnFavoritos.className = 'btn-favoritos-estilo'; // Reseta classe base
+        const interesse = perfil?.interesse_principal || 'barbeiro';
+        if (interesse === 'manicure_pedicure' || interesse === 'designer_cilios') {
+            btnFavoritos.classList.add('estilo-pink');
+            btnFavoritos.classList.remove('estilo-gold');
+        } else {
+            btnFavoritos.classList.add('estilo-gold');
+            btnFavoritos.classList.remove('estilo-pink');
+        }
+    }
+    // -----------------------------------------
+
     lista.innerHTML = "<p>⏳ Carregando profissionais...</p>";
 
     if (!localizacaoCliente) {
@@ -4287,7 +4593,6 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         }
 
         let barbeiros = [];
-        // Lista de favoritos do usuário atual (se existir)
         const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
 
         snap.forEach(doc => {
@@ -4298,19 +4603,15 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             } else {
                 b.distancia = Infinity;
             }
-            // Marca se é favorito ou não para facilitar a ordenação
             b.isFavorito = favoritos.includes(b.uid);
             barbeiros.push(b);
         });
 
         barbeiros.sort((a, b) => {
-            // 1. Se o filtro estiver ATIVO, favoritos vêm primeiro
             if (mostrarApenasFavoritos) {
                 if (a.isFavorito && !b.isFavorito) return -1;
                 if (!a.isFavorito && b.isFavorito) return 1;
             }
-            
-            // 2. Lógica padrão (Disponibilidade > Boost > Pro > Distância)
             const aDisponivel = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
             const bDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
             if (aDisponivel !== bDisponivel) return aDisponivel ? -1 : 1;
@@ -4328,13 +4629,11 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         
         lista.innerHTML = "";
         barbeiros.forEach(b => {
-            // Lógica de Estrelas
             const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
             const estrelas = Math.round(notaMedia / 2); 
             const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
             const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
 
-            // Status HTML
             let statusHtml = '';
             const agora = new Date();
             const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim && agora >= b.ausenciaInicio.toDate() && agora <= b.ausenciaFim.toDate();
@@ -4354,25 +4653,22 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
                     : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
             }
 
-            // Promoções
             let promocoesHtml = '';
             if (b.promocoes && b.promocoes.length > 0) {
               promocoesHtml = `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>`;
             }
             
-            // HTML da Logo e Distância
             const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
             
-            // Botão de Favorito (Coração)
             const heartIcon = b.isFavorito ? '❤️' : '♡';
             const favoriteBtn = isGuest ? '' : `<button class="card-action-btn card-favorite-btn" onclick="event.stopPropagation(); toggleFavorito('${b.uid}')">${heartIcon}</button>`;
 
             const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
 
-lista.innerHTML += `
+            lista.innerHTML += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon}
                   ${favoriteBtn}
@@ -5403,8 +5699,6 @@ async function createMessageDiv(msg, docId) {
 
     if (docId) {
         messageDiv.dataset.docId = docId;
-        
-        // Lógica de exclusão para Admin (no clique da MENSAGEM)
         if (perfil && perfil.tipo === 'admin' && msg.tipo !== 'bot' && msg.tipo !== 'ai_suporte') {
             messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto);
             messageDiv.title = 'Admin: Clique para deletar esta mensagem';
@@ -5412,30 +5706,25 @@ async function createMessageDiv(msg, docId) {
         }
     }
 
-    let nomeSpanHtml = ''; // String para o span do nome
+    let nomeSpanHtml = ''; 
 
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
         nomeSpanHtml = `<span style="color: red;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
-    
     } else {
         try {
             let remetenteData;
             if (isCurrentUser) {
                 remetenteData = perfil; 
             } else {
+                // Tenta pegar do cache ou faz fetch rápido
                 const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
-                if (remetenteDoc.exists) {
-                    remetenteData = remetenteDoc.data();
-                }
+                if (remetenteDoc.exists) remetenteData = remetenteDoc.data();
             }
 
             if(remetenteData) {
-                if (remetenteData.possuiItemExclusivo) itemExclusivoIcone = '👕✨';
-                medalhaIcone = obterIconeMaiorConquista(remetenteData.conquistas, remetenteData.tipo === 'cliente' ? 'cliente' : 'profissional');
-
+                // Ícones de Status (VIP/PRO)
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
-                    messageDiv.style.textShadow = '0 0 5px #000';
                 } else if (remetenteData.tipo !== "cliente") { 
                     classeCSS = `barbeiro-chat`;
                     iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`;
@@ -5444,37 +5733,76 @@ async function createMessageDiv(msg, docId) {
                     iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
                 }
 
-                // --- INÍCIO DA LÓGICA DO POPUP DE INFO ---
-                let nomeOnclick = '';
-                let nomeStyle = '';
-                let nomeTitle = '';
-                if (perfil && perfil.tipo === 'admin' && !isCurrentUser) {
-                    // Adiciona o onclick para abrir o popup de info
-                    nomeOnclick = `onclick="event.stopPropagation(); adminAbrirInfoChat('${msg.remetenteUid}')"`;
-                    nomeStyle = 'style="cursor: pointer; text-decoration: underline;"';
-                    nomeTitle = `title="Ver info de ${remetenteData.nome}"`;
+                // Conquistas Selecionadas (Substitui a lógica antiga de "Maior Conquista")
+                let conquistasHtml = "";
+                if (remetenteData.conquistasSelecionadas && remetenteData.conquistasSelecionadas.length > 0) {
+                    const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
+                    remetenteData.conquistasSelecionadas.forEach(cId => {
+                        if(todasDefs[cId]) conquistasHtml += todasDefs[cId].icone;
+                    });
                 }
-                // --- FIM DA LÓGICA ---
 
-                nomeSpanHtml = `<span class="${classeCSS}" ${nomeOnclick} ${nomeStyle} ${nomeTitle}>${itemExclusivoIcone}${medalhaIcone}${iconeBase} ${remetenteData.nome}</span>`;
+                // Foto e Moldura
+                const fotoUrl = remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
+                let molduraClass = '';
+                if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
+                    molduraClass = MOLDURAS[remetenteData.molduraSelecionada].classe;
+                }
+
+                // HTML da Foto
+                const imgHtml = `<img src="${fotoUrl}" class="chat-user-photo ${molduraClass}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
+
+                // Nome Clicável
+                const nomeClicavel = `<span class="${classeCSS}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; text-decoration: underline;">${remetenteData.nome}</span>`;
+                
+                nomeSpanHtml = `${imgHtml} ${nomeClicavel} ${conquistasHtml} ${iconeBase}`;
 
             } else {
                  nomeSpanHtml = `<span class="cliente-chat">👻 Usuário Excluído</span>`;
             }
         } catch (error) {
-             console.error("Erro ao buscar dados do remetente:", error);
              nomeSpanHtml = `<span class="cliente-chat">❓ Erro ao Carregar</span>`;
         }
     }
 
-    messageDiv.innerHTML = `<b>${nomeSpanHtml}:</b> ${msg.texto}`;
+    messageDiv.innerHTML = `<div>${nomeSpanHtml}</div><div style="margin-top:2px;">${msg.texto}</div>`;
     
     if (msg.ts && msg.ts.toDate) {
         const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em;">(${timeString})</small>`;
+        messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em; float:right; margin-top:5px;">${timeString}</small>`;
     }
     return messageDiv;
- }
+}
+
+// Função para abrir o modal de visualização de perfil (NOVO REQUISITO 5.1)
+async function abrirPerfilUsuarioChat(uid) {
+    const doc = await db.collection('usuarios').doc(uid).get();
+    if(!doc.exists) return;
+    const u = doc.data();
+    
+    document.getElementById('visuPerfilFoto').src = u.fotoPerfil || 'https://via.placeholder.com/120';
+    
+    // Aplica moldura no modal
+    const img = document.getElementById('visuPerfilFoto');
+    img.className = 'perfil-foto-grande'; // Reset
+    if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
+        img.classList.add(MOLDURAS[u.molduraSelecionada].classe);
+    }
+    
+    document.getElementById('visuPerfilNome').textContent = u.nome;
+    document.getElementById('visuPerfilTipo').textContent = u.tipo === 'cliente' ? 'Cliente' : 'Profissional';
+    
+    const container = document.getElementById('visuPerfilConquistas');
+    container.innerHTML = '';
+    if (u.conquistasSelecionadas) {
+        const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
+        u.conquistasSelecionadas.forEach(cId => {
+            if(todasDefs[cId]) container.innerHTML += `<span title="${todasDefs[cId].nome}">${todasDefs[cId].icone}</span>`;
+        });
+    }
+    
+    abrirModal('modalVisualizarPerfilChat');
+}
 
 async function adminAbrirInfoChat(uid) {
     exibirAguarde("Buscando dados do usuário...");
@@ -7731,11 +8059,10 @@ async function adminMudarTipoUsuario(uid, novoTipo) {
 }
 
 function exibirPopupNovoAgendamento(agendamentoDoc) {
-    if (popupAgendamentoAberto) return; // Impede abrir múltiplos
+    if (popupAgendamentoAberto) return; 
 
     const ag = agendamentoDoc.data();
     
-    // Preenche as informações
     document.getElementById('popupClienteNome').textContent = ag.clienteNome;
     document.getElementById('popupServicoNome').textContent = ag.servico;
     document.getElementById('popupHorario').textContent = ag.horario ? ag.horario : "Vaga Imediata";
@@ -7749,35 +8076,42 @@ function exibirPopupNovoAgendamento(agendamentoDoc) {
         whatsappLink.style.display = 'none';
     }
 
-    // Configura os botões Aceitar/Recusar
     const btnAceitar = document.getElementById('btnAceitarAgendamentoPopup');
     const btnRecusar = document.getElementById('btnRecusarAgendamentoPopup');
 
+    // MUDANÇA: Usa popup customizado 'exibirConfirmacao' em vez de confirm()
     if (ag.status === 'imediato') {
         btnAceitar.onclick = () => {
-            popupAgendamentoAberto = false;
-            fecharModalAtual(); // Fecha o popup
-            aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
+            exibirConfirmacao("Aprovar Vaga?", "Confirmar a vaga imediata para este cliente?", () => {
+                popupAgendamentoAberto = false;
+                fecharModal('modalNovoAgendamento');
+                aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
+            });
         };
-    } else { // status 'pendente'
+    } else { 
         btnAceitar.onclick = () => {
-            popupAgendamentoAberto = false;
-            fecharModalAtual(); // Fecha o popup
-            aprovarAgendamento(agendamentoDoc.id, ag.clienteUid, ag.valor, ag.horario);
+            exibirConfirmacao("Aprovar Agendamento?", "Confirmar este horário na sua agenda?", () => {
+                popupAgendamentoAberto = false;
+                fecharModal('modalNovoAgendamento');
+                aprovarAgendamento(agendamentoDoc.id, ag.clienteUid, ag.valor, ag.horario);
+            });
         };
     }
 
     btnRecusar.onclick = () => {
-        popupAgendamentoAberto = false;
-        fecharModalAtual(); // Fecha o popup
-        recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
+        exibirConfirmacao("Recusar Agendamento?", "Tem certeza que deseja recusar? O cliente será avisado.", () => {
+            popupAgendamentoAberto = false;
+            fecharModal('modalNovoAgendamento');
+            recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
+        });
     };
 
-    // Abre o modal
     popupAgendamentoAberto = true;
-    abrirModal('modalNovoAgendamento');
+    // Abre o modal sem usar abrirModal para evitar conflito de ID na pilha se precisar
+    const modal = document.getElementById('modalNovoAgendamento');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
 }
-
 
 async function enviarNotificacaoMarketing() {
     const title = document.getElementById('marketingTitulo').value.trim();
@@ -8798,12 +9132,11 @@ async function carregarProdutos() {
     try {
         const usersSnap = await db.collection('usuarios').get();
         const usersData = {};
-        usersSnap.forEach(doc => {
-            usersData[doc.id] = doc.data();
-        });
+        usersSnap.forEach(doc => { usersData[doc.id] = doc.data(); });
 
         const produtosSnap = await db.collection('loja_produtos').orderBy('ts', 'desc').get();
         
+        let premiumHtml = ''; // HTML Exclusivo para Premium
         let officialHtml = '<h4 style="grid-column: 1 / -1;">⭐ Oficiais Nova Versão ⭐</h4>';
         let communityProducts = [];
         let officialProductsFound = false;
@@ -8811,7 +9144,22 @@ async function carregarProdutos() {
         produtosSnap.forEach(doc => {
             const produto = { ...doc.data(), id: doc.id };
             const produtoJSON = JSON.stringify(produto).replace(/'/g, "\\'");
-            if (produto.isOficial) {
+            
+            if (produto.isPremium) {
+                // RENDERIZAÇÃO ESPECIAL PREMIUM
+                const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
+                const imgUrl = (produto.imageUrls && produto.imageUrls.length > 0) ? produto.imageUrls[0] : 'https://via.placeholder.com/250x250?text=Premium';
+                
+                premiumHtml += `
+                <div class="produto-card produto-premium" onclick='handleProdutoClick(${produtoJSON})'>
+                    <img src="${imgUrl}" style="height: 200px; object-fit: cover; border-bottom: 2px solid gold;">
+                    <div class="produto-info">
+                        <div class="produto-nome">🌟 ${produto.nome} 🌟</div>
+                        <div class="produto-preco">R$ ${precoFinal.toFixed(2)}</div>
+                        <p style="font-size: 10px; letter-spacing: 2px; margin-top: 5px;">EDICÃO LIMITADA</p>
+                    </div>
+                </div>`;
+            } else if (produto.isOficial) {
                 officialHtml += renderProdutoCard(produto, produtoJSON);
                 officialProductsFound = true;
             } else {
@@ -8820,7 +9168,7 @@ async function carregarProdutos() {
         });
 
         if (!officialProductsFound) {
-            officialHtml += '<p style="grid-column: 1 / -1; font-size: 14px; opacity: 0.7;">Nenhum produto oficial no momento.</p>';
+            officialHtml += '<p style="grid-column: 1 / -1; font-size: 14px; opacity: 0.7;">Nenhum produto oficial comum no momento.</p>';
         }
 
         const getUserScore = (uid) => {
@@ -8848,14 +9196,14 @@ async function carregarProdutos() {
             });
         }
         
-        container.innerHTML = officialHtml + communityHtml;
+        // ORDEM: PREMIUM -> OFICIAL -> COMUNIDADE
+        container.innerHTML = premiumHtml + officialHtml + communityHtml;
 
     } catch (error) {
         console.error("Erro ao carregar produtos:", error);
         container.innerHTML = '<p>Ocorreu um erro ao carregar a loja.</p>';
     }
 }
-
 
 function renderProdutoCard(p, pJson) {
     const precoFinal = p.desconto ? p.preco * (1 - p.desconto / 100) : p.preco;
@@ -9121,126 +9469,6 @@ async function abrirGerenciarLoja() {
     });
 }
 
-async function abrirFormularioProduto(produtoId = null) {
-    produtoEmEdicaoId = produtoId;
-    imagensMarcadasParaExcluir = []; // Limpa o array ao abrir o modal
-    const modal = document.getElementById('modalAddEditProduto');
-    document.getElementById('formProdutoTitulo').textContent = produtoId ? '✏️ Editar Produto' : '📦 Adicionar Novo Produto';
-
-    // Seletores dos elementos do formulário
-    const nomeInput = modal.querySelector('#produtoNome');
-    const precoInput = modal.querySelector('#produtoPreco');
-    const descontoInput = modal.querySelector('#produtoDesconto');
-    const descricaoInput = modal.querySelector('#produtoDescricao');
-    const tamanhosCheckboxes = modal.querySelectorAll('input[name="tamanhos"]');
-    const fileInput = modal.querySelector('#produtoFiles');
-    const labelFileInput = modal.querySelector('#labelProdutoFiles');
-    const previewsExistentesContainer = modal.querySelector('#produtoPreviewsExistentes');
-    const previewsNovasContainer = modal.querySelector('#produtoPreviewsNovas');
-    const progressBar = modal.querySelector('#produtoUploadProgress');
-    const btnSalvar = modal.querySelector('#btnSalvarProduto');
-    const contadorImagensElement = modal.querySelector('#produtoContadorImagens');
-
-    // Reset do formulário
-    nomeInput.value = '';
-    precoInput.value = '';
-    descontoInput.value = '';
-    descricaoInput.value = '';
-    tamanhosCheckboxes.forEach(c => c.checked = false);
-    fileInput.value = ''; // Limpa seleção de arquivos
-    fileInput.disabled = false; // Habilita input por padrão
-    labelFileInput.textContent = 'Adicionar Novas Imagens'; // Reseta label
-    previewsExistentesContainer.innerHTML = '';
-    previewsNovasContainer.innerHTML = '';
-    progressBar.style.display = 'none';
-    progressBar.value = 0;
-    btnSalvar.disabled = false; // Habilita o botão por padrão
-    contadorImagensElement.textContent = '0'; // Reseta contador
-
-    // Carrega dados se estiver editando
-    let existingImageUrls = [];
-    if (produtoId) {
-        exibirAguarde("Carregando dados do produto...");
-        try {
-            const doc = await db.collection('loja_produtos').doc(produtoId).get();
-            if (!doc.exists) throw new Error("Produto não encontrado.");
-            const p = doc.data();
-
-            nomeInput.value = p.nome || '';
-            precoInput.value = p.preco || '';
-            descontoInput.value = p.desconto || '';
-            descricaoInput.value = p.descricao || '';
-            if (p.tamanhos && Array.isArray(p.tamanhos)) {
-                p.tamanhos.forEach(t => {
-                    const checkbox = modal.querySelector(`input[value="${t}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
-
-            // Carrega previews das imagens existentes
-            existingImageUrls = p.imageUrls || (p.imagemUrl ? [p.imagemUrl] : []); // Compatibilidade
-            contadorImagensElement.textContent = existingImageUrls.length; // Atualiza contador inicial
-            existingImageUrls.forEach(url => {
-                 previewsExistentesContainer.innerHTML += `
-                    <div style="position: relative; margin-right: 5px;" data-url="${url}">
-                        <img src="${url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Imagem Existente">
-                        <button onclick="marcarImagemProdutoParaExcluir(this, '${url}')" style="position: absolute; top: 0; right: 0; background: rgba(255,0,0,0.7); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; line-height: 18px; padding: 0; cursor: pointer;" title="Excluir Imagem">❌</button>
-                    </div>`;
-            });
-            fecharAguarde(null, true);
-
-        } catch (error) {
-            fecharAguarde(null, true);
-            exibirPopup("Erro", "Não foi possível carregar os dados do produto: " + error.message);
-            return; // Não abre o modal se der erro
-        }
-    } else {
-         // Novo produto, verifica se pode adicionar imagens
-         if (existingImageUrls.length >= 5) {
-            fileInput.disabled = true;
-            labelFileInput.textContent = 'Limite de 5 imagens atingido.';
-         }
-    }
-
-
-    // Remove listener antigo se houver
-    fileInput.onchange = null;
-    // Listener para novas imagens
-    fileInput.onchange = () => {
-        previewsNovasContainer.innerHTML = '';
-        const files = fileInput.files;
-        const currentImageCount = existingImageUrls.length - imagensMarcadasParaExcluir.length; // Conta imagens que serão mantidas
-        const allowedNew = 5 - currentImageCount;
-
-        if (files.length > 0) {
-            if (files.length > allowedNew) {
-                exibirPopup("Limite de Imagens", `Você pode adicionar no máximo mais ${allowedNew} imagens (total de 5).`);
-                fileInput.value = ''; // Limpa seleção
-                return;
-            }
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewsNovasContainer.innerHTML += `<img src="${e.target.result}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 5px;" alt="Nova Imagem">`;
-                }
-                reader.readAsDataURL(file);
-            });
-        }
-    };
-
-    // Verifica o estado inicial do input de arquivos
-    const currentCountInitial = existingImageUrls.length;
-    if (currentCountInitial >= 5) {
-        fileInput.disabled = true;
-        labelFileInput.textContent = 'Limite de 5 imagens atingido.';
-    } else {
-         fileInput.disabled = false;
-         labelFileInput.textContent = `Adicionar Novas Imagens (${5 - currentCountInitial} restantes):`;
-    }
-
-    abrirModal('modalAddEditProduto');
-}
-
 // Função auxiliar para marcar/desmarcar imagem de PRODUTO para exclusão
 function marcarImagemProdutoParaExcluir(buttonElement, imageUrl) {
     const imgContainer = buttonElement.parentElement;
@@ -9314,6 +9542,121 @@ function marcarImagemPortfolioParaExcluir(buttonElement, imageUrl) {
      atualizarContadorEInputPortfolio();
 }
 
+async function abrirFormularioProduto(produtoId = null, isPremium = false) {
+    produtoEmEdicaoId = produtoId;
+    imagensMarcadasParaExcluir = []; 
+    const modal = document.getElementById('modalAddEditProduto');
+    
+    // Título Diferente para Premium
+    const titulo = isPremium ? '🌟 Novo Produto PREMIUM' : (produtoId ? '✏️ Editar Produto' : '📦 Adicionar Novo Produto');
+    document.getElementById('formProdutoTitulo').textContent = titulo;
+
+    // Guarda flag no dataset do modal
+    modal.dataset.isPremium = isPremium ? 'true' : 'false';
+
+    const nomeInput = modal.querySelector('#produtoNome');
+    const precoInput = modal.querySelector('#produtoPreco');
+    const descontoInput = modal.querySelector('#produtoDesconto');
+    const descricaoInput = modal.querySelector('#produtoDescricao');
+    const tamanhosCheckboxes = modal.querySelectorAll('input[name="tamanhos"]');
+    const fileInput = modal.querySelector('#produtoFiles');
+    const labelFileInput = modal.querySelector('#labelProdutoFiles');
+    const previewsExistentesContainer = modal.querySelector('#produtoPreviewsExistentes');
+    const previewsNovasContainer = modal.querySelector('#produtoPreviewsNovas');
+    const progressBar = modal.querySelector('#produtoUploadProgress');
+    const btnSalvar = modal.querySelector('#btnSalvarProduto');
+    const contadorImagensElement = modal.querySelector('#produtoContadorImagens');
+
+    nomeInput.value = '';
+    precoInput.value = '';
+    descontoInput.value = '';
+    descricaoInput.value = '';
+    tamanhosCheckboxes.forEach(c => c.checked = false);
+    fileInput.value = ''; 
+    fileInput.disabled = false; 
+    labelFileInput.textContent = 'Adicionar Novas Imagens';
+    previewsExistentesContainer.innerHTML = '';
+    previewsNovasContainer.innerHTML = '';
+    progressBar.style.display = 'none';
+    progressBar.value = 0;
+    btnSalvar.disabled = false; 
+    contadorImagensElement.textContent = '0'; 
+
+    let existingImageUrls = [];
+    if (produtoId) {
+        exibirAguarde("Carregando dados do produto...");
+        try {
+            const doc = await db.collection('loja_produtos').doc(produtoId).get();
+            if (!doc.exists) throw new Error("Produto não encontrado.");
+            const p = doc.data();
+
+            nomeInput.value = p.nome || '';
+            precoInput.value = p.preco || '';
+            descontoInput.value = p.desconto || '';
+            descricaoInput.value = p.descricao || '';
+            if (p.tamanhos && Array.isArray(p.tamanhos)) {
+                p.tamanhos.forEach(t => {
+                    const checkbox = modal.querySelector(`input[value="${t}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+            existingImageUrls = p.imageUrls || (p.imagemUrl ? [p.imagemUrl] : []);
+            contadorImagensElement.textContent = existingImageUrls.length; 
+            existingImageUrls.forEach(url => {
+                 previewsExistentesContainer.innerHTML += `
+                    <div style="position: relative; margin-right: 5px;" data-url="${url}">
+                        <img src="${url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Imagem Existente">
+                        <button onclick="marcarImagemProdutoParaExcluir(this, '${url}')" style="position: absolute; top: 0; right: 0; background: rgba(255,0,0,0.7); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; line-height: 18px; padding: 0; cursor: pointer;" title="Excluir Imagem">❌</button>
+                    </div>`;
+            });
+            fecharAguarde(null, true);
+        } catch (error) {
+            fecharAguarde(null, true);
+            exibirPopup("Erro", "Não foi possível carregar os dados do produto: " + error.message);
+            return;
+        }
+    } else {
+         if (existingImageUrls.length >= 5) {
+            fileInput.disabled = true;
+            labelFileInput.textContent = 'Limite de 5 imagens atingido.';
+         }
+    }
+
+    fileInput.onchange = null;
+    fileInput.onchange = () => {
+        previewsNovasContainer.innerHTML = '';
+        const files = fileInput.files;
+        const currentImageCount = existingImageUrls.length - imagensMarcadasParaExcluir.length;
+        const allowedNew = 5 - currentImageCount;
+
+        if (files.length > 0) {
+            if (files.length > allowedNew) {
+                exibirPopup("Limite de Imagens", `Você pode adicionar no máximo mais ${allowedNew} imagens (total de 5).`);
+                fileInput.value = ''; 
+                return;
+            }
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewsNovasContainer.innerHTML += `<img src="${e.target.result}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 5px;" alt="Nova Imagem">`;
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+
+    const currentCountInitial = existingImageUrls.length;
+    if (currentCountInitial >= 5) {
+        fileInput.disabled = true;
+        labelFileInput.textContent = 'Limite de 5 imagens atingido.';
+    } else {
+         fileInput.disabled = false;
+         labelFileInput.textContent = `Adicionar Novas Imagens (${5 - currentCountInitial} restantes):`;
+    }
+
+    abrirModal('modalAddEditProduto');
+}
+
 async function salvarProdutoVendedor() {
     const modal = document.getElementById('modalAddEditProduto');
     const nome = modal.querySelector('#produtoNome').value.trim();
@@ -9325,8 +9668,10 @@ async function salvarProdutoVendedor() {
     const fileInput = modal.querySelector('#produtoFiles');
     const progressBar = modal.querySelector('#produtoUploadProgress');
     const btnSalvar = modal.querySelector('#btnSalvarProduto');
+    
+    // Pega Flag Premium
+    const isPremium = modal.dataset.isPremium === 'true';
 
-    // Validação de campos obrigatórios
     if (!nome || isNaN(preco) || preco <= 0 || !descricao || tamanhosSelecionados.length === 0) {
         return exibirPopup('Preencha todos os campos obrigatórios (*): Nome, Preço, Descrição e pelo menos um Tamanho.');
     }
@@ -9336,11 +9681,9 @@ async function salvarProdutoVendedor() {
 
     const files = fileInput.files;
     const imagensExistentesParaManter = [];
-    // Pega URLs das imagens existentes que NÃO estão marcadas para excluir
     modal.querySelectorAll('#produtoPreviewsExistentes div[data-url]:not(.marcada-para-excluir)').forEach(div => {
         imagensExistentesParaManter.push(div.dataset.url);
     });
-    // O array `imagensMarcadasParaExcluir` já contém as URLs a serem deletadas do Storage
 
     const totalImagensFinais = imagensExistentesParaManter.length + (files ? files.length : 0);
 
@@ -9348,7 +9691,7 @@ async function salvarProdutoVendedor() {
         return exibirPopup('O produto precisa ter pelo menos uma imagem.');
     }
     if (totalImagensFinais > 5) {
-        return exibirPopup(`O produto pode ter no máximo 5 imagens. Você está tentando salvar ${totalImagensFinais}. Remova algumas existentes ou selecione menos arquivos novos.`);
+        return exibirPopup(`O produto pode ter no máximo 5 imagens. Você está tentando salvar ${totalImagensFinais}.`);
     }
 
     exibirAguarde("Salvando produto...");
@@ -9359,12 +9702,11 @@ async function salvarProdutoVendedor() {
     const uploadPromises = [];
     const newImageUrls = [];
     let totalBytesUpload = 0;
-    const uploadTasksInfo = []; // Para progresso
+    const uploadTasksInfo = [];
 
     if (files && files.length > 0) {
         totalBytesUpload = Array.from(files).reduce((acc, file) => acc + file.size, 0);
         Array.from(files).forEach((file, index) => {
-            // Garante um nome de pasta único se for um novo produto
             const productIdForPath = produtoEmEdicaoId || `new_${auth.currentUser.uid}_${Date.now()}`;
             const filePath = `products/${auth.currentUser.uid}/${productIdForPath}/${Date.now()}_${index}_${file.name}`;
             const uploadPromise = new Promise((resolve, reject) => {
@@ -9384,7 +9726,7 @@ async function salvarProdutoVendedor() {
                     async () => {
                         try {
                             const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                            newImageUrls.push(downloadURL); // Adiciona a nova URL
+                            newImageUrls.push(downloadURL); 
                             resolve();
                         } catch(urlError) { reject(urlError); }
                     }
@@ -9395,10 +9737,8 @@ async function salvarProdutoVendedor() {
     }
 
     try {
-        // Espera todos os uploads terminarem, se houver algum
         await Promise.all(uploadPromises);
 
-        // Deleta imagens marcadas do Storage ANTES de salvar no Firestore
         const deletePromises = imagensMarcadasParaExcluir.map(async url => {
             try {
                 const decodedUrl = decodeURIComponent(url);
@@ -9407,54 +9747,43 @@ async function salvarProdutoVendedor() {
                 if (match && match[1]) {
                     const filePath = match[1];
                     await storage.ref(filePath).delete();
-                    console.log("Imagem marcada deletada do Storage:", filePath);
-                } else {
-                    console.warn("Não foi possível deletar imagem marcada do Storage (path não extraído):", url);
                 }
-            } catch (e) {
-                console.warn("Erro ao deletar imagem marcada do Storage:", e.message, url);
-            }
+            } catch (e) { console.warn("Erro ao deletar imagem:", e); }
         });
-        await Promise.all(deletePromises); // Espera as exclusões terminarem
+        await Promise.all(deletePromises);
 
-        // Combina imagens existentes mantidas com as novas
         const finalImageUrls = [...imagensExistentesParaManter, ...newImageUrls];
 
         const productData = {
             nome,
             preco,
-            desconto: desconto !== null ? desconto : firebase.firestore.FieldValue.delete(), // Remove se estiver vazio
+            desconto: desconto !== null ? desconto : firebase.firestore.FieldValue.delete(),
             descricao,
             tamanhos: tamanhosSelecionados,
-            imageUrls: finalImageUrls, // Salva o array atualizado
-            imagemUrl: finalImageUrls[0] || null, // Primeira imagem como principal (compatibilidade)
+            imageUrls: finalImageUrls, 
+            imagemUrl: finalImageUrls[0] || null,
             vendedorUid: auth.currentUser.uid,
             vendedorNome: perfil.nome,
             isOficial: perfil.tipo === 'admin',
-            // Não atualiza ts nem vendasRealizadas ao editar
+            isPremium: isPremium // SALVA O STATUS PREMIUM
         };
 
         if (produtoEmEdicaoId) {
             await db.collection('loja_produtos').doc(produtoEmEdicaoId).update(productData);
         } else {
-            // Adiciona campos específicos de criação
             productData.ts = firebase.firestore.FieldValue.serverTimestamp();
             productData.vendasRealizadas = 0;
-            // Salva e obtém o ID do novo documento
-            const newProdRef = await db.collection('loja_produtos').add(productData);
-            console.log("Novo produto criado com ID:", newProdRef.id);
-             // Se houve uploads, pode ser necessário renomear a pasta no storage se usou 'new_'
-             // Isso é mais complexo e pode ser deixado como está por simplicidade inicial
+            await db.collection('loja_produtos').add(productData);
         }
 
         fecharTodosOsModais();
         exibirPopup('Produto salvo com sucesso!');
-        abrirGerenciarLoja(); // Recarrega a lista de produtos do vendedor
+        if(perfil.tipo === 'admin') abrirGerenciarLojaAdmin();
+        else abrirGerenciarLoja();
 
     } catch (error) {
         fecharTodosOsModais();
         exibirPopup('Erro ao salvar produto: ' + (error.message || error));
-        // Reabilita o botão em caso de erro
         btnSalvar.disabled = false;
         progressBar.style.display = 'none';
     }
@@ -10140,6 +10469,28 @@ async function ativarModoFerias() {
         fecharTodosOsModais();
         exibirPopup("Ocorreu um erro: " + e.message);
     }
+}
+
+function exibirPopupBloqueante(titulo, mensagem, onOk) {
+    const modal = document.getElementById('modalBloqueante');
+    document.getElementById('tituloBloqueante').textContent = titulo;
+    document.getElementById('msgBloqueante').textContent = mensagem;
+    
+    const btnOk = document.getElementById('btnOkBloqueante');
+    
+    // Clona para remover listeners antigos
+    const novoBtn = btnOk.cloneNode(true);
+    btnOk.parentNode.replaceChild(novoBtn, btnOk);
+    
+    novoBtn.onclick = () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+        // Executa ação de callback (ex: marcar como lido)
+        if (onOk) onOk();
+    };
+    
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
 }
 
 function finalizarOnboarding() {
@@ -10949,6 +11300,18 @@ async function abrirGerenciarLojaAdmin() {
     produtosList.innerHTML = "<p>Carregando...</p>";
     usuariosList.innerHTML = "<p>Carregando...</p>";
 
+    // BOTÃO PREMIUM ADICIONADO AQUI
+    const modalContent = document.querySelector('#modalGerenciarLojaAdmin .modal-content');
+    if (!document.getElementById('btnAdicionarPremium')) {
+        const btnPremium = document.createElement('button');
+        btnPremium.id = 'btnAdicionarPremium';
+        btnPremium.textContent = '🌟 Adicionar Produto PREMIUM';
+        btnPremium.className = 'btn-admin-premium'; 
+        btnPremium.onclick = () => abrirFormularioProduto(null, true); // Chama com flag Premium
+        // Insere logo após o título (index 0 é titulo, 1 é conteúdo)
+        modalContent.insertBefore(btnPremium, modalContent.children[1]); 
+    }
+
     const produtosSnap = await db.collection('loja_produtos').get();
     produtosList.innerHTML = "";
     produtosSnap.forEach(doc => {
@@ -11108,6 +11471,229 @@ function setupConfiguracoes() {
             location.reload(); 
         }
     });
+}
+
+// =================================================
+// === FUNÇÕES DE PERFIL, ROLETA E MOLDURAS (NOVO) ===
+// =================================================
+
+function abrirModalPerfil() {
+    if (!perfil) return;
+    // Carrega dados
+    document.getElementById('perfilNomeInput').value = perfil.nome;
+    document.getElementById('perfilFotoPreview').src = perfil.fotoPerfil || 'https://via.placeholder.com/100';
+    
+    // Define tema da roleta baseado no interesse
+    const roleta = document.getElementById('roletaVisual');
+    roleta.className = 'roleta-container ' + ((perfil.interesse_principal === 'barbeiro') ? 'tema-barbearia' : 'tema-feminino');
+    
+    // Gera itens da roleta (1 a 10 + Caixa) triplicado para efeito visual
+    const faixa = document.getElementById('roletaFaixa');
+    faixa.innerHTML = '';
+    for(let i=0; i<3; i++) {
+        for(let n=1; n<=10; n++) {
+            faixa.innerHTML += `<div class="roleta-item">${n}</div>`;
+        }
+        faixa.innerHTML += `<div class="roleta-item especial">🎁</div>`;
+    }
+    
+    renderizarMolduras();
+    renderizarSelecaoConquistas();
+    
+    abrirModal('modalMeuPerfil');
+}
+
+function previewFotoPerfil() {
+    const file = document.getElementById('perfilFotoInput').files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => document.getElementById('perfilFotoPreview').src = e.target.result;
+        reader.readAsDataURL(file);
+    }
+}
+
+async function salvarNomePerfil() {
+    exibirAguarde("Salvando perfil...");
+    const nome = document.getElementById('perfilNomeInput').value.trim();
+    const file = document.getElementById('perfilFotoInput').files[0];
+    
+    if(!nome) return exibirPopup("O nome não pode ser vazio");
+
+    let updates = { nome: nome };
+    
+    try {
+        if (file) {
+            // Usa a função uploadImage já existente
+            const url = await uploadImage(file, `perfis/${auth.currentUser.uid}_${Date.now()}`);
+            updates.fotoPerfil = url;
+        }
+        
+        await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+        fecharTodosOsModais();
+        exibirPopup("Perfil atualizado com sucesso!");
+    } catch(e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao salvar: " + e.message);
+    }
+}
+
+function girarRoleta() {
+    const hoje = new Date().toDateString();
+    if (perfil.ultimoGiroRoleta === hoje) {
+        return exibirPopup("Você já girou hoje! Volte amanhã.");
+    }
+
+    // Sorteio: 90% numeros, 10% caixa
+    const rand = Math.random();
+    let resultado = rand < 0.9 ? Math.ceil(Math.random() * 10) : 11; // 11 representa a caixa
+    
+    // Animação CSS
+    const itemWidth = 74; // 60px + 10px gap + border aprox
+    // Pula o primeiro set (11 itens) e vai para o item sorteado no segundo set
+    const offsetBase = itemWidth * 11; 
+    const posicaoFinal = offsetBase + ((resultado - 1) * itemWidth);
+    // Variação para parar no meio do item
+    const randomOffset = Math.floor(Math.random() * 10) - 5; 
+    
+    const faixa = document.getElementById('roletaFaixa');
+    faixa.style.transition = "transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+    faixa.style.transform = `translateX(-${posicaoFinal + randomOffset}px)`;
+    
+    // Processa prêmio após 4s
+    setTimeout(async () => {
+        let premioTexto = "";
+        let updates = { ultimoGiroRoleta: hoje };
+        
+        if (resultado <= 10) {
+            premioTexto = `${resultado} Pontos de Fidelidade`;
+            updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
+        } else {
+            // Caixa Surpresa
+            if (perfil.tipo !== 'cliente') {
+                // Profissional: Topo ou VIP
+                const premioCaixa = Math.random() > 0.5 ? 'top' : 'vip';
+                if (premioCaixa === 'top') {
+                    const exp = new Date(); exp.setHours(exp.getHours() + 24);
+                    updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(exp);
+                    premioTexto = "🎁 24h de Perfil Turbinado!";
+                } else {
+                    const exp = new Date(); exp.setDate(exp.getDate() + 5);
+                    updates.vip = true; 
+                    updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(exp);
+                    premioTexto = "🎁 5 Dias de VIP!";
+                }
+            } else {
+                // Cliente: Pontos extras
+                premioTexto = "🎁 50 Pontos de Fidelidade!"; 
+                updates.pontosFidelidade = firebase.firestore.FieldValue.increment(50);
+            }
+        }
+        
+        await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+        // Reseta posição visual sem animação
+        setTimeout(() => {
+             faixa.style.transition = "none";
+             faixa.style.transform = "translateX(0px)";
+        }, 2000);
+        
+        exibirPopup("Parabéns!", `Você ganhou: ${premioTexto}`);
+    }, 4100);
+}
+
+function renderizarMolduras() {
+    const container = document.getElementById('listaMolduras');
+    container.innerHTML = '';
+    const minhasMolduras = perfil.moldurasAdquiridas || [];
+    
+    Object.keys(MOLDURAS).forEach(key => {
+        const m = MOLDURAS[key];
+        const tem = minhasMolduras.includes(key);
+        const selecionada = perfil.molduraSelecionada === key;
+        
+        container.innerHTML += `
+            <div class="moldura-item ${tem ? 'comprada' : ''} ${selecionada ? 'selecionada' : ''}" 
+                 onclick="gerenciarMoldura('${key}')" style="flex-direction:column;">
+                <div class="${m.classe}" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                <span style="font-size:10px; margin-top:5px;">${m.nome}</span>
+                ${!tem ? `<span style="font-size:10px; color:#ff9800;">R$${m.preco}</span>` : ''}
+            </div>`;
+    });
+}
+
+async function gerenciarMoldura(key) {
+    const m = MOLDURAS[key];
+    const minhas = perfil.moldurasAdquiridas || [];
+    
+    if (minhas.includes(key)) {
+        // Selecionar
+        await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
+        exibirPopup("Moldura aplicada com sucesso!");
+        // Atualização visual imediata via listener do perfil
+    } else {
+        // Comprar
+        if (perfil.saldo < m.preco) return exibirPopup("Saldo insuficiente para comprar esta moldura.");
+        
+        if (!confirm(`Deseja comprar a moldura ${m.nome} por R$${m.preco}?`)) return;
+        
+        exibirAguarde("Comprando...");
+        try {
+            await db.collection('usuarios').doc(auth.currentUser.uid).update({
+                saldo: firebase.firestore.FieldValue.increment(-m.preco),
+                moldurasAdquiridas: firebase.firestore.FieldValue.arrayUnion(key)
+            });
+            fecharTodosOsModais();
+            exibirPopup("Compra realizada! Agora você pode selecionar a moldura.");
+        } catch(e) {
+            fecharTodosOsModais();
+            exibirPopup("Erro na compra: " + e.message);
+        }
+    }
+}
+
+function renderizarSelecaoConquistas() {
+    const container = document.getElementById('listaSelecaoConquistas');
+    container.innerHTML = '';
+    const minhasConquistas = perfil.conquistas || [];
+    const selecionadas = perfil.conquistasSelecionadas || [];
+    
+    // Combina definições de cliente e profissional para exibir
+    const todasDefinicoes = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
+    
+    // Adiciona conquistas de TIER PRO se tiver
+    if (perfil.proAtivo && perfil.proTier) {
+         // Lógica simplificada: Exibe texto do Tier se não houver conquista específica mapeada
+         container.innerHTML += `<p style="color:var(--cor-destaque-azul)">🌟 Você possui o Tier ${perfil.proTier.toUpperCase()}</p>`;
+    }
+
+    if(minhasConquistas.length === 0) {
+        container.innerHTML = "<p>Você ainda não possui conquistas desbloqueadas.</p>";
+        return;
+    }
+
+    minhasConquistas.forEach(cId => {
+        const def = todasDefinicoes[cId];
+        if(!def) return;
+        
+        const isSelected = selecionadas.includes(cId);
+        container.innerHTML += `
+            <div class="selectable-item ${isSelected ? 'selected' : ''}" onclick="toggleConquistaChat('${cId}')">
+                <span style="font-size:20px;">${def.icone}</span> ${def.nome}
+            </div>
+        `;
+    });
+}
+
+async function toggleConquistaChat(cId) {
+    let selecionadas = perfil.conquistasSelecionadas || [];
+    if (selecionadas.includes(cId)) {
+        selecionadas = selecionadas.filter(id => id !== cId);
+    } else {
+        if (selecionadas.length >= 3) return exibirPopup("Máximo de 3 conquistas selecionadas.");
+        selecionadas.push(cId);
+    }
+    await db.collection('usuarios').doc(auth.currentUser.uid).update({ conquistasSelecionadas: selecionadas });
+    // Atualiza a lista visualmente
+    renderizarSelecaoConquistas();
 }
 
 async function salvarLocalizacaoConfig() {
