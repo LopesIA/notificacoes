@@ -1406,20 +1406,21 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 /* Roleta Diária */
+/* --- ROLETA CORRIGIDA E PRECISA --- */
 .roleta-container {
-    background: #111;
+    background: #111; /* Fundo escuro */
     border: 4px solid #d4af37; /* Borda Dourada */
     border-radius: 15px;
     height: 100px; /* Altura fixa */
     margin: 20px auto;
-    position: relative; /* Importante para a seta */
+    position: relative; /* Importante para posicionar a seta */
     overflow: hidden; /* Corta o que sai da caixa */
     width: 100%;
-    max-width: 320px;
+    max-width: 320px; /* Largura padrão */
     box-shadow: inset 0 0 20px rgba(0,0,0,0.9); /* Sombra interna */
 }
 
-/* Sombras laterais para dar profundidade */
+/* Sombra lateral para dar profundidade (fade nas pontas) */
 .roleta-container::before, .roleta-container::after {
     content: '';
     position: absolute;
@@ -1428,34 +1429,34 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .roleta-container::before { left: 0; background: linear-gradient(to right, #111, transparent); }
 .roleta-container::after { right: 0; background: linear-gradient(to left, #111, transparent); }
 
-/* SETA INDICADORA (AGORA VISÍVEL) */
+/* SETA INDICADORA (AGORA VISÍVEL E NO TOPO) */
 .seta-roleta {
     position: absolute;
     left: 50%;
-    top: 0; /* Encostada no topo, não fora */
+    top: 0; /* Encostada no topo da caixa */
     transform: translateX(-50%);
     width: 0; 
     height: 0; 
-    /* Triângulo vermelho apontando para baixo */
+    /* Triângulo Vermelho apontando para baixo */
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
     border-top: 25px solid #ff0000; 
     z-index: 20; /* Acima de tudo */
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); /* Sombra para destacar */
 }
 
 .roleta-faixa {
     display: flex;
     height: 100%;
     align-items: center;
-    will-change: transform; /* Otimização */
+    will-change: transform; /* Otimização para celular */
 }
 
 .roleta-item {
-    /* LARGURA FIXA CRUCIAL PARA A MATEMÁTICA */
+    /* LARGURA FIXA: 80px + 5px margem esq + 5px margem dir = 90px TOTAL */
     width: 80px; 
     height: 80px;
-    margin: 0 5px; /* Largura total real = 90px (80+5+5) */
+    margin: 0 5px; 
     flex-shrink: 0;
     border-radius: 10px;
     display: flex;
@@ -1463,7 +1464,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     justify-content: center;
     font-size: 28px;
     font-weight: bold;
-    font-family: monospace;
+    font-family: monospace; /* Fonte monoespaçada para números alinhados */
     box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     border: 2px solid rgba(255,255,255,0.1);
 }
@@ -12038,44 +12039,48 @@ function girarRoleta() {
     btnGirar.textContent = "Girando...";
 
     // 2. Definir o Resultado (Sorteio)
+    // 1 a 10 = Pontos | 11 = Presente
     const rand = Math.random();
-    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; // 1-10 (pontos) ou 11 (presente)
+    let resultado = rand < 0.90 ? Math.ceil(Math.random() * 10) : 11; 
 
-    // 3. MATEMÁTICA PRECISA DO GIRO
-    // Baseado no CSS: item width 80px + margin-left 5px + margin-right 5px = 90px TOTAL
+    // 3. MATEMÁTICA DO GIRO (CORRIGIDA)
+    // Largura Item (80) + Margens (5+5) = 90px
     const LARGURA_ITEM_TOTAL = 90; 
     
-    // O índice do item sorteado dentro do conjunto (0 a 10)
-    // Se resultado for 1, índice é 0. Se for 11, índice é 10.
+    // O índice do item (0 a 10)
     const indiceNoConjunto = resultado - 1; 
     
-    // Escolhemos um conjunto lá na frente (ex: conjunto 45 de 60) para dar bastante giro
+    // Escolhemos um conjunto lá na frente para girar (Conjunto 45 de 60)
+    // Isso dá 5 voltas completas visuais aproximadamente
     const conjuntoAlvo = 45; 
     
-    // Índice absoluto na faixa HTML gigante
+    // Índice absoluto na faixa HTML
     const indiceFinalAbsoluto = (conjuntoAlvo * 11) + indiceNoConjunto;
 
-    // Elementos do DOM
+    // Elementos
     const faixa = document.getElementById('roletaFaixa');
     const container = document.getElementById('roletaVisual');
     
-    // CORREÇÃO PRINCIPAL: Se offsetWidth falhar (modal animando), usa 320px (largura padrão CSS)
+    // Pega a largura do container (ou usa 320 como segurança se der zero)
     const larguraContainer = container.offsetWidth || 320;
 
-    // CÁLCULO DE CENTRALIZAÇÃO:
-    // Queremos que o CENTRO do item pare no CENTRO do container.
-    // Posição = (Índice * 90) - (Metade da Tela) + (Metade do Item)
+    // CÁLCULO DO CENTRO:
+    // Queremos mover a faixa para a esquerda (translateX negativo)
+    // Quantos pixels temos que mover para o item alvo ficar no meio?
     const centroDoItem = (indiceFinalAbsoluto * LARGURA_ITEM_TOTAL) + (LARGURA_ITEM_TOTAL / 2);
     const centroDoContainer = larguraContainer / 2;
+    
+    // Posição final exata
     let moveX = centroDoItem - centroDoContainer;
     
-    // Adiciona um pequeno efeito aleatório (+/- 20px) para não parecer robô, 
-    // mas mantendo dentro da área do item (que tem 80px de largura visual)
+    // Adiciona um "tempero" aleatório (+/- 20px) para não parecer robô, 
+    // mas sem sair de cima do número (o item tem 80px, 20px é seguro)
     const jitter = Math.floor(Math.random() * 40) - 20; 
     moveX += jitter;
 
     // Aplica a animação
-    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; // Começa rápido, freia lento
+    // cubic-bezier(0.1, 0, 0.1, 1) começa rápido e freia suavemente no final
+    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${moveX}px)`;
     
     // 4. Processar Prêmio APÓS a animação (6s + 500ms folga)
@@ -12093,6 +12098,7 @@ function girarRoleta() {
         validade.setHours(validade.getHours() + 24); 
 
         if (resultado <= 10) {
+            // PRÊMIO: PONTOS
             premioTitulo = `🎉 Ganhou ${resultado} Ponto(s)!`;
             premioDescricao = `Você ganhou ${resultado} pontos. Eles expiram em 24 horas se não usados!`;
             
@@ -12102,7 +12108,7 @@ function girarRoleta() {
                 expiraEm: firebase.firestore.Timestamp.fromDate(validade)
             });
 
-            // Atualiza visualmente
+            // Atualiza visualmente agora
             const displayPontos = document.getElementById('pontosFidelidade');
             if(displayPontos) {
                 let atuais = parseInt(displayPontos.textContent) || 0;
@@ -12110,6 +12116,7 @@ function girarRoleta() {
             }
 
         } else {
+            // PRÊMIO: PRESENTE
             premioTitulo = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
                 // Profissional
@@ -12139,7 +12146,7 @@ function girarRoleta() {
             exibirPopupBloqueante(premioTitulo, premioDescricao, () => {});
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", premioDescricao);
             
-            // Atualiza o local para refletir que o giro foi gasto
+            // Atualiza o local
             perfil.girosRealizadosHoje = (girosRealizados + 1);
             perfil.ultimoGiroRoleta = hoje;
             
