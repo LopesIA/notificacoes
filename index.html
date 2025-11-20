@@ -1530,6 +1530,93 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     margin-bottom: 10px;
     font-weight: bold;
 }
+
+/* === CORREÇÃO DE LAYOUT (CSS FIX) === */
+
+/* 1. Forçar centralização da tela inteira */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center !important; /* Garante que tudo fique no meio horizontalmente */
+    overflow-x: hidden; /* Impede barra de rolagem lateral */
+    width: 100%;
+}
+
+/* 2. Arrumar o container principal */
+.content-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 500px !important; /* Mantém o formato de app */
+    margin: 0 auto !important; /* Centraliza o bloco na tela */
+    padding-top: 70px !important; /* Espaço para a Topbar não cobrir o conteúdo */
+    position: relative;
+}
+
+/* 3. Consertar os Cards (Admin, Cliente, etc) */
+.card {
+    width: 92% !important; /* Garante margem nas laterais */
+    max-width: 480px !important;
+    margin: 10px auto !important; /* Centraliza o card */
+    box-sizing: border-box; /* Evita que o padding estoure a largura */
+}
+
+/* 4. Ajustar a Topbar para caber tudo */
+.topbar {
+    justify-content: space-between !important;
+    padding: 0 8px !important; /* Reduz padding lateral */
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 100; /* Garante que fique acima de tudo */
+}
+
+.topbar-right {
+    gap: 5px !important; /* Diminui espaço entre ícones para não vazar */
+    flex-wrap: nowrap !important; /* Impede que os ícones caiam pra linha de baixo */
+}
+
+/* Ajuste de tamanho dos botões da Topbar para telas pequenas */
+.topbar-right button {
+    font-size: 18px !important; /* Levemente menor */
+    padding: 5px !important;
+}
+
+#onlineUserCount {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    white-space: nowrap; /* Texto não quebra */
+}
+
+/* 5. Consertar Botões Inferiores (Sair e Denúncia) */
+.bottom-buttons-container {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    display: flex !important;
+    flex-direction: column-reverse !important; /* Sair em baixo, Denúncia em cima */
+    gap: 15px !important;
+    z-index: 99;
+    align-items: center;
+}
+
+/* Botão flutuante do Chat (Direita) */
+#btnChat {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 99;
+}
+
+/* 6. Ajuste do Painel Admin (Botões cortados) */
+#adminView > div {
+    justify-content: center !important; /* Centraliza os botões do admin */
+}
+#adminView button {
+    flex-grow: 1; /* Faz botões ocuparem espaço igual */
+    min-width: 130px; /* Tamanho mínimo para não cortar texto */
+    margin: 5px !important;
+}
   </style>
 </head>
 <body>
@@ -1548,15 +1635,21 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
   </div>
 </div>
 
-<div class="topbar hidden" id="topbar">
-  <div class="logo">Nova Versão</div>
+<div class="topbar" id="topbar">
+  <div class="logo" style="font-size: 16px; white-space: nowrap;">Nova Versão</div>
+  
   <div class="topbar-right">
-    <button onclick="abrirModalPerfil()" style="font-size:22px; background:none; border:none; margin-right: 10px;">👤</button>
-    <button id="btnTema" onclick="alternarTema()">🌙</button>
-    <button id="btnConfig" onclick="abrirModal('modalConfiguracoes')">⚙️</button>
-    <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 R$ <span id="saldoHeader">0,00</span></button>
-    <div id="onlineUserCount" class="online-counter hidden">🟢 0 Online</div>
+    <button onclick="abrirModalPerfil()" style="background:none; border:none;">👤</button>
+    
+    <button id="btnTema" onclick="alternarTema()" style="background:none; border:none;">🌙</button>
+    
+    <button id="btnConfig" onclick="abrirModal('modalConfiguracoes')" style="background:none; border:none;">⚙️</button>
+    
+    <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 <span id="saldoHeader">0</span></button>
+    
+    <div id="onlineUserCount" class="online-counter hidden">1 ON</div>
   </div>
+</div>
 
 <div class="content-container">
   
@@ -4010,8 +4103,17 @@ auth.onAuthStateChanged(async user => {
     // --- Atualização normal da UI ---
     console.log("Atualizando UI com dados do perfil...");
     const saldo = (perfil.saldo || 0).toFixed(2);
-    document.getElementById("saldoHeader").textContent = saldo;
-    document.getElementById("saldoModal").textContent = saldo;
+    let saldoFormatado = parseFloat(perfil.saldo || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    // Se o valor for muito grande (ex: admin), diminui a fonte ou abrevia visualmente no topo
+    if (saldoFormatado.length > 8) {
+        document.getElementById("btnCarteiraTop").style.fontSize = "12px"; // Diminui fonte
+    } else {
+        document.getElementById("btnCarteiraTop").style.fontSize = "14px";
+    }
+    
+    document.getElementById("saldoHeader").textContent = saldoFormatado;
+    document.getElementById("saldoModal").textContent = saldoFormatado;
 
     // (O restante da lógica de atualização da UI permanece igual...)
     const btnVip = document.getElementById('btnVip');
