@@ -4891,7 +4891,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
     const divPai = lista.parentElement;
     
-    // --- BOTÃO DE FAVORITOS ---
+    // --- 1. BOTÃO DE FAVORITOS (UI) ---
     let btnFavoritos = divPai.querySelector('#btnFiltroFavoritosLuxo');
     if (!btnFavoritos) {
         const divBtn = document.createElement('div');
@@ -4920,7 +4920,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     // Atualiza visual do botão
     if (mostrarApenasFavoritos && !isGuest) {
         btnFavoritos.innerHTML = "❤️ Ver Todos";
-        btnFavoritos.classList.add('ativo');
+        btnFavoritos.classList.add('ativo'); // Estilo de "limpar filtro"
     } else {
         btnFavoritos.innerHTML = "⭐ Meus Favoritos";
         btnFavoritos.classList.remove('ativo');
@@ -4930,40 +4930,51 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
 
     if (!localizacaoCliente) { await obterLocalizacaoAtual().catch(() => {}); }
     
-    if (barbeirosListener) barbeirosListener();
+    if (barbeirosListener) barbeirosListener(); // Limpa listener anterior
     
     // =================================================================
-    // === CORREÇÃO DEFINITIVA: FILTRO DIRETO NO BANCO DE DADOS ===
+    // === 2. LÓGICA DE FILTRO DE BANCO DE DADOS (AQUI ESTÁ A CORREÇÃO) ===
     // =================================================================
     
-    let tiposParaBuscar = ["barbeiro", "manicure_pedicure", "designer_cilios"]; // Padrão: Busca tudo
+    // Lista de todos os tipos possíveis
+    const todosTipos = ["barbeiro", "manicure_pedicure", "designer_cilios"];
+    
+    // Por padrão (Admin, Guest ou Favoritos Ativos), buscamos TUDO
+    let tiposParaBuscar = todosTipos; 
 
-    // Se sou CLIENTE e NÃO estou vendo favoritos, restrinjo a busca
-    if (!isGuest && perfil && perfil.tipo === 'cliente' && !mostrarApenasFavoritos) {
-        // Pega o interesse ou define 'barbeiro' se estiver vazio
-        const meuInteresse = perfil.interesse_principal || 'barbeiro';
-        // O banco de dados só vai entregar profissionais deste tipo exato
-        tiposParaBuscar = [meuInteresse];
+    // Lógica Restritiva (Só aplica se NÃO for Guest, NÃO for Admin e Favoritos estiver OFF)
+    if (!isGuest && perfil && perfil.tipo !== 'admin' && !mostrarApenasFavoritos) {
+        
+        if (perfil.tipo === 'cliente') {
+            // CLIENTE: Vê apenas o interesse escolhido
+            // Se não tiver interesse, fallback para 'barbeiro'
+            const meuInteresse = perfil.interesse_principal || 'barbeiro';
+            tiposParaBuscar = [meuInteresse];
+            
+        } else {
+            // PROFISSIONAL: Vê apenas o seu próprio ramo (Barbeiro vê Barbeiro)
+            // Isso impede que barbeiro veja manicure
+            tiposParaBuscar = [perfil.tipo];
+        }
     }
 
-    // Query Blindada: Usa o array definido acima
+    // Executa a query com o filtro aplicado NA FONTE
     let query = db.collection("usuarios").where("tipo", "in", tiposParaBuscar);
     
     // =================================================================
 
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-             // Mensagem personalizada dependendo do contexto
+             // Mensagens personalizadas para lista vazia
              if (mostrarApenasFavoritos && !isGuest) {
                  lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Você ainda não tem favoritos.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
              } else {
-                 // Tenta pegar o nome legível do interesse
-                 const interesseAtual = (!isGuest && perfil?.interesse_principal) ? perfil.interesse_principal : 'desta categoria';
-                 let nomeCategoria = interesseAtual;
-                 if(interesseAtual === 'barbeiro') nomeCategoria = "Barbearia";
-                 if(interesseAtual === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
-                 if(interesseAtual === 'designer_cilios') nomeCategoria = "Cílios";
-
+                 // Texto amigável para a categoria
+                 let nomeCategoria = "nesta categoria";
+                 if(tiposParaBuscar[0] === 'barbeiro') nomeCategoria = "Barbearia";
+                 if(tiposParaBuscar[0] === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
+                 if(tiposParaBuscar[0] === 'designer_cilios') nomeCategoria = "Cílios";
+                 
                  lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>😔 Nenhum profissional de <b>${nomeCategoria}</b> encontrado no momento.</p></div>`;
              }
              return;
@@ -4977,12 +4988,14 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             b.uid = doc.id;
             b.isFavorito = favoritos.includes(b.uid);
 
-            // Se o botão favoritos estiver ativo, filtramos manualmente aqui
-            // (Porque a query do banco trouxe o tipo certo, mas precisamos ver se é favorito)
+            // --- FILTRAGEM FINAL ---
+            // Se o botão favoritos está ATIVO, ignoramos qualquer outra regra e mostramos SÓ favoritos.
+            // Se está INATIVO, mostramos tudo que veio do banco (que já foi filtrado acima).
             if (mostrarApenasFavoritos && !isGuest) {
-                if (!b.isFavorito) return;
+                if (!b.isFavorito) return; // Pula se não for favorito
             }
 
+            // Cálculo de distância
             if (localizacaoCliente && b.latitude && b.longitude) {
                 b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
             } else {
@@ -4992,13 +5005,14 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             barbeiros.push(b);
         });
 
-        // Verificação final após filtro de favoritos
+        // Se filtrou por favoritos e a lista ficou vazia
         if (barbeiros.length === 0 && mostrarApenasFavoritos) {
-             lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Nenhum favorito encontrado nesta categoria.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
+             lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>💔 Nenhum favorito encontrado nesta visualização.</p><button onclick="alternarFiltroFavoritos()" style="margin-top:10px;width:auto; background:#555;">Voltar a Ver Todos</button></div>`;
              return;
         }
 
         // --- ORDENAÇÃO ---
+        // 1. Favoritos -> 2. Disponibilidade -> 3. Boost -> 4. PRO -> 5. Distância
         barbeiros.sort((a, b) => {
             if (a.isFavorito && !b.isFavorito) return -1;
             if (!a.isFavorito && b.isFavorito) return 1;
@@ -5018,8 +5032,8 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             return a.distancia - b.distancia;
         });
         
+        // --- RENDERIZAÇÃO ---
         lista.innerHTML = "";
-
         barbeiros.forEach(b => {
             const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
             const estrelas = Math.round(notaMedia / 2); 
