@@ -11336,6 +11336,16 @@ async function toggleFavorito(barbeiroUid) {
     }
 }
 
+function abrirModalBarbeiro(barbeiroString) {
+        // ESSA LINHA É CRÍTICA SE VOCÊ USOU A FUNÇÃO CORRIGIDA!
+        const barbeiro = JSON.parse(barbeiroString);
+
+        // O resto da sua lógica de modal pode usar 'barbeiro' como um objeto JavaScript normal.
+        document.getElementById('modalBarbeiroNome').textContent = barbeiro.nome;
+        // ...
+        abrirModal('modalBarbeiroDetalhes');
+    }
+
 function copiarParaClipboard(text, nome) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text)
