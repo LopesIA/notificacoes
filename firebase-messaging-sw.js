@@ -59,8 +59,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   
   // Abre a URL que foi definida no 'data' da notificação
-  const urlToOpen = new URL('/', self.location.origin).href;
-
+  const urlToOpen = new URL(event.notification.data.url, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({
@@ -126,16 +125,18 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith((async () => {
       try {
+        // Tenta pegar a resposta do preload
         const preloadResp = await event.preloadResponse;
-
         if (preloadResp) {
           return preloadResp;
         }
 
+        // Se não tiver preload, faz o fetch normal
         const networkResp = await fetch(event.request);
         return networkResp;
       } catch (error) {
-
+        console.log('Fetch failed; returning offline page instead.', error);
+        
         const cache = await caches.open(CACHE);
         const cachedResp = await cache.match(offlineFallbackPage);
         return cachedResp;
