@@ -1398,17 +1398,85 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     margin-bottom: 10px;
 }
 
+#modalMeuPerfil .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
 /* Roleta Diária */
 .roleta-container {
-    overflow-x: auto;
-    white-space: nowrap;
-    background: #222;
-    padding: 15px 0;
-    border-radius: 10px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 8px; /* Cantos levemente arredondados, mas quadrado */
+    padding: 20px 0;
     margin: 15px 0;
-    border: 1px solid var(--cor-borda);
     position: relative;
-    min-height: 80px;
+    box-shadow: inset 0 0 20px #000;
+}
+
+.roleta-item {
+    width: 70px; /* Quadrado */
+    height: 70px;
+    border-radius: 8px; /* Leve arredondamento estilo app moderno */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+    flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,0.1);
+    margin: 0 4px; /* Espaço entre os quadrados */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    color: #fff;
+}.tema-barbearia .roleta-item:nth-child(odd) {
+    background: linear-gradient(135deg, #ffd700, #b8860b); /* Dourado Luxo */
+    border-color: #ffd700;
+    color: #000;
+}
+.tema-barbearia .roleta-item:nth-child(even) {
+    background: linear-gradient(135deg, #2c2c2c, #000000); /* Preto Luxo */
+    border-color: #444;
+    color: #ffd700;
+}
+
+.tema-feminino .roleta-item:nth-child(odd) {
+    background: linear-gradient(135deg, #ff9a9e, #fecfef); /* Rosa Luxo */
+    border-color: #ff9a9e;
+    color: #4a0000;
+}
+.tema-feminino .roleta-item:nth-child(even) {
+    background: linear-gradient(135deg, #2c2c2c, #000000); /* Preto Luxo */
+    border-color: #444;
+    color: #ff9a9e;
+}
+
+.roleta-item.especial {
+    background: linear-gradient(135deg, #fff, #e0e0e0) !important; /* Branco Brilhante */
+    color: #000 !important;
+    border-color: #fff !important;
+    box-shadow: 0 0 15px rgba(255,255,255,0.6);
+    font-size: 26px;
+}
+
+/* Indicador de Seleção na Moldura */
+.moldura-check {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #2ecc71;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    z-index: 2;
 }
 .roleta-faixa {
     display: inline-flex;
@@ -1416,18 +1484,7 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
     padding: 0 20px;
     transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-.roleta-item {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 18px;
-    flex-shrink: 0;
-    border: 2px solid #fff;
-}
+
 /* Temas da Roleta */
 .tema-barbearia .roleta-item:nth-child(odd) { background: var(--cor-destaque-ouro); color: #000; }
 .tema-barbearia .roleta-item:nth-child(even) { background: #000; color: var(--cor-destaque-ouro); }
@@ -3068,7 +3125,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalMeuPerfil" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 500px;">
-    <h3>👤 Meu Perfil</h3>
+    <h3>👤 Editar Perfil</h3>
     
     <div style="text-align: center; margin-bottom: 15px;">
         <div style="position: relative; display: inline-block;">
@@ -3079,33 +3136,36 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     </div>
 
     <label>Nome de Exibição:</label>
-    <div style="display: flex; gap: 5px;">
-        <input type="text" id="perfilNomeInput" placeholder="Seu nome">
-        <button onclick="salvarNomePerfil()" style="width: auto;">💾</button>
-    </div>
+    <input type="text" id="perfilNomeInput" placeholder="Seu nome">
 
     <div class="popup-section">
         <h4>🎰 Roleta Diária</h4>
-        <p style="font-size: 12px;">Gire 1x por dia para ganhar pontos ou prêmios!</p>
+        <p id="roletaInfoPremios" style="font-size: 12px; color: #aaa; margin-bottom: 5px;"></p>
+        
         <div id="roletaVisual" class="roleta-container">
             <div class="seta-roleta">⬇️</div>
             <div class="roleta-faixa" id="roletaFaixa"></div>
         </div>
-        <button id="btnGirarRoleta" onclick="girarRoleta()">🎲 GIRAR</button>
+        
+        <button id="btnGirarRoleta" onclick="girarRoleta()" style="width: 100%; font-weight: bold; font-size: 16px;">🎲 GIRAR (0)</button>
     </div>
 
     <div class="popup-section">
         <h4>🖼️ Molduras de Perfil</h4>
-        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;" id="listaMolduras">
+        <p style="font-size: 12px; opacity: 0.8;">Selecione para usar (✅) ou clique para comprar.</p>
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 10px;" id="listaMolduras">
             </div>
     </div>
 
     <div class="popup-section">
-        <h4>🏅 Exibir Conquistas no Chat (Máx 3)</h4>
-        <div id="listaSelecaoConquistas" class="scrollable-list" style="max-height: 150px;"></div>
+        <h4>🏅 Exibir Conquistas (Máx 3)</h4>
+        <div id="listaSelecaoConquistas" class="scrollable-list" style="max-height: 120px;"></div>
     </div>
 
-    <button data-modal-id="modalMeuPerfil" onclick="fecharModal(event)">❌ Fechar</button>
+    <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid var(--cor-borda); padding-top: 15px;">
+        <button onclick="fecharModalAtual()" style="background-color: #555; flex: 1;">❌ Cancelar</button>
+        <button onclick="salvarNomePerfil()" style="flex: 1;">💾 Salvar Alterações</button>
+    </div>
   </div>
 </div>
 
@@ -3195,7 +3255,7 @@ const VALOR_RESGATE = 5;
 const PONTOS_POR_DEPOSITO_NORMAL = 4;
 const PONTOS_POR_DEPOSITO_VIP = 8;
 const WHATSAPP_ADM_PHONE = "5527995003737"; // Mantido
-const PRECO_VIP = 100;
+const PRECO_VIP = 29.90; 
 const PRECO_TURBINAR = 9.99;
 
 // Novos Planos PRO
@@ -5245,6 +5305,7 @@ function resgatarPontos() {
 function abrirModalVip() {
     const container = document.getElementById('vipContentContainer');
     if (isVipAtivo(perfil)) {
+        // (Código existente para vip ativo)
         const dataExpiracao = perfil.vipExpirationDate.toDate().toLocaleDateString('pt-BR');
         container.innerHTML = `
             <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
@@ -5261,17 +5322,18 @@ function abrirModalVip() {
             </div>
         `;
     } else {
+        // (Código atualizado com preço 29.90/mês)
         container.innerHTML = `
             <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque);">💎 Torne-se um Membro VIP!</h3>
-                <p>Eleve sua experiência por 6 meses e apoie o desenvolvimento do app.</p>
-                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)}</p>
+                <p>Eleve sua experiência mensalmente.</p>
+                <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)} / mês</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Vantagens Exclusivas para Clientes VIP:</h4>
                     <ul>
                         <li><strong>10% de Desconto</strong> em todos os serviços.</li>
                         <li><strong>Dobro de Pontos</strong> de fidelidade.</li>
-                         <li><strong>Status de Prestígio</strong> com um ícone 👑 no chat.</li>
+                        <li><strong>Status de Prestígio</strong> com um ícone 👑 no chat.</li>
                     </ul>
                 </div>
                 <button onclick="assinarVip()" style="margin-top: 15px;">💎 Assinar Agora</button>
@@ -5393,7 +5455,7 @@ function assinarVip() {
             if (isVipAtivo(clienteDoc.data())) throw "Você já é um membro VIP ativo.";
 
             const expiracao = new Date();
-            expiracao.setDate(expiracao.getDate() + 180); // Adiciona 180 dias
+            expiracao.setDate(expiracao.getDate() + 30); // 1 mês // Válido por 30 dias
 
             t.update(clienteRef, {
                 saldo: firebase.firestore.FieldValue.increment(-PRECO_VIP),
@@ -5916,15 +5978,26 @@ async function abrirPerfilUsuarioChat(uid) {
     
     document.getElementById('visuPerfilFoto').src = u.fotoPerfil || 'https://via.placeholder.com/120';
     
-    // Aplica moldura no modal
+    // Aplica moldura
     const img = document.getElementById('visuPerfilFoto');
-    img.className = 'perfil-foto-grande'; // Reset
+    img.className = 'perfil-foto-grande'; 
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
         img.classList.add(MOLDURAS[u.molduraSelecionada].classe);
     }
     
     document.getElementById('visuPerfilNome').textContent = u.nome;
-    document.getElementById('visuPerfilTipo').textContent = u.tipo === 'cliente' ? 'Cliente' : 'Profissional';
+    
+    // DETECÇÃO DE TIPO (NOVO REQUISITO)
+    let tipoTexto = "Usuário";
+    let corTipo = "#ccc";
+    if (u.tipo === 'admin') { tipoTexto = "🧠 Administrador"; corTipo = "#e74c3c"; }
+    else if (u.tipo === 'cliente') { tipoTexto = "🙋 Cliente"; corTipo = "#fff"; }
+    else { tipoTexto = "💈 Profissional"; corTipo = "var(--cor-destaque)"; }
+    
+    const tipoEl = document.getElementById('visuPerfilTipo');
+    tipoEl.textContent = tipoTexto;
+    tipoEl.style.color = corTipo;
+    tipoEl.style.fontWeight = "bold";
     
     const container = document.getElementById('visuPerfilConquistas');
     container.innerHTML = '';
@@ -5933,6 +6006,39 @@ async function abrirPerfilUsuarioChat(uid) {
         u.conquistasSelecionadas.forEach(cId => {
             if(todasDefs[cId]) container.innerHTML += `<span title="${todasDefs[cId].nome}">${todasDefs[cId].icone}</span>`;
         });
+    }
+    
+    // BOTÕES DE ADMIN (Whatsapp e Gerenciar)
+    // Remove botões antigos se existirem
+    const oldAdminBtns = document.getElementById('adminActionsChatPopup');
+    if(oldAdminBtns) oldAdminBtns.remove();
+
+    if (perfil.tipo === 'admin') {
+        const divBtns = document.createElement('div');
+        divBtns.id = 'adminActionsChatPopup';
+        divBtns.style.display = 'flex';
+        divBtns.style.gap = '10px';
+        divBtns.style.marginTop = '15px';
+        divBtns.style.justifyContent = 'center';
+
+        if(u.telefone) {
+            const btnWpp = document.createElement('button');
+            btnWpp.innerHTML = '💬 WhatsApp';
+            btnWpp.style.backgroundColor = '#25D366';
+            btnWpp.onclick = () => abrirWhatsApp(u.telefone);
+            divBtns.appendChild(btnWpp);
+        }
+
+        const btnGerenciar = document.createElement('button');
+        btnGerenciar.innerHTML = '⚙️ Gerenciar';
+        btnGerenciar.onclick = () => {
+            fecharModalAtual();
+            abrirModalGerenciarUsuario(uid);
+        };
+        divBtns.appendChild(btnGerenciar);
+
+        // Adiciona após as conquistas
+        container.parentNode.appendChild(divBtns);
     }
     
     abrirModal('modalVisualizarPerfilChat');
@@ -7896,72 +8002,71 @@ async function adminToggleVip(uid, conceder) {
     }
 }
 
-// SUBSTITUA a função 'abrirModalVipPro' inteira por esta:
 function abrirModalVipPro() {
     const container = document.getElementById('vipProContentContainer');
-    // Garante que usa o perfil global atualizado
     const proAtivo = isProAtivo(perfil);
 
     if (proAtivo) {
+        // ... (código existente para quando já é pro mantém igual) ...
         let dataFormatada = "Indefinido";
         if (perfil.proExpirationDate) {
              try {
-                 // Tenta converter Timestamp ou String
                  const dateObj = typeof perfil.proExpirationDate.toDate === 'function' 
                     ? perfil.proExpirationDate.toDate() 
                     : new Date(perfil.proExpirationDate);
                  dataFormatada = dateObj.toLocaleDateString('pt-BR');
              } catch (e) { console.log(e); }
         }
-        
-        let taxaAtual = (TAXA * 100); // Taxa padrão (ex: 5%)
-        // Se tiver tier definido, usa a taxa do tier
+        let taxaAtual = (TAXA * 100); 
         if (perfil.proTier && PRECOS_PRO[perfil.proTier]) {
             taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
         }
-
         container.innerHTML = `
             <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque-azul);">🌟 Você é PRO ${perfil.proTier ? perfil.proTier.toUpperCase() : ''}!</h3>
                 <p>Validade: <strong>${dataFormatada}</strong></p>
                 <p style="font-size: 1.2em; margin: 15px 0;">Sua taxa atual: <b style="color: #2ecc71;">${taxaAtual.toFixed(1)}%</b></p>
-                <div class="vantagens" style="text-align: left; margin-top: 20px;">
-                    <ul>
-                        <li>Selo de destaque no chat e lista.</li>
-                        <li>Taxa reduzida em todos os serviços.</li>
-                        <li>Acesso prioritário a novas funções.</li>
-                    </ul>
-                </div>
             </div>
         `;
     } else {
-        // Mostra os Planos para assinar
+        // ATUALIZAÇÃO AQUI: Planos com as informações novas e GIROS
         container.innerHTML = `
             <div style="text-align: center;">
                 <h3 style="color: var(--cor-destaque-azul);">🌟 Seja um Profissional PRO</h3>
-                <p style="font-size:14px; opacity:0.8;">Reduza suas taxas e aumente seus lucros.</p>
+                <p style="font-size:14px; opacity:0.8;">Menos taxas, mais destaque e mais giros na roleta!</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; max-height: 60vh; overflow-y: auto;">
                     
                     <div class="card" style="border: 1px solid #cd7f32; padding: 15px; cursor: pointer;" onclick="assinarPro('tier1')">
                         <h4 style="color: #cd7f32; margin:0;">🥉 Bronze</h4>
-                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}</p>
-                        <p style="font-size: 14px;">Taxa cai para <strong>4%</strong></p>
+                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}/mês</p>
+                        <p style="font-size: 13px;">• Taxa cai para <strong>15%</strong></p>
+                        <p style="font-size: 13px;">• <strong>2 Giros</strong> na Roleta Diária</p>
                         <button style="background-color: #cd7f32; width: 100%; margin-top: 10px; pointer-events: none;">Assinar Bronze</button>
                     </div>
 
                     <div class="card" style="border: 1px solid #c0c0c0; padding: 15px; cursor: pointer;" onclick="assinarPro('tier2')">
                         <h4 style="color: #c0c0c0; margin:0;">🥈 Prata</h4>
-                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}</p>
-                        <p style="font-size: 14px;">Taxa cai para <strong>2%</strong></p>
+                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}/mês</p>
+                        <p style="font-size: 13px;">• Taxa cai para <strong>10%</strong></p>
+                        <p style="font-size: 13px;">• <strong>3 Giros</strong> na Roleta Diária</p>
                         <button style="background-color: #555; color: white; width: 100%; margin-top: 10px; pointer-events: none;">Assinar Prata</button>
                     </div>
-
-                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-azul); cursor: pointer;" onclick="assinarPro('tier3')">
-                        <h4 style="color: var(--cor-destaque-azul); margin:0;">🥇 Ouro (Melhor)</h4>
-                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}</p>
-                        <p style="font-size: 14px;">Taxa de serviço: <strong>0% (ZERO)</strong></p>
+                    
+                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-ouro); cursor: pointer;" onclick="assinarPro('tier3')">
+                        <h4 style="color: var(--cor-destaque-ouro); margin:0;">🥇 Ouro</h4>
+                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}/mês</p>
+                        <p style="font-size: 13px;">• Taxa cai para <strong>5%</strong></p>
+                        <p style="font-size: 13px;">• <strong>4 Giros</strong> na Roleta Diária</p>
                         <button style="width: 100%; margin-top: 10px; pointer-events: none;">Assinar Ouro</button>
+                    </div>
+
+                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-azul); cursor: pointer;" onclick="assinarPro('tier4')">
+                        <h4 style="color: var(--cor-destaque-azul); margin:0;">💎 Diamante (Melhor)</h4>
+                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier4.preco.toFixed(2)}/mês</p>
+                        <p style="font-size: 13px;">• Taxa <strong>0% (ZERO)</strong></p>
+                        <p style="font-size: 13px;">• <strong>5 Giros</strong> na Roleta Diária</p>
+                        <button style="width: 100%; margin-top: 10px; pointer-events: none; background-color: var(--cor-destaque-azul);">Assinar Diamante</button>
                     </div>
                 </div>
             </div>
@@ -11613,24 +11718,69 @@ function setupConfiguracoes() {
 
 function abrirModalPerfil() {
     if (!perfil) return;
-    // Carrega dados
+
+    // 1. Carrega dados básicos
     document.getElementById('perfilNomeInput').value = perfil.nome;
     document.getElementById('perfilFotoPreview').src = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    // Define tema da roleta baseado no interesse
+    // 2. Configura Tema da Roleta
     const roleta = document.getElementById('roletaVisual');
-    roleta.className = 'roleta-container ' + ((perfil.interesse_principal === 'barbeiro') ? 'tema-barbearia' : 'tema-feminino');
-    
-    // Gera itens da roleta (1 a 10 + Caixa) triplicado para efeito visual
+    const isBarber = perfil.interesse_principal === 'barbeiro' || !perfil.interesse_principal;
+    roleta.className = 'roleta-container ' + (isBarber ? 'tema-barbearia' : 'tema-feminino');
+
+    // 3. Configura Texto da Caixa Surpresa
+    const infoPremios = document.getElementById('roletaInfoPremios');
+    if (perfil.tipo === 'cliente') {
+        infoPremios.innerHTML = '🎁 <b>Caixa Surpresa:</b> Pode conter até 50 Pontos de Fidelidade extras!';
+    } else {
+        infoPremios.innerHTML = '🎁 <b>Caixa Surpresa:</b> Pode conter 24h de Topo ou 5 dias de VIP!';
+    }
+
+    // 4. Gera Itens da Roleta (Quadrados)
     const faixa = document.getElementById('roletaFaixa');
     faixa.innerHTML = '';
+    // Gera 3 conjuntos para efeito visual infinito
     for(let i=0; i<3; i++) {
         for(let n=1; n<=10; n++) {
             faixa.innerHTML += `<div class="roleta-item">${n}</div>`;
         }
         faixa.innerHTML += `<div class="roleta-item especial">🎁</div>`;
     }
+
+    // 5. Lógica de Giros Disponíveis
+    const hoje = new Date().toDateString();
     
+    // Calcula giros totais baseados no plano
+    let girosTotais = 1; // Base
+    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+        girosTotais = PRECOS_PRO[perfil.proTier].giros;
+    }
+    
+    // Verifica quantos já usou hoje
+    const girosUsadosHoje = (perfil.ultimoGiroRoleta === hoje && perfil.girosRealizadosHoje) ? perfil.girosRealizadosHoje : 0;
+    
+    // Se mudou o dia, reseta (apenas visualmente aqui, o DB atualiza ao girar)
+    let girosRestantes = 0;
+    if (perfil.ultimoGiroRoleta !== hoje) {
+        girosRestantes = girosTotais;
+    } else {
+        girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
+    }
+
+    const btnGirar = document.getElementById('btnGirarRoleta');
+    btnGirar.textContent = `🎲 GIRAR (${girosRestantes} Restantes)`;
+    
+    if (girosRestantes > 0) {
+        btnGirar.disabled = false;
+        btnGirar.style.opacity = "1";
+        btnGirar.style.cursor = "pointer";
+    } else {
+        btnGirar.disabled = true;
+        btnGirar.style.opacity = "0.5";
+        btnGirar.style.cursor = "not-allowed";
+    }
+    
+    // 6. Renderiza Listas
     renderizarMolduras();
     renderizarSelecaoConquistas();
     
@@ -11673,20 +11823,34 @@ async function salvarNomePerfil() {
 
 function girarRoleta() {
     const hoje = new Date().toDateString();
-    if (perfil.ultimoGiroRoleta === hoje) {
-        return exibirPopup("Você já girou hoje! Volte amanhã.");
+    
+    // Recalcula giros permitidos
+    let girosTotais = 1;
+    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+        girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
+    
+    // Verifica estado atual
+    let girosUsados = (perfil.ultimoGiroRoleta === hoje && perfil.girosRealizadosHoje) ? perfil.girosRealizadosHoje : 0;
+    
+    if (girosUsados >= girosTotais) {
+        return exibirPopup("Sem giros", "Você já usou todos os seus giros de hoje! Volte amanhã ou assine um plano PRO para ter mais.");
+    }
+
+    // Bloqueia botão durante o giro
+    const btnGirar = document.getElementById('btnGirarRoleta');
+    btnGirar.disabled = true;
+    btnGirar.textContent = "Girando...";
 
     // Sorteio: 90% numeros, 10% caixa
     const rand = Math.random();
-    let resultado = rand < 0.9 ? Math.ceil(Math.random() * 10) : 11; // 11 representa a caixa
+    let resultado = rand < 0.9 ? Math.ceil(Math.random() * 10) : 11; // 11 = Caixa
     
-    // Animação CSS
-    const itemWidth = 74; // 60px + 10px gap + border aprox
-    // Pula o primeiro set (11 itens) e vai para o item sorteado no segundo set
-    const offsetBase = itemWidth * 11; 
+    // Animação CSS (Quadrados têm 70px + 8px margem + borda ~ 84px)
+    const itemWidth = 84; 
+    const offsetBase = itemWidth * 11; // Pula o primeiro set
     const posicaoFinal = offsetBase + ((resultado - 1) * itemWidth);
-    // Variação para parar no meio do item
+    // Variação para parar no meio do quadrado
     const randomOffset = Math.floor(Math.random() * 10) - 5; 
     
     const faixa = document.getElementById('roletaFaixa');
@@ -11695,42 +11859,60 @@ function girarRoleta() {
     
     // Processa prêmio após 4s
     setTimeout(async () => {
-        let premioTexto = "";
-        let updates = { ultimoGiroRoleta: hoje };
+        let premioTitulo = "";
+        let premioDescricao = "";
+        let updates = { 
+            ultimoGiroRoleta: hoje,
+            girosRealizadosHoje: (perfil.ultimoGiroRoleta === hoje) ? firebase.firestore.FieldValue.increment(1) : 1
+        };
         
         if (resultado <= 10) {
-            premioTexto = `${resultado} Pontos de Fidelidade`;
+            premioTitulo = `+${resultado} Pontos!`;
+            premioDescricao = "Pontos de fidelidade adicionados à sua conta.";
             updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultado);
         } else {
             // Caixa Surpresa
+            premioTitulo = "🎁 CAIXA SURPRESA!";
             if (perfil.tipo !== 'cliente') {
-                // Profissional: Topo ou VIP
                 const premioCaixa = Math.random() > 0.5 ? 'top' : 'vip';
                 if (premioCaixa === 'top') {
                     const exp = new Date(); exp.setHours(exp.getHours() + 24);
                     updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(exp);
-                    premioTexto = "🎁 24h de Perfil Turbinado!";
+                    premioDescricao = "Você ganhou 24h de Perfil Turbinado!";
                 } else {
                     const exp = new Date(); exp.setDate(exp.getDate() + 5);
                     updates.vip = true; 
                     updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(exp);
-                    premioTexto = "🎁 5 Dias de VIP!";
+                    premioDescricao = "Você ganhou 5 Dias de VIP grátis!";
                 }
             } else {
-                // Cliente: Pontos extras
-                premioTexto = "🎁 50 Pontos de Fidelidade!"; 
+                premioDescricao = "Você ganhou 50 Pontos de Fidelidade!"; 
                 updates.pontosFidelidade = firebase.firestore.FieldValue.increment(50);
             }
         }
         
         await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
-        // Reseta posição visual sem animação
+        
+        // Reset visual
         setTimeout(() => {
              faixa.style.transition = "none";
              faixa.style.transform = "translateX(0px)";
-        }, 2000);
+             // Atualiza UI do botão chamando abrirModalPerfil novamente ou atualizando texto
+             // Mas como estamos dentro do modal, melhor atualizar apenas o texto do botão se possível
+             // Por simplicidade, fechamos e mostramos o prêmio
+             // fecharModalAtual(); <-- Não fecha, deixa o usuário ver e girar dnv se tiver mais
+             
+             // Atualiza botão
+             let novosGirosUsados = (perfil.ultimoGiroRoleta === hoje ? perfil.girosRealizadosHoje : 0) + 1;
+             let restantes = Math.max(0, girosTotais - novosGirosUsados);
+             btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
+             if(restantes > 0) btnGirar.disabled = false;
+             
+        }, 1000);
         
-        exibirPopup("Parabéns!", `Você ganhou: ${premioTexto}`);
+        // POPUP DO PRÊMIO (NOVO REQUISITO)
+        exibirPopup(premioTitulo, premioDescricao, 'sucesso');
+
     }, 4100);
 }
 
@@ -11744,10 +11926,14 @@ function renderizarMolduras() {
         const tem = minhasMolduras.includes(key);
         const selecionada = perfil.molduraSelecionada === key;
         
+        // Adiciona checkmark se selecionada
+        const checkmark = selecionada ? `<div class="moldura-check">✅</div>` : '';
+
         container.innerHTML += `
             <div class="moldura-item ${tem ? 'comprada' : ''} ${selecionada ? 'selecionada' : ''}" 
                  onclick="gerenciarMoldura('${key}')" style="flex-direction:column;">
-                <div class="${m.classe}" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                ${checkmark}
+                <div class="${m.classe}" style="width: 45px; height: 45px; border-radius: 50%;"></div>
                 <span style="font-size:10px; margin-top:5px;">${m.nome}</span>
                 ${!tem ? `<span style="font-size:10px; color:#ff9800;">R$${m.preco}</span>` : ''}
             </div>`;
