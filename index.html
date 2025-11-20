@@ -4893,6 +4893,7 @@ function filtrarBarbeiros() {
 
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
+    // Limpa qualquer botão antigo se houver e define o loading
     lista.innerHTML = "<p>⏳ Carregando...</p>";
 
     // Tenta obter localização se não tiver
@@ -4902,26 +4903,27 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     if (barbeirosListener) barbeirosListener(); 
     
     // =================================================================
-    // === 1. DEFINIÇÃO RIGOROSA DO NICHO A SER EXIBIDO ===
+    // === 1. DEFINIÇÃO RIGOROSA DO NICHO (AGORA IGUAL PARA TODOS) ===
     // =================================================================
     
     let tipoParaBuscar = 'barbeiro'; // Fallback padrão
 
     if (isGuest) {
-        // Visitante: Pega do localStorage ou padrão
+        // Visitante: Pega do localStorage ou usa padrão
         tipoParaBuscar = localStorage.getItem('onboard_tipo_uso') || 'barbeiro';
-        // Se o valor no storage for 'cliente' ou 'profissional', ignoramos e usamos 'barbeiro' como padrão visual
         if (tipoParaBuscar === 'cliente' || tipoParaBuscar === 'profissional') tipoParaBuscar = 'barbeiro';
     } 
-    else if (userView.currentType === 'cliente') {
-        // === PAINEL DO CLIENTE ===
-        // Mostra EXATAMENTE o interesse escolhido nas configurações
-        tipoParaBuscar = perfil.interesse_principal || 'barbeiro';
-    } 
     else {
-        // === PAINEL DO PROFISSIONAL ===
-        // Mostra EXATAMENTE o tipo do profissional (Barbeiro vê Barbeiros)
-        tipoParaBuscar = perfil.tipo;
+        // === CORREÇÃO AQUI: LÓGICA UNIFICADA ===
+        // Não importa se é Cliente ou Profissional.
+        // O que define o que aparece na tela é o INTERESSE PRINCIPAL salvo no banco.
+        // Isso permite que um Barbeiro veja cards de Manicure se mudar nas configurações.
+        
+        // Ordem de prioridade:
+        // 1. O interesse escolhido (Configurações)
+        // 2. O próprio tipo do usuário (Fallback para profissionais novos)
+        // 3. 'barbeiro' (Último recurso)
+        tipoParaBuscar = perfil.interesse_principal || perfil.tipo || 'barbeiro';
     }
 
     // Query blindada: Traz apenas o tipo definido acima
@@ -4931,7 +4933,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
 
     barbeirosListener = query.onSnapshot(snap => {
         if (snap.empty) {
-             // Formata o nome da categoria para exibir na mensagem de erro
+             // Formata o nome da categoria para exibir na mensagem
              let nomeCategoria = "nesta categoria";
              if(tipoParaBuscar === 'barbeiro') nomeCategoria = "Barbearias";
              if(tipoParaBuscar === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
@@ -4961,10 +4963,11 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         });
 
         // =================================================================
-        // === 2. ORDENAÇÃO (FAVORITOS NO TOPO) ===
+        // === 2. ORDENAÇÃO AUTOMÁTICA (FAVORITOS NO TOPO) ===
         // =================================================================
         barbeiros.sort((a, b) => {
             // PRIORIDADE 1: Favoritos (Topo Absoluto)
+            // Se 'a' é favorito e 'b' não, 'a' vem primeiro (-1)
             if (a.isFavorito && !b.isFavorito) return -1;
             if (!a.isFavorito && b.isFavorito) return 1;
 
@@ -4978,7 +4981,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const bBoost = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             if (aBoost !== bBoost) return aBoost ? -1 : 1;
             
-            // PRIORIDADE 4: PRO (Opcional, desempate por status)
+            // PRIORIDADE 4: PRO (Desempate por status)
             const aPro = isProAtivo(a);
             const bPro = isProAtivo(b);
             if (aPro !== bPro) return aPro ? -1 : 1;
@@ -5018,7 +5021,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
             
-            // Ícone de coração cheio se favorito, vazio se não
+            // Visual do coração
             const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
             const heartIcon = b.isFavorito ? '❤️' : '♡';
             
