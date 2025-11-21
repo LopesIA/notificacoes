@@ -1808,42 +1808,42 @@ body {
     background: rgba(0,0,0,0.95); /* Fundo bem escuro para focar */
 }
 
-/* --- MOLDURAS PREMIUM (ATUALIZADO) --- */
+/* ============================================================ */
+/* === MOLDURAS PREMIUM (CORRIGIDO: ASAS E BORDA) === */
+/* ============================================================ */
 
-/* Wrapper Base */
+/* --- ESTRUTURA BASE --- */
 .avatar-wrapper {
     position: relative;
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    margin: 0; /* Ajustado para não desalinhar */
     z-index: 1;
-    vertical-align: middle; /* Garante alinhamento com texto */
+    vertical-align: middle;
+    /* Importante: Permite que as asas saiam da caixa sem serem cortadas */
+    overflow: visible !important; 
 }
 
-/* Limpa estilos da imagem para o wrapper controlar */
+/* Foto do Usuário (Base para todas as molduras) */
 .chat-user-photo {
     position: relative;
-    z-index: 5; /* A foto fica acima das asas */
+    z-index: 10; /* A foto fica na frente de tudo (menos da coroa) */
     object-fit: cover;
     background: #000;
-    display: block; /* Remove espaços extras de inline */
+    display: block;
+    box-sizing: border-box;
 }
 
-/* --- ELEMENTOS DECORATIVOS (Coroas e Asas) --- */
-
-/* Coroa Base */
+/* Coroa (Comum a todas) */
 .coroa-topo {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 20; /* Coroa na frente da foto */
     background: transparent;
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
     pointer-events: none;
 }
-
-/* Desenho genérico da Coroa via CSS */
 .coroa-topo::after {
     content: '';
     position: absolute;
@@ -1851,28 +1851,32 @@ body {
     clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
 }
 
-/* --- ESTILOS ESPECÍFICOS POR TAMANHO (Chat vs Popup) --- */
+/* --- TAMANHOS ESPECÍFICOS --- */
 
 /* 1. TAMANHO CHAT (Pequeno) */
 .avatar-wrapper.chat-size {
-    width: 32px; height: 32px;
-    margin-right: 8px; /* Espaço para o texto do nome */
+    width: 32px; 
+    height: 32px;
+    margin-right: 8px;
+    /* Margem lateral extra para a asa não sobrepor o texto */
+    margin-left: 4px; 
 }
 .avatar-wrapper.chat-size .chat-user-photo {
     width: 100% !important;
     height: 100% !important;
     border-radius: 50%;
-    padding: 1px; /* Pequeno respiro */
+    padding: 1px;
 }
 .avatar-wrapper.chat-size .coroa-topo {
-    width: 14px; height: 10px; 
-    top: -9px;
+    width: 14px; height: 10px; top: -9px;
 }
 
 /* 2. TAMANHO POPUP (Grande) */
 .avatar-wrapper.popup-size {
-    width: 120px; height: 120px;
-    margin: 20px auto 20px auto; /* Margem maior para caber a asa */
+    width: 120px; 
+    height: 120px;
+    /* Margem grande para a asa não bater nas laterais da tela */
+    margin: 15px auto 20px auto; 
 }
 .avatar-wrapper.popup-size .perfil-foto-grande {
     width: 100%; height: 100%;
@@ -1880,16 +1884,15 @@ body {
     padding: 3px;
 }
 .avatar-wrapper.popup-size .coroa-topo {
-    width: 40px; height: 26px; 
-    top: -30px;
+    width: 40px; height: 26px; top: -30px;
 }
 
-/* --- DEFINIÇÃO DOS NÍVEIS (CORES E EFEITOS) --- */
+/* --- ESTILOS DOS NÍVEIS --- */
 
 /* NÍVEL 1: BRONZE */
 .avatar-wrapper.bronze .chat-user-photo {
     background: linear-gradient(45deg, #804a00, #cd7f32);
-    box-shadow: 0 0 0 2px #804a00;
+    box-shadow: 0 0 0 2px #804a00; /* Borda sólida fina */
 }
 .avatar-wrapper.bronze .coroa-topo::after { background: linear-gradient(to bottom, #ffcc80, #cd7f32); }
 
@@ -1909,23 +1912,22 @@ body {
 }
 .avatar-wrapper.ouro .coroa-topo::after { background: linear-gradient(to bottom, #fff7cc, #ffd700, #b8860b); }
 
-/* --- NÍVEL 4: DIAMANTE (CORRIGIDO CONFORME PEDIDO) --- */
+/* --- NÍVEL 4: DIAMANTE (CORRIGIDO) --- */
 
-/* 1. A Foto: Sem borda grossa, apenas brilho azul suave */
+/* 1. A Foto: SEM borda grossa, apenas BRILHO */
 .avatar-wrapper.diamante .chat-user-photo {
-    /* Removemos background gradiente sólido que parecia borda */
     background: transparent; 
-    /* Apenas um box-shadow azul claro difuso (o brilho) */
-    box-shadow: 0 0 12px rgba(0, 198, 255, 0.8); 
-    border: 1px solid rgba(0, 198, 255, 0.3); /* Borda finíssima quase invisível só pra definir limite */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Linha fina quase invisível */
+    /* Brilho azul ciano suave */
+    box-shadow: 0 0 15px rgba(0, 198, 255, 0.9), inset 0 0 10px rgba(0, 198, 255, 0.5); 
 }
 
+/* Coroa Diamante */
 .avatar-wrapper.diamante .coroa-topo::after {
     background: linear-gradient(to bottom, #e0ffff, #00c6ff);
-    clip-path: polygon(50% 0%, 80% 20%, 100% 0%, 100% 100%, 50% 80%, 0% 100%, 0% 0%, 20% 20%);
 }
 
-/* 2. A Asa de Morcego (Afiada e Distante) */
+/* 2. As Asas (Afiadas / Estilo Cristal) */
 .avatar-wrapper.diamante::before {
     content: '';
     position: absolute;
@@ -1934,44 +1936,57 @@ body {
     transform: translate(-50%, -50%);
     z-index: 0; /* Atrás da foto */
     
-    /* Cor da Asa: Gradiente Azul Diamante */
-    background: linear-gradient(to bottom, #00c6ff, #0072ff);
+    /* Gradiente Futurista */
+    background: linear-gradient(90deg, rgba(0,198,255,0) 0%, rgba(0,198,255,0.8) 20%, rgba(0,198,255,1) 50%, rgba(0,198,255,0.8) 80%, rgba(0,198,255,0) 100%);
     
-    /* MÁSCARA AFIADA (Estilo Morcego/Dragão) */
-    /* Isso recorta o quadrado criando pontas afiadas para os lados */
+    /* RECORTE AFIADO (Estilo Mecha/Cristal) */
     clip-path: polygon(
-        0% 0%,    /* Ponta superior esq */
-        30% 35%,  /* Curva interna esq */
-        0% 55%,   /* Ponta média esq */
-        35% 60%,  /* Curva interna baixo esq */
-        50% 50%,  /* Centro (Escondido pela foto) */
-        65% 60%,  /* Curva interna baixo dir */
-        100% 55%, /* Ponta média dir */
-        70% 35%,  /* Curva interna dir */
-        100% 0%   /* Ponta superior dir */
+        0% 10%,   /* Ponta Extrema Esq */
+        20% 30%,  /* Recorte Esq */
+        5% 50%,   /* Ponta Média Esq */
+        35% 55%,  /* Base Asa Esq */
+        
+        50% 50%,  /* Centro (Escondido) */
+        
+        65% 55%,  /* Base Asa Dir */
+        95% 50%,  /* Ponta Média Dir */
+        80% 30%,  /* Recorte Dir */
+        100% 10%, /* Ponta Extrema Dir */
+        
+        60% 40%,  /* Detalhe interno Dir */
+        50% 20%,  /* Topo Centro */
+        40% 40%   /* Detalhe interno Esq */
     );
     
-    animation: pulse-wings-sharp 2s infinite ease-in-out;
+    /* Animação */
+    animation: asa-cristal-flutuar 3s ease-in-out infinite;
 }
 
-/* Ajuste da Asa no POPUP (Grande e Distante) */
-.avatar-wrapper.popup-size.diamante::before {
-    width: 260px; /* Bem largo para sair de trás da foto */
-    height: 160px;
-    /* O clip-path e o tamanho garantem que fique "distante" do centro */
-}
-
-/* Ajuste da Asa no CHAT (Pequena) */
+/* --- AJUSTE ESPECÍFICO DA ASA NO CHAT --- */
 .avatar-wrapper.chat-size.diamante::before {
-    width: 55px; /* Um pouco maior que a foto (32px) para aparecer as pontas */
-    height: 35px;
-    opacity: 0.8; /* Um pouco transparente para não poluir o texto */
+    display: block; /* Força aparecer */
+    width: 65px;    /* Bem mais largo que a foto (32px) */
+    height: 25px;   /* Altura achatada */
+    top: 50%;       /* Centralizado */
+    opacity: 0.9;   
+    /* Ajuste fino para centralizar atrás da bolinha */
+    transform: translate(-50%, -50%) scale(0.9); 
 }
 
-/* Animação da Asa Batendo levemente */
-@keyframes pulse-wings-sharp {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 5px #00c6ff); }
-    50% { transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 10px #00c6ff); }
+/* --- AJUSTE ESPECÍFICO DA ASA NO POPUP --- */
+.avatar-wrapper.popup-size.diamante::before {
+    width: 280px;   /* Grande e imponente */
+    height: 120px;
+    top: 50%;
+    /* Move um pouco para cima para parecer que sai dos ombros */
+    transform: translate(-50%, -60%);
+    filter: drop-shadow(0 0 10px #00c6ff);
+}
+
+/* Animação Suave das Asas */
+@keyframes asa-cristal-flutuar {
+    0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } /* Pulsa levemente */
 }
 
 @keyframes pulse-wings {
