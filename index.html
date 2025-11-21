@@ -1780,6 +1780,12 @@ body {
     100% { background-position: 0% 50%; }
 }
 
+/* Garante que modais de confirmação fiquem acima do popup de agendamento (9999) */
+#modalConfirmacaoGenerica, 
+#modalPopupGenerico, 
+#modalBloqueante {
+    z-index: 10000 !important;
+}
   </style>
 </head>
 <body>
@@ -4461,29 +4467,37 @@ auth.onAuthStateChanged(async user => {
             
             // 1. Listener para o POPUP PERSISTENTE de novo agendamento
             setTimeout(() => {
-                console.log("Iniciando listener de novos agendamentos (10s delay)...");
+                console.log("Iniciando listener de novos agendamentos...");
                 db.collection("agendamentos")
                   .where("barbeiroUid", "==", user.uid)
                   .where("status", "in", ["pendente", "imediato"])
                   .orderBy("ts", "asc")
                   .limit(1)
                   .onSnapshot(snapshot => {
+                      const modal = document.getElementById('modalNovoAgendamento');
+                      
                       if (!snapshot.empty) {
+                          // Tem agendamento pendente: Mostra o popup
                           const primeiroAgendamentoPendente = snapshot.docs[0];
                           exibirPopupNovoAgendamento(primeiroAgendamentoPendente);
                       } else {
-                          if (popupAgendamentoAberto) {
-                              fecharModalAtual();
+                          // Não tem mais pendências: Fecha o popup se estiver aberto
+                          if (popupAgendamentoAberto || (modal && modal.style.display === 'flex')) {
+                              console.log("Sem agendamentos pendentes. Fechando popup.");
+                              if(modal) {
+                                  modal.style.display = 'none';
+                                  modal.classList.remove('show');
+                              }
                               popupAgendamentoAberto = false;
                           }
                       }
                   });
-            }, 10000); // 10 segundos de delay
+            }, 5000); // Delay inicial para não atropelar o carregamento
 
             // 2. Listener para LEMBRETE DE CONCLUSÃO (Verificação a cada 1 min)
             setInterval(() => {
                 checkLembretesConclusao(user.uid);
-            }, 60000); // 1 minuto
+            }, 60000); 
         }
 
         // LÓGICA DO CLIENTE
@@ -8566,8 +8580,9 @@ async function adminMudarTipoUsuario(uid, novoTipo) {
 }
 
 function exibirPopupNovoAgendamento(agendamentoDoc) {
-    // Se já estiver aberto e visível, não recria (evita piscar)
-    if (popupAgendamentoAberto && document.getElementById('modalNovoAgendamento').style.display === 'flex') return; 
+    // Se já estiver aberto e visível, não recria para evitar piscar
+    const modal = document.getElementById('modalNovoAgendamento');
+    if (popupAgendamentoAberto && modal.style.display === 'flex') return; 
 
     const ag = agendamentoDoc.data();
     
@@ -8588,15 +8603,17 @@ function exibirPopupNovoAgendamento(agendamentoDoc) {
     const btnAceitar = document.getElementById('btnAceitarAgendamentoPopup');
     const btnRecusar = document.getElementById('btnRecusarAgendamentoPopup');
 
-    // Ações dos botões
+    // --- AÇÃO DO BOTÃO ACEITAR ---
     btnAceitar.onclick = () => {
-        if(!confirm("Confirmar aprovação?")) return;
+        // Usa confirm nativo para evitar conflito de sobreposição de modais
+        if(!confirm("Confirmar aprovação deste agendamento?")) return;
         
-        // Fecha o popup visualmente
-        fecharModalAtual(true); 
+        // 1. Fecha visualmente o modal IMEDIATAMENTE
+        modal.style.display = 'none';
+        modal.classList.remove('show');
         popupAgendamentoAberto = false;
         
-        // Chama a função de aprovação (Backend)
+        // 2. Chama a função de backend
         if (ag.status === 'imediato') {
             aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
         } else {
@@ -8604,20 +8621,23 @@ function exibirPopupNovoAgendamento(agendamentoDoc) {
         }
     };
 
+    // --- AÇÃO DO BOTÃO RECUSAR ---
     btnRecusar.onclick = () => {
-        if(!confirm("Tem certeza que deseja recusar?")) return;
+        if(!confirm("Tem certeza que deseja recusar este agendamento?")) return;
         
-        fecharModalAtual(true); 
+        // 1. Fecha visualmente
+        modal.style.display = 'none';
+        modal.classList.remove('show');
         popupAgendamentoAberto = false;
+        
+        // 2. Chama backend
         recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
     };
 
+    // Abre o modal
     popupAgendamentoAberto = true;
-    const modal = document.getElementById('modalNovoAgendamento');
-    
-    // Força display flex e remove listener de clique fora (Persistência Total)
     modal.style.display = 'flex';
-    modal.onclick = null; // Remove qualquer evento de fechar no fundo
+    modal.onclick = null; // Remove qualquer evento de clique no fundo
     setTimeout(() => modal.classList.add('show'), 10);
 }
 
