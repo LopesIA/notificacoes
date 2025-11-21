@@ -8485,53 +8485,6 @@ async function abrirModalGerenciarUsuario(uid) {
             </div>
         </div>
 
-let moldurasHtml = '';
-    const moldurasAdquiridas = u.moldurasAdquiridas || [];
-    const molduraEquipada = u.molduraSelecionada;
-
-    // Verifica acesso temporário via PRO (Lógica local para exibição)
-    const checkProAccess = (key) => {
-        if (!isProAtivo(u) || !u.proTier) return false;
-        const tier = u.proTier;
-        const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
-        const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
-        const idxUser = niveis.indexOf(tier);
-        const idxMoldura = moldurasOrdem.indexOf(key);
-        return (idxUser >= 0 && idxMoldura >= 0 && idxUser >= idxMoldura);
-    };
-
-    Object.keys(MOLDURAS).forEach(key => {
-        const m = MOLDURAS[key];
-        const isDefinitiva = moldurasAdquiridas.includes(key);
-        const isTemporaria = !isDefinitiva && checkProAccess(key);
-        const isEquipada = molduraEquipada === key;
-
-        if (isDefinitiva || isTemporaria) {
-            const tipoBadge = isDefinitiva 
-                ? '<span style="background:#27ae60; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">DEFINITIVA (Comprada)</span>' 
-                : '<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">TEMPORÁRIA (PRO)</span>';
-            
-            const equipadaBadge = isEquipada ? '✅ Em uso' : '';
-
-            moldurasHtml += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cor-botoes); padding:8px; margin-bottom:5px; border-radius:8px; border: 1px solid var(--cor-borda);">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div class="${m.classe}" style="width:30px; height:30px; border-radius:50%;"></div>
-                        <div>
-                            <div style="font-weight:bold; font-size:14px;">${m.nome} ${equipadaBadge}</div>
-                            ${tipoBadge}
-                        </div>
-                    </div>
-                    <button onclick="adminRemoverMoldura('${uid}', '${key}', ${isDefinitiva})" style="background:#c0392b; font-size:12px; padding:5px 10px; width:auto;">Remover</button>
-                </div>
-            `;
-        }
-    });
-
-    if (moldurasHtml === '') {
-        moldurasHtml = '<p style="font-size:12px; opacity:0.7;">Este usuário não possui molduras liberadas.</p>';
-    }
-
         <div class="popup-section">
             <p><strong>Ações de Segurança:</strong></p>
             <input id="adminNovaSenha" type="password" placeholder="🔑 Definir Nova Senha para o Usuário">
@@ -8892,15 +8845,11 @@ async function adminToggleLoja(uid, deveAtivar) {
     }
 }
 
+// SUBSTITUA a função 'adminTogglePro' inteira por esta:
 async function adminTogglePro(uid, conceder) {
     exibirAguarde(conceder ? "Concedendo PRO..." : "Removendo PRO...");
     
     try {
-        // 1. Busca dados atuais do usuário para verificar a moldura
-        const userDoc = await db.collection('usuarios').doc(uid).get();
-        if (!userDoc.exists) throw new Error("Usuário não encontrado.");
-        const u = userDoc.data();
-
         let updates = {};
         
         if (conceder) {
@@ -8909,31 +8858,24 @@ async function adminTogglePro(uid, conceder) {
             if (!selectElement) throw new Error("Erro na interface: Select não encontrado.");
             
             const tierSelecionado = selectElement.value;
+            
+            // Define expiração para 30 dias
             const expiracao = new Date();
             expiracao.setDate(expiracao.getDate() + 30); 
             
             updates = {
                 proAtivo: true,
                 proTier: tierSelecionado,
+                // Envia como ISO String para garantir compatibilidade total
                 proExpirationDate: expiracao.toISOString() 
             };
         } else {
-            // --- LÓGICA DE REMOÇÃO INTELIGENTE DA MOLDURA ---
-            // Se o usuário estiver com uma moldura equipada
-            if (u.molduraSelecionada) {
-                const moldurasCompradas = u.moldurasAdquiridas || [];
-                // Se a moldura atual NÃO estiver na lista de compradas (ou seja, é temporária do PRO)
-                if (!moldurasCompradas.includes(u.molduraSelecionada)) {
-                    console.log("Removendo moldura temporária do usuário...");
-                    updates.molduraSelecionada = firebase.firestore.FieldValue.delete(); // Remove a seleção
-                }
-            }
-            // ------------------------------------------------
-
-            // Remove status PRO
-            updates.proAtivo = false;
-            updates.proTier = null;
-            updates.proExpirationDate = null;
+            // Para remover, limpamos os campos
+            updates = {
+                proAtivo: false,
+                proTier: null,
+                proExpirationDate: null
+            };
         }
         
         // Envia para o backend
@@ -8952,56 +8894,28 @@ async function adminTogglePro(uid, conceder) {
 
         fecharTodosOsModais(); // Fecha o aguarde
         
-        // Callback para reabrir o modal
+        // --- MUDANÇA AQUI ---
+        // Define a função de callback que reabre o modal
         const reabrirModalAdmin = () => {
             abrirModalGerenciarUsuario(uid);
         };
 
+        // Feedback visual
         if (conceder) {
             notifyUser(uid, "🌟 PRO Ativado!", `Admin ativou seu plano ${updates.proTier}.`);
-            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado.`, "sucesso", reabrirModalAdmin);
+            // Exibe o popup e passa o callback para o botão "OK"
+            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado com sucesso.`, "sucesso", reabrirModalAdmin);
         } else {
             notifyUser(uid, "ℹ️ PRO Removido", "Seu plano PRO foi cancelado pelo admin.");
-            exibirPopup("Sucesso!", "Plano PRO removido (Moldura temporária retirada, se houver).", "sucesso", reabrirModalAdmin);
+            // Exibe o popup e passa o callback para o botão "OK"
+            exibirPopup("Sucesso!", "Plano PRO removido.", "sucesso", reabrirModalAdmin);
         }
+        // O setTimeout foi removido e substituído pela lógica de callback
+        // --- FIM DA MUDANÇA ---
 
     } catch (error) {
         fecharTodosOsModais();
         exibirPopup("Erro", error.message);
-    }
-}
-
-// NOVA FUNÇÃO PARA ADMIN REMOVER MOLDURAS MANUALMENTE
-async function adminRemoverMoldura(uid, molduraKey, isDefinitiva) {
-    if (!confirm(`Tem certeza que deseja remover a moldura "${MOLDURAS[molduraKey].nome}" deste usuário?`)) return;
-
-    exibirAguarde("Removendo moldura...");
-    try {
-        const userRef = db.collection('usuarios').doc(uid);
-        const userDoc = await userRef.get();
-        const u = userDoc.data();
-        
-        let updates = {};
-
-        // 1. Se for definitiva, remove do array de adquiridas
-        if (isDefinitiva) {
-            updates.moldurasAdquiridas = firebase.firestore.FieldValue.arrayRemove(molduraKey);
-        }
-
-        // 2. Se o usuário estiver USANDO essa moldura no momento, desequipa ela
-        if (u.molduraSelecionada === molduraKey) {
-            updates.molduraSelecionada = firebase.firestore.FieldValue.delete();
-        }
-
-        await userRef.update(updates);
-
-        fecharTodosOsModais();
-        exibirPopup("Sucesso", "Moldura removida com sucesso!");
-        abrirModalGerenciarUsuario(uid); // Reabre para atualizar a lista
-
-    } catch (error) {
-        fecharTodosOsModais();
-        exibirPopup("Erro", "Erro ao remover moldura: " + error.message);
     }
 }
 
