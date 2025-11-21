@@ -1786,6 +1786,37 @@ body {
 #modalBloqueante {
     z-index: 10000 !important;
 }
+
+/* --- SETAS EXTERNAS DA ROLETA --- */
+.roleta-wrapper-externo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0; /* Espaçamento geral */
+}
+
+.seta-externa {
+    width: 0; 
+    height: 0; 
+    border-left: 10px solid transparent; /* Largura da base da seta */
+    border-right: 10px solid transparent;
+    z-index: 15; /* Garante que fique acima de sombras */
+}
+
+.seta-externa.topo {
+    /* Seta de Cima: Aponta para BAIXO */
+    border-top: 15px solid var(--cor-destaque); 
+    margin-bottom: 2px; /* Cola na roleta */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+}
+
+.seta-externa.baixo {
+    /* Seta de Baixo: Aponta para CIMA */
+    border-bottom: 15px solid var(--cor-destaque);
+    margin-top: 2px; /* Cola na roleta */
+    filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.5));
+}
   </style>
 </head>
 <body>
@@ -3225,10 +3256,17 @@ onclick="fecharModal(event)">Fechar</button></div></div>
         <h4>🎰 Roleta Diária</h4>
         <p id="roletaInfoPremios" style="font-size: 12px; color: #aaa; margin-bottom: 5px;"></p>
         
-        <div id="roletaVisual" class="roleta-container">
-            <div class="roleta-faixa" id="roletaFaixa"></div>
+        <div class="roleta-wrapper-externo">
+            
+            <div class="seta-externa topo"></div>
+
+            <div id="roletaVisual" class="roleta-container" style="margin: 0;">
+                <div class="roleta-faixa" id="roletaFaixa"></div>
+            </div>
+
+            <div class="seta-externa baixo"></div>
+            
         </div>
-        
         <button id="btnGirarRoleta" onclick="girarRoleta()" style="width: 100%; font-weight: bold; font-size: 16px;">🎲 GIRAR (0)</button>
     </div>
 
