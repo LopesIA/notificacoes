@@ -1807,6 +1807,142 @@ body {
 #modalBloqueante.show {
     background: rgba(0,0,0,0.95); /* Fundo bem escuro para focar */
 }
+
+/* --- MOLDURAS PREMIUM (EXTRAVAGANTES) --- */
+
+/* Wrapper Base */
+.avatar-wrapper {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+    z-index: 1;
+}
+
+/* Limpa estilos antigos da imagem para o wrapper controlar */
+.chat-user-photo {
+    position: relative;
+    z-index: 2; /* A foto fica acima do fundo, mas abaixo dos adornos */
+    border: none !important; /* Remove borda simples */
+    background: #000;
+    padding: 2px; /* Espaço para o gradiente */
+}
+
+/* --- ELEMENTOS DECORATIVOS (Coroas e Asas) --- */
+
+/* Coroa Base (Melhorada) */
+.coroa-topo {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%) rotate(0deg);
+    width: 24px;
+    height: 16px;
+    z-index: 10;
+    background: transparent;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+    pointer-events: none;
+}
+
+/* Desenho da Coroa via CSS (Clip-path mais complexo) */
+.coroa-topo::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; width: 100%; height: 100%;
+    clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
+}
+
+/* --- NÍVEL 1: BRONZE (Rústico e Forte) --- */
+.avatar-wrapper.bronze .chat-user-photo {
+    background: linear-gradient(45deg, #804a00, #cd7f32, #593208);
+    box-shadow: 0 0 0 2px #593208, 0 0 10px rgba(205, 127, 50, 0.5);
+}
+.avatar-wrapper.bronze .coroa-topo::after {
+    background: linear-gradient(to bottom, #ffcc80, #cd7f32);
+}
+
+/* --- NÍVEL 2: PRATA (Metálico e Brilhante) --- */
+.avatar-wrapper.prata .chat-user-photo {
+    background: linear-gradient(135deg, #fff, #c0c0c0, #555, #c0c0c0, #fff);
+    background-size: 200% 200%;
+    animation: brilhoMetalico 3s linear infinite;
+    box-shadow: 0 0 0 2px #777, 0 0 15px rgba(255, 255, 255, 0.6);
+}
+.avatar-wrapper.prata .coroa-topo::after {
+    background: linear-gradient(to bottom, #fff, #999);
+}
+/* Brilho extra na prata */
+.avatar-wrapper.prata::before {
+    content: '✨';
+    position: absolute;
+    top: -5px; right: -5px;
+    font-size: 12px;
+    z-index: 11;
+    animation: pulse-glow 1s infinite;
+}
+
+/* --- NÍVEL 3: OURO (Majestoso - O Rei) --- */
+.avatar-wrapper.ouro .chat-user-photo {
+    background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    background-size: 200% 200%;
+    animation: brilhoDourado 2s infinite alternate;
+    box-shadow: 0 0 0 3px #aa771c, 0 0 20px rgba(255, 215, 0, 0.8);
+}
+.avatar-wrapper.ouro .coroa-topo {
+    width: 30px; height: 20px; top: -22px; /* Coroa maior */
+}
+.avatar-wrapper.ouro .coroa-topo::after {
+    background: linear-gradient(to bottom, #fff7cc, #ffd700, #b8860b);
+}
+/* Aura Dourada */
+.avatar-wrapper.ouro::after {
+    content: '';
+    position: absolute;
+    top: -10%; left: -10%; width: 120%; height: 120%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%);
+    z-index: 0;
+    animation: spin 10s linear infinite;
+}
+
+/* --- NÍVEL 4: DIAMANTE (Extravagante - Asas e Energia) --- */
+.avatar-wrapper.diamante .chat-user-photo {
+    background: linear-gradient(135deg, #b9f2ff, #00c6ff, #0072ff, #b9f2ff);
+    background-size: 300% 300%;
+    animation: brilhoMetalico 2s linear infinite;
+    box-shadow: 0 0 0 3px #00c6ff, 0 0 30px #00c6ff, inset 0 0 10px #fff;
+}
+.avatar-wrapper.diamante .coroa-topo {
+    width: 34px; height: 24px; top: -26px;
+    filter: drop-shadow(0 0 5px #00c6ff);
+}
+.avatar-wrapper.diamante .coroa-topo::after {
+    background: linear-gradient(to bottom, #e0ffff, #00c6ff, #0072ff);
+    clip-path: polygon(50% 0%, 80% 20%, 100% 0%, 100% 100%, 50% 80%, 0% 100%, 0% 0%, 20% 20%); /* Coroa estilo cristal */
+}
+
+/* ASAS DE ENERGIA (Feitas com CSS puro) */
+.avatar-wrapper.diamante::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 160%; height: 60%;
+    background: radial-gradient(ellipse at center, rgba(0,198,255,0.8) 0%, transparent 70%);
+    z-index: 0;
+    border-radius: 50%;
+    box-shadow: 
+        -30px -10px 0 -10px rgba(0,198,255,0.5), 
+        30px -10px 0 -10px rgba(0,198,255,0.5); /* Simula asas laterais */
+    animation: pulse-wings 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-wings {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
   </style>
 </head>
 <body>
@@ -8418,7 +8554,7 @@ function abrirModalVipPro() {
     const proAtivo = isProAtivo(perfil);
 
     if (proAtivo) {
-        // ... (código existente para quando já é pro mantém igual) ...
+        // Visualização para quem JÁ É PRO
         let dataFormatada = "Indefinido";
         if (perfil.proExpirationDate) {
              try {
@@ -8428,56 +8564,100 @@ function abrirModalVipPro() {
                  dataFormatada = dateObj.toLocaleDateString('pt-BR');
              } catch (e) { console.log(e); }
         }
+        
         let taxaAtual = (TAXA * 100); 
+        let girosAtuais = 1;
+        let nomeTier = "";
+        
         if (perfil.proTier && PRECOS_PRO[perfil.proTier]) {
             taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
+            girosAtuais = PRECOS_PRO[perfil.proTier].giros;
+            nomeTier = PRECOS_PRO[perfil.proTier].nome;
         }
+
         container.innerHTML = `
-            <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
-                <h3 style="color: var(--cor-destaque-azul);">🌟 Você é PRO ${perfil.proTier ? perfil.proTier.toUpperCase() : ''}!</h3>
-                <p>Validade: <strong>${dataFormatada}</strong></p>
-                <p style="font-size: 1.2em; margin: 15px 0;">Sua taxa atual: <b style="color: #2ecc71;">${taxaAtual.toFixed(1)}%</b></p>
+            <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center; background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);">
+                <h3 style="color: #00c6ff; text-shadow: 0 0 10px #00c6ff;">🌟 Você é PRO ${nomeTier.toUpperCase()}!</h3>
+                <p style="color:white;">Sua assinatura é válida até: <strong>${dataFormatada}</strong></p>
+                
+                <div style="display:flex; justify-content:space-around; margin-top:20px;">
+                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
+                        <p style="font-size:24px;">📉 ${taxaAtual.toFixed(0)}%</p>
+                        <p style="font-size:12px; color:#aaa;">Taxa de Serviço</p>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
+                        <p style="font-size:24px;">🎲 ${girosAtuais}</p>
+                        <p style="font-size:12px; color:#aaa;">Giros Diários</p>
+                    </div>
+                </div>
+                
+                <p style="margin-top:20px; font-size:14px; color:#ccc;">Aproveite seus benefícios exclusivos!</p>
             </div>
         `;
     } else {
-        // ATUALIZAÇÃO AQUI: Planos com as informações novas e GIROS
+        // Visualização de VENDA (Cards detalhados)
         container.innerHTML = `
             <div style="text-align: center;">
-                <h3 style="color: var(--cor-destaque-azul);">🌟 Seja um Profissional PRO</h3>
-                <p style="font-size:14px; opacity:0.8;">Menos taxas, mais destaque e mais giros na roleta!</p>
+                <h3 style="background: -webkit-linear-gradient(#00c6ff, #0072ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: 800;">🚀 DECOLE SUA CARREIRA</h3>
+                <p style="font-size:14px; opacity:0.8; margin-bottom: 20px;">Escolha o plano ideal para lucrar mais e se destacar!</p>
                 
-                <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; max-height: 60vh; overflow-y: auto;">
+                <div style="display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding: 5px;">
                     
-                    <div class="card" style="border: 1px solid #cd7f32; padding: 15px; cursor: pointer;" onclick="assinarPro('tier1')">
-                        <h4 style="color: #cd7f32; margin:0;">🥉 Bronze</h4>
-                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}/mês</p>
-                        <p style="font-size: 13px;">• Taxa cai para <strong>15%</strong></p>
-                        <p style="font-size: 13px;">• <strong>2 Giros</strong> na Roleta Diária</p>
-                        <button style="background-color: #cd7f32; width: 100%; margin-top: 10px; pointer-events: none;">Assinar Bronze</button>
+                    <div class="card" style="border: 2px solid #cd7f32; background: linear-gradient(135deg, #1a1a1a, #2a1a10); cursor: pointer;" onclick="assinarPro('tier1')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #cd7f32; margin:0; font-size: 20px;">🥉 Bronze</h4>
+                            <span style="background:#cd7f32; color:black; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Iniciante</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #ddd; padding-left: 20px; margin-bottom: 15px;">
+                            <li>📉 Taxa reduzida para <strong>15%</strong></li>
+                            <li>🎲 <strong>2 Giros</strong> na Roleta Diária</li>
+                            <li>✨ Destaque Bronze no Chat</li>
+                        </ul>
+                        <button style="background-color: #cd7f32; width: 100%; color:black; font-weight:bold; pointer-events: none;">ASSINAR BRONZE</button>
                     </div>
 
-                    <div class="card" style="border: 1px solid #c0c0c0; padding: 15px; cursor: pointer;" onclick="assinarPro('tier2')">
-                        <h4 style="color: #c0c0c0; margin:0;">🥈 Prata</h4>
-                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}/mês</p>
-                        <p style="font-size: 13px;">• Taxa cai para <strong>10%</strong></p>
-                        <p style="font-size: 13px;">• <strong>3 Giros</strong> na Roleta Diária</p>
-                        <button style="background-color: #555; color: white; width: 100%; margin-top: 10px; pointer-events: none;">Assinar Prata</button>
+                    <div class="card" style="border: 2px solid #c0c0c0; background: linear-gradient(135deg, #1a1a1a, #2a2a2a); cursor: pointer;" onclick="assinarPro('tier2')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #e0e0e0; margin:0; font-size: 20px;">🥈 Prata</h4>
+                            <span style="background:#c0c0c0; color:black; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Popular</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #ddd; padding-left: 20px; margin-bottom: 15px;">
+                            <li>📉 Taxa reduzida para <strong>10%</strong></li>
+                            <li>🎲 <strong>3 Giros</strong> na Roleta Diária</li>
+                            <li>✨ Destaque Prata + Brilho</li>
+                        </ul>
+                        <button style="background-color: #c0c0c0; width: 100%; color:black; font-weight:bold; pointer-events: none;">ASSINAR PRATA</button>
                     </div>
                     
-                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-ouro); cursor: pointer;" onclick="assinarPro('tier3')">
-                        <h4 style="color: var(--cor-destaque-ouro); margin:0;">🥇 Ouro</h4>
-                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}/mês</p>
-                        <p style="font-size: 13px;">• Taxa cai para <strong>5%</strong></p>
-                        <p style="font-size: 13px;">• <strong>4 Giros</strong> na Roleta Diária</p>
-                        <button style="width: 100%; margin-top: 10px; pointer-events: none;">Assinar Ouro</button>
+                    <div class="card pro-glow" style="border: 2px solid #ffd700; background: linear-gradient(135deg, #1a1a1a, #3a3000); cursor: pointer; transform: scale(1.02);" onclick="assinarPro('tier3')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #ffd700; margin:0; font-size: 20px;">🥇 Ouro</h4>
+                            <span style="background:#ffd700; color:black; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Mais Vendido</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #fff; padding-left: 20px; margin-bottom: 15px;">
+                            <li>📉 Taxa minúscula de <strong>5%</strong></li>
+                            <li>🎲 <strong>4 Giros</strong> na Roleta Diária</li>
+                            <li>👑 Coroa Dourada no Chat</li>
+                        </ul>
+                        <button style="background: linear-gradient(45deg, #ffd700, #b8860b); width: 100%; color:black; font-weight:bold; pointer-events: none;">QUERO SER OURO</button>
                     </div>
 
-                    <div class="card pro-glow" style="padding: 15px; border: 1px solid var(--cor-destaque-azul); cursor: pointer;" onclick="assinarPro('tier4')">
-                        <h4 style="color: var(--cor-destaque-azul); margin:0;">💎 Diamante (Melhor)</h4>
-                        <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">R$ ${PRECOS_PRO.tier4.preco.toFixed(2)}/mês</p>
-                        <p style="font-size: 13px;">• Taxa <strong>0% (ZERO)</strong></p>
-                        <p style="font-size: 13px;">• <strong>5 Giros</strong> na Roleta Diária</p>
-                        <button style="width: 100%; margin-top: 10px; pointer-events: none; background-color: var(--cor-destaque-azul);">Assinar Diamante</button>
+                    <div class="card pro-glow" style="border: 2px solid #00c6ff; background: radial-gradient(circle at top right, #001e33, #000); cursor: pointer;" onclick="assinarPro('tier4')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #00c6ff; margin:0; font-size: 20px;">💎 Diamante</h4>
+                            <span style="background:#00c6ff; color:white; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Lendário</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier4.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #b9f2ff; padding-left: 20px; margin-bottom: 15px;">
+                            <li>🚫 <strong>TAXA ZERO (0%)</strong></li>
+                            <li>🎲 <strong>5 Giros</strong> na Roleta Diária</li>
+                            <li>🦅 Asas de Diamante no Chat</li>
+                            <li>🚀 Destaque Máximo no App</li>
+                        </ul>
+                        <button style="background: linear-gradient(45deg, #00c6ff, #0072ff); width: 100%; color:white; font-weight:bold; pointer-events: none;">ASSINAR DIAMANTE</button>
                     </div>
                 </div>
             </div>
