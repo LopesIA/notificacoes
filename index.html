@@ -13251,35 +13251,45 @@ function abrirModalPerfil() {
     const nomeAtual = perfil.nome || "";
     const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    // === PADRÃO DE PRÊMIOS (ORDEM EXATA) ===
-    // Deve ter exatamente 9 itens para bater com a matemática do giro
-    // 0:1pt, 1:2pt, 2:3pt, 3:5pt, 4:10pt, 5:MOLDURA, 6:BALÃO, 7:1pt, 8:CAIXA
+    // === PADRÃO VISUAL DA ROLETA (16 ITENS - CICLO COMPLETO) ===
+    // Sequência: Num, Moldura, Num, Balão... subindo os tiers.
     const padraoItens = [
-        { tipo: 'txt', val: '1', cls: 'ponto' },
-        { tipo: 'txt', val: '2', cls: 'ponto' },
-        { tipo: 'txt', val: '3', cls: 'ponto' },
-        { tipo: 'txt', val: '5', cls: 'ponto' },
-        { tipo: 'txt', val: '10', cls: 'ponto' },
+        // --- TIER BRONZE ---
+        { tipo: 'txt', val: '1', cls: 'ponto' },         // 0
+        { tipo: 'html', id: 'bronze', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-bronze"></div>', cls: 'premio-top' }, // 1
+        { tipo: 'txt', val: '2', cls: 'ponto' },         // 2
+        { tipo: 'html', id: 'bronze', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-bronze">Chat</div>', cls: 'premio-top' }, // 3
         
-        // MOLDURA (Visual: Usamos a classe 'avatar-frame-ouro' para ficar bonito na roda)
-        { tipo: 'html', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' },
+        // --- TIER PRATA ---
+        { tipo: 'txt', val: '3', cls: 'ponto' },         // 4
+        { tipo: 'html', id: 'prata', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-prata"></div>', cls: 'premio-top' }, // 5
+        { tipo: 'txt', val: '5', cls: 'ponto' },         // 6
+        { tipo: 'html', id: 'prata', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-prata">Chat</div>', cls: 'premio-top' }, // 7
         
-        // BALÃO (Visual: Usamos a classe 'bubble-diamante' para brilhar)
-        { tipo: 'html', html: '<div class="mini-balao-preview chat-message bubble-diamante" style="margin:0;">Chat</div>', cls: 'premio-top' },
+        // --- MEIO (CAIXA) ---
+        { tipo: 'txt', val: '🎁', cls: 'caixa' },        // 8
         
-        { tipo: 'txt', val: '1', cls: 'ponto' },
-        { tipo: 'txt', val: '🎁', cls: 'caixa' }
+        // --- TIER OURO ---
+        { tipo: 'html', id: 'ouro', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 9
+        { tipo: 'txt', val: '10', cls: 'ponto' },        // 10
+        { tipo: 'html', id: 'ouro', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-ouro">Chat</div>', cls: 'premio-top' }, // 11
+        
+        // --- TIER DIAMANTE ---
+        { tipo: 'txt', val: '1', cls: 'ponto' },         // 12
+        { tipo: 'html', id: 'diamante', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-diamante"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 13
+        { tipo: 'txt', val: '2', cls: 'ponto' },         // 14
+        { tipo: 'html', id: 'diamante', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-diamante">Chat</div>', cls: 'premio-top' } // 15
     ];
 
     let faixaHtml = '';
-    // Gera 60 repetições para criar a faixa longa de rolagem
-    for(let i=0; i<60; i++) {
+    // Gera 40 repetições (já que o set é grande de 16 itens, 40x é suficiente)
+    for(let i=0; i<40; i++) {
         padraoItens.forEach(item => {
             let conteudo = '';
             if (item.tipo === 'txt') {
                 conteudo = `<span>${item.val}</span>`;
             } else {
-                conteudo = item.html; // Insere o HTML exato da moldura/balão
+                conteudo = item.html; // Injeta o HTML exato da moldura/balão
             }
             faixaHtml += `<div class="roleta-item ${item.cls}">${conteudo}</div>`;
         });
@@ -13432,85 +13442,81 @@ async function girarRoleta() {
     btnGirar.disabled = true; 
     btnGirar.textContent = "Girando...";
 
-    // === TABELA DE PRÊMIOS (Sincronizada com padraoItens em abrirModalPerfil) ===
-    // Index: 0   1   2   3   4    5(M)   6(B)   7   8(Cx)
+    // === TABELA DE PRÊMIOS (16 ITENS - IGUAL AO VISUAL) ===
+    // key: nome da chave no objeto MOLDURAS/BALOES
     const arrayPremios = [
-        { tipo: 'ponto', valor: 1 },   // 0
-        { tipo: 'ponto', valor: 2 },   // 1
-        { tipo: 'ponto', valor: 3 },   // 2
-        { tipo: 'ponto', valor: 5 },   // 3
-        { tipo: 'ponto', valor: 10 },  // 4
-        { tipo: 'moldura', valor: 0 }, // 5 (Moldura)
-        { tipo: 'balao', valor: 0 },   // 6 (Balão)
-        { tipo: 'ponto', valor: 1 },   // 7
-        { tipo: 'caixa', valor: 0 }    // 8 (Caixa)
+        { tipo: 'ponto', valor: 1 },      // 0
+        { tipo: 'moldura', key: 'bronze', nome: 'Bronze' }, // 1
+        { tipo: 'ponto', valor: 2 },      // 2
+        { tipo: 'balao', key: 'bronze', nome: 'Chat Bronze' }, // 3
+        { tipo: 'ponto', valor: 3 },      // 4
+        { tipo: 'moldura', key: 'prata', nome: 'Prata' },  // 5
+        { tipo: 'ponto', valor: 5 },      // 6
+        { tipo: 'balao', key: 'prata', nome: 'Chat Prata' },  // 7
+        { tipo: 'caixa', valor: 0 },      // 8 (Caixa)
+        { tipo: 'moldura', key: 'ouro', nome: 'Ouro' },   // 9
+        { tipo: 'ponto', valor: 10 },     // 10
+        { tipo: 'balao', key: 'ouro', nome: 'Chat Ouro' },   // 11
+        { tipo: 'ponto', valor: 1 },      // 12
+        { tipo: 'moldura', key: 'diamante', nome: 'Diamante' }, // 13
+        { tipo: 'ponto', valor: 2 },      // 14
+        { tipo: 'balao', key: 'diamante', nome: 'Chat Diamante' } // 15
     ];
 
     // 1. DEFINIR O PRÊMIO (Lógica de Probabilidade)
     const rand = Math.random() * 100;
     let targetIndex = 0; 
 
-    // Probabilidades ajustadas:
-    if (rand < 30) targetIndex = 0;      // 30% -> 1 pt
-    else if (rand < 50) targetIndex = 7; // 20% -> 1 pt (Outra posição)
-    else if (rand < 70) targetIndex = 1; // 20% -> 2 pts
-    else if (rand < 85) targetIndex = 2; // 15% -> 3 pts
-    else if (rand < 92) targetIndex = 3; // 7%  -> 5 pts
-    else if (rand < 95) targetIndex = 4; // 3%  -> 10 pts
-    else if (rand < 97) targetIndex = 5; // 2%  -> MOLDURA
-    else if (rand < 99) targetIndex = 6; // 2%  -> BALÃO
-    else targetIndex = 8;                // 1%  -> CAIXA
+    // Probabilidades Ajustadas:
+    if (rand < 20) targetIndex = 0;       // 20% -> 1pt
+    else if (rand < 35) targetIndex = 2;  // 15% -> 2pts
+    else if (rand < 45) targetIndex = 4;  // 10% -> 3pts
+    else if (rand < 55) targetIndex = 12; // 10% -> 1pt (outro slot)
+    else if (rand < 63) targetIndex = 1;  // 8%  -> MOLDURA BRONZE
+    else if (rand < 71) targetIndex = 3;  // 8%  -> BALÃO BRONZE
+    else if (rand < 76) targetIndex = 5;  // 5%  -> MOLDURA PRATA
+    else if (rand < 81) targetIndex = 7;  // 5%  -> BALÃO PRATA
+    else if (rand < 85) targetIndex = 6;  // 4%  -> 5pts
+    else if (rand < 88) targetIndex = 10; // 3%  -> 10pts
+    else if (rand < 91) targetIndex = 9;  // 3%  -> MOLDURA OURO
+    else if (rand < 94) targetIndex = 11; // 3%  -> BALÃO OURO
+    else if (rand < 96) targetIndex = 8;  // 2%  -> CAIXA
+    else if (rand < 98) targetIndex = 13; // 2%  -> MOLDURA DIAMANTE
+    else targetIndex = 15;                // 2%  -> BALÃO DIAMANTE
 
     // 2. CALCULAR O PIXEL EXATO DE PARADA
-    // Item: 80px largura + 5px margem esq + 5px margem dir = 90px TOTAL
     const ITEM_WIDTH = 90; 
-    const ITEMS_PER_SET = 9; // O tamanho do arrayPremios
-    const LOOPS = 40; // Voltas completas (longe o suficiente)
+    const ITEMS_PER_SET = 16; // AGORA SÃO 16 ITENS!
+    const LOOPS = 35; // Voltas completas
     
-    // O índice real na lista HTML gigante (ex: item 365)
+    // Índice final na faixa gigante
     const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
 
-    // Largura da janela da roleta (definida no CSS como 320px)
     const containerWidth = 320; 
-    
-    // Onde o centro do item alvo está (em pixels, desde o início da faixa)
-    // Posição = (Index * Largura) + Metade da Largura
     const targetCenterPixel = (finalIndex * ITEM_WIDTH) + (ITEM_WIDTH / 2);
-    
-    // Onde o centro da janela de visualização está
     const viewCenterPixel = containerWidth / 2;
-    
-    // O quanto precisamos deslocar a faixa para a esquerda (translateX negativo)
-    // Para alinhar o centro do item com o centro da visão
     let moveX = targetCenterPixel - viewCenterPixel;
 
-    // Jitter (Aleatoriedade) SEGURO: +/- 25px no máximo (o item tem 90px, então é seguro)
-    // Isso faz a seta não cair sempre pixel-perfect no meio, dá realismo
+    // Jitter (Aleatoriedade visual segura)
     const jitter = Math.floor(Math.random() * 50) - 25; 
     moveX += jitter;
 
     // 3. EXECUTAR ANIMAÇÃO
     const faixa = document.getElementById('roletaFaixa');
-    // Curva Bezier customizada para freio realista
-    faixa.style.transition = `transform 5s cubic-bezier(0.1, 0, 0.1, 1)`; 
+    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; // 6s para mais suspense
     faixa.style.transform = `translateX(-${moveX}px)`;
 
-    // 4. SORTEAR QUAL MOLDURA/BALÃO SE GANHAR ESSE TIPO
+    // 4. PREPARAR DADOS DO PRÊMIO
+    const premioGanho = arrayPremios[targetIndex];
     let premioKey = '';
     let msgPremio = '';
-    const premioGanho = arrayPremios[targetIndex];
 
-    if (premioGanho.tipo === 'moldura') {
-        const chaves = Object.keys(MOLDURAS).filter(k => !MOLDURAS[k].adminOnly);
-        premioKey = chaves[Math.floor(Math.random() * chaves.length)];
-        msgPremio = `Moldura ${MOLDURAS[premioKey].nome}`;
-    } else if (premioGanho.tipo === 'balao') {
-        const chaves = Object.keys(BALOES).filter(k => !BALOES[k].adminOnly);
-        premioKey = chaves[Math.floor(Math.random() * chaves.length)];
-        msgPremio = `Estilo ${BALOES[premioKey].nome}`;
+    if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
+        premioKey = premioGanho.key;
+        msgPremio = premioGanho.nome;
     }
 
-    // 5. PROCESSAR RESULTADO APÓS ANIMAÇÃO
+    // 5. PROCESSAR RESULTADO APÓS ANIMAÇÃO (6 segundos)
     setTimeout(async () => {
         let updates = { ultimoGiroRoleta: hoje };
         updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
@@ -13524,13 +13530,15 @@ async function girarRoleta() {
         } 
         else if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
             tituloPopup = "🎁 Item Temporário!";
-            corpoPopup = `Sorte Grande! Você ganhou o item **${msgPremio}** por 24 horas!`;
+            const tipoItem = premioGanho.tipo === 'moldura' ? 'Moldura' : 'Estilo de Chat';
+            corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por 24 horas!`;
             
             const expiraEm = new Date();
             expiraEm.setHours(expiraEm.getHours() + 24);
             
             updates[`premiosTemporarios.${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
             
+            // Equipa automaticamente
             if (premioGanho.tipo === 'moldura') updates.molduraSelecionada = premioKey;
             if (premioGanho.tipo === 'balao') updates.balaoSelecionado = premioKey;
         } 
@@ -13557,7 +13565,7 @@ async function girarRoleta() {
             exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
                 db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
                     perfil = doc.data();
-                    abrirModalPerfil(); // Recarrega o modal (reseta a posição da roleta)
+                    abrirModalPerfil(); // Reset roleta
                 });
             });
 
@@ -13571,7 +13579,7 @@ async function girarRoleta() {
             atualizarBotaoRoleta();
         }
 
-    }, 5000);
+    }, 6000); // Tempo da animação
 }
 
 function verificarAcessoMoldura(key) {
