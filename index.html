@@ -13004,7 +13004,7 @@ async function gerenciarMoldura(key, element) {
         btnNao.textContent = "Equipar (Grátis)";
         btnNao.style.backgroundColor = "#00c6ff"; // Azul PRO
         btnNao.onclick = async () => {
-            fecharModalAtual();
+            fecharModalAtual(); // Aqui fecha normal, pois a ação acaba aqui
             selecionarMolduraVisualmente(element);
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
         };
@@ -13013,8 +13013,11 @@ async function gerenciarMoldura(key, element) {
         btnSim.textContent = `Comprar (R$ ${m.preco})`;
         btnSim.style.backgroundColor = "#4CAF50";
         btnSim.onclick = () => {
-            fecharModalAtual();
-            executarCompraMoldura(key, m); // Chama a função de compra
+            // --- CORREÇÃO AQUI ---
+            // Removemos o 'fecharModalAtual()' daqui. 
+            // Ao chamar a função abaixo, ela vai reaproveitar o popup aberto
+            // e mudar o texto para "Confirmar Compra?", sem piscar ou travar.
+            executarCompraMoldura(key, m); 
         };
 
         abrirModal('modalConfirmacaoGenerica');
