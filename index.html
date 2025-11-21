@@ -1942,76 +1942,6 @@ body {
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
 }
 
-/* --- NOVO: Container de Scroll das Molduras (Estilo Caixa) --- */
-.molduras-scroll-container {
-    display: flex;
-    overflow-x: auto; /* Permite rolar para o lado */
-    gap: 15px;
-    padding: 15px;
-    background: #1a1a1a; /* Fundo da caixa */
-    border: 1px solid var(--cor-borda);
-    border-radius: 12px;
-    margin-top: 10px;
-    white-space: nowrap; /* Garante que fiquem em linha */
-    box-shadow: inset 0 0 10px #000; /* Sombra interna para profundidade */
-}
-
-/* Personaliza a barra de rolagem para ficar bonita */
-.molduras-scroll-container::-webkit-scrollbar {
-    height: 8px;
-}
-.molduras-scroll-container::-webkit-scrollbar-thumb {
-    background: var(--cor-destaque);
-    border-radius: 4px;
-}
-.molduras-scroll-container::-webkit-scrollbar-track {
-    background: #333;
-}
-
-/* --- AJUSTE: Molduras no Chat (Pequenas) --- */
-.avatar-wrapper.chat-size {
-    width: 30px; 
-    height: 30px;
-    margin-right: 8px;
-    vertical-align: middle;
-    display: inline-flex; /* Para alinhar com texto */
-}
-.avatar-wrapper.chat-size .chat-user-photo {
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 50%;
-    padding: 1px; /* Borda fina */
-}
-/* Ajusta a coroa para o tamanho pequeno do chat */
-.avatar-wrapper.chat-size .coroa-topo {
-    width: 14px; 
-    height: 10px; 
-    top: -10px;
-}
-/* Remove efeitos muito pesados no chat para não poluir */
-.avatar-wrapper.chat-size::after {
-    display: none; /* Remove aura giratória no chat */
-}
-.avatar-wrapper.chat-size::before {
-    display: none; /* Remove asas no chat */
-}
-
-/* --- AJUSTE: Molduras no Popup de Perfil (Grandes) --- */
-.avatar-wrapper.popup-size {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 15px auto;
-}
-.avatar-wrapper.popup-size .perfil-foto-grande {
-    width: 100%;
-    height: 100%;
-    padding: 3px;
-}
-.avatar-wrapper.popup-size .coroa-topo {
-    width: 50px;
-    height: 30px;
-    top: -35px;
-}
   </style>
 </head>
 <body>
@@ -3489,10 +3419,15 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 <div id="modalVisualizarPerfilChat" class="modal" onclick="fecharModal(event)">
   <div class="modal-content perfil-visualizacao" onclick="event.stopPropagation()">
     <div class="perfil-visualizacao-content">
-    <h3 id="visuPerfilNome" style="margin: 5px 0; color: var(--cor-destaque);"></h3>
-    <p id="visuPerfilTipo" style="font-size: 12px; opacity: 0.8; color: #fff;"></p>
-    <div id="visuPerfilConquistas" style="display: flex; justify-content: center; gap: 10px; font-size: 24px; margin: 15px 0;"></div>
-    <button data-modal-id="modalVisualizarPerfilChat" onclick="fecharModal(event)">Fechar</button>
+        <img id="visuPerfilFoto" src="" class="perfil-foto-grande">
+        <h3 id="visuPerfilNome" style="margin: 5px 0; color: var(--cor-destaque);"></h3>
+        <p id="visuPerfilTipo" style="font-size: 12px; opacity: 0.8; color: #fff;"></p>
+        
+        <div id="visuPerfilConquistas" style="display: flex; justify-content: center; gap: 10px; font-size: 24px; margin: 15px 0;"></div>
+        
+        <button data-modal-id="modalVisualizarPerfilChat" onclick="fecharModal(event)">Fechar</button>
+    </div>
+  </div>
 </div>
 
 <div id="modalBloqueante" class="modal" style="z-index: 9999; backdrop-filter: blur(5px);">
@@ -6338,25 +6273,18 @@ async function createMessageDiv(msg, docId) {
 
                 // Foto e Moldura
                 const fotoUrl = remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
-                let avatarHtml = '';
+                let molduraClass = '';
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
-                    // Se tem moldura, usa a estrutura completa (Wrapper + Coroa + Foto)
-                    // Adiciona a classe 'chat-size' para ficar pequeno
-                    avatarHtml = `
-                    <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
-                        <div class="coroa-topo"></div>
-                        <img src="${fotoUrl}" class="chat-user-photo">
-                    </div>`;
-                } else {
-                    // Sem moldura, imagem normal (com classe chat-user-photo para manter o tamanho)
-                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:30px; height:30px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
+                    molduraClass = MOLDURAS[remetenteData.molduraSelecionada].classe;
                 }
+
+                // HTML da Foto
+                const imgHtml = `<img src="${fotoUrl}" class="chat-user-photo ${molduraClass}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
 
                 // Nome Clicável
                 const nomeClicavel = `<span class="${classeCSS}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; text-decoration: underline;">${remetenteData.nome}</span>`;
                 
-                // Monta a string final
-                nomeSpanHtml = `${avatarHtml} ${nomeClicavel} ${conquistasHtml} ${iconeBase}`;
+                nomeSpanHtml = `${imgHtml} ${nomeClicavel} ${conquistasHtml} ${iconeBase}`;
 
             } else {
                  nomeSpanHtml = `<span class="cliente-chat">👻 Usuário Excluído</span>`;
@@ -6375,41 +6303,24 @@ async function createMessageDiv(msg, docId) {
     return messageDiv;
 }
 
-// SUBSTITUA A FUNÇÃO abrirPerfilUsuarioChat
+// Função para abrir o modal de visualização de perfil (NOVO REQUISITO 5.1)
 async function abrirPerfilUsuarioChat(uid) {
     const doc = await db.collection('usuarios').doc(uid).get();
     if(!doc.exists) return;
     const u = doc.data();
     
-    const containerFoto = document.getElementById('visuPerfilFoto').parentElement; // Pega o pai da imagem
+    document.getElementById('visuPerfilFoto').src = u.fotoPerfil || 'https://via.placeholder.com/120';
     
-    // Limpa visualizações anteriores de moldura no pai
-    // (Removemos e recriamos a imagem para resetar o wrapper se existir)
-    containerFoto.innerHTML = ''; 
-
-    let htmlFoto = '';
-    const fotoUrl = u.fotoPerfil || 'https://via.placeholder.com/120';
-
+    // Aplica moldura
+    const img = document.getElementById('visuPerfilFoto');
+    img.className = 'perfil-foto-grande'; 
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
-        // Com Moldura (Grande)
-        htmlFoto = `
-        <div class="avatar-wrapper popup-size ${u.molduraSelecionada}">
-            <div class="coroa-topo"></div>
-            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande">
-        </div>`;
-    } else {
-        // Sem Moldura
-        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333;">`;
+        img.classList.add(MOLDURAS[u.molduraSelecionada].classe);
     }
     
-    // Insere o HTML (Wrapper ou Img simples) antes do Nome
-    const nomeEl = document.getElementById('visuPerfilNome');
-    nomeEl.insertAdjacentHTML('beforebegin', htmlFoto);
-
-    // Preenche o nome
-    nomeEl.textContent = u.nome;
+    document.getElementById('visuPerfilNome').textContent = u.nome;
     
-    // DETECÇÃO DE TIPO
+    // DETECÇÃO DE TIPO (NOVO REQUISITO)
     let tipoTexto = "Usuário";
     let corTipo = "#ccc";
     if (u.tipo === 'admin') { tipoTexto = "🧠 Administrador"; corTipo = "#e74c3c"; }
@@ -6421,7 +6332,6 @@ async function abrirPerfilUsuarioChat(uid) {
     tipoEl.style.color = corTipo;
     tipoEl.style.fontWeight = "bold";
     
-    // Conquistas
     const container = document.getElementById('visuPerfilConquistas');
     container.innerHTML = '';
     if (u.conquistasSelecionadas) {
@@ -6431,7 +6341,8 @@ async function abrirPerfilUsuarioChat(uid) {
         });
     }
     
-    // Botões de Admin (WhatsApp e Gerenciar)
+    // BOTÕES DE ADMIN (Whatsapp e Gerenciar)
+    // Remove botões antigos se existirem
     const oldAdminBtns = document.getElementById('adminActionsChatPopup');
     if(oldAdminBtns) oldAdminBtns.remove();
 
@@ -6458,6 +6369,8 @@ async function abrirPerfilUsuarioChat(uid) {
             abrirModalGerenciarUsuario(uid);
         };
         divBtns.appendChild(btnGerenciar);
+
+        // Adiciona após as conquistas
         container.parentNode.appendChild(divBtns);
     }
     
@@ -8642,7 +8555,7 @@ function abrirModalVipPro() {
     const proAtivo = isProAtivo(perfil);
 
     if (proAtivo) {
-        // ... (Código existente para quem JÁ É PRO mantém igual) ...
+        // Visualização para quem JÁ É PRO
         let dataFormatada = "Indefinido";
         if (perfil.proExpirationDate) {
              try {
@@ -8652,58 +8565,101 @@ function abrirModalVipPro() {
                  dataFormatada = dateObj.toLocaleDateString('pt-BR');
              } catch (e) { console.log(e); }
         }
-        let nomeTier = (perfil.proTier && PRECOS_PRO[perfil.proTier]) ? PRECOS_PRO[perfil.proTier].nome : "";
         
+        let taxaAtual = (TAXA * 100); 
+        let girosAtuais = 1;
+        let nomeTier = "";
+        
+        if (perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+            taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
+            girosAtuais = PRECOS_PRO[perfil.proTier].giros;
+            nomeTier = PRECOS_PRO[perfil.proTier].nome;
+        }
+
         container.innerHTML = `
             <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center; background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);">
                 <h3 style="color: #00c6ff; text-shadow: 0 0 10px #00c6ff;">🌟 Você é PRO ${nomeTier.toUpperCase()}!</h3>
                 <p style="color:white;">Sua assinatura é válida até: <strong>${dataFormatada}</strong></p>
+                
+                <div style="display:flex; justify-content:space-around; margin-top:20px;">
+                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
+                        <p style="font-size:24px;">📉 ${taxaAtual.toFixed(0)}%</p>
+                        <p style="font-size:12px; color:#aaa;">Taxa de Serviço</p>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
+                        <p style="font-size:24px;">🎲 ${girosAtuais}</p>
+                        <p style="font-size:12px; color:#aaa;">Giros Diários</p>
+                    </div>
+                </div>
+                
                 <p style="margin-top:20px; font-size:14px; color:#ccc;">Aproveite seus benefícios exclusivos!</p>
             </div>
         `;
     } else {
-        // --- NOVA VISUALIZAÇÃO DETALHADA DE VENDA ---
-        let htmlPlanos = '';
-        
-        // Definição dos benefícios para exibição
-        const beneficios = {
-            'tier1': ['📉 Taxa reduzida para <strong>15%</strong>', '🎲 <strong>2 Giros</strong> na Roleta', '🥉 Moldura Bronze no Chat'],
-            'tier2': ['📉 Taxa reduzida para <strong>10%</strong>', '🎲 <strong>3 Giros</strong> na Roleta', '🥈 Moldura Prata no Chat'],
-            'tier3': ['📉 Taxa reduzida para <strong>5%</strong>', '🎲 <strong>4 Giros</strong> na Roleta', '🥇 Moldura Ouro + Brilho'],
-            'tier4': ['🚫 <strong>TAXA ZERO (0%)</strong>', '🎲 <strong>5 Giros</strong> na Roleta', '💎 Moldura Diamante + Asas']
-        };
-
-        const cores = {
-            'tier1': '#cd7f32', // Bronze
-            'tier2': '#c0c0c0', // Prata
-            'tier3': '#ffd700', // Ouro
-            'tier4': '#00c6ff'  // Diamante
-        };
-
-        Object.keys(PRECOS_PRO).forEach(tier => {
-            const plano = PRECOS_PRO[tier];
-            const cor = cores[tier];
-            const listaBeneficios = beneficios[tier].map(b => `<li>${b}</li>`).join('');
-            
-            htmlPlanos += `
-            <div class="card" style="border: 2px solid ${cor}; background: linear-gradient(135deg, #1a1a1a, #000); cursor: pointer; margin-bottom: 15px;" onclick="assinarPro('${tier}')">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h4 style="color: ${cor}; margin:0; font-size: 20px; text-transform: uppercase;">${plano.nome}</h4>
-                    <span style="background:${cor}; color:black; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">R$ ${plano.preco.toFixed(2)}</span>
-                </div>
-                <ul style="text-align:left; font-size: 14px; color: #ddd; padding-left: 20px; margin: 10px 0;">
-                    ${listaBeneficios}
-                </ul>
-                <button style="background: ${cor}; width: 100%; color:black; font-weight:bold; border:none; padding: 10px; pointer-events: none;">QUERO SER ${plano.nome.toUpperCase()}</button>
-            </div>`;
-        });
-
+        // Visualização de VENDA (Cards detalhados)
         container.innerHTML = `
             <div style="text-align: center;">
-                <h3 style="background: -webkit-linear-gradient(#00c6ff, #0072ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: 800;">🚀 SEJA UM PROFISSIONAL PRO</h3>
-                <p style="font-size:14px; opacity:0.8; margin-bottom: 20px;">Escolha seu nível e maximize seus lucros!</p>
-                <div style="max-height: 60vh; overflow-y: auto; padding: 5px;">
-                    ${htmlPlanos}
+                <h3 style="background: -webkit-linear-gradient(#00c6ff, #0072ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: 800;">🚀 DECOLE SUA CARREIRA</h3>
+                <p style="font-size:14px; opacity:0.8; margin-bottom: 20px;">Escolha o plano ideal para lucrar mais e se destacar!</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding: 5px;">
+                    
+                    <div class="card" style="border: 2px solid #cd7f32; background: linear-gradient(135deg, #1a1a1a, #2a1a10); cursor: pointer;" onclick="assinarPro('tier1')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #cd7f32; margin:0; font-size: 20px;">🥉 Bronze</h4>
+                            <span style="background:#cd7f32; color:black; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Iniciante</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier1.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #ddd; padding-left: 20px; margin-bottom: 15px;">
+                            <li>📉 Taxa reduzida para <strong>15%</strong></li>
+                            <li>🎲 <strong>2 Giros</strong> na Roleta Diária</li>
+                            <li>✨ Destaque Bronze no Chat</li>
+                        </ul>
+                        <button style="background-color: #cd7f32; width: 100%; color:black; font-weight:bold; pointer-events: none;">ASSINAR BRONZE</button>
+                    </div>
+
+                    <div class="card" style="border: 2px solid #c0c0c0; background: linear-gradient(135deg, #1a1a1a, #2a2a2a); cursor: pointer;" onclick="assinarPro('tier2')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #e0e0e0; margin:0; font-size: 20px;">🥈 Prata</h4>
+                            <span style="background:#c0c0c0; color:black; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Popular</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier2.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #ddd; padding-left: 20px; margin-bottom: 15px;">
+                            <li>📉 Taxa reduzida para <strong>10%</strong></li>
+                            <li>🎲 <strong>3 Giros</strong> na Roleta Diária</li>
+                            <li>✨ Destaque Prata + Brilho</li>
+                        </ul>
+                        <button style="background-color: #c0c0c0; width: 100%; color:black; font-weight:bold; pointer-events: none;">ASSINAR PRATA</button>
+                    </div>
+                    
+                    <div class="card pro-glow" style="border: 2px solid #ffd700; background: linear-gradient(135deg, #1a1a1a, #3a3000); cursor: pointer; transform: scale(1.02);" onclick="assinarPro('tier3')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #ffd700; margin:0; font-size: 20px;">🥇 Ouro</h4>
+                            <span style="background:#ffd700; color:black; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Mais Vendido</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier3.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #fff; padding-left: 20px; margin-bottom: 15px;">
+                            <li>📉 Taxa minúscula de <strong>5%</strong></li>
+                            <li>🎲 <strong>4 Giros</strong> na Roleta Diária</li>
+                            <li>👑 Coroa Dourada no Chat</li>
+                        </ul>
+                        <button style="background: linear-gradient(45deg, #ffd700, #b8860b); width: 100%; color:black; font-weight:bold; pointer-events: none;">QUERO SER OURO</button>
+                    </div>
+
+                    <div class="card pro-glow" style="border: 2px solid #00c6ff; background: radial-gradient(circle at top right, #001e33, #000); cursor: pointer;" onclick="assinarPro('tier4')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color: #00c6ff; margin:0; font-size: 20px;">💎 Diamante</h4>
+                            <span style="background:#00c6ff; color:white; font-weight:bold; padding:2px 8px; border-radius:10px; font-size:12px;">Lendário</span>
+                        </div>
+                        <p style="font-size: 26px; font-weight: 800; margin: 10px 0; color:white;">R$ ${PRECOS_PRO.tier4.preco.toFixed(2)}<span style="font-size:14px; font-weight:normal;">/mês</span></p>
+                        <ul style="text-align:left; font-size: 14px; color: #b9f2ff; padding-left: 20px; margin-bottom: 15px;">
+                            <li>🚫 <strong>TAXA ZERO (0%)</strong></li>
+                            <li>🎲 <strong>5 Giros</strong> na Roleta Diária</li>
+                            <li>🦅 Asas de Diamante no Chat</li>
+                            <li>🚀 Destaque Máximo no App</li>
+                        </ul>
+                        <button style="background: linear-gradient(45deg, #00c6ff, #0072ff); width: 100%; color:white; font-weight:bold; pointer-events: none;">ASSINAR DIAMANTE</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -12585,7 +12541,7 @@ function girarRoleta() {
     let moveX = centroDoItem - centroDoContainer;
     
     // Jitter (Variação aleatória pequena para realismo)
-    const jitter = Math.floor(Math.random() * 6) - 3; 
+    const jitter = Math.floor(Math.random() * 20) - 10; 
     moveX += jitter;
 
     // Executa a Animação CSS
@@ -12693,13 +12649,9 @@ function girarRoleta() {
     }, 6500); // Tempo da animação
 }
 
-// SUBSTITUA A FUNÇÃO renderizarMolduras
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
-    // Adiciona a classe do container de scroll
-    container.className = 'molduras-scroll-container'; 
     container.innerHTML = '';
-    
     const minhasMolduras = perfil.moldurasAdquiridas || [];
     
     Object.keys(MOLDURAS).forEach(key => {
@@ -12707,25 +12659,22 @@ function renderizarMolduras() {
         const tem = minhasMolduras.includes(key);
         const selecionada = perfil.molduraSelecionada === key;
         
-        // Checkmark visual
-        const checkDisplay = selecionada ? 'flex' : 'none';
-        const bordaCor = selecionada ? 'var(--cor-destaque)' : (tem ? '#4CAF50' : '#333');
-        const opacidade = tem ? '1' : '0.7';
-
+        // key é 'bronze', 'prata', etc. Usamos isso na classe do avatar-wrapper
+        
         container.innerHTML += `
             <div id="moldura_${key}" class="moldura-item ${tem ? 'comprada' : ''} ${selecionada ? 'selecionada' : ''}" 
                  onclick="gerenciarMoldura('${key}', this)" 
-                 style="flex: 0 0 auto; width: 80px; display:flex; flex-direction:column; align-items:center; position:relative; cursor:pointer; opacity: ${opacidade};"> 
+                 style="flex-direction:column; position:relative; margin-top: 15px;"> 
                  
-                <div class="moldura-check" style="display: ${checkDisplay}; right: 10px;">✅</div>
+                <div class="moldura-check">✅</div>
                 
-                <div class="avatar-wrapper ${key}" style="width: 60px; height: 60px;">
-                    <div class="coroa-topo" style="width: 20px; height: 14px; top: -16px;"></div> 
-                    <div class="${m.classe}" style="width: 100%; height: 100%; border-radius: 50%; background: #222;"></div>
+                <div class="avatar-wrapper ${key}">
+                    <div class="coroa-topo"></div> 
+                    <div class="${m.classe}" style="width: 45px; height: 45px; border-radius: 50%;"></div>
                 </div>
 
-                <span style="font-size:12px; margin-top:8px; font-weight:bold;">${m.nome}</span>
-                ${!tem ? `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${m.preco}</span>` : '<span style="font-size:10px; color:#4CAF50; margin-top:2px;">Adquirido</span>'}
+                <span style="font-size:10px; margin-top:5px;">${m.nome}</span>
+                ${!tem ? `<span style="font-size:10px; color:#ff9800;">R$${m.preco}</span>` : ''}
             </div>`;
     });
 }
