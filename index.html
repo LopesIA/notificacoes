@@ -13251,53 +13251,63 @@ function abrirModalPerfil() {
     const nomeAtual = perfil.nome || "";
     const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    // === PADRÃO VISUAL DA ROLETA (16 ITENS - CICLO COMPLETO) ===
-    // Sequência: Num, Moldura, Num, Balão... subindo os tiers.
+    // === PADRÃO VISUAL DA ROLETA (20 ITENS - CICLO COMPLETO 1-10 + TIERS) ===
+    // Sequência: Num > Moldura > Num > Balão (Subindo Tier Bronze -> Diamante)
     const padraoItens = [
-        // --- TIER BRONZE ---
+        // BLOCO 1: BRONZE
         { tipo: 'txt', val: '1', cls: 'ponto' },         // 0
         { tipo: 'html', id: 'bronze', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-bronze"></div>', cls: 'premio-top' }, // 1
         { tipo: 'txt', val: '2', cls: 'ponto' },         // 2
         { tipo: 'html', id: 'bronze', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-bronze">Chat</div>', cls: 'premio-top' }, // 3
         
-        // --- TIER PRATA ---
+        // BLOCO 2: PRATA
         { tipo: 'txt', val: '3', cls: 'ponto' },         // 4
         { tipo: 'html', id: 'prata', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-prata"></div>', cls: 'premio-top' }, // 5
-        { tipo: 'txt', val: '5', cls: 'ponto' },         // 6
+        { tipo: 'txt', val: '4', cls: 'ponto' },         // 6
         { tipo: 'html', id: 'prata', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-prata">Chat</div>', cls: 'premio-top' }, // 7
         
-        // --- MEIO (CAIXA) ---
-        { tipo: 'txt', val: '🎁', cls: 'caixa' },        // 8
+        // BLOCO 3: MEIO (CAIXA E PONTOS MÉDIOS)
+        { tipo: 'txt', val: '5', cls: 'ponto' },         // 8
+        { tipo: 'txt', val: '🎁', cls: 'caixa' },        // 9 (Caixa Surpresa)
+        { tipo: 'txt', val: '6', cls: 'ponto' },         // 10
         
-        // --- TIER OURO ---
-        { tipo: 'html', id: 'ouro', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 9
-        { tipo: 'txt', val: '10', cls: 'ponto' },        // 10
-        { tipo: 'html', id: 'ouro', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-ouro">Chat</div>', cls: 'premio-top' }, // 11
+        // BLOCO 4: OURO
+        { tipo: 'html', id: 'ouro', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 11
+        { tipo: 'txt', val: '7', cls: 'ponto' },         // 12
+        { tipo: 'html', id: 'ouro', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-ouro">Chat</div>', cls: 'premio-top' }, // 13
         
-        // --- TIER DIAMANTE ---
-        { tipo: 'txt', val: '1', cls: 'ponto' },         // 12
-        { tipo: 'html', id: 'diamante', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-diamante"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 13
-        { tipo: 'txt', val: '2', cls: 'ponto' },         // 14
-        { tipo: 'html', id: 'diamante', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-diamante">Chat</div>', cls: 'premio-top' } // 15
+        // BLOCO 5: DIAMANTE
+        { tipo: 'txt', val: '8', cls: 'ponto' },         // 14
+        { tipo: 'html', id: 'diamante', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-diamante"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 15
+        { tipo: 'txt', val: '9', cls: 'ponto' },         // 16
+        { tipo: 'html', id: 'diamante', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-diamante">Chat</div>', cls: 'premio-top' }, // 17
+        
+        // FINAL
+        { tipo: 'txt', val: '10', cls: 'ponto' },        // 18
+        { tipo: 'txt', val: '1', cls: 'ponto' }          // 19 (Repete 1 pra fechar loop suave)
     ];
 
     let faixaHtml = '';
-    // Gera 40 repetições (já que o set é grande de 16 itens, 40x é suficiente)
+    // Gera 40 repetições para criar a faixa longa de rolagem
     for(let i=0; i<40; i++) {
         padraoItens.forEach(item => {
             let conteudo = '';
             if (item.tipo === 'txt') {
                 conteudo = `<span>${item.val}</span>`;
             } else {
-                conteudo = item.html; // Injeta o HTML exato da moldura/balão
+                conteudo = item.html; // Visual exato
             }
             faixaHtml += `<div class="roleta-item ${item.cls}">${conteudo}</div>`;
         });
     }
 
-    const infoTexto = perfil.tipo === 'cliente' 
-        ? '🎁 <b>Caixa Surpresa:</b> VIP ou Pontos!' 
-        : '🎁 <b>Caixa Surpresa:</b> Boost ou Topo!';
+    // Texto de explicação detalhado como solicitado
+    const infoCaixa = perfil.tipo === 'cliente' 
+        ? 'Cliente = VIP (5 dias)' 
+        : 'Profissional = Ficar no topo (24h)';
+        
+    const infoTexto = `🎁 <b>Caixa Surpresa:</b> ${infoCaixa}`;
+    const infoPremios = `<b>Possíveis Prêmios:</b> Pontos (1 a 10), Molduras e Balões (Bronze, Prata, Ouro, Diamante).`;
 
     const modal = document.getElementById('modalMeuPerfil');
     const content = modal.querySelector('.modal-content');
@@ -13318,7 +13328,8 @@ function abrirModalPerfil() {
 
         <div class="popup-section">
             <h4>🎰 Roleta Diária</h4>
-            <p id="roletaInfoPremios" style="font-size: 12px; color: #aaa; margin-bottom: 5px;">${infoTexto}</p>
+            <p id="roletaInfoPremios" style="font-size: 11px; color: #eee; margin-bottom: 2px;">${infoTexto}</p>
+            <p style="font-size: 10px; color: #aaa; margin-bottom: 10px;">${infoPremios}</p>
             
             <div class="roleta-wrapper-externo" style="position: relative;">
                  <div class="seta-externa topo"></div>
@@ -13442,54 +13453,42 @@ async function girarRoleta() {
     btnGirar.disabled = true; 
     btnGirar.textContent = "Girando...";
 
-    // === TABELA DE PRÊMIOS (16 ITENS - IGUAL AO VISUAL) ===
-    // key: nome da chave no objeto MOLDURAS/BALOES
+    // === TABELA DE PRÊMIOS (20 ITENS - SINCRONIZADA) ===
     const arrayPremios = [
-        { tipo: 'ponto', valor: 1 },      // 0
+        { tipo: 'ponto', valor: 1 },           // 0
         { tipo: 'moldura', key: 'bronze', nome: 'Bronze' }, // 1
-        { tipo: 'ponto', valor: 2 },      // 2
+        { tipo: 'ponto', valor: 2 },           // 2
         { tipo: 'balao', key: 'bronze', nome: 'Chat Bronze' }, // 3
-        { tipo: 'ponto', valor: 3 },      // 4
-        { tipo: 'moldura', key: 'prata', nome: 'Prata' },  // 5
-        { tipo: 'ponto', valor: 5 },      // 6
-        { tipo: 'balao', key: 'prata', nome: 'Chat Prata' },  // 7
-        { tipo: 'caixa', valor: 0 },      // 8 (Caixa)
-        { tipo: 'moldura', key: 'ouro', nome: 'Ouro' },   // 9
-        { tipo: 'ponto', valor: 10 },     // 10
-        { tipo: 'balao', key: 'ouro', nome: 'Chat Ouro' },   // 11
-        { tipo: 'ponto', valor: 1 },      // 12
-        { tipo: 'moldura', key: 'diamante', nome: 'Diamante' }, // 13
-        { tipo: 'ponto', valor: 2 },      // 14
-        { tipo: 'balao', key: 'diamante', nome: 'Chat Diamante' } // 15
+        { tipo: 'ponto', valor: 3 },           // 4
+        { tipo: 'moldura', key: 'prata', nome: 'Prata' }, // 5
+        { tipo: 'ponto', valor: 4 },           // 6
+        { tipo: 'balao', key: 'prata', nome: 'Chat Prata' }, // 7
+        { tipo: 'ponto', valor: 5 },           // 8
+        { tipo: 'caixa', valor: 0 },           // 9 (Caixa)
+        { tipo: 'ponto', valor: 6 },           // 10
+        { tipo: 'moldura', key: 'ouro', nome: 'Ouro' }, // 11
+        { tipo: 'ponto', valor: 7 },           // 12
+        { tipo: 'balao', key: 'ouro', nome: 'Chat Ouro' }, // 13
+        { tipo: 'ponto', valor: 8 },           // 14
+        { tipo: 'moldura', key: 'diamante', nome: 'Diamante' }, // 15
+        { tipo: 'ponto', valor: 9 },           // 16
+        { tipo: 'balao', key: 'diamante', nome: 'Chat Diamante' }, // 17
+        { tipo: 'ponto', valor: 10 },          // 18
+        { tipo: 'ponto', valor: 1 }            // 19
     ];
 
-    // 1. DEFINIR O PRÊMIO (Lógica de Probabilidade)
-    const rand = Math.random() * 100;
-    let targetIndex = 0; 
-
-    // Probabilidades Ajustadas:
-    if (rand < 20) targetIndex = 0;       // 20% -> 1pt
-    else if (rand < 35) targetIndex = 2;  // 15% -> 2pts
-    else if (rand < 45) targetIndex = 4;  // 10% -> 3pts
-    else if (rand < 55) targetIndex = 12; // 10% -> 1pt (outro slot)
-    else if (rand < 63) targetIndex = 1;  // 8%  -> MOLDURA BRONZE
-    else if (rand < 71) targetIndex = 3;  // 8%  -> BALÃO BRONZE
-    else if (rand < 76) targetIndex = 5;  // 5%  -> MOLDURA PRATA
-    else if (rand < 81) targetIndex = 7;  // 5%  -> BALÃO PRATA
-    else if (rand < 85) targetIndex = 6;  // 4%  -> 5pts
-    else if (rand < 88) targetIndex = 10; // 3%  -> 10pts
-    else if (rand < 91) targetIndex = 9;  // 3%  -> MOLDURA OURO
-    else if (rand < 94) targetIndex = 11; // 3%  -> BALÃO OURO
-    else if (rand < 96) targetIndex = 8;  // 2%  -> CAIXA
-    else if (rand < 98) targetIndex = 13; // 2%  -> MOLDURA DIAMANTE
-    else targetIndex = 15;                // 2%  -> BALÃO DIAMANTE
+    // 1. SORTEIO 100% ALEATÓRIO (0 a 19)
+    // Como solicitado: "a probabilidade da roleta, quero que seja 100% aleatoria"
+    // Não há pesos aqui, é sorte pura.
+    let targetIndex = Math.floor(Math.random() * 20);
 
     // 2. CALCULAR O PIXEL EXATO DE PARADA
+    // Item: 80px largura + 5px margem esq + 5px margem dir = 90px TOTAL
     const ITEM_WIDTH = 90; 
-    const ITEMS_PER_SET = 16; // AGORA SÃO 16 ITENS!
-    const LOOPS = 35; // Voltas completas
+    const ITEMS_PER_SET = 20; // AGORA SÃO 20 ITENS!
+    const LOOPS = 30; // Voltas completas
     
-    // Índice final na faixa gigante
+    // O índice final na faixa gigante
     const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
 
     const containerWidth = 320; 
@@ -13503,7 +13502,8 @@ async function girarRoleta() {
 
     // 3. EXECUTAR ANIMAÇÃO
     const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; // 6s para mais suspense
+    // Curva Bezier customizada para freio realista
+    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${moveX}px)`;
 
     // 4. PREPARAR DADOS DO PRÊMIO
@@ -13549,7 +13549,7 @@ async function girarRoleta() {
                 exp.setHours(exp.getHours() + 24); 
                 updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(exp);
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
-                corpoPopup = "Você ganhou 24 horas de Perfil Turbinado!";
+                corpoPopup = "Você ganhou 24 horas de Perfil Turbinado (Topo da Lista)!";
             } else {
                 const exp = new Date();
                 exp.setDate(exp.getDate() + 5); 
@@ -13565,7 +13565,7 @@ async function girarRoleta() {
             exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
                 db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
                     perfil = doc.data();
-                    abrirModalPerfil(); // Reset roleta
+                    abrirModalPerfil(); // Reset roleta e mostra novo status
                 });
             });
 
