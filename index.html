@@ -2913,21 +2913,28 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalAgendaBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📅 Minha Agenda</h3>
-    <p>Use os botões abaixo para gerenciar sua disponibilidade e horários.</p>
-    <button id="btnDisponibilidade" onclick="toggleDisponibilidade()"></button>
-    <button id="btnVagaImediata" onclick="toggleVagaImediata()"></button>
-    <button id="btnAgendaManual" onclick="toggleAgendaManual()"></button>
-    <div id="agendaManualPainel" class="hidden card">
-        <h4>Horários Disponíveis Hoje</h4>
-        <p>Selecione os horários para trabalhar ou clique duas vezes para bloquear.</p>
-        <div id="horariosContainer" style="display:flex; flex-wrap:wrap; gap:5px; justify-content: center;"></div>
-        <div class="horarios-actions">
-            <button onclick="salvarAgendaManual()">💾 Salvar</button>
-            <button data-modal-id="modalAgendaBarbeiro" onclick="fecharModal(event)">🚪 Fechar</button>
+    <h3>📅 Gerenciar Agenda</h3>
+    <p style="font-size: 12px; margin-bottom: 15px;">Configure como você quer receber agendamentos.</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+        <button id="btnDisponibilidade" onclick="toggleDisponibilidade()">Carregando...</button>
+        <button id="btnVagaImediata" onclick="toggleVagaImediata()">Carregando...</button>
+        <button id="btnAgendaManual" onclick="toggleAgendaManual()">Carregando...</button>
+        <button id="btnModoFerias" onclick="abrirModal('modalModoFerias')" style="background: linear-gradient(45deg, #e57373, #c0392b);">🏖️ Modo Férias / Ausência</button>
+    </div>
+
+    <div id="agendaManualPainel" class="hidden" style="border-top: 1px solid var(--cor-borda); padding-top: 10px;">
+        <h4>Horários Fixos</h4>
+        <p style="font-size: 12px;">Clique para liberar (Dourado) ou bloquear (Riscado).</p>
+        
+        <div id="horariosContainer"></div>
+        
+        <div class="horarios-actions" style="margin-top: 10px;">
+            <button onclick="salvarAgendaManual()" style="width: 100%;">💾 Salvar Horários</button>
         </div>
     </div>
-    <button data-modal-id="modalAgendaBarbeiro" onclick="fecharModal(event)">❌ Fechar</button>
+
+    <button data-modal-id="modalAgendaBarbeiro" onclick="fecharModal(event)" style="margin-top: 15px; background: #444;">❌ Fechar</button>
   </div>
 </div>
 
@@ -7340,40 +7347,50 @@ function exibirConfirmacao(titulo, mensagem, onConfirm) {
     abrirModal('modalConfirmacaoGenerica');
 }
 
-// SUBSTITUA A FUNÇÃO 'carregarAgenda' INTEIRA EM index.html
 function carregarAgenda() {
     const btnDisp = document.getElementById("btnDisponibilidade");
     const btnVagaImediata = document.getElementById("btnVagaImediata");
     const btnAgendaManual = document.getElementById("btnAgendaManual");
     const agendaManualPainel = document.getElementById("agendaManualPainel");
-    const horariosContainer = document.ge
-tElementById("horariosContainer");
+    const horariosContainer = document.getElementById("horariosContainer");
+
+    // Verifica se o usuário está logado antes de buscar
+    if (!auth.currentUser) return;
 
     db.collection("usuarios").doc(auth.currentUser.uid).onSnapshot(doc => {
         perfil = doc.data(); 
-        if(!btnDisp) return;
-        btnDisp.textContent = perfil.disponivel === 'sim' ? '🔴 Ficar Indisponível (Automático)' : '🟢 Ficar Disponível (Automático)';
+        if(!btnDisp) return; // Se o modal não estiver renderizado ainda
+
+        // Atualiza Textos e Cores dos Botões
+        btnDisp.textContent = perfil.disponivel === 'sim' ? '🔴 Parar Disponibilidade Automática' : '🟢 Ativar Disponibilidade Automática';
+        btnDisp.style.border = perfil.disponivel === 'sim' ? '1px solid #e74c3c' : '1px solid #2ecc71';
+
         btnVagaImediata.textContent = perfil.vagaImediata ? '⚠️ Desativar Vaga Imediata' : '⚡ Ativar Vaga Imediata';
-        btnAgendaManual.textContent = perfil.usaAgendaManual ? '❌ Desativar Agenda Manual' : '📅 Ativar Agenda Manual';
+        btnVagaImediata.classList.toggle('selected', perfil.vagaImediata);
+
+        btnAgendaManual.textContent = perfil.usaAgendaManual ? '❌ Fechar Agenda Manual' : '📅 Configurar Agenda Manual';
+        btnAgendaManual.classList.toggle('selected', perfil.usaAgendaManual);
         
+        // Lógica da Agenda Manual
         if (perfil.usaAgendaManual) {
             agendaManualPainel.classList.remove("hidden");
             horariosContainer.innerHTML = "";
             tempSelectedHorarios = { ...perfil.agenda };
             
-            // --- LOOP DE 30 MINUTOS ---
-            for (let i = 7 * 60; i <= 18 * 60; i += 30) { // De 7h às 18h, de 30 em 30 min
+            // Gera horários das 07:00 às 20:00 (ajuste conforme necessidade)
+            for (let i = 7 * 60; i <= 20 * 60; i += 30) { 
                 const horas = Math.floor(i / 60);
                 const minutos = i % 60;
                 const horario = `${horas}:${minutos.toString().padStart(2, '0')}`;
-            // --- FIM DO LOOP ---
                 
                 const statusHorario = tempSelectedHorarios[horario];
                 const btn = document.createElement('button');
                 btn.textContent = horario;
                 btn.className = `horario-btn`;
+                
                 if(statusHorario === true) btn.classList.add('selecionado');
                 if(statusHorario === 'bloqueado') btn.classList.add('bloqueado');
+                
                 btn.onclick = () => toggleHorario(horario);
                 horariosContainer.appendChild(btn);
             }
@@ -13011,134 +13028,71 @@ function setupConfiguracoes() {
     });
 }
 
-// =================================================
-// === FUNÇÕES DE PERFIL, ROLETA E MOLDURAS (NOVO) ===
-// =================================================
-
+// Função Perfil Corrigida (Visual Roleta + Balões)
 function abrirModalPerfil() {
     if (!perfil) return;
 
-    // 1. Carrega dados básicos
-    document.getElementById('perfilNomeInput').value = perfil.nome;
-    document.getElementById('perfilFotoPreview').src = perfil.fotoPerfil || 'https://via.placeholder.com/100';
+    // 1. Dados Básicos
+    const nomeAtual = perfil.nome || "";
+    const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    // 2. Configura Tema da Roleta
-    const roleta = document.getElementById('roletaVisual');
+    // 2. Configuração da Roleta
+    // PADRÃO DA FAIXA: Deve corresponder exatamente aos índices do array de prêmios na função girarRoleta
+    // Padrão Visual: [1, 5, MOLDURA, 10, 2, BALAO, 3, 1, PRESENTE] (9 itens)
+    const padraoRoleta = [
+        {t: '1', i: ''}, {t: '5', i: ''}, {t: '', i: '🖼️'}, 
+        {t: '10', i: ''}, {t: '2', i: ''}, {t: '', i: '💬'}, 
+        {t: '3', i: ''}, {t: '1', i: ''}, {t: '', i: '🎁'}
+    ];
+
+    let faixaHtml = '';
+    // Repete o padrão 50 vezes para criar a faixa longa
+    for(let i=0; i<50; i++) {
+        padraoRoleta.forEach(item => {
+            const classeExtra = item.i === '🎁' ? 'especial' : '';
+            const conteudo = item.i ? `<span style="font-size:24px;">${item.i}</span>` : item.t;
+            faixaHtml += `<div class="roleta-item ${classeExtra}">${conteudo}</div>`;
+        });
+    }
+
     const isBarber = perfil.interesse_principal === 'barbeiro' || !perfil.interesse_principal;
-    roleta.className = 'roleta-container ' + (isBarber ? 'tema-barbearia' : 'tema-feminino');
-
-    // 3. Configura Texto da Caixa Surpresa
-    const infoPremios = document.getElementById('roletaInfoPremios');
-    if (perfil.tipo === 'cliente') {
-        infoPremios.innerHTML = '🎁 <b>Prêmios:</b> Pontos, Molduras e Balões de Chat (24h)!';
-    } else {
-        infoPremios.innerHTML = '🎁 <b>Prêmios:</b> Topo, VIP, Molduras e Balões (24h)!';
-    }
-
-    // 4. Gera Itens da Roleta (VISUAL COM MOLDURAS E BALÕES INDIVIDUAIS)
-    const roletaVisual = document.getElementById('roletaVisual');
-    roletaVisual.innerHTML = `
-        <div class="seta-external topo" style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); border-top: 15px solid var(--cor-destaque); border-left: 10px solid transparent; border-right: 10px solid transparent; z-index:20;"></div>
-        <div class="roleta-faixa" id="roletaFaixa"></div>
-        <div class="seta-external baixo" style="position:absolute; bottom:-15px; left:50%; transform:translateX(-50%); border-bottom: 15px solid var(--cor-destaque); border-left: 10px solid transparent; border-right: 10px solid transparent; z-index:20;"></div>
-    `;
+    const classeTema = isBarber ? 'tema-barbearia' : 'tema-feminino';
     
-    const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = 'none';
-    faixa.style.transform = 'translateX(0px)';
-    faixa.innerHTML = '';
+    // Texto informativo
+    const infoTexto = perfil.tipo === 'cliente' 
+        ? '🎁 <b>Caixa Surpresa:</b> Pontos Extras!' 
+        : '🎁 <b>Caixa Surpresa:</b> Topo ou VIP!';
 
-    // Sequência visual repetida: Num, Num, Moldura, Num, Num, Balão, Num, Num, Presente
-    // Total 60 sets para garantir animação longa
-    for(let i=0; i<60; i++) {
-        // Padrão fixo para a faixa visual
-        let htmlSet = `
-            <div class="roleta-item">1</div>
-            <div class="roleta-item">5</div>
-            <div class="roleta-item" style="font-size:24px;">🖼️</div>
-            <div class="roleta-item">10</div>
-            <div class="roleta-item">2</div>
-            <div class="roleta-item" style="font-size:24px;">💬</div>
-            <div class="roleta-item">3</div>
-            <div class="roleta-item">1</div>
-            <div class="roleta-item especial">🎁</div>
-        `;
-        faixa.innerHTML += htmlSet;
-    }
-
-    // 5. Lógica de Giros Disponíveis
-    const hoje = new Date().toDateString();
-    let girosTotais = 1; 
-    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-        girosTotais = PRECOS_PRO[perfil.proTier].giros;
-    }
-    const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
-    const girosUsadosHoje = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
-    let girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
-
-    const btnGirar = document.getElementById('btnGirarRoleta');
-    btnGirar.textContent = `🎲 GIRAR (${girosRestantes} Restantes)`;
-    
-    if (girosRestantes > 0) {
-        btnGirar.disabled = false;
-        btnGirar.style.opacity = "1";
-        btnGirar.style.cursor = "pointer";
-    } else {
-        btnGirar.disabled = true;
-        btnGirar.style.opacity = "0.5";
-        btnGirar.style.cursor = "not-allowed";
-        btnGirar.textContent = "Volte Amanhã";
-    }
-    
-    // 6. Renderiza Listas (Molduras e Balões)
-    // ATENÇÃO: As funções renderizarMolduras e renderizarBaloes precisam injetar HTML 
-    // nos containers que vamos criar abaixo
-    
-    // Primeiro, renderiza no DOM (para as funções encontrarem os IDs)
-    setTimeout(() => {
-        renderizarMolduras();
-        renderizarBaloes();
-        renderizarSelecaoConquistas();
-    }, 100);
-
-    // Abre o modal (O conteúdo HTML é injetado diretamente aqui para garantir estrutura)
+    // 3. Montagem do HTML Completo
     const modal = document.getElementById('modalMeuPerfil');
     const content = modal.querySelector('.modal-content');
-    
-    // Preserva inputs e roleta, recria apenas as listas
-    // Como o innerHTML destrói eventos, vamos atualizar containers específicos
-    // Mas sua estrutura atual usa innerHTML global no modal. Vamos adaptar:
-    
-    // --- ESTRUTURA DO MODAL (Atualizada com container de balões) ---
-    // Precisamos garantir que o container 'listaBaloes' exista no HTML do modal.
-    // Vou reinjetar o HTML base do modal para garantir que tudo esteja lá.
-    
-    // Nota: Isso pode resetar o valor dos inputs se já estiver aberto, mas ok para 'abrir'.
+
     content.innerHTML = `
         <h3>👤 Editar Perfil</h3>
         
         <div style="text-align: center; margin-bottom: 15px;">
             <div style="position: relative; display: inline-block;">
-                <img id="perfilFotoPreview" src="${perfil.fotoPerfil || 'https://via.placeholder.com/100'}" class="perfil-foto-grande" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #333;">
+                <img id="perfilFotoPreview" src="${fotoAtual}" class="perfil-foto-grande" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #333;">
                 <label for="perfilFotoInput" style="position: absolute; bottom: 0; right: 0; background: var(--cor-destaque); color: #000; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">📷</label>
             </div>
             <input type="file" id="perfilFotoInput" accept="image/*" style="display: none;" onchange="previewFotoPerfil()">
         </div>
 
         <label>Nome de Exibição:</label>
-        <input type="text" id="perfilNomeInput" value="${perfil.nome}" placeholder="Seu nome">
+        <input type="text" id="perfilNomeInput" value="${nomeAtual}" placeholder="Seu nome">
 
         <div class="popup-section">
             <h4>🎰 Roleta Diária</h4>
-            <p id="roletaInfoPremios" style="font-size: 12px; color: #aaa; margin-bottom: 5px;">${infoPremios.innerHTML}</p>
+            <p id="roletaInfoPremios" style="font-size: 12px; color: #aaa; margin-bottom: 5px;">${infoTexto}</p>
+            
             <div class="roleta-wrapper-externo" style="position: relative;">
                  <div class="seta-externa topo"></div>
-                 <div id="roletaVisual" class="roleta-container" style="margin: 0;">
-                    <div class="roleta-faixa" id="roletaFaixa">${faixa.innerHTML}</div>
+                 <div id="roletaVisual" class="roleta-container ${classeTema}" style="margin: 0;">
+                    <div class="roleta-faixa" id="roletaFaixa" style="transform: translateX(0px);">${faixaHtml}</div>
                  </div>
                  <div class="seta-externa baixo"></div>
             </div>
-            <button id="btnGirarRoleta" onclick="girarRoleta()" style="width: 100%; font-weight: bold; font-size: 16px; margin-top:10px;">${btnGirar.textContent}</button>
+            <button id="btnGirarRoleta" onclick="girarRoleta()" style="width: 100%; font-weight: bold; font-size: 16px; margin-top:10px;">Carregando...</button>
         </div>
 
         <div class="popup-section">
@@ -13163,16 +13117,46 @@ function abrirModalPerfil() {
             <button onclick="salvarNomePerfil()" style="flex: 1;">💾 Salvar Alterações</button>
         </div>
     `;
-    
-    // Reabilita o botão se necessário (pois o innerHTML reseta)
-    const btnGirarNovo = document.getElementById('btnGirarRoleta');
-    if(girosRestantes <= 0) {
-         btnGirarNovo.disabled = true;
-         btnGirarNovo.style.opacity = "0.5";
-         btnGirarNovo.style.cursor = "not-allowed";
-    }
+
+    // 4. Atualiza o estado do botão de girar
+    atualizarBotaoRoleta();
+
+    // 5. Renderiza as listas (Delay mínimo para garantir que o DOM existe)
+    setTimeout(() => {
+        renderizarMolduras();
+        renderizarBaloes();
+        renderizarSelecaoConquistas();
+    }, 50);
 
     abrirModal('modalMeuPerfil');
+}
+
+// Função auxiliar para atualizar o texto do botão
+function atualizarBotaoRoleta() {
+    const btnGirar = document.getElementById('btnGirarRoleta');
+    if (!btnGirar) return;
+
+    const hoje = new Date().toDateString();
+    let girosTotais = 1; 
+    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+        girosTotais = PRECOS_PRO[perfil.proTier].giros;
+    }
+    const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
+    const girosUsadosHoje = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
+    let girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
+
+    btnGirar.textContent = `🎲 GIRAR (${girosRestantes} Restantes)`;
+    
+    if (girosRestantes > 0) {
+        btnGirar.disabled = false;
+        btnGirar.style.opacity = "1";
+        btnGirar.style.cursor = "pointer";
+    } else {
+        btnGirar.disabled = true;
+        btnGirar.style.opacity = "0.5";
+        btnGirar.style.cursor = "not-allowed";
+        btnGirar.textContent = "Volte Amanhã";
+    }
 }
 
 function previewFotoPerfil() {
@@ -13210,6 +13194,7 @@ async function salvarNomePerfil() {
 }
 
 async function girarRoleta() {
+    // 1. Verificações Iniciais
     const hoje = new Date().toDateString();
     let girosTotais = 1; 
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
@@ -13223,91 +13208,110 @@ async function girarRoleta() {
     }
 
     const btnGirar = document.getElementById('btnGirarRoleta');
-    btnGirar.disabled = true; btnGirar.textContent = "Girando...";
+    btnGirar.disabled = true; 
+    btnGirar.textContent = "Girando...";
 
-    // --- LÓGICA DE SORTEIO DE PRÊMIOS (AJUSTADA) ---
+    // --- LÓGICA MATEMÁTICA PRECISA ---
+    
+    // Definição do Padrão Visual (0 a 8)
+    // 0=1pt, 1=5pt, 2=Moldura, 3=10pt, 4=2pt, 5=Balao, 6=3pt, 7=1pt, 8=Caixa
+    const padraoPremios = [
+        { tipo: 'ponto', valor: 1 },   // Index 0
+        { tipo: 'ponto', valor: 5 },   // Index 1
+        { tipo: 'moldura', valor: 0 }, // Index 2
+        { tipo: 'ponto', valor: 10 },  // Index 3
+        { tipo: 'ponto', valor: 2 },   // Index 4
+        { tipo: 'balao', valor: 0 },   // Index 5
+        { tipo: 'ponto', valor: 3 },   // Index 6
+        { tipo: 'ponto', valor: 1 },   // Index 7
+        { tipo: 'caixa', valor: 0 }    // Index 8
+    ];
+
+    // Sorteio Ponderado (Decide O QUE ganhar primeiro)
     const rand = Math.random() * 100;
-    let resultadoVisual = 0; // O número ou ícone que a roleta para
-    let premioTipo = ''; // 'ponto', 'moldura', 'balao', 'boost', 'vip'
-    let premioKey = '';  // ID do prêmio (ex: 'diamante', 'ouro')
+    let targetIndex = 0; // Qual item do array acima vamos parar
+    let premioKey = ''; // ID da moldura/balão se ganhar
     let msgPremio = '';
 
-    // PROBABILIDADES:
-    // 0-60: Pontos baixos (1-5)
-    // 60-80: Pontos médios (6-10)
-    // 80-90: Moldura Temporária (1 dia)
-    // 90-95: Balão Temporário (1 dia)
-    // 95-100: Caixa Surpresa (Boost/VIP)
-
-    if (rand < 60) {
-        resultadoVisual = Math.ceil(Math.random() * 5); // 1 a 5
-        premioTipo = 'ponto';
-    } else if (rand < 80) {
-        resultadoVisual = Math.ceil(Math.random() * 5) + 5; // 6 a 10
-        premioTipo = 'ponto';
-    } else if (rand < 90) {
-        // SORTEIO DE MOLDURA (Exceto admin)
+    if (rand < 40) targetIndex = 0; // 1 pt (40%)
+    else if (rand < 60) targetIndex = 7; // 1 pt (20%)
+    else if (rand < 75) targetIndex = 4; // 2 pt (15%)
+    else if (rand < 85) targetIndex = 6; // 3 pt (10%)
+    else if (rand < 90) targetIndex = 1; // 5 pt (5%)
+    else if (rand < 93) targetIndex = 3; // 10 pt (3%)
+    else if (rand < 96) {
+        // MOLDURA (2%)
+        targetIndex = 2;
         const chaves = Object.keys(MOLDURAS).filter(k => !MOLDURAS[k].adminOnly);
         premioKey = chaves[Math.floor(Math.random() * chaves.length)];
-        premioTipo = 'moldura';
-        resultadoVisual = 11; // Ícone presente
-        msgPremio = `Moldura ${MOLDURAS[premioKey].nome} por 24h!`;
-    } else if (rand < 95) {
-        // SORTEIO DE BALÃO (Exceto admin)
+        msgPremio = `Moldura ${MOLDURAS[premioKey].nome}`;
+    } else if (rand < 98) {
+        // BALÃO (3%)
+        targetIndex = 5;
         const chaves = Object.keys(BALOES).filter(k => !BALOES[k].adminOnly);
         premioKey = chaves[Math.floor(Math.random() * chaves.length)];
-        premioTipo = 'balao';
-        resultadoVisual = 11; 
-        msgPremio = `Estilo ${BALOES[premioKey].nome} por 24h!`;
+        msgPremio = `Estilo ${BALOES[premioKey].nome}`;
     } else {
-        // CAIXA MISTERIOSA CLÁSSICA
-        premioTipo = 'caixa';
-        resultadoVisual = 11;
+        // CAIXA SURPRESA (2%)
+        targetIndex = 8;
     }
 
-    // Animação da Roleta (Mantida)
-    const LARGURA_ITEM_TOTAL = 90; const itensPorSet = 11; const voltas = 5; 
-    const indiceNoConjunto = (resultadoVisual - 1) + 2; 
-    const indiceFinalAbsoluto = (voltas * itensPorSet) + indiceNoConjunto;
+    // --- CÁLCULO DE PIXELS ---
+    const LARGURA_ITEM = 90; // 80px + 10px margem (definido no CSS)
+    const VOLTAS_MINIMAS = 5; 
+    const ITENS_POR_SET = 9; 
+    
+    // Queremos parar longe, ex: no set 35
+    const setFinal = 35; 
+    const indiceFinalAbsoluto = (setFinal * ITENS_POR_SET) + targetIndex;
+
+    // Elementos DOM
+    const faixa = document.getElementById('roletaFaixa');
     const container = document.getElementById('roletaVisual');
     const larguraContainer = container.offsetWidth || 320;
-    const centroDoItem = (indiceFinalAbsoluto * LARGURA_ITEM_TOTAL) + (LARGURA_ITEM_TOTAL / 2);
-    const centroDoContainer = larguraContainer / 2;
-    let moveX = centroDoItem - centroDoContainer;
-    const jitter = Math.floor(Math.random() * 6) - 3; 
+
+    // Centro do Item Alvo
+    // O + 0.5 centra no meio do item
+    const posCentroItem = (indiceFinalAbsoluto * LARGURA_ITEM) + (LARGURA_ITEM / 2);
+    const centroContainer = larguraContainer / 2;
+    
+    // Quanto mover para alinhar o centro do item com o centro do container
+    let moveX = posCentroItem - centroContainer;
+
+    // Adiciona um pequeno "jitter" (ruído) para não parar sempre no pixel exato, 
+    // mas mantendo dentro do quadrado (max +/- 20px)
+    const jitter = Math.floor(Math.random() * 40) - 20; 
     moveX += jitter;
 
-    const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
+    // Executa a Animação
+    faixa.style.transition = `transform 5s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${moveX}px)`;
-    
+
+    // --- ENTREGA DO PRÊMIO (Após 5s) ---
     setTimeout(async () => {
+        const premioGanho = padraoPremios[targetIndex];
         let updates = { ultimoGiroRoleta: hoje };
         updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
         
-        let tituloPopup = "🎉 Ganhou!";
+        let tituloPopup = "🎉 Parabéns!";
         let corpoPopup = "";
 
-        if (premioTipo === 'ponto') {
-            corpoPopup = `Você ganhou ${resultadoVisual} pontos de fidelidade.`;
-            updates.pontosFidelidade = firebase.firestore.FieldValue.increment(resultadoVisual);
-        } else if (premioTipo === 'moldura' || premioTipo === 'balao') {
+        if (premioGanho.tipo === 'ponto') {
+            corpoPopup = `Você ganhou ${premioGanho.valor} pontos de fidelidade!`;
+            updates.pontosFidelidade = firebase.firestore.FieldValue.increment(premioGanho.valor);
+        } 
+        else if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
             tituloPopup = "🎁 Item Temporário!";
-            corpoPopup = `Sorte Grande! Você ganhou o uso do item **${msgPremio}**`;
-            
-            // Salva no objeto 'premiosTemporarios'
+            corpoPopup = `Sorte Grande! Você ganhou o item **${msgPremio}** por 24 horas!`;
             const expiraEm = new Date();
-            expiraEm.setHours(expiraEm.getHours() + 24); // 24h de duração
-            
-            // Usa dot notation para atualizar campo específico do map no Firestore
+            expiraEm.setHours(expiraEm.getHours() + 24);
             updates[`premiosTemporarios.${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
             
-            // Se for moldura, já equipa automaticamente pra pessoa ver
-            if (premioTipo === 'moldura') updates.molduraSelecionada = premioKey;
-            if (premioTipo === 'balao') updates.balaoSelecionado = premioKey;
-
-        } else {
-            // Lógica da Caixa Misteriosa (Boost/VIP)
+            // Equipa automaticamente
+            if (premioGanho.tipo === 'moldura') updates.molduraSelecionada = premioKey;
+            if (premioGanho.tipo === 'balao') updates.balaoSelecionado = premioKey;
+        } 
+        else if (premioGanho.tipo === 'caixa') {
             tituloPopup = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
                 const exp = new Date(); 
@@ -13327,32 +13331,44 @@ async function girarRoleta() {
                 corpoPopup = "Incrível! Você ganhou 5 Dias de VIP Grátis!";
             }
         }
-        
+
         try {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
-            exibirPopupBloqueante(tituloPopup, corpoPopup, () => { 
-                if (premioTipo === 'moldura' || premioTipo === 'balao') abrirModalPerfil(); 
-            });
-            notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
             
+            // Atualiza perfil local para UI refletir (ex: pontos)
+            if(premioGanho.tipo === 'ponto') {
+                 const display = document.getElementById('pontosFidelidade'); // Se estiver visível em outro lugar
+                 // Para roleta, não mostramos pontos instantaneamente no modal, só no popup
+            }
+            
+            exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
+                // Se ganhou item, recarrega o modal para mostrar equipado
+                if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
+                    // Força atualização do perfil antes de reabrir
+                    db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
+                        perfil = doc.data();
+                        abrirModalPerfil();
+                    });
+                } else {
+                    atualizarBotaoRoleta(); // Reseta visual do botão
+                    // Reseta a faixa visualmente (sem transição)
+                    faixa.style.transition = 'none';
+                    faixa.style.transform = 'translateX(0px)';
+                }
+            });
+
+            notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
+
+            // Atualiza estado local para bloquear botão imediatamente se acabaram os giros
             perfil.ultimoGiroRoleta = hoje;
             perfil.girosRealizadosHoje = isNovoDia ? 1 : (girosRealizados + 1);
+
         } catch (e) {
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
+            atualizarBotaoRoleta();
         }
 
-        let novosGirosUsados = perfil.girosRealizadosHoje;
-        let restantes = Math.max(0, girosTotais - novosGirosUsados);
-        btnGirar.textContent = `🎲 GIRAR (${restantes} Restantes)`;
-        
-        if(restantes > 0) {
-            btnGirar.disabled = false;
-            setTimeout(() => { faixa.style.transition = 'none'; faixa.style.transform = 'translateX(0px)'; }, 1000);
-        } else {
-            btnGirar.disabled = true; btnGirar.textContent = "Volte Amanhã";
-            btnGirar.style.opacity = "0.5"; btnGirar.style.cursor = "not-allowed";
-        }
-    }, 6500);
+    }, 5000); // Tempo da animação (5s)
 }
 
 function verificarAcessoMoldura(key) {
