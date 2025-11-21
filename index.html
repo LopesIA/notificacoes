@@ -119,6 +119,33 @@
    }
 }
 
+/* Garante que o modal da agenda tenha rolagem interna */
+#modalAgendaBarbeiro .modal-content {
+    max-height: 85vh; /* Altura máxima */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* O scroll vai no corpo, não no modal todo */
+}
+
+/* Área de rolagem para os botões e grid */
+#agendaScrollContent {
+    overflow-y: auto;
+    padding-right: 5px;
+    flex-grow: 1;
+}
+
+/* Correção visual do Grid de Horários */
+#horariosContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    padding: 10px;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
 /* CLASSE QUE APLICA A ANIMAÇÃO QUANDO SELECIONADO */
 .onboard-option.selected {
     border: 2px solid var(--cor-tema-forte) !important; /* Adiciona uma borda dourada sólida */
@@ -2913,28 +2940,31 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalAgendaBarbeiro" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>📅 Gerenciar Agenda</h3>
-    <p style="font-size: 12px; margin-bottom: 15px;">Configure como você quer receber agendamentos.</p>
-    
-    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-        <button id="btnDisponibilidade" onclick="toggleDisponibilidade()">Carregando...</button>
-        <button id="btnVagaImediata" onclick="toggleVagaImediata()">Carregando...</button>
-        <button id="btnAgendaManual" onclick="toggleAgendaManual()">Carregando...</button>
-        <button id="btnModoFerias" onclick="abrirModal('modalModoFerias')" style="background: linear-gradient(45deg, #e57373, #c0392b);">🏖️ Modo Férias / Ausência</button>
+    <div style="flex-shrink: 0; border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; margin-bottom: 10px;">
+        <h3 style="margin:0;">📅 Gerenciar Agenda</h3>
     </div>
 
-    <div id="agendaManualPainel" class="hidden" style="border-top: 1px solid var(--cor-borda); padding-top: 10px;">
-        <h4>Horários Fixos</h4>
-        <p style="font-size: 12px;">Clique para liberar (Dourado) ou bloquear (Riscado).</p>
+    <div id="agendaScrollContent">
+        <p style="font-size: 12px; margin-bottom: 15px;">Configure como você quer receber agendamentos.</p>
         
-        <div id="horariosContainer"></div>
-        
-        <div class="horarios-actions" style="margin-top: 10px;">
-            <button onclick="salvarAgendaManual()" style="width: 100%;">💾 Salvar Horários</button>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+            <button id="btnDisponibilidade" onclick="toggleDisponibilidade()">Carregando...</button>
+            <button id="btnVagaImediata" onclick="toggleVagaImediata()">Carregando...</button>
+            <button id="btnAgendaManual" onclick="toggleAgendaManual()">Carregando...</button>
+            <button id="btnModoFerias" onclick="abrirModal('modalModoFerias')" style="background: linear-gradient(45deg, #e57373, #c0392b);">🏖️ Modo Férias / Ausência</button>
+        </div>
+
+        <div id="agendaManualPainel" class="hidden" style="border-top: 1px solid var(--cor-borda); padding-top: 10px;">
+            <h4>Horários Fixos</h4>
+            <p style="font-size: 12px;">Clique para liberar (Dourado) ou bloquear (Riscado).</p>
+            <div id="horariosContainer"></div>
+            <div class="horarios-actions" style="margin-top: 10px;">
+                <button onclick="salvarAgendaManual()" style="width: 100%;">💾 Salvar Horários</button>
+            </div>
         </div>
     </div>
 
-    <button data-modal-id="modalAgendaBarbeiro" onclick="fecharModal(event)" style="margin-top: 15px; background: #444;">❌ Fechar</button>
+    <button data-modal-id="modalAgendaBarbeiro" onclick="fecharModal(event)" style="margin-top: 15px; background: #444; flex-shrink: 0;">❌ Fechar</button>
   </div>
 </div>
 
@@ -13028,7 +13058,6 @@ function setupConfiguracoes() {
     });
 }
 
-// Função Perfil Corrigida (Visual Roleta + Balões)
 function abrirModalPerfil() {
     if (!perfil) return;
 
@@ -13036,34 +13065,32 @@ function abrirModalPerfil() {
     const nomeAtual = perfil.nome || "";
     const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    // 2. Configuração da Roleta
-    // PADRÃO DA FAIXA: Deve corresponder exatamente aos índices do array de prêmios na função girarRoleta
-    // Padrão Visual: [1, 5, MOLDURA, 10, 2, BALAO, 3, 1, PRESENTE] (9 itens)
-    const padraoRoleta = [
+    // 2. Configuração Visual da Roleta (Faixa HTML)
+    const isBarber = perfil.interesse_principal === 'barbeiro' || !perfil.interesse_principal;
+    const classeTema = isBarber ? 'tema-barbearia' : 'tema-feminino';
+    
+    // Padrão Visual: [1, 5, MOLDURA, 10, 2, BALAO, 3, 1, PRESENTE]
+    const padraoItens = [
         {t: '1', i: ''}, {t: '5', i: ''}, {t: '', i: '🖼️'}, 
         {t: '10', i: ''}, {t: '2', i: ''}, {t: '', i: '💬'}, 
         {t: '3', i: ''}, {t: '1', i: ''}, {t: '', i: '🎁'}
     ];
 
     let faixaHtml = '';
-    // Repete o padrão 50 vezes para criar a faixa longa
-    for(let i=0; i<50; i++) {
-        padraoRoleta.forEach(item => {
+    // Gera 60 repetições para dar espaço para girar
+    for(let i=0; i<60; i++) {
+        padraoItens.forEach(item => {
             const classeExtra = item.i === '🎁' ? 'especial' : '';
             const conteudo = item.i ? `<span style="font-size:24px;">${item.i}</span>` : item.t;
             faixaHtml += `<div class="roleta-item ${classeExtra}">${conteudo}</div>`;
         });
     }
 
-    const isBarber = perfil.interesse_principal === 'barbeiro' || !perfil.interesse_principal;
-    const classeTema = isBarber ? 'tema-barbearia' : 'tema-feminino';
-    
-    // Texto informativo
     const infoTexto = perfil.tipo === 'cliente' 
         ? '🎁 <b>Caixa Surpresa:</b> Pontos Extras!' 
         : '🎁 <b>Caixa Surpresa:</b> Topo ou VIP!';
 
-    // 3. Montagem do HTML Completo
+    // 3. Montagem do HTML (Com container de Balões corrigido)
     const modal = document.getElementById('modalMeuPerfil');
     const content = modal.querySelector('.modal-content');
 
@@ -13084,7 +13111,6 @@ function abrirModalPerfil() {
         <div class="popup-section">
             <h4>🎰 Roleta Diária</h4>
             <p id="roletaInfoPremios" style="font-size: 12px; color: #aaa; margin-bottom: 5px;">${infoTexto}</p>
-            
             <div class="roleta-wrapper-externo" style="position: relative;">
                  <div class="seta-externa topo"></div>
                  <div id="roletaVisual" class="roleta-container ${classeTema}" style="margin: 0;">
@@ -13098,13 +13124,13 @@ function abrirModalPerfil() {
         <div class="popup-section">
             <h4>🖼️ Molduras de Perfil</h4>
             <p style="font-size: 12px; opacity: 0.8;">Selecione para usar (✅) ou clique para comprar.</p>
-            <div id="listaMolduras" class="molduras-scroll-container" style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0;"></div>
+            <div id="listaMolduras" class="molduras-scroll-container" style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0; min-height: 120px;"></div>
         </div>
 
         <div class="popup-section" style="border-top: 1px solid var(--cor-borda); padding-top: 15px;">
             <h4>💬 Estilos de Chat</h4>
             <p style="font-size: 12px; opacity: 0.8;">Personalize seus balões de mensagem.</p>
-            <div id="listaBaloes" class="molduras-scroll-container" style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0;"></div>
+            <div id="listaBaloes" class="molduras-scroll-container" style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0; min-height: 120px;"></div>
         </div>
 
         <div class="popup-section">
@@ -13118,15 +13144,15 @@ function abrirModalPerfil() {
         </div>
     `;
 
-    // 4. Atualiza o estado do botão de girar
+    // 4. Atualiza Botão e Listas
     atualizarBotaoRoleta();
 
-    // 5. Renderiza as listas (Delay mínimo para garantir que o DOM existe)
-    setTimeout(() => {
+    // Usa requestAnimationFrame para garantir que o DOM foi atualizado antes de injetar itens
+    requestAnimationFrame(() => {
         renderizarMolduras();
-        renderizarBaloes();
+        renderizarBaloes(); // Agora deve funcionar pois o ID listaBaloes existe
         renderizarSelecaoConquistas();
-    }, 50);
+    });
 
     abrirModal('modalMeuPerfil');
 }
@@ -13194,7 +13220,6 @@ async function salvarNomePerfil() {
 }
 
 async function girarRoleta() {
-    // 1. Verificações Iniciais
     const hoje = new Date().toDateString();
     let girosTotais = 1; 
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
@@ -13211,85 +13236,90 @@ async function girarRoleta() {
     btnGirar.disabled = true; 
     btnGirar.textContent = "Girando...";
 
-    // --- LÓGICA MATEMÁTICA PRECISA ---
-    
-    // Definição do Padrão Visual (0 a 8)
-    // 0=1pt, 1=5pt, 2=Moldura, 3=10pt, 4=2pt, 5=Balao, 6=3pt, 7=1pt, 8=Caixa
-    const padraoPremios = [
-        { tipo: 'ponto', valor: 1 },   // Index 0
-        { tipo: 'ponto', valor: 5 },   // Index 1
-        { tipo: 'moldura', valor: 0 }, // Index 2
-        { tipo: 'ponto', valor: 10 },  // Index 3
-        { tipo: 'ponto', valor: 2 },   // Index 4
-        { tipo: 'balao', valor: 0 },   // Index 5
-        { tipo: 'ponto', valor: 3 },   // Index 6
-        { tipo: 'ponto', valor: 1 },   // Index 7
-        { tipo: 'caixa', valor: 0 }    // Index 8
+    // --- LÓGICA MATEMÁTICA DO SORTEIO ---
+    // Array Lógico: Define o prêmio de cada posição no padrão visual (0 a 8)
+    // Ordem Visual: 1, 5, MOLDURA, 10, 2, BALAO, 3, 1, CAIXA
+    const arrayPremios = [
+        { tipo: 'ponto', valor: 1 },   // Index 0 (Visual: 1)
+        { tipo: 'ponto', valor: 5 },   // Index 1 (Visual: 5)
+        { tipo: 'moldura', valor: 0 }, // Index 2 (Visual: 🖼️)
+        { tipo: 'ponto', valor: 10 },  // Index 3 (Visual: 10)
+        { tipo: 'ponto', valor: 2 },   // Index 4 (Visual: 2)
+        { tipo: 'balao', valor: 0 },   // Index 5 (Visual: 💬)
+        { tipo: 'ponto', valor: 3 },   // Index 6 (Visual: 3)
+        { tipo: 'ponto', valor: 1 },   // Index 7 (Visual: 1)
+        { tipo: 'caixa', valor: 0 }    // Index 8 (Visual: 🎁)
     ];
 
-    // Sorteio Ponderado (Decide O QUE ganhar primeiro)
+    // 1. Sorteia o Índice Vencedor (0 a 8) baseado em probabilidades
     const rand = Math.random() * 100;
-    let targetIndex = 0; // Qual item do array acima vamos parar
-    let premioKey = ''; // ID da moldura/balão se ganhar
-    let msgPremio = '';
+    let targetIndex = 0; 
 
-    if (rand < 40) targetIndex = 0; // 1 pt (40%)
-    else if (rand < 60) targetIndex = 7; // 1 pt (20%)
-    else if (rand < 75) targetIndex = 4; // 2 pt (15%)
-    else if (rand < 85) targetIndex = 6; // 3 pt (10%)
-    else if (rand < 90) targetIndex = 1; // 5 pt (5%)
-    else if (rand < 93) targetIndex = 3; // 10 pt (3%)
-    else if (rand < 96) {
-        // MOLDURA (2%)
-        targetIndex = 2;
+    // Probabilidades Ajustadas
+    if (rand < 40) targetIndex = 0;      // 1pt (40%)
+    else if (rand < 60) targetIndex = 7; // 1pt (20%)
+    else if (rand < 75) targetIndex = 4; // 2pt (15%)
+    else if (rand < 85) targetIndex = 6; // 3pt (10%)
+    else if (rand < 90) targetIndex = 1; // 5pt (5%)
+    else if (rand < 94) targetIndex = 3; // 10pt (4%)
+    else if (rand < 96) targetIndex = 2; // Moldura (2%)
+    else if (rand < 98) targetIndex = 5; // Balão (2%)
+    else targetIndex = 8;                // Caixa (2%)
+
+    // --- CÁLCULO DE PIXELS (A Mágica) ---
+    // Largura do Item: 80px (largura) + 5px (margem esq) + 5px (margem dir) = 90px
+    const ITEM_WIDTH = 90; 
+    const ITENS_POR_SET = 9; // Tamanho do padrão visual
+    
+    // Define onde parar: Vamos parar no set número 45 (bem longe para girar bastante)
+    // O índice absoluto é: (45 voltas completas * 9 itens) + índice do prêmio
+    const setFinal = 45; 
+    const indiceAbsolutoFinal = (setFinal * ITENS_POR_SET) + targetIndex;
+
+    // Cálculo do deslocamento
+    // Queremos centralizar o item. O container tem ~320px. O centro é 160px.
+    // O item tem 90px. O centro do item é 45px.
+    // A faixa começa no 0. Para trazer o item X para o centro:
+    // TranslateX = - (PosiçãoDoItem - CentroContainer + MetadeItem)
+    
+    const container = document.getElementById('roletaVisual');
+    const larguraContainer = container.offsetWidth;
+    const centroContainer = larguraContainer / 2;
+    const metadeItem = ITEM_WIDTH / 2;
+
+    // Posição esquerda do item alvo na faixa longa
+    const posicaoEsquerdaItem = indiceAbsolutoFinal * ITEM_WIDTH;
+    
+    // Cálculo exato para centralizar
+    let moveX = posicaoEsquerdaItem - centroContainer + metadeItem;
+
+    // Adiciona um pequeno "ruído" (jitter) para não parar roboticamente no pixel exato
+    // Mas limita a +/- 25px para não cair no item vizinho
+    const jitter = Math.floor(Math.random() * 50) - 25; 
+    moveX += jitter;
+
+    // Aplica a animação CSS
+    const faixa = document.getElementById('roletaFaixa');
+    faixa.style.transition = `transform 5s cubic-bezier(0.15, 0, 0.10, 1)`; // Curva de desaceleração suave
+    faixa.style.transform = `translateX(-${moveX}px)`;
+
+    // Prepara o prêmio lógico para entregar depois da animação
+    let premioKey = '';
+    let msgPremio = '';
+    const premioGanho = arrayPremios[targetIndex];
+
+    if (premioGanho.tipo === 'moldura') {
         const chaves = Object.keys(MOLDURAS).filter(k => !MOLDURAS[k].adminOnly);
         premioKey = chaves[Math.floor(Math.random() * chaves.length)];
         msgPremio = `Moldura ${MOLDURAS[premioKey].nome}`;
-    } else if (rand < 98) {
-        // BALÃO (3%)
-        targetIndex = 5;
+    } else if (premioGanho.tipo === 'balao') {
         const chaves = Object.keys(BALOES).filter(k => !BALOES[k].adminOnly);
         premioKey = chaves[Math.floor(Math.random() * chaves.length)];
         msgPremio = `Estilo ${BALOES[premioKey].nome}`;
-    } else {
-        // CAIXA SURPRESA (2%)
-        targetIndex = 8;
     }
-
-    // --- CÁLCULO DE PIXELS ---
-    const LARGURA_ITEM = 90; // 80px + 10px margem (definido no CSS)
-    const VOLTAS_MINIMAS = 5; 
-    const ITENS_POR_SET = 9; 
-    
-    // Queremos parar longe, ex: no set 35
-    const setFinal = 35; 
-    const indiceFinalAbsoluto = (setFinal * ITENS_POR_SET) + targetIndex;
-
-    // Elementos DOM
-    const faixa = document.getElementById('roletaFaixa');
-    const container = document.getElementById('roletaVisual');
-    const larguraContainer = container.offsetWidth || 320;
-
-    // Centro do Item Alvo
-    // O + 0.5 centra no meio do item
-    const posCentroItem = (indiceFinalAbsoluto * LARGURA_ITEM) + (LARGURA_ITEM / 2);
-    const centroContainer = larguraContainer / 2;
-    
-    // Quanto mover para alinhar o centro do item com o centro do container
-    let moveX = posCentroItem - centroContainer;
-
-    // Adiciona um pequeno "jitter" (ruído) para não parar sempre no pixel exato, 
-    // mas mantendo dentro do quadrado (max +/- 20px)
-    const jitter = Math.floor(Math.random() * 40) - 20; 
-    moveX += jitter;
-
-    // Executa a Animação
-    faixa.style.transition = `transform 5s cubic-bezier(0.1, 0, 0.1, 1)`; 
-    faixa.style.transform = `translateX(-${moveX}px)`;
 
     // --- ENTREGA DO PRÊMIO (Após 5s) ---
     setTimeout(async () => {
-        const premioGanho = padraoPremios[targetIndex];
         let updates = { ultimoGiroRoleta: hoje };
         updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
         
@@ -13335,31 +13365,16 @@ async function girarRoleta() {
         try {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
             
-            // Atualiza perfil local para UI refletir (ex: pontos)
-            if(premioGanho.tipo === 'ponto') {
-                 const display = document.getElementById('pontosFidelidade'); // Se estiver visível em outro lugar
-                 // Para roleta, não mostramos pontos instantaneamente no modal, só no popup
-            }
-            
             exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
-                // Se ganhou item, recarrega o modal para mostrar equipado
-                if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
-                    // Força atualização do perfil antes de reabrir
-                    db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
-                        perfil = doc.data();
-                        abrirModalPerfil();
-                    });
-                } else {
-                    atualizarBotaoRoleta(); // Reseta visual do botão
-                    // Reseta a faixa visualmente (sem transição)
-                    faixa.style.transition = 'none';
-                    faixa.style.transform = 'translateX(0px)';
-                }
+                // Recarrega o modal para resetar a roleta e mostrar prêmios
+                // Força atualização do perfil antes
+                db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
+                    perfil = doc.data();
+                    abrirModalPerfil();
+                });
             });
 
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
-
-            // Atualiza estado local para bloquear botão imediatamente se acabaram os giros
             perfil.ultimoGiroRoleta = hoje;
             perfil.girosRealizadosHoje = isNovoDia ? 1 : (girosRealizados + 1);
 
@@ -13368,7 +13383,7 @@ async function girarRoleta() {
             atualizarBotaoRoleta();
         }
 
-    }, 5000); // Tempo da animação (5s)
+    }, 5000); // Espera a animação acabar
 }
 
 function verificarAcessoMoldura(key) {
