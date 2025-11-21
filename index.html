@@ -7063,7 +7063,7 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if (clienteTelefone) {
           const phoneNum = clienteTelefone.replace(/\D/g, '');
           // Mensagem pré-definida
-          const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento comigo no aplicativo Nova Versão, fico no seu aguardo no horario ${horario} :)`);
+          const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento comigo no aplicativo Nova Versão, fico no seu aguardo no horario ${horario} 😁`);
           // Abre em nova aba
           window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
       }
@@ -7173,7 +7173,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     // 3. REDIRECIONA PARA O WHATSAPP (Ação Solicitada)
     if (clienteTelefone) {
         const phoneNum = clienteTelefone.replace(/\D/g, '');
-        const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação, assim você ganha pontos pra ter desconto nos proximos agendamentos, agradeço! :D");
+        const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação, assim você ganha pontos pra ter desconto nos proximos agendamentos, agradeço! 😁");
         window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
     }
 
