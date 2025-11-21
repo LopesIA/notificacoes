@@ -1314,17 +1314,27 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
         right: 50px; /* Link ao lado do Coração */
         font-size: 18px; 
     }
+/* Agenda Visual Corrigida */
 #horariosContainer {
-        display: flex; 
-        flex-wrap: wrap; 
-        gap: 5px; 
-        justify-content: center;
-        max-height: 250px; /* Define uma altura máxima */
-        overflow-y: auto; /* Adiciona o scroll vertical */
-        padding: 5px; /* Adiciona um respiro */
-        background: var(--cor-fundo);
-        border-radius: 5px;
-    }
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* Botoes com tamanho fixo e responsivo */
+    gap: 8px;
+    justify-content: center;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--cor-fundo);
+    border-radius: 8px;
+    border: 1px solid var(--cor-borda);
+    margin-top: 10px;
+}
+/* Ajuste no botão de horário */
+.horario-btn {
+    width: 100% !important; /* Ocupa a célula do grid */
+    margin: 0 !important;   /* Remove margem externa pois usamos gap */
+    font-size: 13px;
+    padding: 8px 2px;
+}
 
     /* Scroll para a Agenda do Onboarding */
     #onboardingHorariosContainer {
@@ -2305,8 +2315,6 @@ body {
   
   <div id="botaoExtra" class="hidden"></div>
   
-  <div id="onlineUserCount" class="online-counter hidden" style="margin: 15px auto 5px auto; cursor: pointer; width: fit-content;">🏆 0 Online</div>
-  
   <div id="authView" class="card hidden">
     <h2>🔐 Entrar ou Criar Conta</h2>
     <input id="email" type="email" placeholder="📧 Email">
@@ -2328,6 +2336,7 @@ body {
       <input id="telefone" type="tel" placeholder="📞 Telefone com DDD (ex: 27999999999)">
       <input id="rua" type="text" placeholder="Endereço (Rua)" class="hidden">
       <input id="numero" type="text" placeholder="Endereço (Número)" class="hidden">
+  
       <input id="estado" type="text" placeholder="🌎 Digite seu estado (Ex: São Paulo)" oninput="this.value = formatarNomeProprio(this.value)">
       <input id="cidade" type="text" placeholder="🏙️ Digite sua cidade (Ex: São Paulo)" oninput="this.value = formatarNomeProprio(this.value)">
       <input id="indicador" type="text" placeholder="📨 Email de quem te indicou? (opcional)">
@@ -2376,7 +2385,7 @@ body {
         </div>
     </div>
     <hr style="border-color: var(--cor-borda); margin: 20px 0;">
-<div id="listaBarbeirosPrincipalCliente" class="barbeiro-list-container"></div>
+    <div id="listaBarbeirosPrincipalCliente" class="barbeiro-list-container"></div>
   </div>
 
   <div id="barbeiroView" class="hidden card">
@@ -2411,6 +2420,8 @@ body {
   </div>
 
   <div id="adminView" class="hidden card">
+    <div id="onlineUserCount" class="online-counter hidden" style="margin: 0 auto 10px auto; cursor: pointer; width: fit-content; display:block;">🏆 0 Online</div>
+
     <h2>🧠 Painel do Admin</h2>
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
       <button onclick="abrirModalEstatisticas()" style="width:45%">📊 Estatísticas</button>
@@ -2420,6 +2431,7 @@ body {
       <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
       <button onclick="abrirGerenciarLojaAdmin()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
+      
       <button onclick="abrirModal('modalNotificacaoMarketing')" style="width:92%">📣 Enviar Notificação Geral</button>
     </div>
   </div>
@@ -2430,6 +2442,7 @@ body {
     </div>
     <div id="lojaContainer" class="loja-grid">
     </div>
+</div>
 </div>
 
 
@@ -4591,19 +4604,24 @@ function criarConta() {
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha-cadastro").value;
   const senhaConfirm = document.getElementById("senha-confirm").value;
-  const tipo = document.getElementById("tipo").value; // Lê o tipo selecionado
+  const tipo = document.getElementById("tipo").value;
   const telefone = document.getElementById("telefone").value.trim();
-  const estadoInput = document.getElementById("estado").value.trim(); 
-  const cidadeInput = document.getElementById("cidade").value.trim(); 
-  const estado = formatarNomeProprio(estadoInput); 
-  const cidade = formatarNomeProprio(cidadeInput); 
   const nome = document.getElementById("nomeExibido").value.trim();
   const indicadorEmail = document.getElementById("indicador").value.trim();
+  
+  // Campos de localização (podem vir vazios agora)
+  const estadoInput = document.getElementById("estado").value.trim(); 
+  const cidadeInput = document.getElementById("cidade").value.trim(); 
+  const estado = formatarNomeProprio(estadoInput) || "Não Informado"; 
+  const cidade = formatarNomeProprio(cidadeInput) || "Não Informado"; 
+  
   let rua, numero;
 
   if (senha !== senhaConfirm) { fecharTodosOsModais(); return exibirPopup("As senhas não coincidem."); }
-  if (!telefone || telefone.length < 10 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD (mínimo 10 dígitos)."); }
-  if (!email || !senha || !nome || (email !== ADMIN_EMAIL && (!estado || !cidade))) { fecharTodosOsModais(); return exibirPopup("Preencha todos os campos obrigatórios"); }
+  if (!telefone || telefone.length < 10 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD."); }
+  
+  // REMOVIDA A OBRIGATORIEDADE DE ESTADO/CIDADE
+  if (!email || !senha || !nome) { fecharTodosOsModais(); return exibirPopup("Preencha email, senha e nome."); }
 
   const isProfissional = tipo !== 'cliente';
   if (isProfissional) {
@@ -4614,39 +4632,23 @@ function criarConta() {
   const estadoFinal = email === ADMIN_EMAIL ? "todos" : estado;
   const cidadeFinal = email === ADMIN_EMAIL ? "todos" : cidade;
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
-  
-  // Define o interesse: Se for profissional, o interesse é o próprio nicho. Se for cliente, vem do onboarding.
   const interesseFinal = (tipoFinal !== 'cliente' && tipoFinal !== 'admin') ? tipoFinal : (onboardingState.interesse_principal || 'barbeiro');
 
   auth.createUserWithEmailAndPassword(email, senha)
     .then(async cred => {
       const data = {
-        email, nome,
-        tipo: tipoFinal,
-        telefone,
-        estado: estadoFinal,
-        cidade: cidadeFinal,
-        saldo: 0, reputacao: 100, cortesSemana: 0,
-        disponivel: "nao", listaServicos: [], promocoes: [], portfolio: [],
-        chatAtivo: true, vip: false, lojaLiberada: false,
-        rua: rua || null, numero: numero || null,
+        email, nome, tipo: tipoFinal, telefone,
+        estado: estadoFinal, cidade: cidadeFinal,
+        saldo: 0, reputacao: 100, cortesSemana: 0, disponivel: "nao", 
+        // Se tiver coordenadas, salva. Se não, null.
         latitude: cadastroCoords ? cadastroCoords.latitude : null,
         longitude: cadastroCoords ? cadastroCoords.longitude : null,
-        usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
-        codigosResgatados: [],
-        indicadoPorEmail: indicadorEmail || null,
-        bonusIndicacaoPendente: !!indicadorEmail,
-        fcmTokens: [],
-        cortesRealizados: 0,
-        conquistas: [],
-        clientesAtendidos: 0,
-        somaAvaliacoes: 0, numAvaliacoes: 0,
-        ultimoBoostComprado: null,
-        
-        // --- AQUI ESTÁ A CORREÇÃO DO INTERESSE ---
-        interesse_principal: interesseFinal, 
-        // -----------------------------------------
-
+        // ... (restante dos dados padrão) ...
+        listaServicos: [], promocoes: [], portfolio: [], chatAtivo: true, vip: false, lojaLiberada: false,
+        rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
+        codigosResgatados: [], indicadoPorEmail: indicadorEmail || null, bonusIndicacaoPendente: !!indicadorEmail,
+        fcmTokens: [], cortesRealizados: 0, conquistas: [], clientesAtendidos: 0, somaAvaliacoes: 0, numAvaliacoes: 0,
+        ultimoBoostComprado: null, interesse_principal: interesseFinal,
         onboarding_profissional_concluido: tipoFinal === 'cliente', 
         precisaConfiguracaoInicial: tipoFinal !== 'cliente', 
         lastSeen: firebase.firestore.FieldValue.serverTimestamp()
@@ -4654,17 +4656,16 @@ function criarConta() {
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
       fecharTodosOsModais();
-
     })
     .catch(e => {
         fecharTodosOsModais();
         if (e.code === 'auth/email-already-in-use') {
-             exibirPopup("Erro ao criar conta: Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.");
+             exibirPopup("Erro: E-mail já cadastrado.");
         } else {
              exibirPopup("Erro ao criar conta: " + e.message);
         }
     });
- }
+}
 
 document.getElementById('tipo').addEventListener('change', (e) => {
   const isProfissional = e.target.value !== 'cliente';
@@ -4850,6 +4851,43 @@ auth.onAuthStateChanged(async user => {
         renderCurrentView(); // Renderiza a view correta
 
         checarParametrosURL();
+
+// --- VERIFICAÇÃO DE LOCALIZAÇÃO AUSENTE ---
+        if (!perfil.latitude || !perfil.longitude) {
+            // Tenta pegar silenciosamente primeiro
+            obterLocalizacaoAtual().then(coords => {
+                if(coords) {
+                    // Se conseguiu, atualiza o perfil silenciosamente
+                    db.collection('usuarios').doc(user.uid).update({
+                        latitude: coords.latitude,
+                        longitude: coords.longitude
+                    });
+                }
+            }).catch(() => {
+                // Se falhar, inicia o intervalo de aviso
+                setInterval(() => {
+                    // Verifica se o modal já não está aberto para não flodar
+                    if (!document.querySelector('.modal.show')) {
+                        exibirConfirmacao(
+                            "📍 Localização Necessária", 
+                            "Para ver os profissionais mais próximos e usar o app corretamente, precisamos da sua localização. Deseja ativar agora?", 
+                            () => {
+                                obterLocalizacaoAtual().then(coords => {
+                                    db.collection('usuarios').doc(user.uid).update({
+                                        latitude: coords.latitude,
+                                        longitude: coords.longitude
+                                    });
+                                    exibirPopup("Sucesso", "Localização atualizada!");
+                                }).catch(() => {
+                                    exibirPopup("Erro", "Não foi possível obter a localização. Verifique se o GPS está ativo e se você deu permissão ao navegador.");
+                                });
+                            }
+                        );
+                    }
+                }, 45000); // Verifica a cada 45 segundos
+            });
+        }
+        // --- FIM VERIFICAÇÃO ---
 
         // --- !! BLOCO DE ONBOARDING ATUALIZADO !! ---
         if (perfil.tipo !== 'cliente' && perfil.precisaConfiguracaoInicial === true) {
@@ -8370,9 +8408,28 @@ function abrirModalSolicitacoes() {
       lista.innerHTML = snap.empty ? "<p>Nenhuma solicitação pendente.</p>" : "";
       snap.forEach(doc => {
         const s = doc.data();
-        lista.innerHTML += `<div class="card" onclick="verDetalhesSolicitacao('${doc.id}')"><b>${s.tipo.toUpperCase()}</b> de ${s.usuarioNome}<br><p>Valor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}</p><p style="color: #ff9800;">Status: <b>PENDENTE</b></p></div>`;
+        lista.innerHTML += `
+    <div class="card" style="position: relative;">
+        <div onclick="verDetalhesSolicitacao('${doc.id}')">
+            <b>${s.tipo.toUpperCase()}</b> de ${s.usuarioNome}<br>
+            <p>Valor: R$ ${s.valor ? s.valor.toFixed(2) : 'N/A'}</p>
+            <p style="color: #ff9800;">Status: <b>PENDENTE</b></p>
+        </div>
+        <button onclick="adminDeletarSolicitacao('${doc.id}')" style="position: absolute; top: 10px; right: 10px; background: #c0392b; width: 30px; height: 30px; padding: 0; border-radius: 50%; font-size: 12px;">🗑️</button>
+    </div>`;
       });
     });
+}
+
+async function adminDeletarSolicitacao(id) {
+    if(confirm("Tem certeza que deseja EXCLUIR esta solicitação? Ela sumirá da lista.")) {
+        try {
+            await db.collection("solicitacoes").doc(id).delete();
+            exibirPopup("Solicitação excluída.");
+        } catch (e) {
+            exibirPopup("Erro ao excluir: " + e.message);
+        }
+    }
 }
 
 async function verDetalhesSolicitacao(id) {
@@ -12973,41 +13030,50 @@ function abrirModalPerfil() {
     // 3. Configura Texto da Caixa Surpresa
     const infoPremios = document.getElementById('roletaInfoPremios');
     if (perfil.tipo === 'cliente') {
-        infoPremios.innerHTML = '🎁 <b>Caixa Surpresa:</b> Pode conter até 50 Pontos de Fidelidade extras!';
+        infoPremios.innerHTML = '🎁 <b>Prêmios:</b> Pontos, Molduras e Balões de Chat (24h)!';
     } else {
-        infoPremios.innerHTML = '🎁 <b>Caixa Surpresa:</b> Pode conter 24h de Topo ou 5 dias de VIP!';
+        infoPremios.innerHTML = '🎁 <b>Prêmios:</b> Topo, VIP, Molduras e Balões (24h)!';
     }
 
-    // 4. Gera Itens da Roleta (Com as Setas que adicionamos antes)
+    // 4. Gera Itens da Roleta (VISUAL COM MOLDURAS E BALÕES INDIVIDUAIS)
     const roletaVisual = document.getElementById('roletaVisual');
     roletaVisual.innerHTML = `
-        <div class="seta-roleta"></div>
+        <div class="seta-external topo" style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); border-top: 15px solid var(--cor-destaque); border-left: 10px solid transparent; border-right: 10px solid transparent; z-index:20;"></div>
         <div class="roleta-faixa" id="roletaFaixa"></div>
+        <div class="seta-external baixo" style="position:absolute; bottom:-15px; left:50%; transform:translateX(-50%); border-bottom: 15px solid var(--cor-destaque); border-left: 10px solid transparent; border-right: 10px solid transparent; z-index:20;"></div>
     `;
     
     const faixa = document.getElementById('roletaFaixa');
     faixa.style.transition = 'none';
     faixa.style.transform = 'translateX(0px)';
-    
+    faixa.innerHTML = '';
+
+    // Sequência visual repetida: Num, Num, Moldura, Num, Num, Balão, Num, Num, Presente
+    // Total 60 sets para garantir animação longa
     for(let i=0; i<60; i++) {
-        for(let n=1; n<=10; n++) {
-            faixa.innerHTML += `<div class="roleta-item">${n}</div>`;
-        }
-        faixa.innerHTML += `<div class="roleta-item especial">🎁</div>`;
+        // Padrão fixo para a faixa visual
+        let htmlSet = `
+            <div class="roleta-item">1</div>
+            <div class="roleta-item">5</div>
+            <div class="roleta-item" style="font-size:24px;">🖼️</div>
+            <div class="roleta-item">10</div>
+            <div class="roleta-item">2</div>
+            <div class="roleta-item" style="font-size:24px;">💬</div>
+            <div class="roleta-item">3</div>
+            <div class="roleta-item">1</div>
+            <div class="roleta-item especial">🎁</div>
+        `;
+        faixa.innerHTML += htmlSet;
     }
 
-    // 5. Lógica de Giros Disponíveis (CORRIGIDA PARA ZERAR DIARIAMENTE)
+    // 5. Lógica de Giros Disponíveis
     const hoje = new Date().toDateString();
-    
     let girosTotais = 1; 
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
-    
-    // Se a data do último giro NÃO for hoje, consideramos que usou 0 giros hoje.
     const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
     const girosUsadosHoje = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
-    
     let girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
 
     const btnGirar = document.getElementById('btnGirarRoleta');
@@ -13024,11 +13090,88 @@ function abrirModalPerfil() {
         btnGirar.textContent = "Volte Amanhã";
     }
     
-    // 6. Renderiza Listas
-    renderizarMolduras();
-    renderizarBaloes();
-    renderizarSelecaoConquistas();
+    // 6. Renderiza Listas (Molduras e Balões)
+    // ATENÇÃO: As funções renderizarMolduras e renderizarBaloes precisam injetar HTML 
+    // nos containers que vamos criar abaixo
     
+    // Primeiro, renderiza no DOM (para as funções encontrarem os IDs)
+    setTimeout(() => {
+        renderizarMolduras();
+        renderizarBaloes();
+        renderizarSelecaoConquistas();
+    }, 100);
+
+    // Abre o modal (O conteúdo HTML é injetado diretamente aqui para garantir estrutura)
+    const modal = document.getElementById('modalMeuPerfil');
+    const content = modal.querySelector('.modal-content');
+    
+    // Preserva inputs e roleta, recria apenas as listas
+    // Como o innerHTML destrói eventos, vamos atualizar containers específicos
+    // Mas sua estrutura atual usa innerHTML global no modal. Vamos adaptar:
+    
+    // --- ESTRUTURA DO MODAL (Atualizada com container de balões) ---
+    // Precisamos garantir que o container 'listaBaloes' exista no HTML do modal.
+    // Vou reinjetar o HTML base do modal para garantir que tudo esteja lá.
+    
+    // Nota: Isso pode resetar o valor dos inputs se já estiver aberto, mas ok para 'abrir'.
+    content.innerHTML = `
+        <h3>👤 Editar Perfil</h3>
+        
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="position: relative; display: inline-block;">
+                <img id="perfilFotoPreview" src="${perfil.fotoPerfil || 'https://via.placeholder.com/100'}" class="perfil-foto-grande" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #333;">
+                <label for="perfilFotoInput" style="position: absolute; bottom: 0; right: 0; background: var(--cor-destaque); color: #000; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">📷</label>
+            </div>
+            <input type="file" id="perfilFotoInput" accept="image/*" style="display: none;" onchange="previewFotoPerfil()">
+        </div>
+
+        <label>Nome de Exibição:</label>
+        <input type="text" id="perfilNomeInput" value="${perfil.nome}" placeholder="Seu nome">
+
+        <div class="popup-section">
+            <h4>🎰 Roleta Diária</h4>
+            <p id="roletaInfoPremios" style="font-size: 12px; color: #aaa; margin-bottom: 5px;">${infoPremios.innerHTML}</p>
+            <div class="roleta-wrapper-externo" style="position: relative;">
+                 <div class="seta-externa topo"></div>
+                 <div id="roletaVisual" class="roleta-container" style="margin: 0;">
+                    <div class="roleta-faixa" id="roletaFaixa">${faixa.innerHTML}</div>
+                 </div>
+                 <div class="seta-externa baixo"></div>
+            </div>
+            <button id="btnGirarRoleta" onclick="girarRoleta()" style="width: 100%; font-weight: bold; font-size: 16px; margin-top:10px;">${btnGirar.textContent}</button>
+        </div>
+
+        <div class="popup-section">
+            <h4>🖼️ Molduras de Perfil</h4>
+            <p style="font-size: 12px; opacity: 0.8;">Selecione para usar (✅) ou clique para comprar.</p>
+            <div id="listaMolduras" class="molduras-scroll-container" style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0;"></div>
+        </div>
+
+        <div class="popup-section" style="border-top: 1px solid var(--cor-borda); padding-top: 15px;">
+            <h4>💬 Estilos de Chat</h4>
+            <p style="font-size: 12px; opacity: 0.8;">Personalize seus balões de mensagem.</p>
+            <div id="listaBaloes" class="molduras-scroll-container" style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0;"></div>
+        </div>
+
+        <div class="popup-section">
+            <h4>🏅 Exibir Conquistas (Máx 3)</h4>
+            <div id="listaSelecaoConquistas" class="scrollable-list" style="max-height: 120px;"></div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid var(--cor-borda); padding-top: 15px;">
+            <button onclick="fecharModalAtual()" style="background-color: #555; flex: 1;">❌ Cancelar</button>
+            <button onclick="salvarNomePerfil()" style="flex: 1;">💾 Salvar Alterações</button>
+        </div>
+    `;
+    
+    // Reabilita o botão se necessário (pois o innerHTML reseta)
+    const btnGirarNovo = document.getElementById('btnGirarRoleta');
+    if(girosRestantes <= 0) {
+         btnGirarNovo.disabled = true;
+         btnGirarNovo.style.opacity = "0.5";
+         btnGirarNovo.style.cursor = "not-allowed";
+    }
+
     abrirModal('modalMeuPerfil');
 }
 
