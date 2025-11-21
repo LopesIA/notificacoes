@@ -2479,6 +2479,80 @@ body {
     text-shadow: 0 0 5px #fff;
     font-weight: bold;
 }
+
+/* --- BALÕES DE CHAT ESTILIZADOS (ADMIN ANIMADO) --- */
+
+/* Base para balões customizados */
+.chat-message.custom-bubble {
+    position: relative;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    z-index: 1;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8); 
+}
+
+/* O Container da Borda Animada (Compartilhado) */
+.chat-message.bubble-diamante::before,
+.chat-message.bubble-admin-black::before,
+.chat-message.bubble-admin-red::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px;
+    z-index: -1;
+    background-size: 400% 400%;
+    animation: border-travel 3s linear infinite; /* A mesma animação fluida */
+}
+
+/* NÍVEL 4: DIAMANTE (Azul Cyan) */
+.chat-message.bubble-diamante {
+    background: #0c0c0c; 
+    color: #e0ffff; 
+    text-shadow: 0 0 2px #00c6ff;
+    overflow: visible !important;
+    border: none; /* A borda é feita pelo ::before */
+}
+.chat-message.bubble-diamante::before {
+    background: linear-gradient(60deg, #00c6ff, #0072ff, #0c0c0c, #00c6ff);
+    opacity: 0.8;
+}
+
+/* ADMIN BLACK: Efeito Void/Matrix Escuro */
+.chat-message.bubble-admin-black {
+    background: #0a0a0a !important;
+    color: #fff !important;
+    text-shadow: 0 0 5px #fff;
+    font-weight: bold;
+    overflow: visible !important;
+    border: none;
+}
+.chat-message.bubble-admin-black::before {
+    /* Gradiente: Preto -> Cinza Chumbo -> Branco (brilho) -> Preto */
+    background: linear-gradient(60deg, #000000, #333333, #ffffff, #000000);
+    opacity: 1; /* Mais visível */
+}
+
+/* ADMIN RED: Efeito Lava/Sangue Vivo */
+.chat-message.bubble-admin-red {
+    background: #1a0505 !important;
+    color: #ffcccc !important;
+    text-shadow: 0 0 5px #ff0000;
+    font-weight: bold;
+    overflow: visible !important;
+    border: none;
+}
+.chat-message.bubble-admin-red::before {
+    /* Gradiente: Vermelho Escuro -> Vermelho Vivo -> Laranja (fogo) -> Vermelho Escuro */
+    background: linear-gradient(60deg, #500000, #ff0000, #ff4500, #500000);
+    opacity: 1;
+}
+
+/* Animação de movimento (Garante que esteja no CSS) */
+@keyframes border-travel {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
   </style>
 </head>
 <body>
@@ -10423,34 +10497,31 @@ function verificarAcessoBalao(key) {
     const b = BALOES[key];
     const meusBaloes = perfil.baloesAdquiridos || [];
     
-    // ADMIN
     if (b.adminOnly) {
-        if (perfil.tipo === 'admin') return { acesso: true, tipo: 'permanente' };
-        else return { acesso: false, tipo: 'bloqueado_admin' };
+        return perfil.tipo === 'admin' ? { acesso: true, tipo: 'permanente' } : { acesso: false, tipo: 'bloqueado_admin' };
     }
 
-    // COMPRADO (Permanente)
+    // 1. Permanente (Comprado)
     if (meusBaloes.includes(key)) {
         return { acesso: true, tipo: 'permanente' };
     }
 
-    // PRÊMIO TEMPORÁRIO DA ROLETA
-    if (perfil.premiosTemporarios && perfil.premiosTemporarios[key]) {
-        const validade = perfil.premiosTemporarios[key].toDate();
+    // 2. Temporário (Roleta) - CORREÇÃO AQUI
+    // Agora verifica a chave composta 'balao_key'
+    if (perfil.premiosTemporarios && perfil.premiosTemporarios[`balao_${key}`]) {
+        const validade = perfil.premiosTemporarios[`balao_${key}`].toDate();
         if (validade > new Date()) {
             return { acesso: true, tipo: 'temporario_roleta', validade };
         }
     }
 
-    // VIA PRO (Temporário)
+    // 3. Temporário (PRO)
     if (isProAtivo(perfil) && perfil.proTier) {
         const tier = perfil.proTier;
         const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
         const baloesOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
-        
         const idxUser = niveis.indexOf(tier);
         const idxBalao = baloesOrdem.indexOf(key);
-
         if (idxUser >= 0 && idxBalao >= 0 && idxUser >= idxBalao) {
             return { acesso: true, tipo: 'temporario_pro' };
         }
@@ -13456,58 +13527,48 @@ async function girarRoleta() {
     btnGirar.disabled = true; 
     btnGirar.textContent = "Girando...";
 
-    // === TABELA DE PRÊMIOS (20 ITENS - SINCRONIZADA COM VISUAL) ===
-    // Nota: O índice 19 foi alterado para 4 pontos para casar com o visual
+    // TABELA DE PRÊMIOS (16 ITENS)
     const arrayPremios = [
         { tipo: 'ponto', valor: 1 },           // 0
         { tipo: 'moldura', key: 'bronze', nome: 'Bronze' }, // 1
         { tipo: 'ponto', valor: 2 },           // 2
         { tipo: 'balao', key: 'bronze', nome: 'Chat Bronze' }, // 3
         { tipo: 'ponto', valor: 3 },           // 4
-        { tipo: 'moldura', key: 'prata', nome: 'Prata' },  // 5
+        { tipo: 'moldura', key: 'prata', nome: 'Prata' }, // 5
         { tipo: 'ponto', valor: 4 },           // 6
-        { tipo: 'balao', key: 'prata', nome: 'Chat Prata' },  // 7
+        { tipo: 'balao', key: 'prata', nome: 'Chat Prata' }, // 7
         { tipo: 'ponto', valor: 5 },           // 8
-        { tipo: 'caixa', valor: 0 },           // 9 (Caixa)
+        { tipo: 'caixa', valor: 0 },           // 9
         { tipo: 'ponto', valor: 6 },           // 10
-        { tipo: 'moldura', key: 'ouro', nome: 'Ouro' },    // 11
+        { tipo: 'moldura', key: 'ouro', nome: 'Ouro' }, // 11
         { tipo: 'ponto', valor: 7 },           // 12
-        { tipo: 'balao', key: 'ouro', nome: 'Chat Ouro' },    // 13
+        { tipo: 'balao', key: 'ouro', nome: 'Chat Ouro' }, // 13
         { tipo: 'ponto', valor: 8 },           // 14
         { tipo: 'moldura', key: 'diamante', nome: 'Diamante' }, // 15
         { tipo: 'ponto', valor: 9 },           // 16
         { tipo: 'balao', key: 'diamante', nome: 'Chat Diamante' }, // 17
         { tipo: 'ponto', valor: 10 },          // 18
-        { tipo: 'ponto', valor: 4 }            // 19 (Para emendar o loop sem repetir '1')
+        { tipo: 'ponto', valor: 4 }            // 19
     ];
 
-    // 1. SORTEIO 100% ALEATÓRIO (0 a 19)
-    // Cada item tem 5% de chance exata de cair.
     let targetIndex = Math.floor(Math.random() * 20);
 
-    // 2. CALCULAR O PIXEL EXATO DE PARADA
     const ITEM_WIDTH = 90; 
-    const ITEMS_PER_SET = 20; // 20 itens no padrão
-    const LOOPS = 30; // Voltas completas
-    
-    // O índice final na faixa gigante
+    const ITEMS_PER_SET = 20; 
+    const LOOPS = 30; 
     const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
 
     const containerWidth = 320; 
     const targetCenterPixel = (finalIndex * ITEM_WIDTH) + (ITEM_WIDTH / 2);
     const viewCenterPixel = containerWidth / 2;
     let moveX = targetCenterPixel - viewCenterPixel;
-
-    // Jitter (Aleatoriedade visual segura: +/- 25px)
     const jitter = Math.floor(Math.random() * 50) - 25; 
     moveX += jitter;
 
-    // 3. EXECUTAR ANIMAÇÃO
     const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; // Efeito de parada suave
+    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${moveX}px)`;
 
-    // 4. PREPARAR DADOS DO PRÊMIO
     const premioGanho = arrayPremios[targetIndex];
     let premioKey = '';
     let msgPremio = '';
@@ -13517,7 +13578,6 @@ async function girarRoleta() {
         msgPremio = premioGanho.nome;
     }
 
-    // 5. PROCESSAR RESULTADO APÓS ANIMAÇÃO (6 segundos)
     setTimeout(async () => {
         let updates = { ultimoGiroRoleta: hoje };
         updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
@@ -13537,11 +13597,15 @@ async function girarRoleta() {
             const expiraEm = new Date();
             expiraEm.setHours(expiraEm.getHours() + 24);
             
-            updates[`premiosTemporarios.${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
-            
-            // Equipa automaticamente
-            if (premioGanho.tipo === 'moldura') updates.molduraSelecionada = premioKey;
-            if (premioGanho.tipo === 'balao') updates.balaoSelecionado = premioKey;
+            // --- CORREÇÃO CRÍTICA: USA PREFIXO PARA SALVAR ---
+            if (premioGanho.tipo === 'moldura') {
+                updates[`premiosTemporarios.moldura_${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
+                updates.molduraSelecionada = premioKey; // Equipa
+            }
+            if (premioGanho.tipo === 'balao') {
+                updates[`premiosTemporarios.balao_${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
+                updates.balaoSelecionado = premioKey; // Equipa
+            }
         } 
         else if (premioGanho.tipo === 'caixa') {
             tituloPopup = "🎁 CAIXA MISTERIOSA!";
@@ -13564,53 +13628,50 @@ async function girarRoleta() {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
             
             exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
-                db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
-                    perfil = doc.data();
-                    abrirModalPerfil(); // Reset roleta
-                });
+                // Atualiza a página instantaneamente para refletir o prêmio equipado
+                location.reload();
             });
 
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
-            
-            perfil.ultimoGiroRoleta = hoje;
-            perfil.girosRealizadosHoje = isNovoDia ? 1 : (girosRealizados + 1);
 
         } catch (e) {
             exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
             atualizarBotaoRoleta();
         }
 
-    }, 6000); // Tempo da animação
+    }, 6000);
 }
 
 function verificarAcessoMoldura(key) {
     const m = MOLDURAS[key];
     const minhasMolduras = perfil.moldurasAdquiridas || [];
     
-    // 1. NOVA CHECAGEM: É moldura de Admin?
     if (m.adminOnly) {
-        if (perfil.tipo === 'admin') {
-            return { acesso: true, tipo: 'permanente' }; // Admin tem acesso vitalício automático
-        } else {
-            return { acesso: false, tipo: 'bloqueado_admin' }; // Outros não veem/não acessam
-        }
+        return perfil.tipo === 'admin' ? { acesso: true, tipo: 'permanente' } : { acesso: false, tipo: 'bloqueado_admin' };
     }
 
-    // 2. Verifica se comprou (Vitalício)
+    // 1. Permanente (Comprado)
     if (minhasMolduras.includes(key)) {
         return { acesso: true, tipo: 'permanente' };
     }
 
-    // 3. Verifica se tem acesso via PRO (Temporário)
+    // 2. Temporário (Roleta) - CORREÇÃO AQUI
+    // Agora verifica a chave composta 'moldura_key'
+    if (perfil.premiosTemporarios && perfil.premiosTemporarios[`moldura_${key}`]) {
+        const validade = perfil.premiosTemporarios[`moldura_${key}`].toDate();
+        if (validade > new Date()) {
+            return { acesso: true, tipo: 'temporario_roleta', validade };
+        }
+    }
+
+    // 3. Temporário (PRO)
     if (isProAtivo(perfil) && perfil.proTier) {
         const tier = perfil.proTier;
         const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
         const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
-        
-        const indiceUsuario = niveis.indexOf(tier);
-        const indiceMoldura = moldurasOrdem.indexOf(key);
-
-        if (indiceUsuario >= 0 && indiceMoldura >= 0 && indiceUsuario >= indiceMoldura) {
+        const idxUser = niveis.indexOf(tier);
+        const idxMoldura = moldurasOrdem.indexOf(key);
+        if (idxUser >= 0 && idxMoldura >= 0 && idxUser >= idxMoldura) {
             return { acesso: true, tipo: 'temporario' };
         }
     }
@@ -13746,16 +13807,19 @@ async function gerenciarBalao(key, element) {
     const b = BALOES[key];
     const statusAcesso = verificarAcessoBalao(key);
     
-    // Se já tem (seja permanente, pro ou roleta), equipa direto
     if (statusAcesso.acesso) {
-        selecionarMolduraVisualmente(element); // Reusa a função visual das molduras para o efeito de check
+        selecionarMolduraVisualmente(element);
         try {
+            exibirAguarde("Aplicando...");
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ balaoSelecionado: key });
-        } catch (e) { exibirPopup("Erro ao salvar."); }
+            fecharTodosOsModais(); // Fecha Aguarde
+            location.reload(); // <--- ATUALIZAÇÃO INSTANTÂNEA
+        } catch (e) { 
+            fecharTodosOsModais();
+            exibirPopup("Erro ao salvar."); 
+        }
         return;
     }
-
-    // Se não tem, inicia compra
     executarCompraBalao(key, b);
 }
 
@@ -13788,45 +13852,40 @@ async function gerenciarMoldura(key, element) {
     const m = MOLDURAS[key];
     const statusAcesso = verificarAcessoMoldura(key);
     
-    // CASO 1: Já tem permanente -> Seleciona direto
     if (statusAcesso.tipo === 'permanente') {
         selecionarMolduraVisualmente(element);
         try {
+            exibirAguarde("Aplicando...");
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
-            console.log("Moldura atualizada (Permanente).");
+            fecharTodosOsModais();
+            location.reload(); // <--- ATUALIZAÇÃO INSTANTÂNEA
         } catch (e) {
+            fecharTodosOsModais();
             exibirPopup("Erro", "Falha ao salvar moldura.");
         }
         return;
     }
 
-    // CASO 2: Tem acesso TEMPORÁRIO (PRO) -> Pergunta se quer usar ou comprar
-    if (statusAcesso.tipo === 'temporario') {
-        // Exibe confirmação customizada com 2 botões
+    if (statusAcesso.tipo === 'temporario' || statusAcesso.tipo === 'temporario_roleta') {
         const modal = document.getElementById('modalConfirmacaoGenerica');
-        document.getElementById('confirmacaoGenericaTitulo').textContent = "Moldura Liberada (PRO)";
-        document.getElementById('confirmacaoGenericaMensagem').textContent = `Você tem acesso a esta moldura enquanto for PRO Tier correspondente.\n\nDeseja equipar agora ou comprar para ter para sempre?`;
+        document.getElementById('confirmacaoGenericaTitulo').textContent = "Item Liberado!";
+        document.getElementById('confirmacaoGenericaMensagem').textContent = `Você tem acesso a este item.\n\nDeseja equipar agora ou comprar definitivo?`;
         
         const btnNao = document.getElementById('btnConfirmacaoGenericaNao');
         const btnSim = document.getElementById('btnConfirmacaoGenericaSim');
         
-        // Botão Esquerdo: EQUIPAR (Uso temporário)
         btnNao.textContent = "Equipar (Grátis)";
-        btnNao.style.backgroundColor = "#00c6ff"; // Azul PRO
+        btnNao.style.backgroundColor = "#00c6ff";
         btnNao.onclick = async () => {
-            fecharModalAtual(); // Aqui fecha normal, pois a ação acaba aqui
-            selecionarMolduraVisualmente(element);
+            exibirAguarde("Aplicando...");
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
+            fecharTodosOsModais();
+            location.reload(); // <--- ATUALIZAÇÃO INSTANTÂNEA
         };
 
-        // Botão Direito: COMPRAR (Vitalício)
         btnSim.textContent = `Comprar (R$ ${m.preco})`;
         btnSim.style.backgroundColor = "#4CAF50";
         btnSim.onclick = () => {
-            // --- CORREÇÃO AQUI ---
-            // Removemos o 'fecharModalAtual()' daqui. 
-            // Ao chamar a função abaixo, ela vai reaproveitar o popup aberto
-            // e mudar o texto para "Confirmar Compra?", sem piscar ou travar.
             executarCompraMoldura(key, m); 
         };
 
@@ -13834,7 +13893,6 @@ async function gerenciarMoldura(key, element) {
         return;
     }
 
-    // CASO 3: Não tem acesso -> Compra normal
     executarCompraMoldura(key, m);
 }
 
