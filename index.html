@@ -2091,6 +2091,67 @@ body {
     left: 50%;
     transform: translateX(-50%);
 }
+
+/* --- MOLDURAS ADMIN (BASEADA NA DIAMANTE) --- */
+
+/* 1. SUPREME BLACK (PRETA) */
+.avatar-wrapper.admin_black .chat-user-photo, 
+.avatar-wrapper.admin_black .perfil-foto-grande,
+.avatar-wrapper.admin_black .avatar-frame-admin-black {
+    background: transparent; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.9), inset 0 0 10px rgba(50, 50, 50, 0.8); 
+}
+.avatar-wrapper.admin_black .coroa-topo::after {
+    background: linear-gradient(to bottom, #444, #000); /* Coroa Preta */
+}
+/* Asas Pretas/Sombrias */
+.avatar-wrapper.admin_black::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 20%, rgba(20,20,20,1) 50%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-sombria-flutuar 3s ease-in-out infinite;
+}
+
+/* 2. SUPREME RED (VERMELHA) */
+.avatar-wrapper.admin_red .chat-user-photo, 
+.avatar-wrapper.admin_red .perfil-foto-grande,
+.avatar-wrapper.admin_red .avatar-frame-admin-red {
+    background: transparent; 
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.9), inset 0 0 10px rgba(192, 57, 43, 0.5); 
+}
+.avatar-wrapper.admin_red .coroa-topo::after {
+    background: linear-gradient(to bottom, #ff6b6b, #c0392b); /* Coroa Vermelha */
+}
+/* Asas de Fogo */
+.avatar-wrapper.admin_red::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(231,76,60,0) 0%, rgba(231,76,60,0.8) 20%, rgba(192,57,43,1) 50%, rgba(231,76,60,0.8) 80%, rgba(231,76,60,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-fogo-flutuar 3s ease-in-out infinite;
+}
+
+/* Animações Específicas e Ajustes de Tamanho */
+@keyframes asa-sombria-flutuar {
+    0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 5px black); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 15px black); }
+}
+@keyframes asa-fogo-flutuar {
+    0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 5px red); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 15px red); }
+}
+
+/* Ajustes de Tamanho para as Asas Admin (Igual Diamante) */
+.avatar-wrapper.chat-size.admin_black::before, .avatar-wrapper.chat-size.admin_red::before {
+    display: block; width: 54px; height: 22px; top: 50%; opacity: 1; transform: translate(-50%, -50%);
+}
+.avatar-wrapper.popup-size.admin_black::before, .avatar-wrapper.popup-size.admin_red::before {
+    width: 280px; height: 120px; top: 50%; transform: translate(-50%, -60%);
+}
+.avatar-wrapper.shop-size.admin_black::before, .avatar-wrapper.shop-size.admin_red::before {
+    width: 130px; height: 50px; top: 50%; transform: translate(-50%, -50%); opacity: 1;
+}
   </style>
 </head>
 <body>
@@ -3667,7 +3728,10 @@ const MOLDURAS = {
     bronze: { nome: 'Bronze', preco: 9.99, classe: 'avatar-frame-bronze' },
     prata: { nome: 'Prata', preco: 19.99, classe: 'avatar-frame-prata' },
     ouro: { nome: 'Ouro', preco: 29.99, classe: 'avatar-frame-ouro' },
-    diamante: { nome: 'Diamante', preco: 39.99, classe: 'avatar-frame-diamante' }
+    diamante: { nome: 'Diamante', preco: 39.99, classe: 'avatar-frame-diamante' },
+    // NOVAS MOLDURAS ADMIN
+    admin_black: { nome: 'Supreme Black', preco: 9999, classe: 'avatar-frame-admin-black', adminOnly: true },
+    admin_red: { nome: 'Supreme Red', preco: 9999, classe: 'avatar-frame-admin-red', adminOnly: true }
 };
 
 let fcmSetupDone = false;
@@ -12882,18 +12946,24 @@ function girarRoleta() {
 }
 
 function verificarAcessoMoldura(key) {
-    if (!key) return { acesso: false, tipo: 'nenhum' };
-
-    // 1. Verifica se comprou (Vitalício - Ninguém tira)
+    const m = MOLDURAS[key];
     const minhasMolduras = perfil.moldurasAdquiridas || [];
+    
+    // 1. NOVA CHECAGEM: É moldura de Admin?
+    if (m.adminOnly) {
+        if (perfil.tipo === 'admin') {
+            return { acesso: true, tipo: 'permanente' }; // Admin tem acesso vitalício automático
+        } else {
+            return { acesso: false, tipo: 'bloqueado_admin' }; // Outros não veem/não acessam
+        }
+    }
+
+    // 2. Verifica se comprou (Vitalício)
     if (minhasMolduras.includes(key)) {
         return { acesso: true, tipo: 'permanente' };
     }
 
-    // 2. Verifica se tem acesso via PRO (Temporário)
-    // AQUI ESTÁ O SEGREDO: isProAtivo(perfil) retorna FALSE se:
-    // a) A data expirou OU
-    // b) O admin desativou manualmente (proAtivo = false)
+    // 3. Verifica se tem acesso via PRO (Temporário)
     if (isProAtivo(perfil) && perfil.proTier) {
         const tier = perfil.proTier;
         const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
@@ -12902,15 +12972,13 @@ function verificarAcessoMoldura(key) {
         const indiceUsuario = niveis.indexOf(tier);
         const indiceMoldura = moldurasOrdem.indexOf(key);
 
-        // Regra de hierarquia: Tier Diamante pode usar Ouro, Prata, etc.
         if (indiceUsuario >= 0 && indiceMoldura >= 0 && indiceUsuario >= indiceMoldura) {
             return { acesso: true, tipo: 'temporario' };
         }
     }
 
-    // Se falhou na compra e falhou no PRO (tempo acabou ou admin tirou), nega acesso.
     return { acesso: false, tipo: 'nenhum' };
-}
+}	
 
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
@@ -12919,28 +12987,34 @@ function renderizarMolduras() {
     
     Object.keys(MOLDURAS).forEach(key => {
         const m = MOLDURAS[key];
+        
+        // --- FILTRO DE SEGURANÇA ---
+        // Se for moldura de admin e o usuário NÃO for admin, pula e não mostra.
+        if (m.adminOnly && perfil.tipo !== 'admin') {
+            return;
+        }
+        // ---------------------------
+
         const selecionada = perfil.molduraSelecionada === key;
-        const statusAcesso = verificarAcessoMoldura(key); // Usa a nova função
+        const statusAcesso = verificarAcessoMoldura(key); 
         
         const checkDisplay = selecionada ? 'flex' : 'none';
         
-        // Lógica de exibição do rodapé (Preço ou Status)
         let rodapeHtml = '';
         let estiloBorda = '';
 
         if (statusAcesso.tipo === 'permanente') {
-            rodapeHtml = '<span style="font-size:10px; color:#4CAF50; margin-top:2px;">Adquirido</span>';
-            // Se tiver selecionada, borda destaque, senão borda verde
+            // Para Admin, aparece como "Exclusivo" ou "Adquirido"
+            const texto = m.adminOnly ? 'Exclusivo Admin' : 'Adquirido';
+            rodapeHtml = `<span style="font-size:10px; color:#4CAF50; margin-top:2px;">${texto}</span>`;
             estiloBorda = selecionada ? '' : 'border-color: #4CAF50;'; 
         } else if (statusAcesso.tipo === 'temporario') {
-            // Mostra que está liberado pelo PRO, mas permite ver que é temporário
             rodapeHtml = `
                 <span style="font-size:9px; color:#00c6ff; font-weight:bold; margin-top:2px;">Liberado PRO</span>
                 <span style="font-size:9px; color:#ff9800; opacity:0.7;">(Comprar: R$${m.preco})</span>
             `;
             estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
         } else {
-            // Não tem acesso
             rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${m.preco}</span>`;
             estiloBorda = 'opacity: 0.7;';
         }
