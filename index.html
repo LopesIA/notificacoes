@@ -6939,7 +6939,6 @@ function toggleDisponibilidade() {
 }
 
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
-    if (!confirm("Aprovar esta vaga imediata?")) return;
     exibirAguarde("Aprovando...");
     
     // Lógica de cálculo de taxa dinâmica
@@ -6954,7 +6953,9 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
         const clienteRef = db.collection("usuarios").doc(clienteUid);
         const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
+        
         const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+        
         if (agendamentoDoc.data().status !== 'imediato') throw "Solicitação já processada.";
         if (!clienteDoc.exists) throw "Cliente não encontrado.";
         if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
@@ -6962,25 +6963,50 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
 
         t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
         t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa), vagaImediata: false });
-        t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), lembreteConcluirEnviado: false });
+        
+        t.update(agendamentoRef, { 
+            status: "conclusão pendente", 
+            confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), 
+            lembreteConcluirEnviado: false,
+            clienteNotificado: false // Garante popup do cliente
+        });
+        
         const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
-    }).then(() => {
-        setTimeout(() => location.reload(), 4000); // 4 segundos
 
+        // RETORNA O TELEFONE
+        return agendamentoDoc.data().clienteTelefone;
+
+    }).then((clienteTelefone) => {
+        
+        // --- NOVO: DIRECIONAMENTO PARA O WHATSAPP ---
+        if (clienteTelefone) {
+            const phoneNum = clienteTelefone.replace(/\D/g, '');
+            // Mensagem adaptada para Vaga Imediata
+            const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento de Vaga Imediata comigo no aplicativo Nova Versão, fico no seu aguardo :)`);
+            window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
+        }
+        // --------------------------------------------
+
+        // Avisos para o cliente (mantidos do código original)
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
-        exibirPopup("Agendamento aprovado!");
-    }).catch(e => {
-        exibirPopup("Erro ao aprovar: " + e);
-setTimeout(() => location.reload(), 4000); // 4 segundos
+        
+        fecharTodosOsModais();
+        exibirPopup("Agendamento aprovado! Redirecionando para o WhatsApp...");
+        
+        setTimeout(() => location.reload(), 4000);
 
+    }).catch(e => {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao aprovar: " + e);
+        setTimeout(() => location.reload(), 4000);
     });
 }
 
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
-  if (!confirm("Aprovar este agendamento?")) return;
+  // Confirmação visual já foi feita no popup anterior, mas mantemos a verificação de segurança
   exibirAguarde("Aprovando...");
   
   // Lógica de cálculo de taxa dinâmica
@@ -6995,32 +7021,64 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
       const clienteRef = db.collection("usuarios").doc(clienteUid);
       const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
+      
       const [agendamentoDoc, clienteDoc, barbeiroDoc] = await Promise.all([t.get(agendamentoRef), t.get(clienteRef), t.get(barbeiroRef)]);
+      
       if (agendamentoDoc.data().status !== 'pendente') throw "Solicitação já processada.";
       if (!clienteDoc.exists) throw "Cliente não encontrado.";
       if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
 
+      // 1. Movimentação Financeira
       t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
       t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
-      t.update(agendamentoRef, { status: "conclusão pendente", confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), lembreteConcluirEnviado: false });
+      
+      // 2. Atualiza Status do Agendamento
+      t.update(agendamentoRef, { 
+          status: "conclusão pendente", 
+          confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), 
+          lembreteConcluirEnviado: false,
+          clienteNotificado: false // Garante o popup do cliente
+      });
 
+      // 3. Remove horário da agenda se necessário
       if (barbeiroDoc.data().usaAgendaManual && horario) {
           const agendaAtual = barbeiroDoc.data().agenda || {};
-          if (agendaAtual[horario]) { delete agendaAtual[horario]; t.update(barbeiroRef, { agenda: agendaAtual }); }
+          if (agendaAtual[horario]) { 
+              delete agendaAtual[horario]; 
+              t.update(barbeiroRef, { agenda: agendaAtual }); 
+          }
       }
+      
+      // 4. Taxa do Admin
       const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
-  }).then(() => {
-      setTimeout(() => location.reload(), 4000); // 4 segundos
 
+      // RETORNA O TELEFONE PARA USAR NO .THEN
+      return agendamentoDoc.data().clienteTelefone;
+
+  }).then((clienteTelefone) => {
       
-      notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Seu horário com ${perfil.nome} para as ${horario} foi confirmado.`);
-      exibirPopup("Agendamento aprovado!");
-  }).catch(e => {
-      exibirPopup("Erro ao aprovar: " + e);
-setTimeout(() => location.reload(), 4000); // 4 segundos
+      // --- NOVO: DIRECIONAMENTO PARA O WHATSAPP ---
+      if (clienteTelefone) {
+          const phoneNum = clienteTelefone.replace(/\D/g, '');
+          // Mensagem pré-definida
+          const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento comigo no aplicativo Nova Versão, fico no seu aguardo no horario ${horario} :)`);
+          // Abre em nova aba
+          window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
+      }
+      // --------------------------------------------
 
+      fecharTodosOsModais();
+      exibirPopup("Sucesso!", "Agendamento aprovado! Você foi redirecionado para o WhatsApp do cliente.");
+      
+      // Recarrega a página após 4 segundos para atualizar tudo
+      setTimeout(() => location.reload(), 4000); 
+
+  }).catch(e => {
+      fecharTodosOsModais();
+      exibirPopup("Erro ao aprovar: " + e);
+      setTimeout(() => location.reload(), 4000); 
   });
 }
 
@@ -7075,30 +7133,63 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
 
 async function concluirAgendamento(agendamentoId, clienteUid) {
   exibirAguarde("Concluindo...");
+  
   try {
     const agendamentoRef = db.collection("agendamentos").doc(agendamentoId);
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
     const clienteRef = db.collection("usuarios").doc(clienteUid);
-    await db.runTransaction(async t => {
+
+    // 1. Executa a transação no banco e RETORNA o telefone do cliente
+    const clienteTelefone = await db.runTransaction(async t => {
         const agendamentoDoc = await t.get(agendamentoRef);
-        if (agendamentoDoc.data().status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
-        t.update(barbeiroRef, { cortesSemana: firebase.firestore.FieldValue.increment(1), clientesAtendidos: firebase.firestore.FieldValue.increment(1) });
-        t.update(agendamentoRef, { status: "concluido", avisoAvaliacaoEnviado: false });
-        t.update(clienteRef, { cortesRealizados: firebase.firestore.FieldValue.increment(1) });
+        const agData = agendamentoDoc.data();
+
+        if (agData.status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
+
+        // Atualiza contadores do profissional
+        t.update(barbeiroRef, { 
+            cortesSemana: firebase.firestore.FieldValue.increment(1), 
+            clientesAtendidos: firebase.firestore.FieldValue.increment(1) 
+        });
+        
+        // Marca agendamento como concluído
+        t.update(agendamentoRef, { 
+            status: "concluido", 
+            avisoAvaliacaoEnviado: false // Reseta para garantir que o popup de avaliação apareça pro cliente
+        });
+        
+        // Atualiza contador do cliente
+        t.update(clienteRef, { 
+            cortesRealizados: firebase.firestore.FieldValue.increment(1) 
+        });
+
+        return agData.clienteTelefone; // Retorna o telefone para usar fora da transação
     });
+
+    // 2. Verifica conquistas (sem travar o fluxo visual)
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    
-    setTimeout(() => location.reload(), 4000); // 4 segundos
+    // 3. REDIRECIONA PARA O WHATSAPP (Ação Solicitada)
+    if (clienteTelefone) {
+        const phoneNum = clienteTelefone.replace(/\D/g, '');
+        const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação, assim você ganha pontos pra ter desconto nos proximos agendamentos, agradeço! :D");
+        window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
+    }
 
-    exibirPopup("Serviço concluído!");
+    fecharTodosOsModais();
+    exibirPopup("Sucesso", "Serviço concluído! WhatsApp aberto para aviso.");
+
+    // 4. Notificações e Lógica de Bônus (Mantido do original)
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
+    
     const clienteDoc = await clienteRef.get();
     const clienteData = clienteDoc.data();
+    
     if (clienteData.bonusIndicacaoPendente) {
         await clienteRef.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO), bonusIndicacaoPendente: false });
         notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade!`);
+        
         const query = await db.collection("usuarios").where("email", "==", clienteData.indicadoPorEmail).limit(1).get();
         if (!query.empty) {
             const indicadorDoc = query.docs[0];
@@ -7106,10 +7197,14 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
             notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o serviço!`);
         }
     }
-  } catch(e) {
-    exibirPopup("Erro ao concluir serviço: " + e);
-setTimeout(() => location.reload(), 4000); // 4 segundos
 
+    // Recarrega a página após 4 segundos para atualizar as listas
+    setTimeout(() => location.reload(), 4000);
+
+  } catch(e) {
+    fecharTodosOsModais();
+    exibirPopup("Erro ao concluir serviço: " + e);
+    setTimeout(() => location.reload(), 4000); 
   }
 }
 
