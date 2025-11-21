@@ -13025,10 +13025,12 @@ async function gerenciarMoldura(key, element) {
     executarCompraMoldura(key, m);
 }
 
-// Função auxiliar para isolar a lógica de compra
-function ejecutarCompraMoldura(key, m) {
+function executarCompraMoldura(key, m) {
     if (perfil.saldo < m.preco) {
-        return exibirPopup("Saldo insuficiente", "Você não tem saldo suficiente para comprar esta moldura.");
+        // Adicionei um callback aqui também para facilitar o depósito
+        return exibirPopup("Saldo insuficiente", "Você não tem saldo suficiente para comprar esta moldura.", "aviso", () => {
+            abrirModal('modalCarteira');
+        });
     }
     
     exibirConfirmacao(
@@ -13039,10 +13041,13 @@ function ejecutarCompraMoldura(key, m) {
             db.collection('usuarios').doc(auth.currentUser.uid).update({
                 saldo: firebase.firestore.FieldValue.increment(-m.preco),
                 moldurasAdquiridas: firebase.firestore.FieldValue.arrayUnion(key),
-                molduraSelecionada: key // Já seleciona ao comprar
+                molduraSelecionada: key // Já seleciona automaticamente ao comprar
             }).then(() => {
                 fecharTodosOsModais();
-                exibirPopup("Sucesso!", "Compra realizada! Moldura vitalícia adquirida.", "sucesso");
+                exibirPopup("Sucesso!", "Compra realizada! Moldura vitalícia adquirida.", "sucesso", () => {
+                    // Reabre o perfil para mostrar a moldura equipada
+                    abrirModalPerfil();
+                });
             }).catch(e => {
                 fecharTodosOsModais();
                 exibirPopup("Erro na compra: " + e.message);
