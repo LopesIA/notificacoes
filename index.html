@@ -1429,29 +1429,6 @@ padding-right: 10px; /* Espaço para a barra de rolagem */
 .roleta-container::before { left: 0; background: linear-gradient(to right, #000, transparent); }
 .roleta-container::after { right: 0; background: linear-gradient(to left, #000, transparent); }
 
-/* SETA INDICADORA: Centralizada e Visível */
-.seta-roleta {
-    position: absolute;
-    left: 50%;
-    top: 0; /* Encostado no teto, DENTRO da caixa */
-    transform: translateX(-50%);
-    width: 0; 
-    height: 0; 
-    
-    /* Desenha o triângulo vermelho com bordas */
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-top: 25px solid #ff0000; /* Vermelho vivo */
-    
-    z-index: 100; /* Garante que fique na frente de tudo */
-    filter: drop-shadow(0 2px 2px black);
-    
-    /* IMPORTANTE: Esconde o emoji antigo se ele estiver no HTML */
-    font-size: 0; 
-    color: transparent;
-    text-shadow: none;
-}
-
 .roleta-faixa {
     display: flex;
     height: 100%;
@@ -7063,7 +7040,7 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if (clienteTelefone) {
           const phoneNum = clienteTelefone.replace(/\D/g, '');
           // Mensagem pré-definida
-          const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento comigo no aplicativo Nova Versão, fico no seu aguardo no horario ${horario} 😁`);
+          const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento comigo no aplicativo Nova Versão, fico no seu aguardo no horario ${horario} :D`);
           // Abre em nova aba
           window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
       }
@@ -7173,7 +7150,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     // 3. REDIRECIONA PARA O WHATSAPP (Ação Solicitada)
     if (clienteTelefone) {
         const phoneNum = clienteTelefone.replace(/\D/g, '');
-        const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação, assim você ganha pontos pra ter desconto nos proximos agendamentos, agradeço! 😁");
+        const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação, assim você ganha pontos pra ter desconto nos proximos agendamentos, agradeço! :D");
         window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
     }
 
