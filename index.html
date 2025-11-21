@@ -8484,7 +8484,64 @@ async function abrirModalGerenciarUsuario(uid) {
                 <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>👁️ Designer Cílios</button>
             </div>
         </div>
+       let moldurasHtml = '';
+    const moldurasAdquiridas = u.moldurasAdquiridas || [];
+    const molduraEquipada = u.molduraSelecionada;
 
+    // Verifica acesso temporário via PRO (Lógica local para exibição)
+    const checkProAccess = (key) => {
+        if (!isProAtivo(u) || !u.proTier) return false;
+        const tier = u.proTier;
+        const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
+        const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
+        const idxUser = niveis.indexOf(tier);
+        const idxMoldura = moldurasOrdem.indexOf(key);
+        return (idxUser >= 0 && idxMoldura >= 0 && idxUser >= idxMoldura);
+    };
+
+    Object.keys(MOLDURAS).forEach(key => {
+        const m = MOLDURAS[key];
+        const isDefinitiva = moldurasAdquiridas.includes(key);
+        const isTemporaria = !isDefinitiva && checkProAccess(key);
+        const isEquipada = molduraEquipada === key;
+
+        if (isDefinitiva || isTemporaria) {
+            const tipoBadge = isDefinitiva 
+                ? '<span style="background:#27ae60; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">DEFINITIVA (Comprada)</span>' 
+                : '<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">TEMPORÁRIA (PRO)</span>';
+            
+            const equipadaBadge = isEquipada ? '✅ Em uso' : '';
+
+            moldurasHtml += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cor-botoes); padding:8px; margin-bottom:5px; border-radius:8px; border: 1px solid var(--cor-borda);">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="${m.classe}" style="width:30px; height:30px; border-radius:50%;"></div>
+                        <div>
+                            <div style="font-weight:bold; font-size:14px;">${m.nome} ${equipadaBadge}</div>
+                            ${tipoBadge}
+                        </div>
+                    </div>
+                    <button onclick="adminRemoverMoldura('${uid}', '${key}', ${isDefinitiva})" style="background:#c0392b; font-size:12px; padding:5px 10px; width:auto;">Remover</button>
+                </div>
+            `;
+        }
+    });
+
+    if (moldurasHtml === '') {
+        moldurasHtml = '<p style="font-size:12px; opacity:0.7;">Este usuário não possui molduras liberadas.</p>';
+    }
+    // --- FIM DO BLOCO NOVO ---
+
+    // INSERIR O HTML NO TEMPLATE STRING DO MODAL:
+    container.innerHTML = `
+        <div class="popup-section">
+            <p><strong>Gerenciar Molduras:</strong></p>
+            ${moldurasHtml}
+        </div>
+
+        <div class="popup-section">
+            <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
+            `;
         <div class="popup-section">
             <p><strong>Ações de Segurança:</strong></p>
             <input id="adminNovaSenha" type="password" placeholder="🔑 Definir Nova Senha para o Usuário">
