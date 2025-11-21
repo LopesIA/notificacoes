@@ -8845,15 +8845,11 @@ async function adminToggleLoja(uid, deveAtivar) {
     }
 }
 
+// SUBSTITUA a função 'adminTogglePro' inteira por esta:
 async function adminTogglePro(uid, conceder) {
     exibirAguarde(conceder ? "Concedendo PRO..." : "Removendo PRO...");
     
     try {
-        // 1. Busca dados atuais do usuário para verificar a moldura
-        const userDoc = await db.collection('usuarios').doc(uid).get();
-        if (!userDoc.exists) throw new Error("Usuário não encontrado.");
-        const u = userDoc.data();
-
         let updates = {};
         
         if (conceder) {
@@ -8862,31 +8858,24 @@ async function adminTogglePro(uid, conceder) {
             if (!selectElement) throw new Error("Erro na interface: Select não encontrado.");
             
             const tierSelecionado = selectElement.value;
+            
+            // Define expiração para 30 dias
             const expiracao = new Date();
             expiracao.setDate(expiracao.getDate() + 30); 
             
             updates = {
                 proAtivo: true,
                 proTier: tierSelecionado,
+                // Envia como ISO String para garantir compatibilidade total
                 proExpirationDate: expiracao.toISOString() 
             };
         } else {
-            // --- LÓGICA DE REMOÇÃO INTELIGENTE DA MOLDURA ---
-            // Se o usuário estiver com uma moldura equipada
-            if (u.molduraSelecionada) {
-                const moldurasCompradas = u.moldurasAdquiridas || [];
-                // Se a moldura atual NÃO estiver na lista de compradas (ou seja, é temporária do PRO)
-                if (!moldurasCompradas.includes(u.molduraSelecionada)) {
-                    console.log("Removendo moldura temporária do usuário...");
-                    updates.molduraSelecionada = firebase.firestore.FieldValue.delete(); // Remove a seleção
-                }
-            }
-            // ------------------------------------------------
-
-            // Remove status PRO
-            updates.proAtivo = false;
-            updates.proTier = null;
-            updates.proExpirationDate = null;
+            // Para remover, limpamos os campos
+            updates = {
+                proAtivo: false,
+                proTier: null,
+                proExpirationDate: null
+            };
         }
         
         // Envia para o backend
@@ -8905,18 +8894,24 @@ async function adminTogglePro(uid, conceder) {
 
         fecharTodosOsModais(); // Fecha o aguarde
         
-        // Callback para reabrir o modal
+        // --- MUDANÇA AQUI ---
+        // Define a função de callback que reabre o modal
         const reabrirModalAdmin = () => {
             abrirModalGerenciarUsuario(uid);
         };
 
+        // Feedback visual
         if (conceder) {
             notifyUser(uid, "🌟 PRO Ativado!", `Admin ativou seu plano ${updates.proTier}.`);
-            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado.`, "sucesso", reabrirModalAdmin);
+            // Exibe o popup e passa o callback para o botão "OK"
+            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado com sucesso.`, "sucesso", reabrirModalAdmin);
         } else {
             notifyUser(uid, "ℹ️ PRO Removido", "Seu plano PRO foi cancelado pelo admin.");
-            exibirPopup("Sucesso!", "Plano PRO removido (Moldura temporária retirada, se houver).", "sucesso", reabrirModalAdmin);
+            // Exibe o popup e passa o callback para o botão "OK"
+            exibirPopup("Sucesso!", "Plano PRO removido.", "sucesso", reabrirModalAdmin);
         }
+        // O setTimeout foi removido e substituído pela lógica de callback
+        // --- FIM DA MUDANÇA ---
 
     } catch (error) {
         fecharTodosOsModais();
