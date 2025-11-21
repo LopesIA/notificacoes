@@ -1817,6 +1817,19 @@ body {
     margin-top: 2px; /* Cola na roleta */
     filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.5));
 }
+
+/* Garante que o Modal de Confirmação e o Bloqueante fiquem ACIMA de tudo */
+#modalConfirmacaoGenerica, 
+#modalBloqueante,
+#modalPopupGenerico {
+    z-index: 10000 !important; /* Maior que o modal de agendamento (9999) */
+}
+
+/* Garante que o fundo escuro desses modais também fique acima */
+#modalConfirmacaoGenerica.show,
+#modalBloqueante.show {
+    background: rgba(0,0,0,0.95); /* Fundo bem escuro para focar */
+}
   </style>
 </head>
 <body>
@@ -4559,30 +4572,36 @@ auth.onAuthStateChanged(async user => {
                   });
               });
 
-            // 2. Listener para POPUP DE STATUS (Aceito/Recusado - Horário Marcado)
+            // 2. Listener para POPUP DE STATUS (Aceito/Recusado)
             console.log("Iniciando listener de status de agendamentos (Cliente)...");
             db.collection("agendamentos")
               .where("clienteUid", "==", user.uid)
-              .where("clienteNotificado", "==", false)
-              .where("status", "in", ["conclusão pendente", "cancelado"])
+              .where("clienteNotificado", "==", false) // Só pega os que ainda não foram avisados
+              .where("status", "in", ["conclusão pendente", "cancelado"]) // Monitora Aprovado e Recusado
               .onSnapshot(snapshot => {
                   snapshot.docChanges().forEach(change => {
                       if (change.type === 'added' || change.type === 'modified') {
                           const ag = change.doc.data();
                           
                           if (ag.status === "conclusão pendente") {
-                              if (ag.horario) { 
-                                  // USANDO POPUP BLOQUEANTE
-                                  exibirPopupBloqueante("Agendamento Aceito!", 
-                                    `Boas notícias! Seu agendamento foi aceito:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario}\nValor: R$ ${ag.valor.toFixed(2)}\n\nPor favor, não se atrase!`,
-                                    () => change.doc.ref.update({ clienteNotificado: true })
-                                  );
-                              }
+                              // AGENDAMENTO APROVADO
+                              exibirPopupBloqueante(
+                                "✅ Agendamento Aprovado!", 
+                                `Ótima notícia! Seu agendamento foi confirmado:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario || 'Imediato'}\nValor: R$ ${ag.valor.toFixed(2)}\n\nPor favor, não se atrase!`,
+                                () => {
+                                    // Ao clicar em OK, marca como notificado para não aparecer de novo
+                                    change.doc.ref.update({ clienteNotificado: true });
+                                }
+                              );
                           } else if (ag.status === "cancelado") {
-                              // USANDO POPUP BLOQUEANTE
-                              exibirPopupBloqueante("Agendamento Recusado", 
-                                `Infelizmente, seu pedido de agendamento foi recusado:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario || 'Vaga Imediata'}\n\nVocê não foi cobrado.`,
-                                () => change.doc.ref.update({ clienteNotificado: true })
+                              // AGENDAMENTO RECUSADO
+                              exibirPopupBloqueante(
+                                "❌ Agendamento Recusado", 
+                                `O profissional não pode atender neste momento:\n\nProfissional: ${ag.barbeiroNome}\n\nO valor foi estornado para sua carteira e você não foi cobrado.`,
+                                () => {
+                                    // Ao clicar em OK, marca como notificado
+                                    change.doc.ref.update({ clienteNotificado: true });
+                                }
                               );
                           }
                       }
@@ -8641,41 +8660,52 @@ function exibirPopupNovoAgendamento(agendamentoDoc) {
     const btnAceitar = document.getElementById('btnAceitarAgendamentoPopup');
     const btnRecusar = document.getElementById('btnRecusarAgendamentoPopup');
 
-    // --- AÇÃO DO BOTÃO ACEITAR ---
+    // --- AÇÃO DO BOTÃO ACEITAR (COM POPUP CUSTOMIZADO) ---
     btnAceitar.onclick = () => {
-        // Usa confirm nativo para evitar conflito de sobreposição de modais
-        if(!confirm("Confirmar aprovação deste agendamento?")) return;
-        
-        // 1. Fecha visualmente o modal IMEDIATAMENTE
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        popupAgendamentoAberto = false;
-        
-        // 2. Chama a função de backend
-        if (ag.status === 'imediato') {
-            aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
-        } else {
-            aprovarAgendamento(agendamentoDoc.id, ag.clienteUid, ag.valor, ag.horario);
-        }
+        exibirConfirmacao(
+            "Aprovar Agendamento?", 
+            `Deseja confirmar o atendimento de ${ag.clienteNome} para ${ag.horario || 'agora'}?`,
+            () => {
+                // Callback: Só executa se clicar em "Sim" no popup
+                
+                // 1. Fecha o modal de agendamento manualmente
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+                popupAgendamentoAberto = false;
+                
+                // 2. Chama a função de aprovação
+                if (ag.status === 'imediato') {
+                    aprovarAgendamentoImediato(agendamentoDoc.id, ag.clienteUid, ag.valor);
+                } else {
+                    aprovarAgendamento(agendamentoDoc.id, ag.clienteUid, ag.valor, ag.horario);
+                }
+            }
+        );
     };
 
-    // --- AÇÃO DO BOTÃO RECUSAR ---
+    // --- AÇÃO DO BOTÃO RECUSAR (COM POPUP CUSTOMIZADO) ---
     btnRecusar.onclick = () => {
-        if(!confirm("Tem certeza que deseja recusar este agendamento?")) return;
-        
-        // 1. Fecha visualmente
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        popupAgendamentoAberto = false;
-        
-        // 2. Chama backend
-        recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
+        exibirConfirmacao(
+            "Recusar Agendamento?", 
+            "Tem certeza que deseja recusar? O cliente será notificado.",
+            () => {
+                // Callback: Só executa se clicar em "Sim"
+                
+                // 1. Fecha o modal manualmente
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+                popupAgendamentoAberto = false;
+                
+                // 2. Chama a função de recusa
+                recusarAgendamento(agendamentoDoc.id, ag.clienteUid);
+            }
+        );
     };
 
-    // Abre o modal
+    // Abre o modal de forma persistente
     popupAgendamentoAberto = true;
     modal.style.display = 'flex';
-    modal.onclick = null; // Remove qualquer evento de clique no fundo
+    modal.onclick = null; // Remove fechamento por clique no fundo
     setTimeout(() => modal.classList.add('show'), 10);
 }
 
