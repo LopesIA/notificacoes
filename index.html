@@ -4572,60 +4572,34 @@ auth.onAuthStateChanged(async user => {
                   });
               });
 
-            // --- LISTENER DE STATUS DO AGENDAMENTO (Cliente) ---
-            console.log("Iniciando monitoramento de aprovação/recusa...");
-            
+            // 2. Listener para POPUP DE STATUS (Aceito/Recusado)
+            console.log("Iniciando listener de status de agendamentos (Cliente)...");
             db.collection("agendamentos")
               .where("clienteUid", "==", user.uid)
-              .where("clienteNotificado", "==", false) // Filtro chave: Só pega o que ainda não foi visto
-              .where("status", "in", ["conclusão pendente", "cancelado"]) // Monitora Aprovados e Recusados
+              .where("clienteNotificado", "==", false) // Só pega os que ainda não foram avisados
+              .where("status", "in", ["conclusão pendente", "cancelado"]) // Monitora Aprovado e Recusado
               .onSnapshot(snapshot => {
                   snapshot.docChanges().forEach(change => {
-                      // Executa apenas se for um novo evento ou modificação
                       if (change.type === 'added' || change.type === 'modified') {
                           const ag = change.doc.data();
                           
-                          // CASO 1: AGENDAMENTO APROVADO
                           if (ag.status === "conclusão pendente") {
-                              
-                              // Monta uma mensagem HTML bonita com os detalhes
-                              const detalhesHtml = `
-                                  <div style="text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-top: 10px;">
-                                      <p>💈 <b>Profissional:</b> ${ag.barbeiroNome}</p>
-                                      <p>✂️ <b>Serviço:</b> ${ag.servico}</p>
-                                      <p>📅 <b>Horário:</b> <span style="color: var(--cor-destaque); font-weight:bold;">${ag.horario || 'Vaga Imediata'}</span></p>
-                                      <p>💰 <b>Valor:</b> R$ ${ag.valor.toFixed(2)}</p>
-                                  </div>
-                                  <p style="margin-top: 15px; font-size: 0.9em;">Por favor, não se atrase!</p>
-                              `;
-
+                              // AGENDAMENTO APROVADO
                               exibirPopupBloqueante(
                                 "✅ Agendamento Aprovado!", 
-                                detalhesHtml,
+                                `Ótima notícia! Seu agendamento foi confirmado:\n\nProfissional: ${ag.barbeiroNome}\nServiço: ${ag.servico}\nHorário: ${ag.horario || 'Imediato'}\nValor: R$ ${ag.valor.toFixed(2)}\n\nPor favor, não se atrase!`,
                                 () => {
-                                    // AÇÃO DO BOTÃO OK:
-                                    // Atualiza o banco para dizer que o cliente JÁ VIU o aviso.
-                                    // Isso impede que o popup apareça novamente para este agendamento.
+                                    // Ao clicar em OK, marca como notificado para não aparecer de novo
                                     change.doc.ref.update({ clienteNotificado: true });
                                 }
                               );
-                          } 
-                          
-                          // CASO 2: AGENDAMENTO RECUSADO/CANCELADO
-                          else if (ag.status === "cancelado") {
-                              
-                              const detalhesHtml = `
-                                  <p>O profissional <b>${ag.barbeiroNome}</b> não pôde confirmar seu horário para <b>${ag.servico}</b>.</p>
-                                  <br>
-                                  <p style="color: #e74c3c;">O valor foi estornado para sua carteira.</p>
-                              `;
-
+                          } else if (ag.status === "cancelado") {
+                              // AGENDAMENTO RECUSADO
                               exibirPopupBloqueante(
                                 "❌ Agendamento Recusado", 
-                                detalhesHtml,
+                                `O profissional não pode atender neste momento:\n\nProfissional: ${ag.barbeiroNome}\n\nO valor foi estornado para sua carteira e você não foi cobrado.`,
                                 () => {
-                                    // AÇÃO DO BOTÃO OK:
-                                    // Marca como visto para parar de notificar
+                                    // Ao clicar em OK, marca como notificado
                                     change.doc.ref.update({ clienteNotificado: true });
                                 }
                               );
