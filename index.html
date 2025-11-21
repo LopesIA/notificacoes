@@ -1809,7 +1809,7 @@ body {
 }
 
 /* ============================================================ */
-/* === MOLDURAS PREMIUM (CORRIGIDO: Z-INDEX E LOJA) === */
+/* === MOLDURAS PREMIUM (CORRIGIDO: ASAS NO CHAT) === */
 /* ============================================================ */
 
 /* --- ESTRUTURA BASE --- */
@@ -1826,17 +1826,17 @@ body {
 /* Foto do Usuário (Chat e Geral) */
 .chat-user-photo {
     position: relative;
-    z-index: 20; /* AUMENTADO: Garante que fique na frente das asas */
+    z-index: 20; /* Foto acima das asas */
     object-fit: cover;
     background: #000;
     display: block;
     box-sizing: border-box;
 }
 
-/* Foto do Usuário (Popup Grande) - CORREÇÃO DO Z-INDEX AQUI */
+/* Foto do Usuário (Popup Grande) - Z-Index Alto */
 .perfil-foto-grande {
     position: relative;
-    z-index: 25 !important; /* Força a foto a ficar SOBRE a asa */
+    z-index: 25 !important; /* Foto acima da asa no popup */
     object-fit: cover;
     background: #000;
     display: block;
@@ -1847,7 +1847,7 @@ body {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 30; /* Coroa na frente de tudo */
+    z-index: 30; /* Coroa acima de tudo */
     background: transparent;
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
     pointer-events: none;
@@ -1864,7 +1864,8 @@ body {
 /* 1. TAMANHO CHAT (Pequeno - 32px) */
 .avatar-wrapper.chat-size {
     width: 32px; height: 32px;
-    margin-right: 8px; margin-left: 4px;
+    margin-right: 12px; /* Aumentei a margem direita para a asa não bater no nome */
+    margin-left: 8px;   /* Margem esquerda para a asa não bater na borda */
 }
 .avatar-wrapper.chat-size .chat-user-photo {
     width: 100% !important; height: 100% !important;
@@ -1887,13 +1888,12 @@ body {
     width: 40px; height: 26px; top: -30px;
 }
 
-/* 3. TAMANHO LOJA (Médio - 60px) - NOVO */
+/* 3. TAMANHO LOJA (Médio - 60px) */
 .avatar-wrapper.shop-size {
     width: 60px; height: 60px;
-    /* Não precisa de margem extra pois está dentro da caixa scroll */
 }
-.avatar-wrapper.shop-size div[class*="avatar-frame"] { /* Alvo para o div placeholder */
-    z-index: 20; position: relative; /* Garante que o placeholder fique sobre a asa */
+.avatar-wrapper.shop-size div[class*="avatar-frame"] { 
+    z-index: 20; position: relative; 
 }
 .avatar-wrapper.shop-size .coroa-topo {
     width: 20px; height: 14px; top: -16px;
@@ -1930,9 +1930,8 @@ body {
 }
 .avatar-wrapper.ouro .coroa-topo::after { background: linear-gradient(to bottom, #fff7cc, #ffd700, #b8860b); }
 
-/* --- NÍVEL 4: DIAMANTE --- */
+/* --- NÍVEL 4: DIAMANTE (ASAS REVISADAS) --- */
 
-/* Estilo da Foto/Placeholder */
 .avatar-wrapper.diamante .chat-user-photo, 
 .avatar-wrapper.diamante .perfil-foto-grande,
 .avatar-wrapper.diamante .avatar-frame-diamante {
@@ -1945,19 +1944,19 @@ body {
     background: linear-gradient(to bottom, #e0ffff, #00c6ff);
 }
 
-/* ASAS (Design Cristal) */
+/* ASAS (Cristal Afiado) */
 .avatar-wrapper.diamante::before {
     content: '';
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 0; /* Fica atrás */
+    z-index: 0; /* Atrás da foto */
     
     background: linear-gradient(90deg, rgba(0,198,255,0) 0%, rgba(0,198,255,0.8) 20%, rgba(0,198,255,1) 50%, rgba(0,198,255,0.8) 80%, rgba(0,198,255,0) 100%);
     
     clip-path: polygon(
         0% 10%, 20% 30%, 5% 50%, 35% 55%, 
-        50% 50%, /* Centro */
+        50% 50%, 
         65% 55%, 95% 50%, 80% 30%, 100% 10%, 
         60% 40%, 50% 20%, 40% 40%
     );
@@ -1965,30 +1964,33 @@ body {
     animation: asa-cristal-flutuar 3s ease-in-out infinite;
 }
 
-/* Ajuste Asa no CHAT (32px) */
+/* AJUSTE: Asa no CHAT (Agora visível e proporcional) */
 .avatar-wrapper.chat-size.diamante::before {
-    width: 65px; height: 25px;
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(0.9);
+    display: block;
+    width: 54px;  /* Mais largo que os 32px da foto */
+    height: 22px;
+    top: 50%;
+    opacity: 1;
+    /* Ajuste fino para centralizar perfeitamente atrás da bolinha */
+    transform: translate(-50%, -50%); 
 }
 
-/* Ajuste Asa no POPUP (120px) */
+/* AJUSTE: Asa no POPUP (Distante do centro) */
 .avatar-wrapper.popup-size.diamante::before {
     width: 280px; height: 120px;
     top: 50%;
-    transform: translate(-50%, -60%); /* Levemente pra cima */
+    transform: translate(-50%, -60%);
     filter: drop-shadow(0 0 10px #00c6ff);
 }
 
-/* Ajuste Asa na LOJA (60px) - NOVO */
+/* AJUSTE: Asa na LOJA (Visível) */
 .avatar-wrapper.shop-size.diamante::before {
-    width: 130px; height: 50px; /* Proporcional a 60px */
+    width: 130px; height: 50px;
     top: 50%;
     transform: translate(-50%, -50%);
     opacity: 1;
 }
 
-/* Animação */
 @keyframes asa-cristal-flutuar {
     0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
     50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
@@ -12781,27 +12783,75 @@ function girarRoleta() {
     }, 6500);
 }
 
+// Helper para verificar acesso à moldura (Permanente ou PRO)
+function verificarAcessoMoldura(key) {
+    const minhasMolduras = perfil.moldurasAdquiridas || [];
+    
+    // 1. Verifica se comprou (Vitalício)
+    if (minhasMolduras.includes(key)) {
+        return { acesso: true, tipo: 'permanente' };
+    }
+
+    // 2. Verifica se tem acesso via PRO (Temporário)
+    if (isProAtivo(perfil) && perfil.proTier) {
+        // Mapeamento de Tier -> Moldura Liberada (CUMULATIVO: Tier alto libera anteriores)
+        // Tier 1 (Bronze) -> bronze
+        // Tier 2 (Prata) -> prata + bronze
+        // Tier 3 (Ouro) -> ouro + prata + bronze
+        // Tier 4 (Diamante) -> diamante + ouro + prata + bronze
+        
+        const tier = perfil.proTier;
+        const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
+        const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
+        
+        const indiceUsuario = niveis.indexOf(tier);
+        const indiceMoldura = moldurasOrdem.indexOf(key);
+
+        if (indiceUsuario >= 0 && indiceMoldura >= 0 && indiceUsuario >= indiceMoldura) {
+            return { acesso: true, tipo: 'temporario' };
+        }
+    }
+
+    return { acesso: false, tipo: 'nenhum' };
+}
+
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
-    // Aplica a classe de scroll horizontal
     container.className = 'molduras-scroll-container'; 
     container.innerHTML = '';
     
-    const minhasMolduras = perfil.moldurasAdquiridas || [];
-    
     Object.keys(MOLDURAS).forEach(key => {
         const m = MOLDURAS[key];
-        const tem = minhasMolduras.includes(key);
         const selecionada = perfil.molduraSelecionada === key;
+        const statusAcesso = verificarAcessoMoldura(key); // Usa a nova função
         
         const checkDisplay = selecionada ? 'flex' : 'none';
-        const opacidade = tem ? '1' : '0.7';
+        
+        // Lógica de exibição do rodapé (Preço ou Status)
+        let rodapeHtml = '';
+        let estiloBorda = '';
 
-        // Adicionada a classe 'shop-size' na div avatar-wrapper abaixo
+        if (statusAcesso.tipo === 'permanente') {
+            rodapeHtml = '<span style="font-size:10px; color:#4CAF50; margin-top:2px;">Adquirido</span>';
+            // Se tiver selecionada, borda destaque, senão borda verde
+            estiloBorda = selecionada ? '' : 'border-color: #4CAF50;'; 
+        } else if (statusAcesso.tipo === 'temporario') {
+            // Mostra que está liberado pelo PRO, mas permite ver que é temporário
+            rodapeHtml = `
+                <span style="font-size:9px; color:#00c6ff; font-weight:bold; margin-top:2px;">Liberado PRO</span>
+                <span style="font-size:9px; color:#ff9800; opacity:0.7;">(Comprar: R$${m.preco})</span>
+            `;
+            estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
+        } else {
+            // Não tem acesso
+            rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${m.preco}</span>`;
+            estiloBorda = 'opacity: 0.7;';
+        }
+
         container.innerHTML += `
-            <div id="moldura_${key}" class="moldura-item ${tem ? 'comprada' : ''} ${selecionada ? 'selecionada' : ''}" 
+            <div id="moldura_${key}" class="moldura-item ${selecionada ? 'selecionada' : ''}" 
                  onclick="gerenciarMoldura('${key}', this)" 
-                 style="flex: 0 0 auto; width: 80px; display:flex; flex-direction:column; align-items:center; position:relative; cursor:pointer; opacity: ${opacidade}; margin: 0;"> 
+                 style="flex: 0 0 auto; width: 80px; display:flex; flex-direction:column; align-items:center; position:relative; cursor:pointer; margin: 0; ${estiloBorda}"> 
                  
                 <div class="moldura-check" style="display: ${checkDisplay}; right: 10px;">✅</div>
                 
@@ -12811,12 +12861,11 @@ function renderizarMolduras() {
                 </div>
 
                 <span style="font-size:12px; margin-top:8px; font-weight:bold; color: #fff;">${m.nome}</span>
-                ${!tem ? `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${m.preco}</span>` : '<span style="font-size:10px; color:#4CAF50; margin-top:2px;">Adquirido</span>'}
+                ${rodapeHtml}
             </div>`;
     });
 }
 
-// NOVA FUNÇÃO: Aplica o visual instantaneamente
 function selecionarMolduraVisualmente(element) {
     // Remove seleção visual de todas as outras
     document.querySelectorAll('.moldura-item').forEach(item => {
@@ -12830,46 +12879,79 @@ function selecionarMolduraVisualmente(element) {
 
 async function gerenciarMoldura(key, element) {
     const m = MOLDURAS[key];
-    const minhas = perfil.moldurasAdquiridas || [];
+    const statusAcesso = verificarAcessoMoldura(key);
     
-    if (minhas.includes(key)) {
-        // Seleciona visualmente instantaneamente
+    // CASO 1: Já tem permanente -> Seleciona direto
+    if (statusAcesso.tipo === 'permanente') {
         selecionarMolduraVisualmente(element);
-
-        // Atualiza no banco
         try {
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
-            console.log("Moldura atualizada.");
+            console.log("Moldura atualizada (Permanente).");
         } catch (e) {
             exibirPopup("Erro", "Falha ao salvar moldura.");
         }
-    } else {
-        // Lógica de Compra com POPUP
-        if (perfil.saldo < m.preco) {
-            return exibirPopup("Saldo insuficiente", "Você não tem saldo suficiente para comprar esta moldura.");
-        }
-        
-        // Substituição do confirm() pelo exibirConfirmacao()
-        exibirConfirmacao(
-            "Comprar Moldura?", 
-            `Deseja adquirir a moldura "${m.nome}" por R$ ${m.preco.toFixed(2)}?`, 
-            () => {
-                // Callback executado ao clicar em SIM
-                exibirAguarde("Comprando...");
-                db.collection('usuarios').doc(auth.currentUser.uid).update({
-                    saldo: firebase.firestore.FieldValue.increment(-m.preco),
-                    moldurasAdquiridas: firebase.firestore.FieldValue.arrayUnion(key)
-                }).then(() => {
-                    fecharTodosOsModais();
-                    exibirPopup("Sucesso!", "Compra realizada! Agora você pode selecionar a moldura.", "sucesso");
-                    // A UI será atualizada pelo listener do perfil
-                }).catch(e => {
-                    fecharTodosOsModais();
-                    exibirPopup("Erro na compra: " + e.message);
-                });
-            }
-        );
+        return;
     }
+
+    // CASO 2: Tem acesso TEMPORÁRIO (PRO) -> Pergunta se quer usar ou comprar
+    if (statusAcesso.tipo === 'temporario') {
+        // Exibe confirmação customizada com 2 botões
+        const modal = document.getElementById('modalConfirmacaoGenerica');
+        document.getElementById('confirmacaoGenericaTitulo').textContent = "Moldura Liberada (PRO)";
+        document.getElementById('confirmacaoGenericaMensagem').textContent = `Você tem acesso a esta moldura enquanto for PRO Tier correspondente.\n\nDeseja equipar agora ou comprar para ter para sempre?`;
+        
+        const btnNao = document.getElementById('btnConfirmacaoGenericaNao');
+        const btnSim = document.getElementById('btnConfirmacaoGenericaSim');
+        
+        // Botão Esquerdo: EQUIPAR (Uso temporário)
+        btnNao.textContent = "Equipar (Grátis)";
+        btnNao.style.backgroundColor = "#00c6ff"; // Azul PRO
+        btnNao.onclick = async () => {
+            fecharModalAtual();
+            selecionarMolduraVisualmente(element);
+            await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
+        };
+
+        // Botão Direito: COMPRAR (Vitalício)
+        btnSim.textContent = `Comprar (R$ ${m.preco})`;
+        btnSim.style.backgroundColor = "#4CAF50";
+        btnSim.onclick = () => {
+            fecharModalAtual();
+            executarCompraMoldura(key, m); // Chama a função de compra
+        };
+
+        abrirModal('modalConfirmacaoGenerica');
+        return;
+    }
+
+    // CASO 3: Não tem acesso -> Compra normal
+    executarCompraMoldura(key, m);
+}
+
+// Função auxiliar para isolar a lógica de compra
+function ejecutarCompraMoldura(key, m) {
+    if (perfil.saldo < m.preco) {
+        return exibirPopup("Saldo insuficiente", "Você não tem saldo suficiente para comprar esta moldura.");
+    }
+    
+    exibirConfirmacao(
+        "Comprar Moldura?", 
+        `Deseja adquirir a moldura "${m.nome}" VITALÍCIA por R$ ${m.preco.toFixed(2)}?`, 
+        () => {
+            exibirAguarde("Comprando...");
+            db.collection('usuarios').doc(auth.currentUser.uid).update({
+                saldo: firebase.firestore.FieldValue.increment(-m.preco),
+                moldurasAdquiridas: firebase.firestore.FieldValue.arrayUnion(key),
+                molduraSelecionada: key // Já seleciona ao comprar
+            }).then(() => {
+                fecharTodosOsModais();
+                exibirPopup("Sucesso!", "Compra realizada! Moldura vitalícia adquirida.", "sucesso");
+            }).catch(e => {
+                fecharTodosOsModais();
+                exibirPopup("Erro na compra: " + e.message);
+            });
+        }
+    );
 }
 
 function renderizarSelecaoConquistas() {
