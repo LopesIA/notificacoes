@@ -2387,17 +2387,16 @@ body {
     align-items: center;
 }
 
-/* --- CORREÇÃO VISUAL DA ROLETA --- */
+/* --- CORREÇÃO ROLETA (CSS) --- */
 .roleta-container {
-    background: #111;
+    background: #0a0a0a;
     border: 4px solid #d4af37;
     border-radius: 15px;
     height: 100px; 
     margin: 20px auto;
     position: relative;
     overflow: hidden;
-    width: 100%;
-    max-width: 320px; /* Largura fixa ajuda no cálculo visual */
+    width: 320px; /* Largura fixa para garantir a matemática */
     box-shadow: inset 0 0 30px rgba(0,0,0,1);
 }
 
@@ -2406,62 +2405,79 @@ body {
     height: 100%;
     align-items: center;
     will-change: transform;
+    /* A transição será injetada via JS */
 }
 
-/* MEDIDA EXATA PARA MATEMÁTICA: 80px largura + 5px margem esq + 5px margem dir = 90px TOTAL */
+/* O item tem 90px TOTAL (80 largura + 5 margem esq + 5 margem dir) */
 .roleta-item {
     width: 80px; 
     height: 80px;
     margin: 0 5px; 
-    flex-shrink: 0;
+    flex-shrink: 0; /* ISSO É CRUCIAL: Impede que o item esmague */
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px; /* Fonte ajustada */
+    font-size: 28px; 
     font-weight: 900;
-    font-family: 'Arial Black', sans-serif;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255,255,255,0.2);
     background: #1a1a1a;
     color: #fff;
+    border: 1px solid #333;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden; /* Para conter os efeitos internos */
 }
 
-/* Cores específicas para diferenciar os prêmios visualmente */
-.roleta-item.ponto { background: #1a1a1a; color: #fff; border-color: #333; }
-.roleta-item.item-especial { background: #d4af37; color: #000; border-color: #fff; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
-.roleta-item.caixa-surpresa { background: #e74c3c; color: #fff; border-color: #c0392b; animation: pulse-glow 1.5s infinite; }
+/* Estilos Específicos dos Itens da Roleta */
+.roleta-item.ponto { color: #eee; }
+.roleta-item.premio-top { background: #111; border: 1px solid gold; }
+.roleta-item.caixa { background: #c0392b; border: 2px solid #e74c3c; animation: pulse-red 1s infinite; }
 
-/* --- CLASSES INDIVIDUAIS PARA MOLDURAS E BALÕES NO CHAT --- */
+/* --- PREVIEWS REAIS DENTRO DA ROLETA --- */
+.mini-moldura-preview {
+    width: 50px; height: 50px; 
+    border-radius: 50%; 
+    background: url('https://via.placeholder.com/50/000000/FFFFFF/?text=VC') center/cover;
+    position: relative;
+}
+.mini-balao-preview {
+    width: 60px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    border-radius: 8px;
+}
 
-/* MOLDURAS (Avatar Frames) */
-.avatar-frame-bronze { border: 3px solid #cd7f32; box-shadow: 0 0 5px #cd7f32; }
-.avatar-frame-prata { border: 3px solid #c0c0c0; box-shadow: 0 0 8px #c0c0c0; }
-.avatar-frame-ouro { border: 3px solid #ffd700; box-shadow: 0 0 10px #ffd700; animation: gold-pulse 2s infinite; }
-.avatar-frame-diamante { border: 3px solid #b9f2ff; box-shadow: 0 0 12px #b9f2ff, inset 0 0 5px #b9f2ff; animation: flash-blue 1.5s infinite; }
+/* --- ANIMAÇÕES ADMIN (INSANAS) --- */
 
-/* BALÕES DE CHAT (Chat Bubbles) */
-.chat-message.bubble-bronze {
-    border: 1px solid #cd7f32 !important;
-    background: linear-gradient(145deg, #2a1a0a, #0c0c0c) !important;
-    box-shadow: 2px 2px 5px rgba(205, 127, 50, 0.2);
+/* ADMIN RED: Fogo/Sangue Pulsante */
+@keyframes admin-red-burn {
+    0% { box-shadow: 0 0 5px #800000, inset 0 0 5px #800000; border-color: #ff0000; }
+    50% { box-shadow: 0 0 20px #ff0000, inset 0 0 15px #ff0000; border-color: #ff4d4d; }
+    100% { box-shadow: 0 0 5px #800000, inset 0 0 5px #800000; border-color: #ff0000; }
 }
-.chat-message.bubble-prata {
-    border: 1px solid #c0c0c0 !important;
-    background: linear-gradient(145deg, #2c2c2c, #0c0c0c) !important;
-    box-shadow: 0 0 5px rgba(192, 192, 192, 0.3);
+.chat-message.bubble-admin-red {
+    background: linear-gradient(135deg, #200000, #500000) !important;
+    color: #ffcccc !important;
+    border: 2px solid #ff0000 !important;
+    animation: admin-red-burn 1.5s infinite alternate !important;
+    text-shadow: 0 0 5px #ff0000;
+    font-weight: bold;
 }
-.chat-message.bubble-ouro {
-    border: 1px solid #ffd700 !important;
-    background: linear-gradient(145deg, #3a2a00, #0c0c0c) !important;
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+
+/* ADMIN BLACK: Void/Matrix/Dark Energy */
+@keyframes admin-black-void {
+    0% { background-position: 0% 50%; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+    50% { background-position: 100% 50%; box-shadow: 0 0 25px rgba(255,255,255,0.4); }
+    100% { background-position: 0% 50%; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
 }
-.chat-message.bubble-diamante {
-    border: 1px solid #00c6ff !important;
-    background: #080808 !important;
-    box-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
-    color: #e0ffff !important;
-    text-shadow: 0 0 5px #00c6ff;
+.chat-message.bubble-admin-black {
+    background: linear-gradient(270deg, #000000, #333333, #000000) !important;
+    background-size: 400% 400% !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    animation: admin-black-void 3s ease infinite !important;
+    text-shadow: 0 0 5px #fff;
+    font-weight: bold;
 }
   </style>
 </head>
@@ -13235,34 +13251,43 @@ function abrirModalPerfil() {
     const nomeAtual = perfil.nome || "";
     const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    const isBarber = perfil.interesse_principal === 'barbeiro' || !perfil.interesse_principal;
-    const classeTema = isBarber ? 'tema-barbearia' : 'tema-feminino';
-    
-    // --- NOVA ORDEM ORGANIZADA (8 ITENS) ---
-    // Isso deve bater EXACTAMENTE com o array 'arrayPremios' na função girarRoleta
+    // === PADRÃO DE PRÊMIOS (ORDEM EXATA) ===
+    // Deve ter exatamente 9 itens para bater com a matemática do giro
+    // 0:1pt, 1:2pt, 2:3pt, 3:5pt, 4:10pt, 5:MOLDURA, 6:BALÃO, 7:1pt, 8:CAIXA
     const padraoItens = [
-        {t: '1', i: '', cls: 'ponto'},       // Index 0
-        {t: '2', i: '', cls: 'ponto'},       // Index 1
-        {t: '3', i: '', cls: 'ponto'},       // Index 2
-        {t: '5', i: '', cls: 'ponto'},       // Index 3
-        {t: '10', i: '', cls: 'ponto'},      // Index 4
-        {t: '', i: '🖼️', cls: 'item-especial'}, // Index 5 (Moldura)
-        {t: '', i: '💬', cls: 'item-especial'}, // Index 6 (Balão)
-        {t: '', i: '🎁', cls: 'caixa-surpresa'} // Index 7 (Caixa)
+        { tipo: 'txt', val: '1', cls: 'ponto' },
+        { tipo: 'txt', val: '2', cls: 'ponto' },
+        { tipo: 'txt', val: '3', cls: 'ponto' },
+        { tipo: 'txt', val: '5', cls: 'ponto' },
+        { tipo: 'txt', val: '10', cls: 'ponto' },
+        
+        // MOLDURA (Visual: Usamos a classe 'avatar-frame-ouro' para ficar bonito na roda)
+        { tipo: 'html', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' },
+        
+        // BALÃO (Visual: Usamos a classe 'bubble-diamante' para brilhar)
+        { tipo: 'html', html: '<div class="mini-balao-preview chat-message bubble-diamante" style="margin:0;">Chat</div>', cls: 'premio-top' },
+        
+        { tipo: 'txt', val: '1', cls: 'ponto' },
+        { tipo: 'txt', val: '🎁', cls: 'caixa' }
     ];
 
     let faixaHtml = '';
-    // Gera repetições suficientes para a animação (60 sets)
+    // Gera 60 repetições para criar a faixa longa de rolagem
     for(let i=0; i<60; i++) {
         padraoItens.forEach(item => {
-            const conteudo = item.i ? `<span style="font-size:32px;">${item.i}</span>` : item.t;
+            let conteudo = '';
+            if (item.tipo === 'txt') {
+                conteudo = `<span>${item.val}</span>`;
+            } else {
+                conteudo = item.html; // Insere o HTML exato da moldura/balão
+            }
             faixaHtml += `<div class="roleta-item ${item.cls}">${conteudo}</div>`;
         });
     }
 
     const infoTexto = perfil.tipo === 'cliente' 
-        ? '🎁 <b>Caixa Surpresa:</b> Pontos Extras ou VIP!' 
-        : '🎁 <b>Caixa Surpresa:</b> Topo ou Boost!';
+        ? '🎁 <b>Caixa Surpresa:</b> VIP ou Pontos!' 
+        : '🎁 <b>Caixa Surpresa:</b> Boost ou Topo!';
 
     const modal = document.getElementById('modalMeuPerfil');
     const content = modal.querySelector('.modal-content');
@@ -13287,7 +13312,7 @@ function abrirModalPerfil() {
             
             <div class="roleta-wrapper-externo" style="position: relative;">
                  <div class="seta-externa topo"></div>
-                 <div id="roletaVisual" class="roleta-container ${classeTema}" style="margin: 0;">
+                 <div id="roletaVisual" class="roleta-container" style="margin: 0;">
                     <div class="roleta-faixa" id="roletaFaixa" style="transform: translateX(0px);">${faixaHtml}</div>
                  </div>
                  <div class="seta-externa baixo"></div>
@@ -13302,7 +13327,7 @@ function abrirModalPerfil() {
         </div>
 
         <div class="popup-section" style="border-top: 1px solid var(--cor-borda); padding-top: 15px;">
-            <h4>💬 Estilos de Chat (Balões)</h4>
+            <h4>💬 Estilos de Chat</h4>
             <div id="listaBaloes" class="molduras-scroll-container"></div>
         </div>
 
@@ -13319,7 +13344,6 @@ function abrirModalPerfil() {
 
     atualizarBotaoRoleta();
 
-    // Renderiza as listas
     requestAnimationFrame(() => {
         renderizarMolduras();
         renderizarBaloes();
@@ -13408,69 +13432,74 @@ async function girarRoleta() {
     btnGirar.disabled = true; 
     btnGirar.textContent = "Girando...";
 
-    // === MAPA DE PRÊMIOS (ORDEM EXATA DO VISUAL) ===
-    // 0:1, 1:2, 2:3, 3:5, 4:10, 5:Moldura, 6:Balão, 7:Caixa
+    // === TABELA DE PRÊMIOS (Sincronizada com padraoItens em abrirModalPerfil) ===
+    // Index: 0   1   2   3   4    5(M)   6(B)   7   8(Cx)
     const arrayPremios = [
-        { tipo: 'ponto', valor: 1 },   // Index 0
-        { tipo: 'ponto', valor: 2 },   // Index 1
-        { tipo: 'ponto', valor: 3 },   // Index 2
-        { tipo: 'ponto', valor: 5 },   // Index 3
-        { tipo: 'ponto', valor: 10 },  // Index 4
-        { tipo: 'moldura', valor: 0 }, // Index 5
-        { tipo: 'balao', valor: 0 },   // Index 6
-        { tipo: 'caixa', valor: 0 }    // Index 7
+        { tipo: 'ponto', valor: 1 },   // 0
+        { tipo: 'ponto', valor: 2 },   // 1
+        { tipo: 'ponto', valor: 3 },   // 2
+        { tipo: 'ponto', valor: 5 },   // 3
+        { tipo: 'ponto', valor: 10 },  // 4
+        { tipo: 'moldura', valor: 0 }, // 5 (Moldura)
+        { tipo: 'balao', valor: 0 },   // 6 (Balão)
+        { tipo: 'ponto', valor: 1 },   // 7
+        { tipo: 'caixa', valor: 0 }    // 8 (Caixa)
     ];
 
-    // Sorteio Ponderado (Define onde vai parar)
+    // 1. DEFINIR O PRÊMIO (Lógica de Probabilidade)
     const rand = Math.random() * 100;
     let targetIndex = 0; 
 
-    // Ajuste as probabilidades aqui
+    // Probabilidades ajustadas:
     if (rand < 30) targetIndex = 0;      // 30% -> 1 pt
-    else if (rand < 55) targetIndex = 1; // 25% -> 2 pts
-    else if (rand < 75) targetIndex = 2; // 20% -> 3 pts
-    else if (rand < 85) targetIndex = 3; // 10% -> 5 pts
-    else if (rand < 90) targetIndex = 4; // 5%  -> 10 pts
-    else if (rand < 94) targetIndex = 5; // 4%  -> Moldura
-    else if (rand < 98) targetIndex = 6; // 4%  -> Balão
-    else targetIndex = 7;                // 2%  -> Caixa Surpresa
+    else if (rand < 50) targetIndex = 7; // 20% -> 1 pt (Outra posição)
+    else if (rand < 70) targetIndex = 1; // 20% -> 2 pts
+    else if (rand < 85) targetIndex = 2; // 15% -> 3 pts
+    else if (rand < 92) targetIndex = 3; // 7%  -> 5 pts
+    else if (rand < 95) targetIndex = 4; // 3%  -> 10 pts
+    else if (rand < 97) targetIndex = 5; // 2%  -> MOLDURA
+    else if (rand < 99) targetIndex = 6; // 2%  -> BALÃO
+    else targetIndex = 8;                // 1%  -> CAIXA
 
-    // --- MATEMÁTICA DE PARADA (Pixel Perfect) ---
-    // Largura do item + margens (80px + 5px + 5px) = 90px
-    const LARGURA_ITEM = 90; 
-    const ITENS_POR_SET = 8; // Agora temos 8 itens no padrão
-    const SET_FINAL = 45; // Quantas voltas completas dar antes de parar
+    // 2. CALCULAR O PIXEL EXATO DE PARADA
+    // Item: 80px largura + 5px margem esq + 5px margem dir = 90px TOTAL
+    const ITEM_WIDTH = 90; 
+    const ITEMS_PER_SET = 9; // O tamanho do arrayPremios
+    const LOOPS = 40; // Voltas completas (longe o suficiente)
     
-    // Índice absoluto onde a roleta deve parar (meio da faixa gerada)
-    const indiceFinalAbsoluto = (SET_FINAL * ITENS_POR_SET) + targetIndex;
+    // O índice real na lista HTML gigante (ex: item 365)
+    const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
 
-    const container = document.getElementById('roletaVisual');
-    const larguraContainer = container.offsetWidth; // ex: 320px
+    // Largura da janela da roleta (definida no CSS como 320px)
+    const containerWidth = 320; 
     
-    // O centro visual do container
-    const centroContainer = larguraContainer / 2;
+    // Onde o centro do item alvo está (em pixels, desde o início da faixa)
+    // Posição = (Index * Largura) + Metade da Largura
+    const targetCenterPixel = (finalIndex * ITEM_WIDTH) + (ITEM_WIDTH / 2);
     
-    // O centro do item alvo na faixa gigante
-    const posicaoItemAlvo = (indiceFinalAbsoluto * LARGURA_ITEM) + (LARGURA_ITEM / 2);
+    // Onde o centro da janela de visualização está
+    const viewCenterPixel = containerWidth / 2;
     
-    // Quanto temos que mover a faixa para a esquerda para alinhar o alvo ao centro
-    let moveX = posicaoItemAlvo - centroContainer;
+    // O quanto precisamos deslocar a faixa para a esquerda (translateX negativo)
+    // Para alinhar o centro do item com o centro da visão
+    let moveX = targetCenterPixel - viewCenterPixel;
 
-    // Adiciona um pequeno desvio aleatório (+/- 20px) para não parecer robótico
-    const jitter = Math.floor(Math.random() * 40) - 20; 
+    // Jitter (Aleatoriedade) SEGURO: +/- 25px no máximo (o item tem 90px, então é seguro)
+    // Isso faz a seta não cair sempre pixel-perfect no meio, dá realismo
+    const jitter = Math.floor(Math.random() * 50) - 25; 
     moveX += jitter;
 
-    // Aplica a animação
+    // 3. EXECUTAR ANIMAÇÃO
     const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = `transform 5s cubic-bezier(0.15, 0, 0.10, 1)`; 
+    // Curva Bezier customizada para freio realista
+    faixa.style.transition = `transform 5s cubic-bezier(0.1, 0, 0.1, 1)`; 
     faixa.style.transform = `translateX(-${moveX}px)`;
 
-    // --- ENTREGA DO PRÊMIO ---
+    // 4. SORTEAR QUAL MOLDURA/BALÃO SE GANHAR ESSE TIPO
     let premioKey = '';
     let msgPremio = '';
     const premioGanho = arrayPremios[targetIndex];
 
-    // Sorteia qual Moldura ou Balão específico ganhou
     if (premioGanho.tipo === 'moldura') {
         const chaves = Object.keys(MOLDURAS).filter(k => !MOLDURAS[k].adminOnly);
         premioKey = chaves[Math.floor(Math.random() * chaves.length)];
@@ -13481,7 +13510,7 @@ async function girarRoleta() {
         msgPremio = `Estilo ${BALOES[premioKey].nome}`;
     }
 
-    // Aguarda o fim da animação (5s) para mostrar o resultado
+    // 5. PROCESSAR RESULTADO APÓS ANIMAÇÃO
     setTimeout(async () => {
         let updates = { ultimoGiroRoleta: hoje };
         updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
@@ -13500,7 +13529,6 @@ async function girarRoleta() {
             const expiraEm = new Date();
             expiraEm.setHours(expiraEm.getHours() + 24);
             
-            // Salva nos prêmios temporários e já equipa
             updates[`premiosTemporarios.${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
             
             if (premioGanho.tipo === 'moldura') updates.molduraSelecionada = premioKey;
@@ -13509,14 +13537,12 @@ async function girarRoleta() {
         else if (premioGanho.tipo === 'caixa') {
             tituloPopup = "🎁 CAIXA MISTERIOSA!";
             if (perfil.tipo !== 'cliente') {
-                // Profissional
                 const exp = new Date(); 
                 exp.setHours(exp.getHours() + 24); 
                 updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(exp);
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
                 corpoPopup = "Você ganhou 24 horas de Perfil Turbinado!";
             } else {
-                // Cliente
                 const exp = new Date();
                 exp.setDate(exp.getDate() + 5); 
                 updates.vip = true; 
@@ -13529,16 +13555,14 @@ async function girarRoleta() {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
             
             exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
-                // Recarrega perfil para atualizar botão e resets
                 db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
                     perfil = doc.data();
-                    abrirModalPerfil(); 
+                    abrirModalPerfil(); // Recarrega o modal (reseta a posição da roleta)
                 });
             });
 
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
             
-            // Atualiza estado local para a UI não esperar o listener
             perfil.ultimoGiroRoleta = hoje;
             perfil.girosRealizadosHoje = isNovoDia ? 1 : (girosRealizados + 1);
 
