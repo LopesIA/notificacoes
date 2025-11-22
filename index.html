@@ -8148,14 +8148,12 @@ function toggleDisponibilidade() {
 }
 
 async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
-    exibirAguarde("Aprovando...");
+    exibirAguarde("Aprovando Vaga Imediata...");
     
-    // Lógica de cálculo de taxa dinâmica
     let taxaAplicada = TAXA;
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
     }
-    const valorComTaxa = valor * (1 - taxaAplicada);
     const valorAdmin = valor * taxaAplicada;
 
     db.runTransaction(async t => {
@@ -8170,40 +8168,41 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
         if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
         if (barbeiroDoc.data().vagaImediata === false) throw "Vaga imediata não está mais ativa.";
 
+        // 1. Debita do Cliente (Retém)
         t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
-        t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa), vagaImediata: false });
         
+        // 2. Desativa a vaga imediata do barbeiro (mas NÃO paga ele ainda)
+        t.update(barbeiroRef, { vagaImediata: false });
+        
+        // 3. Atualiza Status
         t.update(agendamentoRef, { 
             status: "conclusão pendente", 
             confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), 
             lembreteConcluirEnviado: false,
-            clienteNotificado: false // Garante popup do cliente
+            clienteNotificado: false 
         });
         
+        // 4. Taxa Admin
         const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
         if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
         t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
 
-        // RETORNA O TELEFONE
         return agendamentoDoc.data().clienteTelefone;
 
     }).then((clienteTelefone) => {
         
-        // --- NOVO: DIRECIONAMENTO PARA O WHATSAPP ---
         if (clienteTelefone) {
             const phoneNum = clienteTelefone.replace(/\D/g, '');
-            // Mensagem adaptada para Vaga Imediata
             const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento de Vaga Imediata comigo no aplicativo Nova Versão, fico no seu aguardo :)`);
             window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
         }
-        // --------------------------------------------
 
-        // Avisos para o cliente (mantidos do código original)
         criarAviso(clienteUid, `✅ Sua vaga imediata foi aprovada por ${perfil.nome}!`, 'vaga-aprovada', agendamentoId);
         notifyUser(clienteUid, "✅ Agendamento Confirmado!", `Sua vaga imediata com ${perfil.nome} foi aprovada. Corra para o local!`);
         
         fecharTodosOsModais();
-        exibirPopup("Agendamento aprovado! Redirecionando para o WhatsApp...");
+        // MENSAGEM ATUALIZADA
+        exibirPopup("Vaga Aprovada!", "O cliente foi notificado. O valor cairá na sua conta somente após você clicar em 'CONCLUIR'.");
         
         setTimeout(() => location.reload(), 4000);
 
@@ -8215,15 +8214,13 @@ async function aprovarAgendamentoImediato(agendamentoId, clienteUid, valor) {
 }
 
 async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = null) {
-  // Confirmação visual já foi feita no popup anterior, mas mantemos a verificação de segurança
   exibirAguarde("Aprovando...");
   
-  // Lógica de cálculo de taxa dinâmica
+  // Cálculo apenas para registro da taxa do admin (O prof só recebe na conclusão)
   let taxaAplicada = TAXA;
   if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
       taxaAplicada = PRECOS_PRO[perfil.proTier].taxa;
   }
-  const valorComTaxa = valor * (1 - taxaAplicada);
   const valorAdmin = valor * taxaAplicada;
 
   db.runTransaction(async t => {
@@ -8237,19 +8234,18 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       if (!clienteDoc.exists) throw "Cliente não encontrado.";
       if (clienteDoc.data().saldo < valor) throw "Saldo do cliente insuficiente.";
 
-      // 1. Movimentação Financeira
+      // 1. Debita do Cliente (Retém o valor no sistema)
       t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-valor) });
-      t.update(barbeiroRef, { saldo: firebase.firestore.FieldValue.increment(valorComTaxa) });
       
       // 2. Atualiza Status do Agendamento
       t.update(agendamentoRef, { 
           status: "conclusão pendente", 
           confirmadoEm: firebase.firestore.FieldValue.serverTimestamp(), 
           lembreteConcluirEnviado: false,
-          clienteNotificado: false // Garante o popup do cliente
+          clienteNotificado: false
       });
 
-      // 3. Remove horário da agenda se necessário
+      // 3. Remove horário da agenda (se manual)
       if (barbeiroDoc.data().usaAgendaManual && horario) {
           const agendaAtual = barbeiroDoc.data().agenda || {};
           if (agendaAtual[horario]) { 
@@ -8258,30 +8254,28 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
           }
       }
       
-      // 4. Taxa do Admin
+      // 4. Taxa do Admin (Opcional: Pode cobrar agora ou na conclusão. Mantive agora para garantir)
       const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
       if(!adminSnap.empty) t.update(db.collection("usuarios").doc(adminSnap.docs[0].id), { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
       t.set(db.collection("config").doc("financeiro"), { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
 
-      // RETORNA O TELEFONE PARA USAR NO .THEN
+      // IMPORTANTE: REMOVI A LINHA QUE DAVA SALDO AO BARBEIRO AQUI.
+      // Ele só vai receber na função concluirAgendamento.
+
       return agendamentoDoc.data().clienteTelefone;
 
   }).then((clienteTelefone) => {
       
-      // --- NOVO: DIRECIONAMENTO PARA O WHATSAPP ---
       if (clienteTelefone) {
           const phoneNum = clienteTelefone.replace(/\D/g, '');
-          // Mensagem pré-definida
           const msg = encodeURIComponent(`Olá, passando aqui pra confirmar que aprovei seu agendamento comigo no aplicativo Nova Versão, fico no seu aguardo no horario ${horario} :D`);
-          // Abre em nova aba
           window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
       }
-      // --------------------------------------------
 
       fecharTodosOsModais();
-      exibirPopup("Sucesso!", "Agendamento aprovado! Você foi redirecionado para o WhatsApp do cliente.");
+      // MENSAGEM ATUALIZADA
+      exibirPopup("Agendamento Aprovado!", "O valor foi retido do cliente. O saldo será liberado na sua carteira assim que você clicar em 'CONCLUIR' após o serviço.");
       
-      // Recarrega a página após 4 segundos para atualizar tudo
       setTimeout(() => location.reload(), 4000); 
 
   }).catch(e => {
