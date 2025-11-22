@@ -6300,16 +6300,16 @@ function confirmarAgendamento() {
         return;
     }
 
-    // --- LÓGICA DE PRECIFICAÇÃO ---
-    // 1. Valor Base (Original): É o preço que o barbeiro definiu (já com a promoção DELE aplicada, se houver).
-    //    Ex: Corte custa 50. Promo do barbeiro 10% -> servico.valor aqui já é 45.
+    // 1. Valor Original: É o valor que o barbeiro cobra (já com promoção dele, se houver).
+    // Ex: Serviço 100 com 10% promo = 90. Valor Original = 90.
     const valorOriginalServico = servico.valor; 
 
     // 2. Verifica VIP do Cliente (Desconto do Sistema)
     const isVip = isVipAtivo(perfil);
     
-    // 3. Valor que sai da carteira do cliente
+    // 3. Valor Final do Cliente: O que sai da carteira dele.
     // Se VIP, paga 90% do valor do barbeiro. Se não, paga 100%.
+    // Ex: 90 * 0.9 = 81. Cliente paga 81.
     const valorFinalCliente = isVip ? valorOriginalServico * 0.9 : valorOriginalServico;
     
     if (perfil.saldo < valorFinalCliente) {
@@ -6332,10 +6332,10 @@ function confirmarAgendamento() {
             clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
             barbeiroUid, barbeiroNome, servico: servico.nome, 
             
-            // SALVA OS VALORES SEPARADAMENTE PARA O CÁLCULO FINAL
-            valor: valorFinalCliente,          // O que o cliente pagou (para extrato dele e cálculo de saldo)
-            valorOriginal: valorOriginalServico, // A base de cálculo do profissional (SEM desconto VIP)
-            descontoVipAplicado: isVip,
+            // SALVA OS DOIS VALORES PARA O CÁLCULO BATER
+            valor: valorFinalCliente,          // O que o cliente pagou (81)
+            valorOriginal: valorOriginalServico, // O que o profissional merece (90)
+            descontoVipAplicado: isVip,        // Flag para confirmar que houve desconto
             
             status: horario === 'imediato' ? 'imediato' : 'pendente',
             ts: firebase.firestore.FieldValue.serverTimestamp(),
