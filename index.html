@@ -2709,6 +2709,131 @@ body {
     0%, 100% { transform: translateY(0) rotate(5deg); }
     50% { transform: translateY(-3px) rotate(-5deg); }
 }
+
+/* --- BALÕES DE CHAT ESTILIZADOS E OTIMIZADOS --- */
+
+/* Base para balões customizados */
+.chat-message.custom-bubble {
+    position: relative;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    z-index: 1;
+    /* Garante leitura: Sombra preta forte atrás da letra */
+    text-shadow: 1px 1px 2px #000000, 0 0 1em #000000;
+    font-weight: 500;
+}
+
+/* NÍVEL 2: PRATA (Agora fosco/metálico, sem brilho de movimento) */
+.chat-message.bubble-prata {
+    border: 1px solid #a0a0a0;
+    background: linear-gradient(145deg, #444, #222);
+    box-shadow: 0 0 5px rgba(192, 192, 192, 0.2);
+    color: #ffffff !important; /* Contraste garantido */
+}
+
+/* NÍVEL 3: OURO (Agora com o brilho valioso!) */
+.chat-message.bubble-ouro {
+    border: 1px solid #ffd700;
+    background: linear-gradient(145deg, #5e4b08, #1a1a00);
+    color: #fffbe6 !important; /* Branco levemente dourado */
+    overflow: hidden; /* Necessário para o brilho não vazar */
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+/* Efeito de brilho passando no Ouro */
+.chat-message.bubble-ouro::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(to right, transparent, rgba(255, 215, 0, 0.4), transparent);
+    transform: rotate(45deg);
+    animation: shine-gold 4s infinite; /* Brilho passando */
+    pointer-events: none;
+}
+
+/* NÍVEL 4: DIAMANTE (Movimento Suave) */
+.chat-message.bubble-diamante {
+    background: #0c0c0c; 
+    color: #e0ffff !important; /* Cyan claro para leitura */
+    border: none; 
+    overflow: visible !important; 
+    margin-top: 12px !important;
+}
+.chat-message.bubble-diamante::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #00c6ff, #0072ff, #000, #000, #00c6ff);
+    background-size: 300% 300%;
+    /* AQUI: Mudado para 12s para ficar BEM LENTO e SUAVE */
+    animation: border-travel 12s linear infinite; 
+    opacity: 0.8;
+}
+.chat-message.bubble-diamante::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    animation: float-crown 3s ease-in-out infinite;
+}
+
+/* ADMIN BLACK (Movimento Suave) */
+.chat-message.bubble-admin-black {
+    background: #000; 
+    color: #ffffff !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-black::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #ffffff, #333, #000, #000, #ffffff);
+    background-size: 300% 300%;
+    /* Movimento lento */
+    animation: border-travel 12s linear infinite; 
+}
+.chat-message.bubble-admin-black::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: grayscale(100%);
+    animation: float-crown 3s ease-in-out infinite;
+}
+
+/* ADMIN RED (Movimento Suave) */
+.chat-message.bubble-admin-red {
+    background: #1a0000; 
+    color: #ffe0e0 !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-red::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #ff0000, #ff4500, #2c0000, #2c0000, #ff0000);
+    background-size: 300% 300%;
+    /* Movimento lento */
+    animation: border-travel 10s linear infinite; 
+}
+.chat-message.bubble-admin-red::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: sepia(100%) saturate(1000%) hue-rotate(-50deg);
+    animation: float-crown 3s ease-in-out infinite;
+}
+
+/* ANIMAÇÕES ATUALIZADAS */
+@keyframes border-travel {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes float-crown {
+    0%, 100% { transform: translateY(0) rotate(5deg); }
+    50% { transform: translateY(-3px) rotate(-5deg); }
+}
+@keyframes shine-gold {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    20% { transform: translateX(100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); } /* Pausa longa entre brilhos */
+}
   </style>
 </head>
 <body>
@@ -4426,6 +4551,138 @@ function toggleOnboardOption(element) {
     }
 }
 
+
+async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
+    const lista = document.getElementById(containerId);
+    // Limpa qualquer botão antigo se houver e define o loading
+    lista.innerHTML = "<p style='text-align:center; margin-top:20px;'>⏳ Carregando profissionais...</p>";
+
+    // Tenta obter localização se não tiver
+    if (!localizacaoCliente) { await obterLocalizacaoAtual().catch(() => {}); }
+    
+    // Limpa listener anterior para não duplicar
+    if (barbeirosListener) barbeirosListener(); 
+    
+    let tipoParaBuscar = 'barbeiro'; // Fallback padrão
+
+    if (isGuest) {
+        tipoParaBuscar = localStorage.getItem('onboard_tipo_uso') || 'barbeiro';
+        if (tipoParaBuscar === 'cliente' || tipoParaBuscar === 'profissional') tipoParaBuscar = 'barbeiro';
+    } 
+    else {
+        tipoParaBuscar = perfil.interesse_principal || perfil.tipo || 'barbeiro';
+    }
+
+    let query = db.collection("usuarios").where("tipo", "==", tipoParaBuscar);
+    
+    barbeirosListener = query.onSnapshot(snap => {
+        if (snap.empty) {
+             let nomeCategoria = "nesta categoria";
+             if(tipoParaBuscar === 'barbeiro') nomeCategoria = "Barbearias";
+             if(tipoParaBuscar === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
+             if(tipoParaBuscar === 'designer_cilios') nomeCategoria = "Design de Cílios";
+             
+             lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>😔 Nenhum profissional de <b>${nomeCategoria}</b> encontrado no momento.</p></div>`;
+             return;
+        }
+
+        let barbeiros = [];
+        const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
+
+        snap.forEach(doc => {
+            const b = doc.data();
+            b.uid = doc.id;
+            b.isFavorito = favoritos.includes(b.uid);
+
+            if (localizacaoCliente && b.latitude && b.longitude) {
+                b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
+            } else {
+                b.distancia = Infinity;
+            }
+            
+            barbeiros.push(b);
+        });
+
+        // ORDENAÇÃO
+        barbeiros.sort((a, b) => {
+            if (a.isFavorito && !b.isFavorito) return -1;
+            if (!a.isFavorito && b.isFavorito) return 1;
+
+            const aDisp = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
+            const bDisp = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+            if (aDisp !== bDisp) return aDisp ? -1 : 1;
+
+            const aBoost = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
+            const bBoost = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            if (aBoost !== bBoost) return aBoost ? -1 : 1;
+            
+            const aPro = isProAtivo(a);
+            const bPro = isProAtivo(b);
+            if (aPro !== bPro) return aPro ? -1 : 1;
+
+            return a.distancia - b.distancia;
+        });
+        
+        // --- OTIMIZAÇÃO DE RENDERIZAÇÃO ---
+        // Criamos uma variável gigante para guardar todo o HTML
+        let htmlBuffer = ""; 
+        
+        barbeiros.forEach(b => {
+            const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
+            const estrelas = Math.round(notaMedia / 2); 
+            const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
+            const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
+
+            let statusHtml = '';
+            const agora = new Date();
+            const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim && agora >= b.ausenciaInicio.toDate() && agora <= b.ausenciaFim.toDate();
+            const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+            
+            if (estaAusente) {
+                const dataFim = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
+                statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente (Volta ${dataFim})</div>`;
+            } else if (!isDisponivel) {
+                 statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível</div>`;
+            } else if (b.vagaImediata) {
+                statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata</div>`;
+            } else if (b.usaAgendaManual) {
+                const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
+                statusHtml = horarios.length > 0 ? `<div class="card-status status-manual">📅 Horários Disponíveis</div>` : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
+            }
+            
+            let promocoesHtml = (b.promocoes && b.promocoes.length > 0) ? `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>` : '';
+            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
+            const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
+            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
+            
+            const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
+            const heartIcon = b.isFavorito ? '❤️' : '♡';
+            
+            const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
+            const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
+
+            // Acumula na variável em vez de escrever no DOM repetidamente
+            htmlBuffer += `
+              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
+                  ${boostIcon} ${favoriteBtn} ${shareBtn}
+                  <div class="card-header">
+                      ${logoHtml}
+                      <div class="card-header-info">
+                          <h4 class="professional-name-card">${b.nome}</h4>
+                          ${distanciaTexto}
+                          <p class="card-reputacao-info">${reputacaoEstrelas} <span>(${reputacaoTexto})</span></p> 
+                      </div>
+                  </div>
+                  ${statusHtml} ${promocoesHtml}
+              </div>`;
+        });
+
+        // Escreve no DOM uma única vez (Muito mais rápido!)
+        lista.innerHTML = htmlBuffer;
+    });
+}
+
 function fecharAguarde(event) {
     // Permite fechar com 2 cliques fora
     if (event && event.target.id === 'popupAguarde') {
@@ -5876,160 +6133,6 @@ function filtrarBarbeiros() {
       card.style.display = "none";
     }
   });
-}
-
-async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
-    const lista = document.getElementById(containerId);
-    // Limpa qualquer botão antigo se houver e define o loading
-    lista.innerHTML = "<p>⏳ Carregando...</p>";
-
-    // Tenta obter localização se não tiver
-    if (!localizacaoCliente) { await obterLocalizacaoAtual().catch(() => {}); }
-    
-    // Limpa listener anterior para não duplicar
-    if (barbeirosListener) barbeirosListener(); 
-    
-    // =================================================================
-    // === 1. DEFINIÇÃO RIGOROSA DO NICHO (AGORA IGUAL PARA TODOS) ===
-    // =================================================================
-    
-    let tipoParaBuscar = 'barbeiro'; // Fallback padrão
-
-    if (isGuest) {
-        // Visitante: Pega do localStorage ou usa padrão
-        tipoParaBuscar = localStorage.getItem('onboard_tipo_uso') || 'barbeiro';
-        if (tipoParaBuscar === 'cliente' || tipoParaBuscar === 'profissional') tipoParaBuscar = 'barbeiro';
-    } 
-    else {
-        // === CORREÇÃO AQUI: LÓGICA UNIFICADA ===
-        // Não importa se é Cliente ou Profissional.
-        // O que define o que aparece na tela é o INTERESSE PRINCIPAL salvo no banco.
-        // Isso permite que um Barbeiro veja cards de Manicure se mudar nas configurações.
-        
-        // Ordem de prioridade:
-        // 1. O interesse escolhido (Configurações)
-        // 2. O próprio tipo do usuário (Fallback para profissionais novos)
-        // 3. 'barbeiro' (Último recurso)
-        tipoParaBuscar = perfil.interesse_principal || perfil.tipo || 'barbeiro';
-    }
-
-    // Query blindada: Traz apenas o tipo definido acima
-    let query = db.collection("usuarios").where("tipo", "==", tipoParaBuscar);
-    
-    // =================================================================
-
-    barbeirosListener = query.onSnapshot(snap => {
-        if (snap.empty) {
-             // Formata o nome da categoria para exibir na mensagem
-             let nomeCategoria = "nesta categoria";
-             if(tipoParaBuscar === 'barbeiro') nomeCategoria = "Barbearias";
-             if(tipoParaBuscar === 'manicure_pedicure') nomeCategoria = "Manicure/Pedicure";
-             if(tipoParaBuscar === 'designer_cilios') nomeCategoria = "Design de Cílios";
-             
-             lista.innerHTML = `<div style="text-align:center; padding:20px;"><p>😔 Nenhum profissional de <b>${nomeCategoria}</b> encontrado no momento.</p></div>`;
-             return;
-        }
-
-        let barbeiros = [];
-        const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
-
-        snap.forEach(doc => {
-            const b = doc.data();
-            b.uid = doc.id;
-            // Verifica se é favorito
-            b.isFavorito = favoritos.includes(b.uid);
-
-            // Calcula distância se possível
-            if (localizacaoCliente && b.latitude && b.longitude) {
-                b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
-            } else {
-                b.distancia = Infinity;
-            }
-            
-            barbeiros.push(b);
-        });
-
-        // =================================================================
-        // === 2. ORDENAÇÃO AUTOMÁTICA (FAVORITOS NO TOPO) ===
-        // =================================================================
-        barbeiros.sort((a, b) => {
-            // PRIORIDADE 1: Favoritos (Topo Absoluto)
-            // Se 'a' é favorito e 'b' não, 'a' vem primeiro (-1)
-            if (a.isFavorito && !b.isFavorito) return -1;
-            if (!a.isFavorito && b.isFavorito) return 1;
-
-            // PRIORIDADE 2: Disponibilidade (Vaga Imediata > Agenda Manual > Indisponível)
-            const aDisp = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
-            const bDisp = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            if (aDisp !== bDisp) return aDisp ? -1 : 1;
-
-            // PRIORIDADE 3: Boost (Turbinados)
-            const aBoost = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
-            const bBoost = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
-            if (aBoost !== bBoost) return aBoost ? -1 : 1;
-            
-            // PRIORIDADE 4: PRO (Desempate por status)
-            const aPro = isProAtivo(a);
-            const bPro = isProAtivo(b);
-            if (aPro !== bPro) return aPro ? -1 : 1;
-
-            // PRIORIDADE 5: Distância
-            return a.distancia - b.distancia;
-        });
-        
-        // --- RENDERIZAÇÃO DOS CARDS ---
-        lista.innerHTML = "";
-        barbeiros.forEach(b => {
-            const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
-            const estrelas = Math.round(notaMedia / 2); 
-            const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
-            const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
-
-            let statusHtml = '';
-            const agora = new Date();
-            const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim && agora >= b.ausenciaInicio.toDate() && agora <= b.ausenciaFim.toDate();
-            const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            
-            if (estaAusente) {
-                const dataFim = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
-                statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente (Volta ${dataFim})</div>`;
-            } else if (!isDisponivel) {
-                 statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível</div>`;
-            } else if (b.vagaImediata) {
-                statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata</div>`;
-            } else if (b.usaAgendaManual) {
-                const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
-                statusHtml = horarios.length > 0 ? `<div class="card-status status-manual">📅 Horários Disponíveis</div>` : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
-            }
-            
-            let promocoesHtml = (b.promocoes && b.promocoes.length > 0) ? `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>` : '';
-            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
-            const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
-            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
-            const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
-            
-            // Visual do coração
-            const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
-            const heartIcon = b.isFavorito ? '❤️' : '♡';
-            
-            const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
-            const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
-
-            lista.innerHTML += `
-              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
-                  ${boostIcon} ${favoriteBtn} ${shareBtn}
-                  <div class="card-header">
-                      ${logoHtml}
-                      <div class="card-header-info">
-                          <h4 class="professional-name-card">${b.nome}</h4>
-                          ${distanciaTexto}
-                          <p class="card-reputacao-info">${reputacaoEstrelas} <span>(${reputacaoTexto})</span></p> 
-                      </div>
-                  </div>
-                  ${statusHtml} ${promocoesHtml}
-              </div>`;
-        });
-    });
 }
 
 function resetAgendamentoState() {
