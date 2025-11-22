@@ -2823,17 +2823,24 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     </div>
 </div>
 
-<div id="modalExibirPixAprimorado" class="modal">
+<div id="modalExibirPixAprimorado" class="modal" style="z-index: 2005;">
     <div class="modal-content" style="text-align: center;">
       <h3> Pague com PIX</h3>
-      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
-      <img src="https://i.postimg.cc/fTZyFN6G/qrcode.jpg" id="pix-qrcode" alt="QR Code PIX">
+      <p>Escaneie o QR Code ou copie o código abaixo.</p>
+      
+      <img src="/qrcode.png" id="pix-qrcode" alt="QR Code PIX" style="max-width: 200px; margin: 15px auto; display: block; border-radius: 10px;">
+      
       <div class="pix-copia-cola-container">
-          <textarea id="pixChaveAleatoria">00020126770014BR.GOV.BCB.PIX0136ec4a8f0f-ec59-44bc-afcf-dff364f971de0215NAVALHA DE OURO5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510vuyKg7Qnmx63041C39</textarea>
-          <button onclick="copiarCodigoPixAprimorado(event)">Copiar Chave Aleatória PIX</button>
+          <textarea id="pixChaveAleatoria" style="display:none;">00020126770014BR.GOV.BCB.PIX0136ac099e3b-e63e-402f-9d3e-6e20828470b90215Nova Versão APP5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510ERLNMtaT5r63040E73</textarea>
+          
+          <button id="btnCopiarPixFinal" onclick="copiarPixEFinalizar(event)" style="background-color: #2ecc71; color: #fff; font-weight: bold; padding: 15px; width: 100%;">
+              📑 COPIAR CÓDIGO PIX
+          </button>
       </div>
-      <p style="font-size: 14px; color: #ff9800; margin-top: 15px;">Este código expira em: <b id="pixTimer">10:00</b></p>
-      <button onclick="confirmarEnvioComprovante()">CONFIRMAR</button>
+      
+      <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">Ao clicar em copiar, você será direcionado ao WhatsApp para enviar o comprovante.</p>
+      
+      <button onclick="fecharTodosOsModais()" style="background: transparent; border: 1px solid #555; margin-top: 10px;">Cancelar</button>
     </div>
 </div>
 
@@ -8141,27 +8148,40 @@ function abrirAvaliacoesBarbeiro() {
     });
 }
 
-// --- FUNÇÕES DE DEPÓSITO SEPARADAS (SUBSTITUIR AS ANTIGAS) ---
+// Variável para guardar os dados temporariamente
+let dadosDepositoTemporario = {};
 
-// 1. Depósito de SERVIÇOS (Sempre PIX - Seguro para Fluxo de Caixa)
+// 1. Iniciar Depósito Serviços (Formulário)
 function iniciarDepositoServicos() {
-    // Define uma variável global para saber que o usuário quer depositar em SERVIÇOS
     window.tipoDepositoAtual = 'servicos'; 
-    
-    // Abre o formulário de dados para PIX
     document.getElementById('depositoValor').placeholder = "Valor para Serviços (PIX)";
     abrirModal('modalDepositoFormulario'); 
-    
-    // Configura validação dos inputs
+    configurarBotaoFormulario();
+}
+
+// 2. Iniciar Depósito Digital (Play Store ou Form)
+function iniciarDepositoDigital() {
+    window.tipoDepositoAtual = 'digital';
+    if (isTwa) {
+        abrirModal('modalDepositoPlayStore'); // Play Store direto no App (CORRETO)
+    } else {
+        document.getElementById('depositoValor').placeholder = "Valor Créditos Digitais";
+        abrirModal('modalDepositoFormulario'); // Web usa formulário
+        configurarBotaoFormulario();
+    }
+}
+
+// Auxiliar para configurar validação do formulário
+function configurarBotaoFormulario() {
     const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
     const btn = document.getElementById('btnContinuarDeposito');
     
-    // Remove listeners antigos para não duplicar
+    // Remove listeners antigos
     const novoBtn = btn.cloneNode(true);
     btn.parentNode.replaceChild(novoBtn, btn);
     
-    // Reatribui a função de click
-    novoBtn.onclick = criarSolicitacaoDeposito;
+    // Define a nova ação: APENAS AVANÇAR PARA TELA DO PIX (Sem salvar ainda)
+    novoBtn.onclick = prepararTelaPix; 
 
     inputs.forEach(id => {
         document.getElementById(id).oninput = () => {
@@ -8171,38 +8191,8 @@ function iniciarDepositoServicos() {
     });
 }
 
-// 2. Depósito DIGITAL (Google Play no App / PIX na Web)
-function iniciarDepositoDigital() {
-    window.tipoDepositoAtual = 'digital';
-
-    if (isTwa) {
-        // ESTÁ NO APP: Obriga Google Play (Proteção contra Banimento)
-        // Isso responde sua dúvida: Sim, isso protege o app.
-        abrirModal('modalDepositoPlayStore');
-    } else {
-        // ESTÁ NA WEB: Pode usar PIX ou Cartão para Digital também
-        document.getElementById('depositoValor').placeholder = "Valor Créditos Digitais";
-        abrirModal('modalDepositoFormulario');
-        
-        const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
-        const btn = document.getElementById('btnContinuarDeposito');
-        
-        // Remove listeners antigos
-        const novoBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(novoBtn, btn);
-        novoBtn.onclick = criarSolicitacaoDeposito;
-
-        inputs.forEach(id => {
-            document.getElementById(id).oninput = () => {
-                const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
-                novoBtn.disabled = !allFilled;
-            };
-        });
-    }
-}
-
-// 3. Criar Solicitação (Atualizada para saber o destino do dinheiro)
-async function criarSolicitacaoDeposito() {
+// 3. Preparar Tela do PIX (Valida e Guarda Dados)
+function prepararTelaPix() {
     const primeiroNome = document.getElementById('depositoPrimeiroNome').value.trim();
     const segundoNome = document.getElementById('depositoSegundoNome').value.trim();
     const cpf = document.getElementById('depositoCpf').value.trim();
@@ -8213,46 +8203,100 @@ async function criarSolicitacaoDeposito() {
         return exibirPopup("Por favor, preencha todos os campos corretamente.");
     }
 
-    const nomeCompleto = `${primeiroNome} ${segundoNome}`;
-    
-    // Define o destino do saldo baseado no botão clicado anteriormente
-    // Se a variável não estiver definida (erro), assume 'saldo' (digital)
-    const destinoSaldo = (window.tipoDepositoAtual === 'servicos') ? 'saldoServicos' : 'saldo'; 
-    const nomeDestino = (window.tipoDepositoAtual === 'servicos') ? 'SERVIÇOS (Cortes)' : 'DIGITAL (Loja/VIP)';
+    // Guarda na variável global temporária
+    dadosDepositoTemporario = {
+        nomeCompleto: `${primeiroNome} ${segundoNome}`,
+        cpf,
+        telefone,
+        valor,
+        tipo: window.tipoDepositoAtual === 'servicos' ? 'saldoServicos' : 'saldo'
+    };
 
+    // Fecha form e abre PIX
+    fecharModalAtual(); 
+    
+    // Se for Digital na Web, pergunta se quer PIX ou Cartão
+    if (window.tipoDepositoAtual === 'digital' && !isTwa) {
+         abrirModal('modalDeposito'); // Modal de escolha (PIX/Cartão)
+         // Você precisará garantir que o botão de PIX lá chame 'exibirModalPixReal'
+         const btnPix = document.getElementById('btnPagarComPix');
+         if(btnPix) btnPix.onclick = exibirModalPixReal;
+    } else {
+         // Se for serviços, vai direto pro PIX
+         exibirModalPixReal();
+    }
+}
+
+// 4. Exibe o Modal com o QR Code
+function exibirModalPixReal() {
+    // Fecha modais de escolha anteriores
+    const modalDep = document.getElementById('modalDeposito');
+    if (modalDep && modalDep.classList.contains('show')) {
+        modalDep.classList.remove('show');
+        modalDep.style.display = 'none';
+    }
+    
+    abrirModal('modalExibirPixAprimorado');
+}
+
+// 5. AÇÃO FINAL: Copia, Salva no Banco e Abre WhatsApp
+async function copiarPixEFinalizar(event) {
+    const btn = event.target;
+    const textoPix = document.getElementById('pixChaveAleatoria').value;
+    
+    // 1. Copiar para área de transferência
+    try {
+        await navigator.clipboard.writeText(textoPix);
+        btn.textContent = "✅ COPIADO! Processando...";
+        btn.style.backgroundColor = "#27ae60";
+    } catch (err) {
+        console.error("Erro ao copiar", err);
+        btn.textContent = "Erro ao copiar, tente manual";
+    }
+
+    // 2. Salvar Solicitação no Firestore (AGORA SIM O ADMIN RECEBE)
     try {
         await db.collection("solicitacoes").add({
             tipo: "deposito",
-            subTipo: destinoSaldo, // <--- IMPORTANTE: Avisa o Admin/Server onde pôr o dinheiro
+            subTipo: dadosDepositoTemporario.tipo, 
             usuarioUid: auth.currentUser.uid,
             usuarioNome: perfil.nome,
             dadosDeposito: {
-                nomeCompleto,
-                cpf,
-                telefone
+                nomeCompleto: dadosDepositoTemporario.nomeCompleto,
+                cpf: dadosDepositoTemporario.cpf,
+                telefone: dadosDepositoTemporario.telefone
             },
-            valor: valor,
+            valor: dadosDepositoTemporario.valor,
             status: "pendente",
             ts: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        fecharTodosOsModais();      
         
-        // Se for Depósito de Serviços, vai direto para o PIX (sem opção de cartão)
-        // Se for Digital e estiver na Web, pode oferecer cartão.
-        if (destinoSaldo === 'saldoServicos') {
-             processarPagamentoPixAprimorado(); 
-        } else {
-             // Digital na Web pode escolher
-             abrirModal('modalDeposito'); 
-        }
-        
-        notifyAdmins("📥 Depósito Solicitado!", `${perfil.nome} quer depositar R$${valor.toFixed(2)} para ${nomeDestino}.`, { link: '#solicitacoes' });
+        // Notifica admins
+        const nomeDestino = dadosDepositoTemporario.tipo === 'saldoServicos' ? 'SERVIÇOS (Cortes)' : 'DIGITAL (Loja/VIP)';
+        notifyAdmins("📥 Depósito Solicitado!", `${perfil.nome} iniciou depósito de R$${dadosDepositoTemporario.valor.toFixed(2)} para ${nomeDestino}.`, { link: '#solicitacoes' });
 
-    } catch (error) {
-        console.error("Erro ao criar solicitação:", error);
-        exibirPopup("Ocorreu um erro. Tente novamente.");
+    } catch (e) {
+        console.error("Erro ao salvar solicitação", e);
+        // Continua para o WhatsApp mesmo com erro de log, para não travar o user
     }
+
+    // 3. Redirecionar para WhatsApp após 1.5 segundos
+    setTimeout(() => {
+        const mensagem = encodeURIComponent(
+            `Olá! Acabei de fazer um pagamento PIX no app.\n\n` +
+            `Nome: ${dadosDepositoTemporario.nomeCompleto}\n` +
+            `Valor: R$ ${dadosDepositoTemporario.valor.toFixed(2)}\n` +
+            `CPF: ${dadosDepositoTemporario.cpf}\n\n` +
+            `Aguardo a liberação dos créditos!`
+        );
+        
+        // Usa o número do admin definido no topo do script
+        const phoneNum = WHATSAPP_ADM_PHONE.startsWith('55') ? WHATSAPP_ADM_PHONE : `55${WHATSAPP_ADM_PHONE.replace(/\D/g, '')}`;
+        window.open(`https://wa.me/${phoneNum}?text=${mensagem}`, '_blank');
+        
+        fecharTodosOsModais();
+        exibirPopup("Sucesso!", "Código copiado e solicitação enviada. Finalize o pagamento no seu banco.");
+    }, 1500);
 }
 
 function iniciarSaque() {
@@ -13851,18 +13895,17 @@ function iniciarRelogiosPerfil() {
     intervaloRelogiosPerfil = setInterval(atualizar, 1000);
 }
 
-// --- SISTEMA DE ROTEAMENTO (DEEP LINKING + BOTÃO VOLTAR) ---
+// --- SISTEMA DE ROTEAMENTO (CORRIGIDO E OTIMIZADO) ---
 
-// Mapeamento: Hash da URL -> ID do Modal
 const rotasApp = {
     '#carteira': 'modalCarteira',
     '#historico': 'modalHistoricoCliente',
-    '#vip': 'modalVip', // Ou modalVipPro dependendo da lógica
+    '#vip': 'modalVip',
     '#fidelidade': 'modalFidelidade',
-    '#conquistas': 'modalConquistas', // ou modalConquistasBarbeiro
+    '#conquistas': 'modalConquistas',
     '#blog': 'modalBlog',
     '#configuracoes': 'modalConfiguracoes',
-    '#loja': 'lojaView', // View, não modal
+    '#loja': 'lojaView',
     '#agendamentos': 'modalAgendamentosBarbeiro',
     '#servicos': 'modalServicosBarbeiro',
     '#agenda': 'modalAgendaBarbeiro',
@@ -13880,33 +13923,41 @@ const rotasApp = {
     '#gerenciarloja': 'modalGerenciarLoja'
 };
 
-// 1. Função modificada para abrir modais mudando a URL
+let isProgrammaticNavigation = false; // Flag para evitar loops
+
 function abrirModal(modalId) {
-    // Encontra qual hash corresponde a este modal
-    const hashEncontrado = Object.keys(rotasApp).find(key => rotasApp[key] === modalId);
-    
-    if (hashEncontrado) {
-        // Se tem rota, muda a URL (o listener 'hashchange' vai abrir o modal)
-        window.location.hash = hashEncontrado;
+    // Verifica se o modal tem uma rota associada
+    const rota = Object.keys(rotasApp).find(key => rotasApp[key] === modalId);
+
+    if (rota) {
+        // Se tem rota, apenas muda a URL. O evento 'hashchange' fará o resto.
+        if (window.location.hash !== rota) {
+            isProgrammaticNavigation = true;
+            window.location.hash = rota;
+            // Pequeno delay para resetar flag após o evento disparar
+            setTimeout(() => { isProgrammaticNavigation = false; }, 50);
+        } else {
+            // Se já estamos na rota (ex: refresh), força exibição
+            exibirModalVisualmente(modalId);
+        }
     } else {
-        // Modais sem rota (ex: avisos rápidos, confirmações) abrem direto
+        // Modais sem rota (Avisos, Confirmações) abrem direto sem mexer na URL
         exibirModalVisualmente(modalId);
     }
 }
 
-// 2. Função que realmente exibe o HTML (Interna)
 function exibirModalVisualmente(modalId) {
     const novoModal = document.getElementById(modalId);
     if (novoModal && !novoModal.classList.contains('show')) {
-        // Lógica de Z-Index
         const baseZIndex = 2000;
-        const incremento = modalStack.length * 10;
+        // Z-Index baseado em quantos já estão abertos para sobreposição correta
+        const incremento = document.querySelectorAll('.modal.show').length * 10;
         novoModal.style.zIndex = baseZIndex + incremento;
 
         novoModal.style.display = 'flex';
         setTimeout(() => {
             novoModal.classList.add('show');
-            // Só adiciona na pilha se não for um modal de sistema persistente
+            // Adiciona à pilha visual se não estiver lá
             if (!modalStack.includes(novoModal)) {
                 modalStack.push(novoModal);
             }
@@ -13914,21 +13965,19 @@ function exibirModalVisualmente(modalId) {
     }
 }
 
-// 3. Função modificada para fechar (comportamento do botão voltar)
 function fecharModalAtual(forcePopupAguarde = false) {
-    // Se for forçado (aguarde), fecha direto
-    if (forcePopupAguarde) {
-        const popup = document.getElementById('popupAguarde');
-        popup.classList.remove('show');
-        setTimeout(() => popup.style.display = 'none', 300);
+    // Se for popup de aguarde ou modal sem rota, fecha visualmente
+    const modalTopo = modalStack[modalStack.length - 1];
+    
+    if (forcePopupAguarde || (modalTopo && !Object.values(rotasApp).includes(modalTopo.id))) {
+        fecharModalVisualmente();
         return;
     }
 
-    // Se tiver hash na URL, volta o histórico (simula botão voltar físico)
+    // Se tiver hash na URL, volta o histórico (simula botão físico)
     if (window.location.hash) {
         window.history.back(); 
     } else {
-        // Se não tiver hash (modal sem rota), fecha visualmente
         fecharModalVisualmente();
     }
 }
@@ -13943,29 +13992,28 @@ function fecharModalVisualmente() {
     }
 }
 
-// 4. O CÉREBRO: Escuta mudanças na URL (Botão Voltar ou Links)
+// Listener ÚNICO para mudanças de URL (Evita travamento)
 window.addEventListener('hashchange', () => {
     const hash = window.location.hash;
     
-    // Se a URL ficou limpa (usuário voltou para home), fecha tudo
+    // 1. Se a URL ficou vazia, fecha modais com rota
     if (!hash) {
-        // Fecha todos os modais que têm rota associada
+        // Filtra modais que são de rota e fecha
         modalStack.forEach(modal => {
             if (Object.values(rotasApp).includes(modal.id)) {
                 modal.classList.remove('show');
                 setTimeout(() => modal.style.display = 'none', 300);
             }
         });
-        // Limpa a pilha dos modais fechados
+        // Atualiza a pilha mantendo apenas modais sem rota (ex: aguarde)
         modalStack = modalStack.filter(modal => !Object.values(rotasApp).includes(modal.id));
         return;
     }
 
-    // Se tem hash, verifica se é uma rota válida e abre
+    // 2. Se tem hash, abre o correspondente
     if (rotasApp[hash]) {
-        // Verifica se é view ou modal
+        // Se for View (Loja) usa mostrar(), se for Modal usa exibirModalVisualmente()
         if (rotasApp[hash].includes('View')) {
-            // Se for a Loja (View), usa a função mostrar()
             mostrar(rotasApp[hash]);
             if(hash === '#loja') carregarProdutos();
         } else {
@@ -13974,17 +14022,13 @@ window.addEventListener('hashchange', () => {
     }
 });
 
-// 5. Executa ao carregar a página (para abrir deep links diretos)
+// Ao carregar a página (Deep Linking direto)
 window.addEventListener('load', () => {
-    if (window.location.hash) {
-        const hash = window.location.hash;
-        if (rotasApp[hash]) {
-            // Pequeno delay para garantir que o HTML carregou
-            setTimeout(() => {
-                if (rotasApp[hash].includes('View')) mostrar(rotasApp[hash]);
-                else exibirModalVisualmente(rotasApp[hash]);
-            }, 500);
-        }
+    if (window.location.hash && rotasApp[window.location.hash]) {
+        setTimeout(() => {
+             // Dispara manualmente para garantir abertura
+             window.dispatchEvent(new Event('hashchange'));
+        }, 500);
     }
 });
 
