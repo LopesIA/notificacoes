@@ -1850,6 +1850,16 @@ body {
 /* ============================================================ */
 
 /* --- ESTRUTURA BASE --- */
+.avatar-wrapper {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    vertical-align: middle;
+    overflow: visible !important; /* Permite asas para fora */
+}
+
 /* Foto do Usuário (Chat e Geral) */
 .chat-user-photo {
     position: relative;
@@ -1884,6 +1894,19 @@ body {
     position: absolute;
     bottom: 0; left: 0; width: 100%; height: 100%;
     clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
+}
+
+/* 2. TAMANHO POPUP (Grande - 120px) */
+.avatar-wrapper.popup-size {
+    width: 120px; height: 120px;
+    margin: 15px auto 20px auto; 
+}
+.avatar-wrapper.popup-size .perfil-foto-grande {
+    width: 100%; height: 100%;
+    border-radius: 50%; padding: 3px;
+}
+.avatar-wrapper.popup-size .coroa-topo {
+    width: 40px; height: 26px; top: -30px;
 }
 
 /* 3. TAMANHO LOJA (Médio - 60px) */
@@ -2025,6 +2048,120 @@ body {
 }
 .molduras-scroll-container::-webkit-scrollbar-track {
     background: #333;
+}
+
+/* --- CORREÇÃO: Wrapper da Moldura no CHAT (Pequeno e Alinhado) --- */
+.avatar-wrapper.chat-size {
+    width: 32px; 
+    height: 32px;
+    margin-right: 15px; /* Aumentei a margem para a asa não bater no nome */
+    margin-left: 8px;   /* Espaço na esquerda para a asa */
+    vertical-align: middle; 
+    display: inline-flex; 
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    overflow: visible !important; /* IMPORTANTE: Permite que a asa saia da caixinha */
+}
+
+.avatar-wrapper.chat-size .chat-user-photo {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50%;
+    padding: 1px;
+    margin: 0;
+    display: block;
+    position: relative;
+    z-index: 10; /* Foto acima da asa */
+}
+
+.avatar-wrapper.chat-size .coroa-topo {
+    width: 16px; 
+    height: 10px; 
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15; /* Coroa acima da foto */
+}
+
+/* Garante que as asas (::before) apareçam */
+.avatar-wrapper.chat-size::before {
+    display: block !important;
+    z-index: 0; /* Asa atrás da foto */
+}
+
+/* Removemos aura giratória pesada no chat pequeno para não poluir,
+   mas mantemos o brilho da borda definido nas classes .ouro, .diamante etc */
+.avatar-wrapper.chat-size::after, 
+.avatar-wrapper.chat-size::before {
+    display: none; 
+}
+
+/* --- CORREÇÃO: Wrapper da Moldura no POPUP (Grande) --- */
+.avatar-wrapper.popup-size {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px auto;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.avatar-wrapper.popup-size .perfil-foto-grande {
+    width: 100%;
+    height: 100%;
+    padding: 3px;
+    border-radius: 50%;
+    display: block;
+}
+
+.avatar-wrapper.popup-size .coroa-topo {
+    width: 50px;
+    height: 30px;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* --- MOLDURAS ADMIN (BASEADA NA DIAMANTE) --- */
+
+/* 1. SUPREME BLACK (PRETA) */
+.avatar-wrapper.admin_black .chat-user-photo, 
+.avatar-wrapper.admin_black .perfil-foto-grande,
+.avatar-wrapper.admin_black .avatar-frame-admin-black {
+    background: transparent; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.9), inset 0 0 10px rgba(50, 50, 50, 0.8); 
+}
+.avatar-wrapper.admin_black .coroa-topo::after {
+    background: linear-gradient(to bottom, #444, #000); /* Coroa Preta */
+}
+/* Asas Pretas/Sombrias */
+.avatar-wrapper.admin_black::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 20%, rgba(20,20,20,1) 50%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-sombria-flutuar 3s ease-in-out infinite;
+}
+
+/* 2. SUPREME RED (VERMELHA) */
+.avatar-wrapper.admin_red .chat-user-photo, 
+.avatar-wrapper.admin_red .perfil-foto-grande,
+.avatar-wrapper.admin_red .avatar-frame-admin-red {
+    background: transparent; 
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.9), inset 0 0 10px rgba(192, 57, 43, 0.5); 
+}
+.avatar-wrapper.admin_red .coroa-topo::after {
+    background: linear-gradient(to bottom, #ff6b6b, #c0392b); /* Coroa Vermelha */
+}
+/* Asas de Fogo */
+.avatar-wrapper.admin_red::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(231,76,60,0) 0%, rgba(231,76,60,0.8) 20%, rgba(192,57,43,1) 50%, rgba(231,76,60,0.8) 80%, rgba(231,76,60,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-fogo-flutuar 3s ease-in-out infinite;
 }
 
 /* Animações Específicas e Ajustes de Tamanho */
@@ -2402,6 +2539,21 @@ body {
     display: block;
 }
 
+/* --- CORREÇÃO VISUAL: ASAS NO CHAT --- */
+/* Garante que a asa (::before) apareça na lista de mensagens */
+.chat-message .avatar-wrapper.chat-size::before {
+    content: '';
+    display: block !important;
+    position: absolute;
+    z-index: 0; /* Atrás da foto */
+    /* Força tamanho visível no chat pequeno */
+    width: 54px !important;
+    height: 22px !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
 /* --- CORREÇÃO VISUAL: BRILHO NA ASA E COROA PRETA --- */
 /* Cria um contorno branco brilhante em volta da asa preta para contraste */
 .avatar-wrapper.admin_black::before {
@@ -2449,155 +2601,106 @@ body {
     opacity: 1;
 }
 
-/* ============================================================
-   CORREÇÃO VISUAL DEFINITIVA: MOLDURAS, ASAS E CHAT
-   (Substitui blocos anteriores de avatar)
-   ============================================================ */
+/* --- CORREÇÃO FINAL: VISUAL CHAT E PERFIL --- */
 
-/* Garante que a mensagem do chat não corte a asa */
-.chat-message {
-    overflow: visible !important; 
-}
-
-/* --- WRAPPER BASE --- */
-.avatar-wrapper {
+/* 1. Wrapper no Chat (Pequeno) */
+.avatar-wrapper.chat-size {
+    width: 32px !important;
+    height: 32px !important;
+    margin-right: 8px;
     position: relative;
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    z-index: 1;
     vertical-align: middle;
-    overflow: visible !important; /* Permite asas para fora */
+    overflow: visible !important; /* Permite que a asa saia pra fora */
 }
 
-/* --- TAMANHO 1: NO CHAT (Pequeno) --- */
-.avatar-wrapper.chat-size {
-    width: 35px !important;  /* Levemente maior para acomodar a asa */
-    height: 35px !important;
-    margin-right: 12px !important; /* Espaço para a asa não bater no texto */
-    margin-left: 5px;
-}
-
+/* Foto no Chat */
 .avatar-wrapper.chat-size .chat-user-photo {
     width: 100% !important;
     height: 100% !important;
     border-radius: 50%;
     position: relative;
     z-index: 10; /* Foto na frente */
+    margin: 0 !important;
     border: 1px solid rgba(255,255,255,0.2);
-    object-fit: cover;
 }
 
 /* Coroa no Chat */
 .avatar-wrapper.chat-size .coroa-topo {
-    width: 18px !important;
-    height: 12px !important;
-    top: -12px !important;
+    width: 16px !important;
+    height: 10px !important;
+    top: -10px !important;
     left: 50%;
     transform: translateX(-50%);
     position: absolute;
     z-index: 15;
 }
 
-/* Asa no Chat */
+/* Asas no Chat (Ajuste Fino) */
 .avatar-wrapper.chat-size::before {
     content: '';
     display: block !important;
     position: absolute;
-    width: 65px !important; /* Largura da asa pequena */
-    height: 26px !important;
+    width: 60px !important; /* Asa larga */
+    height: 24px !important;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 0; /* Atrás da foto */
     pointer-events: none;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
 }
 
-/* --- TAMANHO 2: NO POPUP (Grande) --- */
+/* 2. Wrapper no Popup de Perfil (Grande) */
 .avatar-wrapper.popup-size {
-    width: 120px; 
-    height: 120px;
+    width: 120px; height: 120px;
     margin: 20px auto;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible !important;
 }
 .avatar-wrapper.popup-size .perfil-foto-grande {
     width: 100%; height: 100%;
     border-radius: 50%;
     position: relative;
     z-index: 10;
-    border: 3px solid rgba(255,255,255,0.2);
-    object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.1);
 }
 .avatar-wrapper.popup-size .coroa-topo {
     width: 50px; height: 30px;
     top: -35px;
-    left: 50%;
-    transform: translateX(-50%);
     position: absolute;
     z-index: 15;
 }
 .avatar-wrapper.popup-size::before {
-    width: 280px; height: 120px;
+    width: 280px; height: 120px; /* Asa bem grande no popup */
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     z-index: 0;
 }
 
-/* --- ESTILOS DAS MOLDURAS (CORES E ASAS) --- */
+/* --- 3. CORREÇÃO ESPECÍFICA: BRILHO NA ASA E COROA PRETA --- */
 
-/* 1. Coroa Base */
-.coroa-topo::after {
-    content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-    clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
-}
-
-/* 2. BRONZE, PRATA, OURO (Sem asas, apenas borda e coroa) */
-.avatar-wrapper.bronze .chat-user-photo, .avatar-wrapper.bronze .perfil-foto-grande { box-shadow: 0 0 0 2px #cd7f32; }
-.avatar-wrapper.bronze .coroa-topo::after { background: linear-gradient(to bottom, #ffcc80, #cd7f32); }
-
-.avatar-wrapper.prata .chat-user-photo, .avatar-wrapper.prata .perfil-foto-grande { box-shadow: 0 0 0 2px #c0c0c0; }
-.avatar-wrapper.prata .coroa-topo::after { background: linear-gradient(to bottom, #fff, #999); }
-
-.avatar-wrapper.ouro .chat-user-photo, .avatar-wrapper.ouro .perfil-foto-grande { box-shadow: 0 0 0 2px #ffd700; animation: gold-pulse 2s infinite; }
-.avatar-wrapper.ouro .coroa-topo::after { background: linear-gradient(to bottom, #fff7cc, #ffd700); }
-
-/* 3. DIAMANTE (Asa Azul) */
-.avatar-wrapper.diamante .chat-user-photo, .avatar-wrapper.diamante .perfil-foto-grande { border: 2px solid #00c6ff; }
-.avatar-wrapper.diamante .coroa-topo::after { background: linear-gradient(to bottom, #e0ffff, #00c6ff); }
-.avatar-wrapper.diamante::before {
-    content: '';
-    background: linear-gradient(90deg, rgba(0,198,255,0) 0%, rgba(0,198,255,0.8) 20%, rgba(0,198,255,1) 50%, rgba(0,198,255,0.8) 80%, rgba(0,198,255,0) 100%);
-    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
-}
-
-/* 4. ADMIN BLACK (Asa Preta + Brilho Branco) */
-.avatar-wrapper.admin_black .chat-user-photo, 
-.avatar-wrapper.admin_black .perfil-foto-grande { 
-    border: 2px solid #fff; 
-    box-shadow: 0 0 10px rgba(255,255,255,0.5);
-}
-.avatar-wrapper.admin_black .coroa-topo::after { 
-    background: #000; 
-    filter: drop-shadow(0 0 2px #fff); /* Brilho na coroa */
-}
+/* Brilho Branco ao redor da Asa Preta (Chat e Popup) */
 .avatar-wrapper.admin_black::before {
-    content: '';
-    background: #000; /* Asa preta sólida */
-    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
-    /* O TRUQUE DO BRILHO BRANCO EM VOLTA DO PRETO: */
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) !important;
+    /* Sombra branca sólida (outline) + Sombra difusa */
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) !important;
     opacity: 1 !important;
 }
 
-/* 5. ADMIN RED (Asa Vermelha) */
-.avatar-wrapper.admin_red .chat-user-photo, .avatar-wrapper.admin_red .perfil-foto-grande { border: 2px solid #ff0000; }
-.avatar-wrapper.admin_red .coroa-topo::after { background: linear-gradient(to bottom, #ff6b6b, #c0392b); }
-.avatar-wrapper.admin_red::before {
-    content: '';
-    background: linear-gradient(90deg, rgba(255,0,0,0) 0%, rgba(255,0,0,0.8) 20%, rgba(255,0,0,1) 50%, rgba(255,0,0,0.8) 80%, rgba(255,0,0,0) 100%);
-    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+/* Brilho Branco na Coroa Preta */
+.avatar-wrapper.admin_black .coroa-topo {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) !important;
+}
+
+/* Borda brilhante na foto preta */
+.avatar-wrapper.admin_black .chat-user-photo,
+.avatar-wrapper.admin_black .perfil-foto-grande {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
 }
   </style>
 </head>
@@ -8256,44 +8359,48 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 
         if (agData.status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
 
-        // --- CÁLCULO FINANCEIRO CORRIGIDO ---
+        // --- CORREÇÃO FINANCEIRA ROBUSTA ---
         
-        // 1. Determina o Valor Base (Quanto custa o serviço do barbeiro)
+        // 1. Determina o Valor Base (O valor CHEIO que o barbeiro cobra)
         let valorBaseProfissional = agData.valorOriginal;
 
-        // FALLBACK: Se for um agendamento antigo que não tem 'valorOriginal' salvo
+        // FALLBACK DE SEGURANÇA:
+        // Se 'valorOriginal' não foi salvo (agendamento antigo ou erro), recalculamos.
         if (!valorBaseProfissional) {
-            if (agData.descontoVipAplicado) {
-                // Se teve desconto VIP, o valor pago (agData.valor) é 90%. Revertemos para 100%.
+            if (agData.descontoVipAplicado === true) {
+                // Se foi VIP, o valor pago (agData.valor) é 90% do real.
+                // Revertemos: Pago / 0.9 = Original.
+                // Ex: Pagou 90. 90 / 0.9 = 100.
                 valorBaseProfissional = agData.valor / 0.9;
             } else {
-                // Se não teve VIP, o valor pago é o valor cheio.
+                // Se não foi VIP, o valor pago é o valor cheio.
                 valorBaseProfissional = agData.valor;
             }
         }
 
         // 2. Determina a Taxa do Profissional (Baseado no Tier)
+        // Se for Tier 4 (Diamante), taxa é 0.
         let taxaAplicada = TAXA; // Padrão 20% (0.20)
         if (isProAtivo(barbeiroData) && barbeiroData.proTier && PRECOS_PRO[barbeiroData.proTier]) {
             taxaAplicada = PRECOS_PRO[barbeiroData.proTier].taxa;
         }
 
         // 3. Calcula o Pagamento do Profissional
-        // Regra: (Valor do Serviço) - (Taxa do Sistema)
-        // O desconto VIP NÃO entra nessa conta.
+        // Regra: (Valor CHEIO do Serviço) * (1 - Taxa do Sistema)
+        // O desconto VIP NÃO afeta essa conta. O sistema cobre a diferença.
         const valorLiquidoParaBarbeiro = valorBaseProfissional * (1 - taxaAplicada);
 
-        // Debug no console para você verificar
-        console.log(`FINANCEIRO:
-          Preço Serviço: ${valorBaseProfissional}
+        // Debug no console (pressione F12 para ver se precisar)
+        console.log(`FINANCEIRO DEBUG:
+          Preço Serviço Cheio: ${valorBaseProfissional}
           Pago pelo Cliente: ${agData.valor} (VIP: ${agData.descontoVipAplicado})
-          Taxa Sistema: ${(taxaAplicada * 100)}%
+          Tier Profissional: ${barbeiroData.proTier || 'Normal'} (Taxa: ${taxaAplicada * 100}%)
           Barbeiro Recebe: ${valorLiquidoParaBarbeiro}
         `);
 
         // --- ATUALIZAÇÕES NO BANCO ---
 
-        // Credita o Barbeiro
+        // Credita o Barbeiro com o valor correto
         t.update(barbeiroRef, { 
             saldo: firebase.firestore.FieldValue.increment(valorLiquidoParaBarbeiro), 
             cortesSemana: firebase.firestore.FieldValue.increment(1), 
@@ -8306,16 +8413,17 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
             avisoAvaliacaoEnviado: false
         });
 
-        // Gera Extrato
+        // Gera Extrato para Auditoria
         const registroRef = db.collection("extrato_financeiro").doc();
         t.set(registroRef, {
             usuarioUid: auth.currentUser.uid,
             tipo: "entrada_servico",
-            valorBrutoServico: valorBaseProfissional, // R$ 100 (exemplo)
-            valorPagoPeloCliente: agData.valor,       // R$ 90 (se VIP)
-            valorLiquidoRecebido: valorLiquidoParaBarbeiro, // R$ 80 (se taxa 20%)
+            valorBrutoServico: valorBaseProfissional, // Ex: 100
+            valorPagoPeloCliente: agData.valor,       // Ex: 90
+            valorLiquidoRecebido: valorLiquidoParaBarbeiro, // Ex: 100 (se Tier 4)
             taxaAplicada: taxaAplicada,
-            adminAbsorveuDesconto: (valorBaseProfissional - agData.valor), // R$ 10 (prejuízo admin)
+            // Mostra quanto o sistema pagou do bolso (Subsídio VIP)
+            adminAbsorveuDesconto: (valorBaseProfissional - agData.valor), 
             dataEvento: firebase.firestore.FieldValue.serverTimestamp(),
             origem: `Serviço: ${agData.servico}`,
             agendamentoId: agendamentoId
@@ -8329,7 +8437,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         return agData.clienteTelefone;
     });
 
-    // Pós-transação: Conquistas e Notificações
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
