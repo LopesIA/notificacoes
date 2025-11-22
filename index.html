@@ -4413,6 +4413,11 @@ function fecharModalAtual(forcePopupAguarde = false) {
         return;
     }
     
+    if (intervaloRelogiosPerfil) {
+        clearInterval(intervaloRelogiosPerfil);
+        intervaloRelogiosPerfil = null;
+    }
+
     if (modalStack.length > 0) {
         const modalParaFechar = modalStack.pop();
         modalParaFechar.classList.remove('show');
@@ -10390,21 +10395,18 @@ function verificarAcessoBalao(key) {
 
 // 2. Renderizar Lista de Balões (Chame isso dentro de abrirModalPerfil)
 function renderizarBaloes() {
-    const container = document.getElementById('listaBaloes'); // Precisa criar esse div no HTML
+    const container = document.getElementById('listaBaloes');
     if (!container) return;
-    
-    container.className = 'molduras-scroll-container'; 
     container.innerHTML = '';
     
     Object.keys(BALOES).forEach(key => {
         const b = BALOES[key];
-        
         if (b.adminOnly && perfil.tipo !== 'admin') return;
 
         const selecionado = perfil.balaoSelecionado === key;
         const statusAcesso = verificarAcessoBalao(key);
-        
         const checkDisplay = selecionado ? 'flex' : 'none';
+        
         let rodapeHtml = '';
         let estiloBorda = '';
 
@@ -10416,16 +10418,15 @@ function renderizarBaloes() {
             rodapeHtml = `<span style="font-size:9px; color:#00c6ff;">Liberado PRO</span>`;
             estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
         } else if (statusAcesso.tipo === 'temporario_roleta') {
-            // Mostra horas restantes se ganhou na roleta
-            const horasRestantes = Math.ceil((statusAcesso.validade - new Date()) / (1000 * 60 * 60));
-            rodapeHtml = `<span style="font-size:9px; color:#e57373;">Prêmio: ${horasRestantes}h</span>`;
+            // AQUI MUDOU: Adicionamos a classe e o data-expire
+            const ts = statusAcesso.validade.getTime();
+            rodapeHtml = `<span class="contador-tempo-real" data-expire="${ts}" style="font-size:9px; color:#e57373;">Calculando...</span>`;
             estiloBorda = 'border-color: #e57373;';
         } else {
             rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${b.preco}</span>`;
             estiloBorda = 'opacity: 0.7;';
         }
 
-        // Preview do Balão
         const previewHtml = `
             <div class="chat-message ${b.classe} custom-bubble" style="width: 60px; height: 40px; display:flex; align-items:center; justify-content:center; font-size:10px; margin-bottom:5px;">
                 Abc
@@ -13301,6 +13302,7 @@ function abrirModalPerfil() {
         renderizarMolduras();
         renderizarBaloes();
         renderizarSelecaoConquistas();
+        iniciarRelogiosPerfil();
     });
 
     abrirModal('modalMeuPerfil');
