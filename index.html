@@ -2697,12 +2697,32 @@ body {
 onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
+  <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 450px;">
     <h3>💰 Minha Carteira</h3>
-    <p>Seu saldo atual é: <b style="color: var(--cor-destaque);">R$ <span id="saldoModal">0,00</span></b></p>
-    <button onclick="iniciarDeposito()">📥 Depositar</button>
-    <button onclick="iniciarSaque()">📤 Sacar</button>
-    <button data-modal-id="modalCarteira" onclick="fecharModal(event)">❌ Fechar</button>
+    
+    <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #2ecc71;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size: 14px; color: #ccc;">💇 Saldo para Serviços</span>
+            <span style="font-size: 20px; font-weight: bold; color: #2ecc71;">R$ <span id="saldoServicosDisplay">0,00</span></span>
+        </div>
+        <p style="font-size: 11px; opacity: 0.6; margin: 5px 0 10px 0;">Exclusivo para pagar profissionais (Cortes, Unhas, etc).</p>
+        <button onclick="iniciarDepositoServicos()" style="background: #2ecc71; color: #000; width: 100%; font-weight: bold;">➕ Adicionar (PIX)</button>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--cor-destaque);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size: 14px; color: #ccc;">💎 Saldo Digital (Loja/VIP)</span>
+            <span style="font-size: 20px; font-weight: bold; color: var(--cor-destaque);">R$ <span id="saldoDigitalDisplay">0,00</span></span>
+        </div>
+        <p style="font-size: 11px; opacity: 0.6; margin: 5px 0 10px 0;">Para Compras na Loja, VIP, Boost e Roleta.</p>
+        <button onclick="iniciarDepositoDigital()" style="background: var(--cor-destaque); color: #000; width: 100%; font-weight: bold;">➕ Comprar Créditos</button>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <button onclick="iniciarSaque()" style="flex: 1; background: #333; border: 1px solid #555;">📤 Sacar (Profissional)</button>
+    </div>
+
+    <button data-modal-id="modalCarteira" onclick="fecharModal(event)" style="margin-top: 15px; background: transparent; border: 1px solid #555;">❌ Fechar</button>
   </div>
 </div>
 
@@ -4366,33 +4386,6 @@ function fecharAguarde(event, force = false) {
     }
 }
 
-function abrirModal(modalId) {
-    const novoModal = document.getElementById(modalId);
-
-    // Verifica se o modal existe e se já não está aberto
-    if (novoModal && !novoModal.classList.contains('show')) {
-        
-        // --- NOVA LÓGICA DE EMPILHAMENTO (STACKING) ---
-        // 1. Definimos uma base alta (2000) para ficar acima de botões fixos como o do Chat
-        const baseZIndex = 2000;
-        
-        // 2. Calculamos o incremento: Se já tem 1 modal aberto, soma +10. Se tem 2, +20.
-        // Isso garante que o novo SEMPRE tenha um número maior que o anterior.
-        const incremento = modalStack.length * 10;
-        
-        // 3. Aplica o novo Z-Index diretamente no elemento
-        novoModal.style.zIndex = baseZIndex + incremento;
-
-        // --- FIM DA LÓGICA NOVA ---
-
-        novoModal.style.display = 'flex';
-        setTimeout(() => {
-            novoModal.classList.add('show');
-            modalStack.push(novoModal); // Adiciona à pilha para controle do botão voltar/fechar
-        }, 10);
-    }
-}
-
 function fecharModal(event) {
     // Permite fechar clicando no fundo (classe .modal) ou em um botão com data-modal-id
     if (event && event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id')) {
@@ -4404,28 +4397,6 @@ function fecharModal(event) {
         }
         
         fecharModalAtual();
-    }
-}
-
-function fecharModalAtual(forcePopupAguarde = false) {
-    if (forcePopupAguarde) {
-        const popup = document.getElementById('popupAguarde');
-        popup.classList.remove('show');
-        setTimeout(() => popup.style.display = 'none', 300);
-        return;
-    }
-    
-    if (intervaloRelogiosPerfil) {
-        clearInterval(intervaloRelogiosPerfil);
-        intervaloRelogiosPerfil = null;
-    }
-
-    if (modalStack.length > 0) {
-        const modalParaFechar = modalStack.pop();
-        modalParaFechar.classList.remove('show');
-        setTimeout(() => {
-            modalParaFechar.style.display = 'none';
-        }, 300);
     }
 }
 
@@ -5106,18 +5077,33 @@ auth.onAuthStateChanged(async user => {
 
     // --- Atualização normal da UI ---
     console.log("Atualizando UI com dados do perfil...");
-    const saldo = (perfil.saldo || 0).toFixed(2);
-    let saldoFormatado = parseFloat(perfil.saldo || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // --- ATUALIZAÇÃO UI CARTEIRA SEPARADA (SUBSTITUIÇÃO) ---
+    const saldoServicos = (perfil.saldoServicos || 0).toFixed(2);
+    const saldoDigital = (perfil.saldo || 0).toFixed(2); // 'saldo' antigo continua sendo o Digital
+
+    // Atualiza Header (Soma visual ou escolhe um principal - aqui somamos para mostrar o total global)
+    const saldoTotal = (perfil.saldoServicos || 0) + (perfil.saldo || 0);
+    let saldoTotalFormatado = saldoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
-    // Se o valor for muito grande (ex: admin), diminui a fonte ou abrevia visualmente no topo
-    if (saldoFormatado.length > 8) {
-        document.getElementById("btnCarteiraTop").style.fontSize = "12px"; // Diminui fonte
+    // Se o valor for muito grande, diminui a fonte do topo
+    if (saldoTotalFormatado.length > 8) {
+        document.getElementById("btnCarteiraTop").style.fontSize = "12px"; 
     } else {
         document.getElementById("btnCarteiraTop").style.fontSize = "14px";
     }
     
-    document.getElementById("saldoHeader").textContent = saldoFormatado;
-    document.getElementById("saldoModal").textContent = saldoFormatado;
+    // Atualiza o botão do topo e o modal antigo se ainda existir
+    if(document.getElementById("saldoHeader")) document.getElementById("saldoHeader").textContent = saldoTotalFormatado;
+    if(document.getElementById("saldoModal")) document.getElementById("saldoModal").textContent = saldoTotalFormatado;
+
+    // Atualiza os displays da NOVA Carteira Separada
+    if(document.getElementById("saldoServicosDisplay")) {
+        document.getElementById("saldoServicosDisplay").textContent = parseFloat(saldoServicos).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+    if(document.getElementById("saldoDigitalDisplay")) {
+        document.getElementById("saldoDigitalDisplay").textContent = parseFloat(saldoDigital).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+    // --- FIM DA SUBSTITUIÇÃO ---
 
     // (O restante da lógica de atualização da UI permanece igual...)
     const btnVip = document.getElementById('btnVip');
@@ -5895,56 +5881,74 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
 
 function confirmarAgendamento() {
     const { barbeiroUid, barbeiroNome, servico, horario } = agendamentoState;
-    if (!servico || !horario) {
-        fecharModalAtual();
-        return;
+    
+    // Validação básica
+    if (!barbeiroUid || !servico || (!horario && horario !== "imediato")) {
+        return exibirPopup("Erro", "Informações do agendamento incompletas.");
     }
 
     const preco = isVipAtivo(perfil) ? servico.valor * 0.9 : servico.valor;
     
-    if (perfil.saldo < preco) {
+    // --- MUDANÇA CRÍTICA: Verifica o saldoServicos ---
+    const saldoDisponivelServicos = perfil.saldoServicos || 0;
+
+    if (saldoDisponivelServicos < preco) {
         fecharModalAtual();
-        exibirPopup("💸 Saldo insuficiente.", "Por favor, deposite mais dinheiro em sua carteira.", 'aviso', () => {
-            abrirModal('modalCarteira');
-        });
+        exibirPopup(
+            "💸 Saldo de Serviços Insuficiente", 
+            `Seu saldo para serviços é R$ ${saldoDisponivelServicos.toFixed(2)}. O serviço custa R$ ${preco.toFixed(2)}.\n\nPor favor, adicione saldo na carteira de SERVIÇOS (exclusivo para pagamentos de profissionais).`, 
+            'aviso', 
+            () => {
+                // Abre a carteira já sugerindo depósito de serviços
+                abrirModal('modalCarteira');
+            }
+        );
         return;
     }
     
-    const horarioTexto = horario === 'imediato' ? 'uma Vaga Imediata' : `o horário das ${horario}`;
-    let detalhes = `Profissional: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
-    if (servico.duracao) detalhes += `Duração Estimada: ${servico.duracao} minutos\n`;
-    detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${isVipAtivo(perfil) ? ' (Desconto VIP de 10% aplicado)' : ''}`;
-
-    // Usa o novo popup de confirmação
-    exibirConfirmacao("Confirmar Agendamento?", detalhes, () => {
-        // Esta função de callback só executa se o usuário clicar "Sim"
-        exibirAguarde("Agendando...");
+    let mensagemConfirmacao = `Confirmar ${servico.nome} com ${barbeiroNome}`;
+    if (horario === "imediato") mensagemConfirmacao += ` AGORA (Vaga Imediata)?`;
+    else mensagemConfirmacao += ` às ${horario}?`;
     
-        const agendamentoData = {
-            clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
-            barbeiroUid, barbeiroNome, servico: servico.nome, valor: preco,
-            status: horario === 'imediato' ? 'imediato' : 'pendente',
-            ts: firebase.firestore.FieldValue.serverTimestamp(),
-            avaliado: false, lembreteEnviado: false,
-            clienteNotificado: false, // <-- REQUERIDO PARA O POPUP DO CLIENTE
-            lembreteConcluirEnviado: false, // <-- REQUERIDO PARA O LEMBRETE DO PROFISSIONAL
-            avisoAvaliacaoEnviado: false
-        };
-        if (horario !== 'imediato') agendamentoData.horario = horario;
+    mensagemConfirmacao += `\nValor: R$ ${preco.toFixed(2)}`;
 
-        db.collection("agendamentos").add(agendamentoData).then(() => {
-            const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
-            
-            // ATENÇÃO: Aviso para o barbeiro ainda é necessário para o popup persistente
-            criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`, 'novo-agendamento', agendamentoData);
-            
-            notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
-            
-            fecharTodosOsModais();
-            exibirPopup("Sucesso!", "Pedido enviado com sucesso! Aguarde a aprovação do profissional.");
+    exibirConfirmacao("Confirmar Agendamento?", mensagemConfirmacao, () => {
+        exibirAguarde("Agendando...");
+        
+        const agendamentoData = {
+            clienteUid: auth.currentUser.uid,
+            clienteNome: perfil.nome,
+            clienteTelefone: perfil.telefone || "",
+            barbeiroUid: barbeiroUid,
+            barbeiroNome: barbeiroNome,
+            servico: servico.nome,
+            valor: preco,
+            horario: horario === "imediato" ? null : horario,
+            status: horario === "imediato" ? "imediato" : "pendente",
+            ts: firebase.firestore.FieldValue.serverTimestamp(),
+            avaliado: false,
+            clienteNotificado: false,
+            avisoAvaliacaoEnviado: false,
+            lembreteEnviado: false,
+            lembreteConcluirEnviado: false
+        };
+
+        db.collection("agendamentos").add(agendamentoData).then((docRef) => {
+             fecharTodosOsModais();
+             
+             if (horario === "imediato") {
+                 exibirPopup("Solicitação Enviada!", "Aguarde a confirmação do profissional para se dirigir ao local.");
+                 notifyUser(barbeiroUid, "⚡ Vaga Imediata!", `Novo pedido de vaga imediata de ${perfil.nome}!`, { link: '#agendamentos' });
+             } else {
+                 exibirPopup("Solicitação Enviada!", "Aguarde a aprovação do profissional.");
+                 notifyUser(barbeiroUid, "📅 Novo Agendamento", `${perfil.nome} agendou para ${horario}.`, { link: '#agendamentos' });
+             }
+             
+             // Limpa estado
+             resetAgendamentoState();
         }).catch(e => {
             fecharTodosOsModais();
-            exibirPopup("Erro ao enviar pedido: " + e.message, 'erro');
+            exibirPopup("Erro ao agendar: " + e.message);
         });
     });
 }
@@ -8137,30 +8141,67 @@ function abrirAvaliacoesBarbeiro() {
     });
 }
 
-// ======================================================================
-// --- NOVAS FUNÇÕES DE PAGAMENTO (APRIMORADO) ---
-// ======================================================================
+// --- FUNÇÕES DE DEPÓSITO SEPARADAS (SUBSTITUIR AS ANTIGAS) ---
 
-// SUBSTITUA a função 'iniciarDeposito' inteira (Linha ~4661) por esta:
+// 1. Depósito de SERVIÇOS (Sempre PIX - Seguro para Fluxo de Caixa)
+function iniciarDepositoServicos() {
+    // Define uma variável global para saber que o usuário quer depositar em SERVIÇOS
+    window.tipoDepositoAtual = 'servicos'; 
+    
+    // Abre o formulário de dados para PIX
+    document.getElementById('depositoValor').placeholder = "Valor para Serviços (PIX)";
+    abrirModal('modalDepositoFormulario'); 
+    
+    // Configura validação dos inputs
+    const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
+    const btn = document.getElementById('btnContinuarDeposito');
+    
+    // Remove listeners antigos para não duplicar
+    const novoBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(novoBtn, btn);
+    
+    // Reatribui a função de click
+    novoBtn.onclick = criarSolicitacaoDeposito;
 
-function iniciarDeposito() {
+    inputs.forEach(id => {
+        document.getElementById(id).oninput = () => {
+            const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
+            novoBtn.disabled = !allFilled;
+        };
+    });
+}
+
+// 2. Depósito DIGITAL (Google Play no App / PIX na Web)
+function iniciarDepositoDigital() {
+    window.tipoDepositoAtual = 'digital';
+
     if (isTwa) {
-        // Ambiente TWA (Play Store): Abre o modal de depósito do Google Play
+        // ESTÁ NO APP: Obriga Google Play (Proteção contra Banimento)
+        // Isso responde sua dúvida: Sim, isso protege o app.
         abrirModal('modalDepositoPlayStore');
     } else {
-        // Ambiente Web (Navegador): Abre o formulário de depósito (PIX/Cartão)
+        // ESTÁ NA WEB: Pode usar PIX ou Cartão para Digital também
+        document.getElementById('depositoValor').placeholder = "Valor Créditos Digitais";
         abrirModal('modalDepositoFormulario');
+        
         const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
         const btn = document.getElementById('btnContinuarDeposito');
+        
+        // Remove listeners antigos
+        const novoBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(novoBtn, btn);
+        novoBtn.onclick = criarSolicitacaoDeposito;
+
         inputs.forEach(id => {
             document.getElementById(id).oninput = () => {
                 const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
-                btn.disabled = !allFilled;
+                novoBtn.disabled = !allFilled;
             };
         });
     }
 }
 
+// 3. Criar Solicitação (Atualizada para saber o destino do dinheiro)
 async function criarSolicitacaoDeposito() {
     const primeiroNome = document.getElementById('depositoPrimeiroNome').value.trim();
     const segundoNome = document.getElementById('depositoSegundoNome').value.trim();
@@ -8169,14 +8210,20 @@ async function criarSolicitacaoDeposito() {
     const valor = parseFloat(document.getElementById('depositoValor').value);
 
     if (!primeiroNome || !segundoNome || !cpf || !telefone || isNaN(valor) || valor <= 0) {
-        return exibirPopup("Por favor, preencha todos os campos corretamente, incluindo um valor válido.");
+        return exibirPopup("Por favor, preencha todos os campos corretamente.");
     }
 
     const nomeCompleto = `${primeiroNome} ${segundoNome}`;
+    
+    // Define o destino do saldo baseado no botão clicado anteriormente
+    // Se a variável não estiver definida (erro), assume 'saldo' (digital)
+    const destinoSaldo = (window.tipoDepositoAtual === 'servicos') ? 'saldoServicos' : 'saldo'; 
+    const nomeDestino = (window.tipoDepositoAtual === 'servicos') ? 'SERVIÇOS (Cortes)' : 'DIGITAL (Loja/VIP)';
 
     try {
         await db.collection("solicitacoes").add({
             tipo: "deposito",
+            subTipo: destinoSaldo, // <--- IMPORTANTE: Avisa o Admin/Server onde pôr o dinheiro
             usuarioUid: auth.currentUser.uid,
             usuarioNome: perfil.nome,
             dadosDeposito: {
@@ -8190,13 +8237,22 @@ async function criarSolicitacaoDeposito() {
         });
 
         fecharTodosOsModais();      
-        notifyAdmins("📥 Novo Pedido de Depósito!", `${perfil.nome} solicitou um depósito de R$${valor.toFixed(2)}.`, { link: '#solicitacoes' });
+        
+        // Se for Depósito de Serviços, vai direto para o PIX (sem opção de cartão)
+        // Se for Digital e estiver na Web, pode oferecer cartão.
+        if (destinoSaldo === 'saldoServicos') {
+             processarPagamentoPixAprimorado(); 
+        } else {
+             // Digital na Web pode escolher
+             abrirModal('modalDeposito'); 
+        }
+        
+        notifyAdmins("📥 Depósito Solicitado!", `${perfil.nome} quer depositar R$${valor.toFixed(2)} para ${nomeDestino}.`, { link: '#solicitacoes' });
 
     } catch (error) {
-        console.error("Erro ao criar solicitação de depósito:", error);
-        exibirPopup("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
+        console.error("Erro ao criar solicitação:", error);
+        exibirPopup("Ocorreu um erro. Tente novamente.");
     }
-    abrirModal('modalDeposito');
 }
 
 function iniciarSaque() {
@@ -13794,6 +13850,143 @@ function iniciarRelogiosPerfil() {
     atualizar();
     intervaloRelogiosPerfil = setInterval(atualizar, 1000);
 }
+
+// --- SISTEMA DE ROTEAMENTO (DEEP LINKING + BOTÃO VOLTAR) ---
+
+// Mapeamento: Hash da URL -> ID do Modal
+const rotasApp = {
+    '#carteira': 'modalCarteira',
+    '#historico': 'modalHistoricoCliente',
+    '#vip': 'modalVip', // Ou modalVipPro dependendo da lógica
+    '#fidelidade': 'modalFidelidade',
+    '#conquistas': 'modalConquistas', // ou modalConquistasBarbeiro
+    '#blog': 'modalBlog',
+    '#configuracoes': 'modalConfiguracoes',
+    '#loja': 'lojaView', // View, não modal
+    '#agendamentos': 'modalAgendamentosBarbeiro',
+    '#servicos': 'modalServicosBarbeiro',
+    '#agenda': 'modalAgendaBarbeiro',
+    '#clientes': 'modalClientesBarbeiro',
+    '#promocoes': 'modalPromocoesBarbeiro',
+    '#desempenho': 'modalDashboardBarbeiro',
+    '#avaliacoes': 'modalAvaliacoes',
+    '#portfolio': 'modalPortfolioBarbeiro',
+    '#denuncia': 'modalDenuncia',
+    '#perfil': 'modalMeuPerfil',
+    '#solicitacoes': 'modalSolicitacoes',
+    '#usuarios': 'modalUsuarios',
+    '#entregas': 'modalEntregasVendedor',
+    '#minhascompras': 'modalMinhasCompras',
+    '#gerenciarloja': 'modalGerenciarLoja'
+};
+
+// 1. Função modificada para abrir modais mudando a URL
+function abrirModal(modalId) {
+    // Encontra qual hash corresponde a este modal
+    const hashEncontrado = Object.keys(rotasApp).find(key => rotasApp[key] === modalId);
+    
+    if (hashEncontrado) {
+        // Se tem rota, muda a URL (o listener 'hashchange' vai abrir o modal)
+        window.location.hash = hashEncontrado;
+    } else {
+        // Modais sem rota (ex: avisos rápidos, confirmações) abrem direto
+        exibirModalVisualmente(modalId);
+    }
+}
+
+// 2. Função que realmente exibe o HTML (Interna)
+function exibirModalVisualmente(modalId) {
+    const novoModal = document.getElementById(modalId);
+    if (novoModal && !novoModal.classList.contains('show')) {
+        // Lógica de Z-Index
+        const baseZIndex = 2000;
+        const incremento = modalStack.length * 10;
+        novoModal.style.zIndex = baseZIndex + incremento;
+
+        novoModal.style.display = 'flex';
+        setTimeout(() => {
+            novoModal.classList.add('show');
+            // Só adiciona na pilha se não for um modal de sistema persistente
+            if (!modalStack.includes(novoModal)) {
+                modalStack.push(novoModal);
+            }
+        }, 10);
+    }
+}
+
+// 3. Função modificada para fechar (comportamento do botão voltar)
+function fecharModalAtual(forcePopupAguarde = false) {
+    // Se for forçado (aguarde), fecha direto
+    if (forcePopupAguarde) {
+        const popup = document.getElementById('popupAguarde');
+        popup.classList.remove('show');
+        setTimeout(() => popup.style.display = 'none', 300);
+        return;
+    }
+
+    // Se tiver hash na URL, volta o histórico (simula botão voltar físico)
+    if (window.location.hash) {
+        window.history.back(); 
+    } else {
+        // Se não tiver hash (modal sem rota), fecha visualmente
+        fecharModalVisualmente();
+    }
+}
+
+function fecharModalVisualmente() {
+    if (modalStack.length > 0) {
+        const modalParaFechar = modalStack.pop();
+        modalParaFechar.classList.remove('show');
+        setTimeout(() => {
+            modalParaFechar.style.display = 'none';
+        }, 300);
+    }
+}
+
+// 4. O CÉREBRO: Escuta mudanças na URL (Botão Voltar ou Links)
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash;
+    
+    // Se a URL ficou limpa (usuário voltou para home), fecha tudo
+    if (!hash) {
+        // Fecha todos os modais que têm rota associada
+        modalStack.forEach(modal => {
+            if (Object.values(rotasApp).includes(modal.id)) {
+                modal.classList.remove('show');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+        });
+        // Limpa a pilha dos modais fechados
+        modalStack = modalStack.filter(modal => !Object.values(rotasApp).includes(modal.id));
+        return;
+    }
+
+    // Se tem hash, verifica se é uma rota válida e abre
+    if (rotasApp[hash]) {
+        // Verifica se é view ou modal
+        if (rotasApp[hash].includes('View')) {
+            // Se for a Loja (View), usa a função mostrar()
+            mostrar(rotasApp[hash]);
+            if(hash === '#loja') carregarProdutos();
+        } else {
+            exibirModalVisualmente(rotasApp[hash]);
+        }
+    }
+});
+
+// 5. Executa ao carregar a página (para abrir deep links diretos)
+window.addEventListener('load', () => {
+    if (window.location.hash) {
+        const hash = window.location.hash;
+        if (rotasApp[hash]) {
+            // Pequeno delay para garantir que o HTML carregou
+            setTimeout(() => {
+                if (rotasApp[hash].includes('View')) mostrar(rotasApp[hash]);
+                else exibirModalVisualmente(rotasApp[hash]);
+            }, 500);
+        }
+    }
+});
 
 function renderizarSelecaoConquistas() {
     const container = document.getElementById('listaSelecaoConquistas');
