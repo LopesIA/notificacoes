@@ -12,11 +12,6 @@
   <style>
     :root {
 /* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
-.onboard-screen[style*="background-image"] {
-    background-repeat: no-repeat;
-    background-position: center center !important; 
-    background-size: cover !important;
-}
 
       --cor-fundo: #0c0c0c;
       --cor-card: #181818;
@@ -30,6 +25,12 @@
       --cor-borda: #333;
       --cor-destaque: var(--cor-destaque-ouro); /* Cor padrão */
     }
+
+.onboard-screen[style*="background-image"] {
+    background-repeat: no-repeat;
+    background-position: center center !important; 
+    background-size: cover !important;
+}
 /* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
 @keyframes brilhoDourado {
     0% {
@@ -2298,7 +2299,7 @@ body {
 }
 /* Garante limpeza */
 .chat-message.bubble-bronze::before, 
-.chat-message.bubble-bronze::after { !important; }
+.chat-message.bubble-bronze::after;
 
 
 /* ============================================================
@@ -2313,7 +2314,7 @@ body {
     color: #ffffff !important; /* Texto Branco Puro */
 }
 .chat-message.bubble-prata::before, 
-.chat-message.bubble-prata::after { !important; }
+.chat-message.bubble-prata::after;
 
 
 /* ============================================================
@@ -2330,7 +2331,7 @@ body {
     animation: shine-gold 4s linear infinite; /* Brilho passando */
 }
 .chat-message.bubble-ouro::before, 
-.chat-message.bubble-ouro::after { !important; }
+.chat-message.bubble-ouro::after;
 
 
 /* ============================================================
@@ -13272,12 +13273,13 @@ function abrirModalPerfil() {
 
     atualizarBotaoRoleta();
 
-    // CORREÇÃO: Timeout para garantir que o HTML existe antes de preencher
+    // CORREÇÃO ROBUSTA: Try-Catch individual para cada função de renderização
+    // Isso garante que se os balões falharem, o relógio ainda inicia!
     setTimeout(() => {
-        renderizarMolduras();
-        renderizarBaloes();
-        renderizarSelecaoConquistas();
-        iniciarRelogiosPerfil(); // Inicia o timer após renderizar
+        try { renderizarMolduras(); } catch(e) { console.error("Erro molduras:", e); }
+        try { renderizarBaloes(); } catch(e) { console.error("Erro baloes:", e); }
+        try { renderizarSelecaoConquistas(); } catch(e) { console.error("Erro conquistas:", e); }
+        try { iniciarRelogiosPerfil(); } catch(e) { console.error("Erro relogios:", e); }
     }, 100);
 
     abrirModal('modalMeuPerfil');
