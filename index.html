@@ -11,301 +11,714 @@
 
   <style>
     :root {
-        --cor-fundo: #0c0c0c;
-        --cor-card: #181818;
-        --cor-botoes: #222222;
-        --cor-texto-principal: #e0e0e0;
-        --cor-destaque-ouro: #d4af37;
-        --cor-destaque-rosa: #e57373;
-        --cor-destaque-prata: #c0c0c0;
-        --cor-destaque-azul: #007BFF;
-        --cor-sombra: #000000;
-        --cor-borda: #333;
-        --cor-destaque: var(--cor-destaque-ouro);
-    }
+/* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
+.onboard-screen[style*="background-image"] {
+    background-repeat: no-repeat;
+    background-position: center center !important; 
+    background-size: cover !important;
+}
 
-    /* =========================================
-       RESET E ESTRUTURA GERAL
-       ========================================= */
-    body {
-        background-image: url('/icone.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-blend-mode: multiply;
-        background-color: rgba(0, 0, 0, 0.6);
-        margin: 0;
-        color: var(--cor-texto-principal);
-        font-family: 'Poppins', sans-serif;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        transition: background-color 0.3s;
-        overflow-x: hidden;
-        width: 100%;
+      --cor-fundo: #0c0c0c;
+      --cor-card: #181818;
+      --cor-botoes: #222222;
+      --cor-texto-principal: #e0e0e0;
+      --cor-destaque-ouro: #d4af37; /* Dourado */
+      --cor-destaque-rosa: #e57373; /* Rosa Suave */
+      --cor-destaque-prata: #c0c0c0; /* Prateado */
+      --cor-destaque-azul: #007BFF; /* Azul */
+      --cor-sombra: #000000;
+      --cor-borda: #333;
+      --cor-destaque: var(--cor-destaque-ouro); /* Cor padrão */
     }
+/* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
+@keyframes brilhoDourado {
+    0% {
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 15px var(--cor-tema-forte), 0 0 25px var(--cor-tema-forte); /* cor-tema-forte é o seu dourado */
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
+    }
+}
 
+/* Estilo para o botão de Usuários Online (Admin) */
+#onlineUserCount {
+    font-size: 14px;
+    font-weight: 600;
+    /* color: #2ecc71;  <-- REMOVIDO */
+    background: linear-gradient(45deg, var(--cor-destaque-prata), var(--cor-destaque-ouro));
+    color: var(--cor-fundo);
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    /* animation: pulse-green 2s infinite; <-- REMOVIDO */
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+#onlineUserCount:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
+}
+
+/* Estilo para o modal de novo agendamento (não-fechável) */
+#modalNovoAgendamento {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Estilo para item clicável na lista de usuários online */
+#listaUsuariosOnline .selectable-item {
+    background: var(--cor-botoes);
+    border: 1px solid var(--cor-borda);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+#listaUsuariosOnline .selectable-item:hover {
+    border-color: var(--cor-destaque);
+    background-color: var(--cor-card);
+}
+
+/* Estilos para Desktop - Agendamentos do Profissional */
+@media (min-width: 768px) { /* Aplica a partir de telas médias (tablets e desktops) */
+  #modalAgendamentosBarbeiro .modal-content {
+    max-width: 800px; /* Modal um pouco mais largo */
+  }
+
+  #agendamentosPainel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Cria colunas */
+    gap: 15px; /* Espaçamento entre os cards */
+    max-height: 70vh; /* Ajusta a altura máxima se necessário */
+  }
+
+  #agendamentosPainel .card {
+    width: auto; /* Deixa o card ocupar o espaço da coluna */
+    margin: 0; /* Remove margem padrão do card */
+  }
+
+  /* Opcional: Ajustar tamanho da fonte ou padding nos cards se necessário */
+  #agendamentosPainel .card p,
+  #agendamentosPainel .card button {
+    font-size: 0.9em; /* Levemente menor para caber mais info */
+  }
+   #agendamentosPainel .card button {
+      padding: 8px 10px;
+   }
+
+   /* Ajustes gerais para telas maiores */
+   .content-container {
+      max-width: 900px; /* Container principal mais largo */
+   }
+   .card {
+     max-width: none; /* Remove limitação de largura dos cards */
+   }
+}
+
+/* Garante que o modal da agenda tenha rolagem interna */
+#modalAgendaBarbeiro .modal-content {
+    max-height: 85vh; /* Altura máxima */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* O scroll vai no corpo, não no modal todo */
+}
+
+/* Área de rolagem para os botões e grid */
+#agendaScrollContent {
+    overflow-y: auto;
+    padding-right: 5px;
+    flex-grow: 1;
+}
+
+/* Correção visual do Grid de Horários */
+#horariosContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    padding: 10px;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* CLASSE QUE APLICA A ANIMAÇÃO QUANDO SELECIONADO */
+.onboard-option.selected {
+    border: 2px solid var(--cor-tema-forte) !important; /* Adiciona uma borda dourada sólida */
+    animation: brilhoDourado 1.5s infinite alternate; /* Aplica o brilho piscante */
+}
+
+/* Garante que o item não selecionado não tenha a animação */
+.onboard-option:not(.selected) {
+    animation: none;
+}
     body.tema-claro {
-        --cor-fundo: #f0f0f0;
-        --cor-card: #ffffff;
-        --cor-botoes: #e0e0e0;
-        --cor-texto-principal: #333;
-        --cor-borda: #ccc;
+      --cor-fundo: #f0f0f0;
+      --cor-card: #ffffff;
+      --cor-botoes: #e0e0e0;
+      --cor-texto-principal: #333;
+      --cor-destaque-ouro: #d4af37;
+      --cor-destaque-rosa: #e57373;
+      --cor-destaque-prata: #808080;
+      --cor-destaque-azul: #0056b3;
+      --cor-sombra: #b0b0b0;
+      --cor-borda: #ccc;
     }
+    body {
+      background-image: url('/icone.png'); /* Caminho correto para o Firebase Hosting/Web */
+      background-size: cover; /* Garante que a imagem cubra todo o elemento */
+      background-position: center; /* Centraliza a imagem */
+      background-repeat: no-repeat; /* Evita repetição */
+      background-attachment: fixed; /* Opcional: mantém a imagem fixa ao rolar */
 
+      /* Adiciona um overlay escuro para o texto ficar mais legível */
+      background-blend-mode: multiply;
+      background-color: rgba(0, 0, 0, 0.6); /* Cor de fundo escura (ajuste a opacidade 0.6 se necessário) */
+      
+      margin: 0;
+      background: var(--cor-fundo);
+      color: var(--cor-texto-principal);
+      font-family: 'Poppins', sans-serif;
+      min-height: 10vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background-color 0.3s;
+    }
     .content-container {
-        width: 100%;
-        max-width: 500px;
-        padding-top: 70px;
-        padding-bottom: 80px;
-        box-sizing: border-box;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        margin: 0 auto;
+      width: 100%;
+      max-width: 500px;
+      padding-top: 60px;
+      padding-bottom: 80px; /* Espaço para os botões do rodapé */
+      box-sizing: border-box;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative; /* Adicionado para posicionamento do chat preview */
     }
-
-    /* =========================================
-       ELEMENTOS DE INTERFACE (BOTOES, CARDS, INPUTS)
-       ========================================= */
     input, select, button, textarea {
-        width: 100%;
-        margin: 8px 0;
-        padding: 14px;
-        background: var(--cor-botoes);
-        color: var(--cor-texto-principal);
-        border: 1px solid var(--cor-borda);
-        border-radius: 10px;
-        font-size: 16px;
-        transition: all 0.3s ease-in-out;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        box-sizing: border-box;
-        outline: none;
+      width: 100%;
+      margin: 8px 0;
+      padding: 14px;
+      background: var(--cor-botoes);
+      color: var(--cor-texto-principal);
+      border: 1px solid var(--cor-borda);
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      box-sizing: border-box; /* CORREÇÃO: Garante que padding não estoure a div */
     }
-
     button {
-        cursor: pointer;
-        font-weight: 600;
+      cursor: pointer;
+      font-weight: 600;
     }
-
     button:hover {
-        background: var(--cor-destaque);
-        color: var(--cor-fundo);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+      background: var(--cor-destaque);
+      color: var(--cor-fundo);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
     }
-
     button:disabled {
         cursor: not-allowed;
         background: #444;
         opacity: 0.6;
-        transform: none;
-        box-shadow: none;
     }
-
     .card {
-        background: var(--cor-card);
-        padding: 24px;
-        margin: 10px auto;
-        border-radius: 16px;
-        box-shadow: 0 6px 15px var(--cor-sombra);
-        width: 92%;
-        max-width: 480px;
-        box-sizing: border-box;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+      background: var(--cor-card);
+      padding: 24px;
+      margin: 12px;
+      border-radius: 16px;
+      box-shadow: 0 6px 15px var(--cor-sombra);
+      width: 90%;
+      max-width: 480px;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+      /* Transição mais fluida */
+      transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
     }
-
-    .card.exiting { opacity: 0; transform: translateX(-50px); }
-    .card.entering { opacity: 0; transform: translateX(50px); }
-
-    .hidden { display: none !important; }
-
-    /* =========================================
-       TOPBAR E NAVEGAÇÃO
-       ========================================= */
+    .card.exiting {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    .card.entering {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hidden {
+      display: none !important;
+    }
     .topbar {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        height: 60px;
-        background: var(--cor-card);
-        color: var(--cor-texto-principal);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 16px;
-        box-shadow: 0 2px 4px #000;
-        z-index: 100;
-        border-bottom: 2px solid var(--cor-borda);
-        box-sizing: border-box;
-        width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--cor-card);
+      color: var(--cor-texto-principal);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      box-shadow: 0 2px 4px #000;
+      font-size: 18px;
+      z-index: 10;
+      border-bottom: 2px solid var(--cor-borda);
     }
-
     .logo {
-        font-weight: 600;
-        color: var(--cor-destaque);
-        font-size: 18px;
-        text-shadow: 0 0 5px var(--cor-destaque);
-        white-space: nowrap;
+      font-weight: 600;
+      color: var(--cor-destaque);
+      font-size: 18px;
+      text-shadow: 0 0 5px var(--cor-destaque);
+      transition: color 0.3s;
     }
-
     .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 15px; /* Aumentado o espaço */
+    }
+    #btnConfig {
+      font-size: 20px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .modal.show {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-content {
+      background: var(--cor-card);
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+      transform: scale(0.9);
+      transition: transform 0.3s ease-in-out;
+      border: 1px solid var(--cor-borda);
+      position: relative; /* Para popups sobrepostos */
+    }
+    .modal-overlay-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(12, 12, 12, 0.9);
         display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: nowrap;
-    }
-
-    .topbar-right button {
-        font-size: 20px;
-        background: none;
-        border: none;
-        padding: 5px;
-        margin: 0;
-        width: auto;
-        box-shadow: none;
-    }
-
-    #onlineUserCount {
-        font-size: 12px;
-        font-weight: 600;
-        background: linear-gradient(45deg, var(--cor-destaque-prata), var(--cor-destaque-ouro));
-        color: var(--cor-fundo);
-        padding: 4px 8px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-    }
-
-    .bottom-buttons-container {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        display: flex;
-        flex-direction: column-reverse;
-        gap: 15px;
-        z-index: 99;
-        align-items: flex-start;
-        width: auto;
-    }
-
-    #btnSair, #btnDenuncia {
-        font-size: 26px;
-        background: none;
-        border: none;
-        padding: 0;
-        margin: 0;
-        cursor: pointer;
-        width: auto;
-        box-shadow: none;
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-    }
-    
-    #btnSair { font-size: 20px; }
-
-    /* Botão Chat Flutuante */
-    #btnChat {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background-color: rgba(0, 0, 0, 0.6);
-        border: 1px solid var(--cor-destaque);
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        font-size: 24px;
-        padding: 0;
-        margin: 0;
-        cursor: pointer;
+        border-radius: 20px;
+        z-index: 25; /* Fica acima do conteúdo do modal pai */
     }
-
+    /* Estilo para o modal de ranking maior */
+    #modalRankingUnificado .modal-content {
+        max-width: 600px; /* Maior para caber as duas colunas */
+    }
+    .modal.show .modal-content {
+      transform: scale(1);
+    }
+    .servico-btn {
+      background: #333;
+      margin: 6px 0;
+      border: 1px solid #555;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: left;
+    }
+    .bottom-buttons-container {
+      position: fixed;
+      bottom: 12px;
+      width: 90%;
+      max-width: 480px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 15;
+    }
+    .redeem-container {
+      position: fixed;
+      bottom: 25px; /* Posição ajustada */
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      z-index: 15;
+      box-sizing: border-box;
+    }
+    .redeem-container button {
+      width: 200px;
+      font-size: 14px;
+      padding: 10px;
+      margin: 0;
+    }
+    #btnChat, #btnDenuncia {
+      font-size: 26px;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      width: auto;
+      height: auto;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+      position: relative; /* Para o contador de notificação */
+    }
+    #btnSair {
+      font-size: 20px; /* Reduzido */
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      width: auto;
+      height: auto;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+      position: fixed;
+      bottom: 72px; /* Posição alterada para ficar acima do botão de denúncia */
+      left: 12px;
+      z-index: 15;
+    }
+    #btnTema {
+      font-size: 18px; /* Ajuste aqui */
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      width: auto;
+      height: auto;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+    #btnCarteiraTop {
+      font-size: 16px;
+      background: var(--cor-botoes);
+      color: var(--cor-texto-principal);
+      border-radius: 10px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    #botaoExtra {
+      margin: 10px;
+      text-align: center;
+      width: 90%;
+      max-width: 480px;
+      box-sizing: border-box;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .vantagens ul {
+      list-style-type: '✅';
+      padding-left: 20px;
+    }
+    .vantagens li {
+      background: transparent;
+      margin-bottom: 10px;
+      padding: 5px;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      padding-left: 10px;
+    }
+    @keyframes vaga-glow {
+      0% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
+      50% { box-shadow: 0 0 16px #4CAF50, 0 0 24px #4CAF50; }
+      100% { box-shadow: 0 0 8px #4CAF50, 0 0 12px #4CAF50; }
+    }
+    @keyframes gold-flash-background {
+        0%, 100% { background-color: var(--cor-card); }
+        50% { background-color: #2c250e; }
+    }
+    .boosted-card {
+        border: 2px solid var(--cor-destaque);
+        animation: gold-flash-background 3s ease-in-out infinite, fadeIn 0.5s;
+    }
+    .boost-icon {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        font-size: 20px;
+        text-shadow: 0 0 8px var(--cor-destaque);
+    }
+    @keyframes gold-flash {
+      0%, 100% { background-color: transparent; transform: scale(1); }
+      50% { background-color: rgba(212, 175, 55, 0.8); transform: scale(1.2); }
+    }
+    @keyframes gold-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+      70% { box-shadow: 0 0 10px 15px rgba(212, 175, 55, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+    .notificacao-pulsante {
+        animation: gold-pulse 1.5s infinite;
+    }
+    .new-message-glow {
+        animation: gold-flash 1.5s ease-in-out infinite;
+        border-radius: 50%;
+    }
     .notification-badge {
         position: absolute;
         top: -5px;
-        right: -5px;
+        right: -8px;
         background-color: #e74c3c;
         color: white;
         border-radius: 50%;
-        padding: 4px 7px;
-        font-size: 11px;
+        padding: 2px 6px;
+        font-size: 10px;
         font-weight: bold;
-        border: 2px solid #fff;
-        z-index: 1002;
-        display: none;
+        border: 2px solid var(--cor-fundo);
     }
-    .notification-badge.visible {
-        display: block;
-        animation: pulse-red 2s infinite;
+    .vip-glow {
+      box-shadow: 0 0 8px var(--cor-destaque), 0 0 12px var(--cor-destaque);
+      border: 1px solid var(--cor-destaque);
     }
-
-    /* =========================================
-       MODAIS E POPUPS
-       ========================================= */
-    .modal {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000; /* Base alta para stacking */
+    
+    /* NOVO ESTILO ADICIONADO AQUI */
+    .pro-glow {
+      box-shadow: 0 0 8px var(--cor-destaque-azul), 0 0 12px var(--cor-destaque-azul);
+      border: 1px solid var(--cor-destaque-azul);
+    }
+    .promocao-card {
+      background: linear-gradient(45deg, #181818, var(--cor-destaque));
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .chat-container {
+      height: 100%;
+      flex-grow: 1; /* Faz o container crescer */
+      overflow-y: auto;
+      border: 1px solid var(--cor-borda);
+      padding: 10px;
+      border-radius: 10px;
+      background: #0d0d0d;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column; 
+    }
+    .chat-message {
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      animation: fadeIn 0.3s ease-in-out;
+      transition: opacity 1.5s ease-out; /* Transição para o fade out */
+    }
+    .chat-message.fading-out {
         opacity: 0;
-        transition: opacity 0.3s ease-in-out;
     }
-
-    .modal.show {
+    .chat-sent {
+      text-align: right;
+      background: #333;
+      margin-left: 20%;
+    }
+    .chat-received {
+      text-align: left;
+      background: #555;
+      margin-right: 20%;
+    }
+    .scrollable-list {
+      max-height: 250px; /* Ou outro valor que funcione bem */
+overflow-y: auto;
+padding-right: 10px; /* Espaço para a barra de rolagem */
+    }
+    .aviso-item {
+      text-align: left;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--cor-borda);
+      padding-bottom: 8px;
+      opacity: 0.8;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .horario-btn {
+        background: #222;
+        color: #fff;
+        border: 1px solid #555;
+        border-radius: 5px;
+        padding: 8px;
+        margin: 5px;
+        width: 100px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .horario-btn.selecionado {
+        background: var(--cor-destaque);
+        color: var(--cor-fundo);
+        border-color: var(--cor-destaque);
+    }
+    .horario-btn.bloqueado {
+        background: #772014;
+        color: #fff;
+        border-color: #772014;
+        text-decoration: line-through;
+    }
+    .horarios-actions {
         display: flex;
-        opacity: 1;
+        justify-content: space-between;
+        margin-top: 10px;
+        gap: 10px;
     }
-
-    .modal-content {
-        background: var(--cor-card);
-        padding: 30px;
-        border-radius: 20px;
-        width: 90%;
-        max-width: 400px;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.8);
-        transform: scale(0.9);
-        transition: transform 0.3s ease-in-out;
-        border: 1px solid var(--cor-borda);
+    .horarios-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .horario-disponivel {
+      background: var(--cor-botoes);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      color: var(--cor-texto-principal);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .horario-disponivel:hover {
+      background: var(--cor-destaque);
+    }
+    .admin-chat-red {
+      color: red;
+      font-weight: bold;
+      text-shadow: 0 0 5px #000, 0 0 8px #000;
+    }
+    .barbeiro-chat {
+        color: var(--cor-texto-principal);
+        text-shadow: 0 0 8px var(--cor-destaque-azul);
+    }
+    .cliente-chat {
+        color: var(--cor-texto-principal);
+        text-shadow: 0 0 8px var(--cor-destaque-prata);
+    }
+    .show-password-container {
         position: relative;
         display: flex;
-        flex-direction: column;
-    }
-
-    .modal.show .modal-content { transform: scale(1); }
-
-    .modal-fullscreen {
-        align-items: flex-end;
-        background: none;
-    }
-    .modal-fullscreen .modal-content {
+        align-items: center;
         width: 100%;
-        height: 90vh;
-        max-width: 100%;
-        border-radius: 20px 20px 0 0;
-        animation: slide-up 0.5s ease-out;
+    }
+    .show-password-container input {
+        padding-right: 40px;
+    }
+    .show-password-toggle {
+        position: absolute;
+        right: 15px;
+        cursor: pointer;
+        color: var(--cor-destaque-prata);
+    }
+    .barbeiro-card {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        cursor: pointer;
+    }
+    .card-header {
+        display: flex;
+        justify-content: flex-start; /* Alinha itens ao início (esquerda) */
+        align-items: center; /* Centraliza verticalmente */
+        border-bottom: 1px solid var(--cor-borda);
+        padding-bottom: 10px;
+        gap: 15px; /* Espaço entre a logo e o texto */
     }
 
-    #modalNovoAgendamento { backdrop-filter: blur(10px); }
-    #modalConfirmacaoGenerica, #modalBloqueante, #modalPopupGenerico { z-index: 10000 !important; }
-    #modalConfirmacaoGenerica.show, #modalBloqueante.show { background: rgba(0,0,0,0.95); }
+    .card-header img {
+        flex-shrink: 0; /* Garante que a logo não diminua */
+        margin: 0; /* Remove margens antigas */
+    }
 
+    .card-header-info {
+        flex-grow: 1; /* Faz essa div ocupar todo o espaço restante */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center; /* Centraliza o texto horizontalmente */
+        text-align: center; /* Garante que o texto dentro fique centralizado */
+        min-width: 0; /* Evita que textos longos quebrem o layout flex */
+    }
+    .card-header-info h4 {
+        margin: 0;
+        font-size: 1.1em;
+        color: var(--cor-destaque);
+    }
+    .card-header-info p {
+        margin: 4px 0 0;
+        font-size: 0.8em;
+        opacity: 0.8;
+    }
+    .card-reputacao {
+        font-size: 0.9em;
+        text-align: right;
+    }
+    .card-status {
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
+    }
+    .status-imediato {
+        background-color: #4CAF50;
+        color: white;
+        animation: vaga-glow 1.5s ease-in-out infinite;
+    }
+    .status-manual {
+        background-color: var(--cor-botoes);
+    }
+    .status-indisponivel {
+        background-color: #555;
+        opacity: 0.7;
+    }
+    .card-horarios-disponiveis {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 8px;
+    }
+    .card-horarios-disponiveis span {
+        background: #333;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-size: 0.85em;
+    }
+    .card-servicos-title {
+        font-size: 0.9em;
+        font-weight: 600;
+        margin-top: 8px;
+        border-top: 1px solid var(--cor-borda);
+        padding-top: 10px;
+    }
+    .card-servicos-list {
+        font-size: 0.8em;
+        opacity: 0.9;
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
     .popup-section {
         margin-bottom: 15px;
         padding-bottom: 10px;
@@ -316,528 +729,1980 @@
         margin-bottom: 10px;
         color: var(--cor-destaque);
     }
-
-    /* =========================================
-       AVATARES, MOLDURAS E VISUALIZAÇÃO DE PERFIL
-       (CSS UNIFICADO E CORRIGIDO)
-       ========================================= */
-    
-    /* Wrapper Base para alinhar tudo */
-    .avatar-wrapper {
-        position: relative;
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1;
-        vertical-align: middle;
-        overflow: visible !important; /* Permite asas para fora */
-    }
-
-    /* --- TAMANHOS --- */
-
-    /* 1. Chat (Pequeno) */
-    .avatar-wrapper.chat-size {
-        width: 35px !important;
-        height: 35px !important;
-        margin-right: 12px !important;
-        margin-left: 5px;
-    }
-    .avatar-wrapper.chat-size .chat-user-photo {
-        width: 100% !important;
-        height: 100% !important;
-        border-radius: 50%;
-        position: relative;
-        z-index: 10;
-        border: 1px solid rgba(255,255,255,0.2);
-        object-fit: cover;
-    }
-    .avatar-wrapper.chat-size .coroa-topo {
-        width: 18px !important; height: 12px !important;
-        top: -12px !important; left: 50%; transform: translateX(-50%);
-        position: absolute; z-index: 15;
-    }
-    /* Asas no Chat */
-    .avatar-wrapper.chat-size::before {
-        content: ''; display: block !important; position: absolute;
-        width: 65px !important; height: 26px !important;
-        top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 0; pointer-events: none;
-        background-size: contain; background-repeat: no-repeat; background-position: center;
-    }
-
-    /* 2. Popup Perfil (Grande) */
-    .avatar-wrapper.popup-size {
-        width: 120px; height: 120px;
-        margin: 20px auto;
-    }
-    .avatar-wrapper.popup-size .perfil-foto-grande {
-        width: 100%; height: 100%;
-        border-radius: 50%; position: relative; z-index: 10;
-        border: 3px solid rgba(255,255,255,0.2); object-fit: cover;
-    }
-    .avatar-wrapper.popup-size .coroa-topo {
-        width: 50px; height: 30px;
-        top: -35px; left: 50%; transform: translateX(-50%);
-        position: absolute; z-index: 15;
-    }
-    .avatar-wrapper.popup-size::before {
-        width: 280px; height: 120px;
-        top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 0;
-    }
-
-    /* 3. Ranking (Médio) */
-    .avatar-wrapper.ranking-size {
-        width: 50px; height: 50px;
-        margin-right: 10px;
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-    }
-    .avatar-wrapper.ranking-size .ranking-foto {
-        width: 100% !important; height: 100% !important;
-        border-radius: 50%; z-index: 10; position: relative;
-        object-fit: cover; border: 2px solid #444;
-    }
-    .avatar-wrapper.ranking-size .coroa-topo {
-        width: 20px; height: 12px;
-        top: -14px; left: 50%; transform: translateX(-50%);
-        position: absolute; z-index: 15;
-    }
-    .avatar-wrapper.ranking-size::before {
-        width: 90px; height: 35px;
-        top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 0; display: block; opacity: 1;
-    }
-
-    /* 4. Loja/Seleção (Pequeno/Médio) */
-    .avatar-wrapper.shop-size {
-        width: 60px; height: 60px;
-    }
-    .avatar-wrapper.shop-size div[class*="avatar-frame"] { 
-        z-index: 20; position: relative; 
-    }
-    .avatar-wrapper.shop-size .coroa-topo {
-        width: 20px; height: 14px; top: -16px;
-    }
-    .avatar-wrapper.shop-size::before {
-        width: 130px; height: 50px;
-        top: 50%; transform: translate(-50%, -50%); opacity: 1;
-    }
-
-    /* --- ESTILOS VISUAIS DAS MOLDURAS --- */
-
-    /* Coroa Base */
-    .coroa-topo::after {
-        content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-        clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
-    }
-
-    /* Bronze */
-    .avatar-wrapper.bronze .chat-user-photo, .avatar-wrapper.bronze .perfil-foto-grande, .avatar-wrapper.bronze .ranking-foto, .avatar-wrapper.bronze .avatar-frame-bronze {
-        background: linear-gradient(45deg, #804a00, #cd7f32);
-        box-shadow: 0 0 0 2px #804a00;
-    }
-    .avatar-wrapper.bronze .coroa-topo::after { background: linear-gradient(to bottom, #ffcc80, #cd7f32); }
-
-    /* Prata */
-    .avatar-wrapper.prata .chat-user-photo, .avatar-wrapper.prata .perfil-foto-grande, .avatar-wrapper.prata .ranking-foto, .avatar-wrapper.prata .avatar-frame-prata {
-        background: linear-gradient(135deg, #fff, #c0c0c0, #777);
-        box-shadow: 0 0 0 2px #777;
-        animation: brilhoMetalico 3s infinite;
-    }
-    .avatar-wrapper.prata .coroa-topo::after { background: linear-gradient(to bottom, #fff, #999); }
-
-    /* Ouro */
-    .avatar-wrapper.ouro .chat-user-photo, .avatar-wrapper.ouro .perfil-foto-grande, .avatar-wrapper.ouro .ranking-foto, .avatar-wrapper.ouro .avatar-frame-ouro {
-        background: linear-gradient(45deg, #bf953f, #fcf6ba, #aa771c);
-        box-shadow: 0 0 0 2px #aa771c, 0 0 10px rgba(255, 215, 0, 0.6);
-        animation: brilhoDourado 2s infinite alternate;
-    }
-    .avatar-wrapper.ouro .coroa-topo::after { background: linear-gradient(to bottom, #fff7cc, #ffd700, #b8860b); }
-
-    /* Diamante (Asa Azul) */
-    .avatar-wrapper.diamante .chat-user-photo, .avatar-wrapper.diamante .perfil-foto-grande, .avatar-wrapper.diamante .ranking-foto, .avatar-wrapper.diamante .avatar-frame-diamante {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 0 15px rgba(0, 198, 255, 0.9), inset 0 0 10px rgba(0, 198, 255, 0.5);
-    }
-    .avatar-wrapper.diamante .coroa-topo::after { background: linear-gradient(to bottom, #e0ffff, #00c6ff); }
-    .avatar-wrapper.diamante::before {
-        content: '';
-        background: linear-gradient(90deg, rgba(0,198,255,0) 0%, rgba(0,198,255,0.8) 20%, rgba(0,198,255,1) 50%, rgba(0,198,255,0.8) 80%, rgba(0,198,255,0) 100%);
-        clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
-        animation: asa-cristal-flutuar 3s ease-in-out infinite;
-    }
-
-    /* Admin Black (Asa Preta + Brilho) */
-    .avatar-wrapper.admin_black .chat-user-photo, 
-    .avatar-wrapper.admin_black .perfil-foto-grande, 
-    .avatar-wrapper.admin_black .ranking-foto,
-    .avatar-wrapper.admin_black .avatar-frame-admin-black {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
-    }
-    .avatar-wrapper.admin_black .coroa-topo::after {
-        background: linear-gradient(to bottom, #444, #000);
-        filter: drop-shadow(0 0 2px #fff); /* Brilho branco na coroa preta */
-    }
-    /* O Truque do Brilho na Asa Preta */
-    .avatar-wrapper.admin_black::before {
-        content: '';
-        background: #000;
-        clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
-        /* Drop-shadow branco intenso para destacar no fundo escuro */
-        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) !important;
-        opacity: 1 !important;
-        animation: asa-sombria-flutuar 3s ease-in-out infinite;
-    }
-    /* Fundo Radial no Popup para destacar Asa Preta */
-    .avatar-wrapper.popup-size.admin_black {
-        box-shadow: 0 0 50px 15px rgba(255, 255, 255, 0.15);
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-
-    /* Admin Red (Asa Vermelha) */
-    .avatar-wrapper.admin_red .chat-user-photo, .avatar-wrapper.admin_red .perfil-foto-grande, .avatar-wrapper.admin_red .ranking-foto, .avatar-wrapper.admin_red .avatar-frame-admin-red {
-        background: transparent;
-        border: 1px solid rgba(255, 0, 0, 0.3);
-        box-shadow: 0 0 15px rgba(231, 76, 60, 0.9), inset 0 0 10px rgba(192, 57, 43, 0.5);
-    }
-    .avatar-wrapper.admin_red .coroa-topo::after { background: linear-gradient(to bottom, #ff6b6b, #c0392b); }
-    .avatar-wrapper.admin_red::before {
-        content: '';
-        background: linear-gradient(90deg, rgba(231,76,60,0) 0%, rgba(231,76,60,0.8) 20%, rgba(192,57,43,1) 50%, rgba(231,76,60,0.8) 80%, rgba(231,76,60,0) 100%);
-        clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
-        animation: asa-fogo-flutuar 3s ease-in-out infinite;
-    }
-
-    /* =========================================
-       CHAT E BALÕES CUSTOMIZADOS
-       ========================================= */
-    .chat-container {
-        height: 100%;
-        flex-grow: 1;
-        overflow-y: auto;
+    .selectable-item {
+        background: var(--cor-botoes);
         border: 1px solid var(--cor-borda);
         padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    .selectable-item:hover {
+        border-color: var(--cor-destaque);
+    }
+    .selectable-item.selected {
+        background: var(--cor-destaque);
+        color: var(--cor-fundo);
+        border-color: var(--cor-destaque);
+        font-weight: 600;
+    }
+    #barbeiroPerfilHorariosList {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+    #barbeiroPerfilHorariosList .selectable-item {
+        flex-grow: 1;
+        text-align: center;
+    }
+    #modalBarbeiroPerfil .modal-footer {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--cor-borda);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    #chatPreview {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(24, 24, 24, 0.8);
+        color: var(--cor-texto-principal);
+        padding: 5px 12px;
         border-radius: 10px;
-        background: #0d0d0d;
+        font-size: 12px;
+        z-index: 5;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 90%;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        pointer-events: none;
+    }
+    #chatPreview.show {
+        opacity: 1;
+    }
+    .conquista-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background-color: var(--cor-botoes);
+        padding: 10px;
+        border-radius: 8px;
         margin-bottom: 10px;
+    }
+    .conquista-item.unlocked {
+        border-left: 5px solid var(--cor-destaque);
+    }
+    .conquista-item.locked {
+        opacity: 0.5;
+        border-left: 5px solid var(--cor-borda);
+    }
+    .conquista-icon {
+        font-size: 2em;
+    }
+    .ranking-container {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+    }
+    .ranking-column {
+        flex: 1;
+        min-width: 0;
+    }
+    .ranking-column h4 {
+        text-align: center;
+        margin-bottom: 10px;
+        color: var(--cor-destaque);
+    }
+    .ranking-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 5px;
+        border-bottom: 1px solid var(--cor-borda);
+        font-size: 14px;
+    }
+    .ranking-item:first-child {
+        font-weight: bold;
+        color: var(--cor-destaque);
+    }
+    .chat-medal {
+        margin-right: 4px;
+    }
+    .app-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        padding: 5px 0;
+        font-size: 10px;
+        color: var(--cor-texto-principal);
+        opacity: 0.5;
+        z-index: 5;
+        pointer-events: none;
+    }
+    /* Estilos do Chat Fullscreen */
+    #janelaChat.fullscreen {
+        padding: 0;
+        border-radius: 0;
+    }
+    #janelaChat.fullscreen .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #janelaChat.fullscreen #chatInput {
+        margin-bottom: 0;
+    }
+    #janelaChat #carregarMaisMsgBtn {
+        margin: 0;
+        width: 100%;
+        border-radius: 0;
+        background-color: var(--cor-botoes);
+    }
+    /* Estilos do Portfólio */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      padding: 10px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .portfolio-grid img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid var(--cor-borda);
+    }
+    #modalPortfolioCliente .modal-content, #lojaView .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        border-radius: 0;
         display: flex;
         flex-direction: column;
     }
 
-    .chat-message {
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        border-radius: 12px;
-        animation: fadeIn 0.3s ease-in-out;
-        overflow: visible !important; /* Permite que asas/coroas saiam do balão */
-    }
+/* Estilos para o novo gerenciador de portfólio do profissional */
+#portfolioInputsContainer {
+    display: grid;
+    /* Cria um grid que se ajusta, mostrando quantas colunas de 120px couberem */
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+    gap: 10px;
+    max-height: 400px; /* Aumentado de 250px para 400px para caber mais */
+    overflow-y: auto;
+    padding: 5px;
+    background: var(--cor-fundo); /* Fundo para ver os cards */
+    border-radius: 8px;
+}
+.portfolio-admin-item {
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    overflow: hidden; /* Para o input não vazar */
+    background: var(--cor-botoes);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.portfolio-admin-item img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    background: #333; /* Cor de fundo enquanto a imagem carrega */
+    border-bottom: 1px solid var(--cor-borda);
+}
+.portfolio-admin-item input {
+    width: 100%;
+    border-radius: 0;
+    margin: 0;
+    border: none;
+    font-size: 12px;
+    padding: 8px;
+    box-sizing: border-box; /* Garante que o padding não quebre o layout */
+}
 
-    .chat-sent { text-align: right; background: #333; margin-left: 20%; }
-    .chat-received { text-align: left; background: #555; margin-right: 20%; }
-
-    /* Balões Customizados */
-    .chat-message.custom-bubble {
-        position: relative;
-        border: 1px solid transparent;
-        transition: all 0.3s;
-        isolation: isolate; 
-        z-index: 1;
-        text-shadow: 1px 1px 2px #000000, 0 0 5px #000000;
-        font-weight: 600;
-    }
-
-    /* Estilos Específicos de Balão */
-    .chat-message.bubble-bronze {
-        border: 1px solid #cd7f32;
-        background: linear-gradient(145deg, #5c3a1e, #2a1a0a);
-        color: #ffdcb0 !important;
-    }
-    .chat-message.bubble-prata {
-        border: 1px solid #a0a0a0;
-        background: linear-gradient(145deg, #7f7f7f, #2a2a2a);
-        color: #ffffff !important;
-    }
-    .chat-message.bubble-ouro {
-        border: 1px solid #FFD700;
-        background: linear-gradient(110deg, #4b3b00 20%, #b88a00 40%, #fff8db 50%, #b88a00 60%, #4b3b00 80%);
-        background-size: 200% 100%;
-        color: #fff !important;
-        animation: shine-gold 4s linear infinite;
-    }
-    .chat-message.bubble-diamante, .chat-message.bubble-admin-black {
-        background: #000 !important;
-        color: #e0ffff !important;
-        border: none;
-        margin-top: 12px !important;
-    }
-    .chat-message.bubble-diamante::before {
-        content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
-        border-radius: 14px; z-index: -1; opacity: 0.8;
-        background: linear-gradient(60deg, #00c6ff, #0072ff, #000, #000, #00c6ff);
-        background-size: 300% 300%;
-        animation: border-travel 15s linear infinite;
-    }
-    .chat-message.bubble-diamante::after {
-        content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
-        animation: float-crown 4s ease-in-out infinite;
-    }
-    /* Admin Black Bubble */
-    .chat-message.bubble-admin-black { color: #fff !important; }
-    .chat-message.bubble-admin-black::before {
-        content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
-        border-radius: 14px; z-index: -1;
-        background: linear-gradient(60deg, #ffffff, #333, #000, #000, #ffffff);
-        background-size: 300% 300%;
-        animation: border-travel 15s linear infinite;
-    }
-    .chat-message.bubble-admin-black::after {
-        content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
-        filter: grayscale(100%);
-        animation: float-crown 4s ease-in-out infinite;
-    }
-    /* Admin Red Bubble */
-    .chat-message.bubble-admin-red {
-        background: #1a0000 !important; color: #ffe0e0 !important; border: none; margin-top: 12px !important;
-    }
-    .chat-message.bubble-admin-red::before {
-        content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
-        border-radius: 14px; z-index: -1;
-        background: linear-gradient(60deg, #ff0000, #ff4500, #2c0000, #2c0000, #ff0000);
-        background-size: 300% 300%;
-        animation: border-travel 12s linear infinite;
-    }
-    .chat-message.bubble-admin-red::after {
-        content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
-        filter: sepia(100%) saturate(1000%) hue-rotate(-50deg);
-        animation: float-crown 4s ease-in-out infinite;
-    }
-
-    .admin-chat-red { color: red; font-weight: bold; text-shadow: 0 0 5px #000; }
-    .barbeiro-chat { color: var(--cor-texto-principal); text-shadow: 0 0 8px var(--cor-destaque-azul); }
-    .cliente-chat { color: var(--cor-texto-principal); text-shadow: 0 0 8px var(--cor-destaque-prata); }
-    
-    .chat-message.admin-deletable {
-        cursor: pointer;
-        border: 1px dashed rgba(255, 0, 0, 0.3);
-    }
-    .chat-message.admin-deletable:hover {
-        background-color: #4d1c1c;
-        border: 1px dashed rgba(255, 0, 0, 0.8);
-    }
-
-    .chat-tabs { display: flex; border-bottom: 1px solid var(--cor-borda); margin-bottom: 10px; }
-    .chat-tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-bottom: 3px solid transparent; }
-    .chat-tab.active { border-bottom-color: var(--cor-destaque); }
-
-    /* =========================================
-       ROLETA
-       ========================================= */
-    .roleta-container {
-        background: #0a0a0a;
-        border: 4px solid #d4af37;
-        border-radius: 15px;
-        height: 100px;
-        margin: 20px auto;
-        position: relative;
-        overflow: hidden;
-        width: 320px;
-        box-shadow: inset 0 0 30px rgba(0,0,0,1);
-    }
-    .roleta-container::before, .roleta-container::after {
-        content: ''; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none;
-    }
-    .roleta-container::before { left: 0; background: linear-gradient(to right, #000, transparent); }
-    .roleta-container::after { right: 0; background: linear-gradient(to left, #000, transparent); }
-
-    .roleta-faixa {
-        display: flex; height: 100%; align-items: center; will-change: transform;
-    }
-    .roleta-item {
-        width: 80px; height: 80px; margin: 0 5px; flex-shrink: 0;
-        border-radius: 12px; display: flex; align-items: center; justify-content: center;
-        font-size: 28px; font-weight: 900; background: #1a1a1a; color: #fff;
-        border: 1px solid #333; position: relative; overflow: hidden;
-    }
-    .roleta-item.ponto { color: #eee; }
-    .roleta-item.premio-top { background: #111; border: 1px solid gold; }
-    .roleta-item.caixa { background: #c0392b; border: 2px solid #e74c3c; animation: pulse-red 1s infinite; }
-
-    .roleta-wrapper-externo {
-        display: flex; flex-direction: column; align-items: center; margin: 10px 0;
-    }
-    .seta-externa { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; z-index: 15; }
-    .seta-externa.topo { border-top: 15px solid var(--cor-destaque); margin-bottom: 2px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
-    .seta-externa.baixo { border-bottom: 15px solid var(--cor-destaque); margin-top: 2px; filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.5)); }
-
-    /* Previews na Roleta */
-    .mini-moldura-preview { width: 50px; height: 50px; border-radius: 50%; background: #333; position: relative; }
-    .mini-balao-preview { width: 60px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 10px; border-radius: 8px; }
-
-    /* =========================================
-       RANKING
-       ========================================= */
-    .ranking-novo-item {
-        display: flex; align-items: center;
-        background: linear-gradient(90deg, var(--cor-botoes), transparent);
-        padding: 10px; margin-bottom: 8px; border-radius: 12px;
-        border: 1px solid var(--cor-borda); transition: transform 0.2s;
-    }
-    .ranking-novo-item:hover { transform: scale(1.02); border-color: var(--cor-destaque); }
-    .ranking-posicao {
-        font-size: 18px; font-weight: 900; width: 30px; text-align: center; margin-right: 10px; color: #fff;
-    }
-    .ranking-novo-item:nth-child(1) .ranking-posicao { color: #ffd700; text-shadow: 0 0 5px gold; font-size: 24px; }
-    .ranking-novo-item:nth-child(2) .ranking-posicao { color: #c0c0c0; font-size: 22px; }
-    .ranking-novo-item:nth-child(3) .ranking-posicao { color: #cd7f32; font-size: 20px; }
-    .ranking-info { flex-grow: 1; }
-    .ranking-nome { font-weight: 600; font-size: 14px; display: block; }
-    .ranking-conquistas { font-size: 12px; margin-top: 2px; }
-    .ranking-score {
-        font-weight: bold; color: var(--cor-destaque); font-size: 16px;
-        background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 20px;
-    }
-
-    /* =========================================
-       LOJA E PORTFOLIO
-       ========================================= */
+    /* Estilos da Loja */
     .loja-grid {
-        display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 10px;
+        flex-grow: 1;
+        overflow-y: auto;
     }
     .produto-card {
-        background: var(--cor-botoes); border-radius: 12px; overflow: hidden;
-        display: flex; flex-direction: column; border: 1px solid var(--cor-borda); cursor: pointer;
+        background: var(--cor-botoes);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--cor-borda);
+        cursor: pointer;
     }
-    .produto-card img { width: 100%; height: 150px; object-fit: cover; }
-    .produto-info { padding: 10px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .produto-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    .produto-info {
+        padding: 10px;
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
     .produto-nome { font-weight: 600; font-size: 1em; }
     .produto-preco { font-size: 1.1em; color: var(--cor-destaque); margin-top: 5px; }
-    .produto-premium {
-        grid-column: 1 / -1; background: radial-gradient(circle, #2c250e 0%, #000000 100%);
-        border: 2px solid var(--cor-destaque-ouro); box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
-        transform: scale(1.02); margin-bottom: 20px; animation: gold-pulse 2s infinite;
-    }
+    .produto-preco-original { text-decoration: line-through; opacity: 0.7; font-size: 0.9em; }
+    .produto-card button { font-size: 14px; padding: 8px; margin-top: 10px;}
+    #lojaView .card-header { display: flex; justify-content: space-between; align-items: center; }
+    #lojaView .card-header h3 { font-size: 1.1em; white-space: nowrap; }
+    #lojaContainer h4 { font-size: 1.0em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .portfolio-grid, #portfolioInputsContainer {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; padding: 10px; max-height: 400px; overflow-y: auto;
+    .tamanho-options { display: flex; gap: 5px; justify-content: center; margin: 10px 0; }
+    .tamanho-options label {
+      padding: 5px 10px;
+      border: 1px solid var(--cor-borda);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
     }
-    .portfolio-grid img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid var(--cor-borda); }
-    .portfolio-admin-item {
-        border: 1px solid var(--cor-borda); border-radius: 8px; overflow: hidden; background: var(--cor-botoes); display: flex; flex-direction: column;
+    .tamanho-options input { display: none; }
+    .tamanho-options input:checked + label {
+      background: var(--cor-destaque);
+      color: var(--cor-fundo);
+      border-color: var(--cor-destaque);
     }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .checkbox-group label { display: flex; align-items: center; gap: 5px; }
+    .checkbox-group input { width: auto; margin: 0; }
 
-    /* =========================================
-       BARBEIRO CARD E LISTAS
-       ========================================= */
-    .barbeiro-list-container { width: 100%; max-height: 70vh; overflow-y: auto; padding: 0 10px; box-sizing: border-box; }
-    .barbeiro-card { padding: 16px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; }
-    .card-header { display: flex; justify-content: flex-start; align-items: center; border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; gap: 15px; }
-    .card-header img { flex-shrink: 0; margin: 0; }
-    .card-header-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-width: 0; }
-    .professional-name-card { margin: 0; font-size: 1.2em; font-weight: 700; color: var(--cor-destaque); text-shadow: 0 0 6px rgba(212, 175, 55, 0.4); }
-    .card-reputacao-info { font-size: 0.9em; margin-top: 5px; color: var(--cor-destaque); }
-    .card-reputacao-info span { color: var(--cor-texto-principal); opacity: 0.8; font-size: 0.9em; }
+    .modal-venda {
+      z-index: 99;
+    }
+    .modal-venda .modal-content {
+      background: #c0392b;
+      color: white;
+      text-align: center;
+      border: 3px solid #e74c3c;
+      animation: flash-red 1.5s infinite;
+    }
+    .modal-venda h3 {
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    @keyframes flash-red {
+      0%, 100% { background-color: #c0392b; }
+      50% { background-color: #e74c3c; }
+    }
     
-    .card-status { padding: 10px; border-radius: 8px; text-align: center; font-weight: 600; }
-    .status-imediato { background-color: #4CAF50; color: white; animation: vaga-glow 1.5s ease-in-out infinite; }
-    .status-manual { background-color: var(--cor-botoes); }
-    .status-indisponivel { background-color: #555; opacity: 0.7; }
-    
-    .card-action-btn {
-        position: absolute; bottom: 10px; background: rgba(0,0,0,0.6); border: none; border-radius: 50%;
-        width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; color: var(--cor-texto-principal);
+    /* NOVOS ESTILOS */
+    .barbeiro-list-container {
+      width: 100%;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding: 0 10px;
+      box-sizing: border-box;
     }
-    .card-favorite-btn { right: 10px; }
-    .card-share-btn { right: 50px; }
-    .boosted-card { border: 2px solid var(--cor-destaque); animation: gold-flash-background 3s ease-in-out infinite, fadeIn 0.5s; }
-    .boost-icon { position: absolute; top: 8px; left: 8px; font-size: 20px; text-shadow: 0 0 8px var(--cor-destaque); }
+    .promo-info {
+      font-size: 0.8em;
+      color: var(--cor-destaque);
+      margin: 8px 0 0 0;
+      padding-top: 8px;
+      border-top: 1px dashed var(--cor-borda);
+    }
+    #pix-qrcode {
+        max-width: 200px;
+        margin: 15px auto;
+        display: block;
+        border: 5px solid white;
+        border-radius: 10px;
+    }
+    .pix-copia-cola-container {
+      position: relative;
+    }
+    .pix-copia-cola-container button {
+        width: 100%;
+    }
+    #pixChaveAleatoria {
+        display: none;
+    }
+    .metodos-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    #detalhesProdutoAvaliacao {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--cor-borda);
+    }
+    .avaliacao-estrelas {
+        font-size: 1.2em;
+        color: var(--cor-destaque);
+    }
+    .avaliacao-comentario {
+        font-style: italic;
+        opacity: 0.8;
+        margin-top: 5px;
+        font-size: 0.9em;
+        background: var(--cor-botoes);
+        padding: 8px;
+        border-radius: 8px;
+    }
+    /* Estilo para imagem de produto no popup */
+    #detalhesProdutoImg {
+        width: 100%;
+        height: 250px;
+        object-fit: contain; /* Garante que a imagem apareça inteira */
+        border-radius: 10px;
+        margin-bottom: 15px;
+        background-color: var(--cor-botoes);
+    }
 
-    /* =========================================
-       OUTROS (Onboarding, Config, Etc)
-       ========================================= */
-    .onboard-screen[style*="background-image"] {
-        background-repeat: no-repeat; background-position: center center !important; background-size: cover !important;
-    }
-    .onboard-option.selected { border: 2px solid var(--cor-tema-forte) !important; animation: brilhoDourado 1.5s infinite alternate; }
-    #modalOnboarding .modal-content {
-        padding: 0; border-radius: 0; height: 100%; width: 100%;
-        background-image: linear-gradient(rgba(0,0,0, 0.7), rgba(0,0,0, 0.7)), url('https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif');
-        background-size: cover; background-position: center;
-    }
-    .interest-options button.selected { border-color: var(--cor-destaque); background: var(--cor-destaque-ouro); color: var(--cor-fundo); box-shadow: 0 0 15px var(--cor-destaque-ouro); }
+/* ===================================================================== */
+/* ====== INÍCIO: CSS PARA SCROLLBARS (COPIAR) ======================== */
+/* ===================================================================== */
 
-    .scrollable-list { max-height: 250px; overflow-y: auto; padding-right: 10px; }
-    .molduras-scroll-container {
-        display: flex; overflow-x: auto; gap: 15px; padding: 15px; background: #111;
-        border: 1px solid var(--cor-borda); border-radius: 12px; margin-top: 10px; min-height: 130px; align-items: center;
-    }
-    .moldura-item { flex: 0 0 auto; width: 80px; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; }
-    .moldura-item.temp-selected { border-color: var(--cor-destaque) !important; transform: scale(1.05); }
-    .moldura-check { position: absolute; top: -5px; right: -5px; background: #2ecc71; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; z-index: 20; }
+/* ===================================================================== */
+/* ====== INÍCIO: CORREÇÃO LAYOUT E SCROLL (SUBSTITUIR) =============== */
+/* ===================================================================== */
 
-    #horariosContainer {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; padding: 10px;
-        background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: 8px; margin-top: 10px;
-    }
-    .horario-btn { width: 100%; font-size: 13px; padding: 8px 2px; background: #222; color: #fff; border: 1px solid #555; border-radius: 5px; }
-    .horario-btn.selecionado { background: var(--cor-destaque); color: var(--cor-fundo); }
-    .horario-btn.bloqueado { background: #772014; text-decoration: line-through; }
+/* Adiciona scroll ao popup de perfil do profissional (para o cliente) */
+#modalBarbeiroPerfil .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
 
-    #popupAguarde { background-color: rgba(0, 0, 0, 0.7); color: white; z-index: 101; }
+/* --- CORREÇÃO DE LAYOUT E SCROLL DOS MODAIS DE ONBOARDING --- */
+/* Garante que o conteúdo dos modais fique em coluna (um abaixo do outro) */
+#modalOnboardingProfissionalServicos .modal-content,
+#modalAddPromocao .modal-content, 
+#modalOnboardingPromocoes .modal-content,
+#modalOnboardingAgenda .modal-content,
+#modalOnboardingLogomarca .modal-content,
+#modalOnboardingPortfolio .modal-content {
+    overflow-y: auto;
+    max-height: 90vh;
+    display: flex; 
+    flex-direction: column; /* <-- ESTA É A CORREÇÃO PRINCIPAL */
+}
+
+/* Garante que a área de conteúdo (inputs, listas, etc.) possa rolar */
+#modalOnboardingProfissionalServicos .modal-content,
+#modalOnboardingAgenda .modal-content,
+#modalOnboardingLogomarca .modal-content,
+#modalOnboardingPortfolio .modal-content {
+    overflow-y: auto; /* Adiciona scroll ao modal-content principal */
+}
+
+/* Para os modais de promoção (que têm um scrollable-list interno) */
+#modalAddPromocao .scrollable-list, 
+#modalOnboardingPromocoes .scrollable-list {
+    overflow-y: auto;
+    flex-grow: 1; /* Faz esta área crescer para ocupar o espaço */
+    padding-right: 10px;
+}
+/* ===================================================================== */
+/* ====== FIM: CORREÇÃO LAYOUT E SCROLL (SUBSTITUIR) ================== */
+/* ===================================================================== */
+
+    /* ESTILOS ADICIONAIS Nova Versão */
+    #popupAguarde {
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        z-index: 101;
+    }
+    #popupAguarde .modal-content {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+        text-align: center;
+        font-size: 1.2em;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
     .spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 4px solid var(--cor-destaque);
-        width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid var(--cor-destaque);
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px auto;
+    }
+    .modal-fullscreen {
+        align-items: flex-end; /* Alinha o modal na parte inferior */
+        background: none;
+    }
+    .modal-fullscreen .modal-content {
+        width: 100%;
+        height: 90vh;
+        max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        animation: slide-up 0.5s ease-out;
+    }
+    @keyframes slide-up {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    #onboardingContent {
+        text-align: center;
+    }
+    #onboardingContent img {
+        max-width: 80%;
+        height: auto;
+        margin-bottom: 20px;
+    }
+    .interest-options button {
+    background: var(--cor-botoes);
+    border: 2px solid transparent;
+    transition: all 0.3s ease; /* Adicionado para suavizar o efeito */
+}
+    .interest-options button.selected {
+    border-color: var(--cor-destaque);
+    background: var(--cor-destaque-ouro);
+    color: var(--cor-fundo);
+    box-shadow: 0 0 15px var(--cor-destaque-ouro); /* Adicionado para o efeito de brilho */
+}
+    .onboarding-background-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.15;
+      z-index: -1;
+      border-radius: 20px 20px 0 0;
+    }
+    .onboarding-content-wrapper {
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+      color: white;
+      text-shadow: 1px 1px 3px black;
     }
 
-    .vip-glow { box-shadow: 0 0 8px var(--cor-destaque), 0 0 12px var(--cor-destaque); border: 1px solid var(--cor-destaque); }
-    .pro-glow { box-shadow: 0 0 8px var(--cor-destaque-azul), 0 0 12px var(--cor-destaque-azul); border: 1px solid var(--cor-destaque-azul); }
-    .notificacao-pulsante { animation: gold-pulse 1.5s infinite; }
+/* Adicionado para a tela de onboarding ficar cheia */
+#modalOnboarding .modal-content {
+    padding: 0;
+    border-radius: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: linear-gradient(rgba(0,0,0, 0.7), rgba(0,0,0, 0.7)), url('https://i.postimg.cc/NjxQW6sm/ezgif-com-animated-gif-maker.gif');
+    background-size: cover;
+    background-position: center;
+}
 
-    /* Rating Stars */
-    .rating-stars { text-align: center; font-size: 2.5em; cursor: pointer; margin: 10px 0; color: #444; }
-    .rating-stars span.selected, .rating-stars span.hovered { color: var(--cor-destaque); }
-
-    /* =========================================
-       ANIMAÇÕES (TODAS)
-       ========================================= */
-    @keyframes brilhoDourado { 0% { box-shadow: 0 0 5px rgba(212,175,55,0.4); } 50% { box-shadow: 0 0 15px var(--cor-destaque), 0 0 25px var(--cor-destaque); } 100% { box-shadow: 0 0 5px rgba(212,175,55,0.4); } }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 5px rgba(46,204,113,0.3); } 50% { box-shadow: 0 0 15px rgba(46,204,113,0.8); } }
-    @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); } 50% { box-shadow: 0 0 0 6px rgba(231,76,60,0.7); } }
-    @keyframes vaga-glow { 0%, 100% { box-shadow: 0 0 8px #4CAF50; } 50% { box-shadow: 0 0 16px #4CAF50; } }
-    @keyframes gold-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); } 70% { box-shadow: 0 0 10px 15px rgba(212,175,55,0); } }
-    @keyframes gold-flash-background { 0%, 100% { background-color: var(--cor-card); } 50% { background-color: #2c250e; } }
-    @keyframes flash-red { 0%, 100% { background-color: #c0392b; } 50% { background-color: #e74c3c; } }
-    @keyframes brilhoMetalico { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-    
-    @keyframes border-travel { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    @keyframes float-crown { 0%, 100% { transform: translateY(0) rotate(5deg); } 50% { transform: translateY(-3px) rotate(-5deg); } }
-    @keyframes shine-gold { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    
-    @keyframes asa-cristal-flutuar { 0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } }
-    @keyframes asa-sombria-flutuar { 0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 5px black); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 15px black); } }
-    @keyframes asa-fogo-flutuar { 0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 5px red); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 15px red); } }
-
-    /* =========================================
-       RESPONSIVIDADE (DESKTOP)
-       ========================================= */
-    @media (min-width: 768px) {
-        .content-container { max-width: 900px; }
-        .card { width: auto; max-width: none; }
-        #agendamentosPainel, .loja-grid, .portfolio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
-        #modalAgendamentosBarbeiro .modal-content { max-width: 800px; }
+    @keyframes blink-animation {
+      0%, 100% { background-color: var(--cor-botoes); }
+      50% { background-color: var(--cor-destaque); }
     }
-</style>
+    .blinking-button.closed {
+      animation: blink-animation 2s infinite;
+    }
+    .chat-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--cor-borda);
+        margin-bottom: 10px;
+    }
+    .chat-tab {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+    }
+    .chat-tab.active {
+        border-bottom-color: var(--cor-destaque);
+    }
+    .config-section button.selected {
+        background-color: var(--cor-destaque);
+        color: var(--cor-fundo);
+    }
+.footer-contact a {
+    color: inherit; /* Herda a cor do texto padrão */
+    text-decoration: none;
+    display: inline-block; /* Necessário para aplicar gradiente corretamente */
+}
+
+.animated-gradient-text {
+    background: linear-gradient(90deg, var(--cor-destaque-prata), var(--cor-destaque-ouro), var(--cor-destaque-prata));
+    background-size: 200% auto; /* Tamanho do gradiente para animação */
+    color: transparent; /* Torna o texto transparente */
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: gradient-animation 4s linear infinite;
+    font-weight: 500; /* Um pouco mais de destaque */
+}
+
+@keyframes gradient-animation {
+    0% { background-position: 200% center; }
+    100% { background-position: 0% center; }
+}
+
+.online-counter {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2ecc71; /* Verde vivo */
+    background-color: var(--cor-botoes);
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+}
+
+/* Feedback visual para admin poder deletar msg no chat */
+.chat-message.admin-deletable {
+    cursor: pointer;
+    border: 1px dashed rgba(255, 0, 0, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+.chat-message.admin-deletable:hover {
+    background-color: #4d1c1c; /* Fundo vermelho escuro no hover */
+    border: 1px dashed rgba(255, 0, 0, 0.8);
+}
+
+.professional-name-card {
+        margin: 0;
+        font-size: 1.2em; /* Um pouco maior */
+        font-weight: 700; /* Mais forte (Poppins 700) */
+        color: var(--cor-destaque); /* Usa a cor do tema */
+        text-shadow: 0 0 6px rgba(212, 175, 55, 0.4); /* Brilho sutil */
+        transition: text-shadow 0.3s ease;
+    }
+    .barbeiro-card:hover .professional-name-card {
+         text-shadow: 0 0 10px var(--cor-destaque); /* Brilho maior no hover */
+    }
+
+.card-reputacao-info {
+        font-size: 0.9em;
+        margin-top: 5px; /* Espaçamento do item acima (distância) */
+        color: var(--cor-destaque); /* Cor dourada/tema */
+    }
+    .card-reputacao-info span {
+        color: var(--cor-texto-principal); /* Cor do texto normal para o número */
+        opacity: 0.8;
+        font-size: 0.9em;
+    }
+.card-action-btn { /* Classe base para ações no card */
+        position: absolute;
+        bottom: 10px;
+        background: rgba(0,0,0,0.6);
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        z-index: 5;
+        transition: transform 0.2s;
+        color: var(--cor-texto-principal); /* Cor do ícone */
+    }
+    .card-action-btn:hover {
+        transform: scale(1.1);
+    }
+    
+    .card-favorite-btn {
+        right: 10px; /* Coração na direita */
+    }
+    
+    .card-share-btn {
+        right: 50px; /* Link ao lado do Coração */
+        font-size: 18px; 
+    }
+/* Agenda Visual Corrigida */
+#horariosContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* Botoes com tamanho fixo e responsivo */
+    gap: 8px;
+    justify-content: center;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--cor-fundo);
+    border-radius: 8px;
+    border: 1px solid var(--cor-borda);
+    margin-top: 10px;
+}
+/* Ajuste no botão de horário */
+.horario-btn {
+    width: 100% !important; /* Ocupa a célula do grid */
+    margin: 0 !important;   /* Remove margem externa pois usamos gap */
+    font-size: 13px;
+    padding: 8px 2px;
+}
+
+    /* Scroll para a Agenda do Onboarding */
+    #onboardingHorariosContainer {
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 5px; 
+        justify-content: center;
+        max-height: 200px; /* Define uma altura máxima */
+        overflow-y: auto; /* Adiciona o scroll vertical */
+        padding: 5px;
+        background: var(--cor-fundo);
+        border-radius: 5px;
+    }
+
+/* --- NOVOS ESTILOS (FAVORITOS, PREMIUM, PERFIL, MOLDURAS) --- */
+
+/* Botão Favoritos Estilizado */
+.btn-favoritos-estilo {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-weight: 600;
+    margin: 10px auto;
+    display: block;
+    width: fit-content !important;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.estilo-gold {
+    background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    color: #000 !important;
+    border: 1px solid #aa771c !important;
+    box-shadow: 0 0 10px rgba(191, 149, 63, 0.5);
+}
+
+.estilo-pink {
+    background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fad0c4);
+    color: #4a0000 !important;
+    border: 1px solid #ff9a9e !important;
+    box-shadow: 0 0 10px rgba(255, 154, 158, 0.5);
+}
+
+/* Produto Premium na Loja */
+.produto-premium {
+    grid-column: 1 / -1; /* Ocupa toda a largura */
+    background: radial-gradient(circle, #2c250e 0%, #000000 100%);
+    border: 2px solid var(--cor-destaque-ouro);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+    transform: scale(1.02);
+    margin-bottom: 20px;
+    animation: gold-pulse 2s infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.produto-premium .produto-nome {
+    font-size: 1.3em;
+    color: var(--cor-destaque-ouro);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+.produto-premium .produto-preco {
+    font-size: 1.5em;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 5px var(--cor-destaque-ouro);
+    margin-bottom: 10px;
+}
+
+#modalMeuPerfil .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Roleta Diária */
+/* --- ROLETA FINAL (Visual + Seta Corrigida) --- */
+.roleta-container {
+    background: #111;
+    border: 4px solid #d4af37;
+    border-radius: 15px;
+    height: 100px; 
+    margin: 20px auto;
+    position: relative; /* Importante para a seta */
+    overflow: hidden;   /* Corta o que sai da caixa */
+    width: 100%;
+    max-width: 320px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,1); /* Sombra interna mais forte */
+}
+
+/* Sombras laterais (Fade) */
+.roleta-container::before, .roleta-container::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none;
+}
+.roleta-container::before { left: 0; background: linear-gradient(to right, #000, transparent); }
+.roleta-container::after { right: 0; background: linear-gradient(to left, #000, transparent); }
+
+.roleta-faixa {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    will-change: transform;
+}
+
+.roleta-item {
+    /* MEDIDA EXATA: 80px + 5px margem esq + 5px margem dir = 90px TOTAL */
+    width: 80px; 
+    height: 80px;
+    margin: 0 5px; 
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px; /* Fonte maior */
+    font-weight: 900;
+    font-family: 'Arial Black', sans-serif;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+/* Cores Vivas */
+.tema-barbearia .roleta-item:nth-child(odd) { background: #ffcc00; color: #000; }
+.tema-barbearia .roleta-item:nth-child(even) { background: #1a1a1a; color: #ffcc00; border-color: #ffcc00; }
+.tema-feminino .roleta-item:nth-child(odd) { background: #ff6b81; color: #fff; }
+.tema-feminino .roleta-item:nth-child(even) { background: #1a1a1a; color: #ff6b81; border-color: #ff6b81; }
+.roleta-item.especial { background: #fff !important; color: #333 !important; border: 3px solid gold; }
+
+@keyframes pulse-glow {
+    from { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+    to { box-shadow: 0 0 20px rgba(255,255,255,1); }
+}
+
+/* Indicador de Seleção na Moldura */
+.moldura-check {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #2ecc71;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    z-index: 2;
+}
+.roleta-faixa {
+    display: flex; /* Flexbox para alinhar os itens */
+    height: 100%;
+    align-items: center; /* Centraliza verticalmente */
+    will-change: transform; /* Otimiza performance */
+}
+
+/* Temas da Roleta */
+.tema-barbearia .roleta-item:nth-child(odd) { background: var(--cor-destaque-ouro); color: #000; }
+.tema-barbearia .roleta-item:nth-child(even) { background: #000; color: var(--cor-destaque-ouro); }
+.tema-feminino .roleta-item:nth-child(odd) { background: var(--cor-destaque-rosa); color: #000; }
+.tema-feminino .roleta-item:nth-child(even) { background: #000; color: var(--cor-destaque-rosa); }
+.roleta-item.especial { background: #fff !important; color: #000 !important; box-shadow: 0 0 15px #fff; }
+
+
+/* Molduras */
+.moldura-item {
+    transition: transform 0.1s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent; /* Remove o fundo azul/cinza no mobile */
+    outline: none; /* Remove borda de foco */
+    user-select: none; /* Impede seleção de texto */
+}
+.moldura-item:active, .moldura-item:focus {
+    background-color: transparent !important; /* Garante que não tenha fundo */
+}
+/* O checkmark agora é controlado por uma classe 'temp-selected' via JS para feedback instantâneo */
+.moldura-item.temp-selected .moldura-check {
+    display: flex !important;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.moldura-item:not(.temp-selected):not(.selecionada) .moldura-check {
+    display: none;
+}
+
+@keyframes popIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+.moldura-item.comprada { border-color: #4CAF50; }
+.moldura-item.selecionada { border-color: var(--cor-destaque); }
+
+.moldura-item.temp-selected {
+    border-color: var(--cor-destaque) !important;
+    transform: scale(1.05);
+}
+/* Molduras Visuais */
+.avatar-frame-bronze { border: 3px solid #cd7f32; box-shadow: 0 0 5px #cd7f32; }
+.avatar-frame-prata { border: 3px solid #c0c0c0; box-shadow: 0 0 8px #c0c0c0; }
+.avatar-frame-ouro { border: 3px solid #ffd700; box-shadow: 0 0 10px #ffd700; animation: gold-pulse 2s infinite; }
+.avatar-frame-diamante { border: 3px solid #b9f2ff; box-shadow: 0 0 12px #b9f2ff, inset 0 0 10px #b9f2ff; animation: flash-blue 1.5s infinite; }
+
+@keyframes flash-blue { 0%, 100% { box-shadow: 0 0 12px #b9f2ff; } 50% { box-shadow: 0 0 20px #fff; } }
+
+/* Foto no Chat */
+.chat-user-photo {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 5px;
+    object-fit: cover;
+    border: 1px solid #555;
+    cursor: pointer;
+}
+
+/* Popup Perfil Bonito */
+.perfil-visualizacao {
+    text-align: center;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+}
+.perfil-visualizacao::before {
+    content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.85); z-index: 0;
+}
+.perfil-visualizacao-content { position: relative; z-index: 1; padding: 20px; }
+.perfil-foto-grande {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+/* Inversão Botões Rodapé */
+.bottom-buttons-container {
+    display: flex;
+    flex-direction: column-reverse; /* Sair embaixo, Denuncia em cima */
+    align-items: flex-start;
+    position: fixed;
+    bottom: 12px; left: 12px;
+    gap: 15px;
+    z-index: 15;
+    width: auto;
+}
+/* Reset de posições antigas para funcionar no novo container */
+#btnSair { position: static !important; margin: 0 !important; }
+#btnDenuncia { position: static !important; margin: 0 !important; }
+/* Botão Chat Fixo na Direita */
+/* === CORREÇÃO BOTÃO CHAT (RESGATE) === */
+#btnChat {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    left: auto !important; /* Garante que não fique na esquerda */
+    z-index: 1000 !important; /* Z-index altíssimo para ficar acima de tudo */
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    
+    /* Estilo Visual para garantir visibilidade */
+    background-color: rgba(0, 0, 0, 0.6) !important; /* Fundo escuro translúcido */
+    border: 1px solid var(--cor-destaque) !important; /* Borda na cor do tema */
+    border-radius: 50% !important;
+    width: 50px !important;
+    height: 50px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+    
+    /* Texto/Emoji */
+    font-size: 24px !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer;
+}
+
+/* Garante que o emoji dentro não seja afetado por outros estilos */
+#btnChat span {
+    pointer-events: none;
+    display: block;
+}
+
+/* Ajuste da bolinha de notificação */
+.notification-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    background-color: #e74c3c !important; /* Vermelho forte */
+    color: white !important;
+    border-radius: 50%;
+    padding: 4px 7px !important;
+    font-size: 11px !important;
+    font-weight: bold;
+    border: 2px solid #fff;
+    z-index: 1002; /* Acima do botão do chat */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    display: none; /* Começa oculto */
+}
+.notification-badge.visible {
+    display: block !important;
+    animation: pulse-red 2s infinite;
+}
+
+#btnChat .notification-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    background-color: #e74c3c !important;
+    color: white !important;
+    border-radius: 50%;
+    padding: 4px 7px !important;
+    min-width: 18px; /* Garante bolinha redonda */
+    text-align: center;
+    font-size: 11px !important;
+    font-weight: bold;
+    border: 2px solid #fff;
+    z-index: 1002;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    display: none; /* Começa oculto */
+}
+#btnChat .notification-badge.visible {
+    display: block !important;
+    animation: pulse-red 2s infinite;
+}
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+
+/* Botão Admin Premium */
+.btn-admin-premium {
+    background: linear-gradient(45deg, #000, #d4af37);
+    border: 1px solid #d4af37;
+    color: #fff;
+    width: 100%;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* === CORREÇÃO DE LAYOUT (CSS FIX) === */
+
+/* 1. Forçar centralização da tela inteira */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center !important; /* Garante que tudo fique no meio horizontalmente */
+    overflow-x: hidden; /* Impede barra de rolagem lateral */
+    width: 100%;
+}
+
+/* 2. Arrumar o container principal */
+.content-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 500px !important; /* Mantém o formato de app */
+    margin: 0 auto !important; /* Centraliza o bloco na tela */
+    padding-top: 70px !important; /* Espaço para a Topbar não cobrir o conteúdo */
+    position: relative;
+}
+
+/* 3. Consertar os Cards (Admin, Cliente, etc) */
+.card {
+    width: 92% !important; /* Garante margem nas laterais */
+    max-width: 480px !important;
+    margin: 10px auto !important; /* Centraliza o card */
+    box-sizing: border-box; /* Evita que o padding estoure a largura */
+}
+
+/* 4. Ajustar a Topbar para caber tudo */
+.topbar {
+    justify-content: space-between !important;
+    padding: 0 8px !important; /* Reduz padding lateral */
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 100; /* Garante que fique acima de tudo */
+}
+
+.topbar-right {
+    gap: 5px !important; /* Diminui espaço entre ícones para não vazar */
+    flex-wrap: nowrap !important; /* Impede que os ícones caiam pra linha de baixo */
+}
+
+/* Ajuste de tamanho dos botões da Topbar para telas pequenas */
+.topbar-right button {
+    font-size: 18px !important; /* Levemente menor */
+    padding: 5px !important;
+}
+
+#onlineUserCount {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    white-space: nowrap; /* Texto não quebra */
+}
+
+/* 5. Consertar Botões Inferiores (Sair e Denúncia) */
+.bottom-buttons-container {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    display: flex !important;
+    flex-direction: column-reverse !important; /* Sair em baixo, Denúncia em cima */
+    gap: 15px !important;
+    z-index: 99;
+    align-items: center;
+}
+
+/* 6. Ajuste do Painel Admin (Botões cortados) */
+#adminView > div {
+    justify-content: center !important; /* Centraliza os botões do admin */
+}
+#adminView button {
+    flex-grow: 1; /* Faz botões ocuparem espaço igual */
+    min-width: 130px; /* Tamanho mínimo para não cortar texto */
+    margin: 5px !important;
+}
+
+@keyframes brilhoMetalico {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Garante que modais de confirmação fiquem acima do popup de agendamento (9999) */
+#modalConfirmacaoGenerica, 
+#modalPopupGenerico, 
+#modalBloqueante {
+    z-index: 10000 !important;
+}
+
+/* --- SETAS EXTERNAS DA ROLETA --- */
+.roleta-wrapper-externo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0; /* Espaçamento geral */
+}
+
+.seta-externa {
+    width: 0; 
+    height: 0; 
+    border-left: 10px solid transparent; /* Largura da base da seta */
+    border-right: 10px solid transparent;
+    z-index: 15; /* Garante que fique acima de sombras */
+}
+
+.seta-externa.topo {
+    /* Seta de Cima: Aponta para BAIXO */
+    border-top: 15px solid var(--cor-destaque); 
+    margin-bottom: 2px; /* Cola na roleta */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+}
+
+.seta-externa.baixo {
+    /* Seta de Baixo: Aponta para CIMA */
+    border-bottom: 15px solid var(--cor-destaque);
+    margin-top: 2px; /* Cola na roleta */
+    filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.5));
+}
+
+/* Garante que o Modal de Confirmação e o Bloqueante fiquem ACIMA de tudo */
+#modalConfirmacaoGenerica, 
+#modalBloqueante,
+#modalPopupGenerico {
+    z-index: 10000 !important; /* Maior que o modal de agendamento (9999) */
+}
+
+/* Garante que o fundo escuro desses modais também fique acima */
+#modalConfirmacaoGenerica.show,
+#modalBloqueante.show {
+    background: rgba(0,0,0,0.95); /* Fundo bem escuro para focar */
+}
+
+/* ============================================================ */
+/* === MOLDURAS PREMIUM (CORRIGIDO: ASAS NO CHAT) === */
+/* ============================================================ */
+
+/* --- ESTRUTURA BASE --- */
+.avatar-wrapper {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    vertical-align: middle;
+    overflow: visible !important; /* Permite asas para fora */
+}
+
+/* Foto do Usuário (Chat e Geral) */
+.chat-user-photo {
+    position: relative;
+    z-index: 20; /* Foto acima das asas */
+    object-fit: cover;
+    background: #000;
+    display: block;
+    box-sizing: border-box;
+}
+
+/* Foto do Usuário (Popup Grande) - Z-Index Alto */
+.perfil-foto-grande {
+    position: relative;
+    z-index: 25 !important; /* Foto acima da asa no popup */
+    object-fit: cover;
+    background: #000;
+    display: block;
+}
+
+/* Coroa (Comum a todas) */
+.coroa-topo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30; /* Coroa acima de tudo */
+    background: transparent;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+    pointer-events: none;
+}
+.coroa-topo::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; width: 100%; height: 100%;
+    clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
+}
+
+/* 2. TAMANHO POPUP (Grande - 120px) */
+.avatar-wrapper.popup-size {
+    width: 120px; height: 120px;
+    margin: 15px auto 20px auto; 
+}
+.avatar-wrapper.popup-size .perfil-foto-grande {
+    width: 100%; height: 100%;
+    border-radius: 50%; padding: 3px;
+}
+.avatar-wrapper.popup-size .coroa-topo {
+    width: 40px; height: 26px; top: -30px;
+}
+
+/* 3. TAMANHO LOJA (Médio - 60px) */
+.avatar-wrapper.shop-size {
+    width: 60px; height: 60px;
+}
+.avatar-wrapper.shop-size div[class*="avatar-frame"] { 
+    z-index: 20; position: relative; 
+}
+.avatar-wrapper.shop-size .coroa-topo {
+    width: 20px; height: 14px; top: -16px;
+}
+
+/* --- ESTILOS DOS NÍVEIS --- */
+
+/* NÍVEL 1: BRONZE */
+.avatar-wrapper.bronze .chat-user-photo,
+.avatar-wrapper.bronze .perfil-foto-grande,
+.avatar-wrapper.bronze .avatar-frame-bronze {
+    background: linear-gradient(45deg, #804a00, #cd7f32);
+    box-shadow: 0 0 0 2px #804a00; 
+}
+.avatar-wrapper.bronze .coroa-topo::after { background: linear-gradient(to bottom, #ffcc80, #cd7f32); }
+
+/* NÍVEL 2: PRATA */
+.avatar-wrapper.prata .chat-user-photo,
+.avatar-wrapper.prata .perfil-foto-grande,
+.avatar-wrapper.prata .avatar-frame-prata {
+    background: linear-gradient(135deg, #fff, #c0c0c0, #777);
+    box-shadow: 0 0 0 2px #777;
+    animation: brilhoMetalico 3s infinite;
+}
+.avatar-wrapper.prata .coroa-topo::after { background: linear-gradient(to bottom, #fff, #999); }
+
+/* NÍVEL 3: OURO */
+.avatar-wrapper.ouro .chat-user-photo,
+.avatar-wrapper.ouro .perfil-foto-grande,
+.avatar-wrapper.ouro .avatar-frame-ouro {
+    background: linear-gradient(45deg, #bf953f, #fcf6ba, #aa771c);
+    box-shadow: 0 0 0 2px #aa771c, 0 0 10px rgba(255, 215, 0, 0.6);
+    animation: brilhoDourado 2s infinite alternate;
+}
+.avatar-wrapper.ouro .coroa-topo::after { background: linear-gradient(to bottom, #fff7cc, #ffd700, #b8860b); }
+
+/* --- NÍVEL 4: DIAMANTE (ASAS REVISADAS) --- */
+
+.avatar-wrapper.diamante .chat-user-photo, 
+.avatar-wrapper.diamante .perfil-foto-grande,
+.avatar-wrapper.diamante .avatar-frame-diamante {
+    background: transparent; 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 15px rgba(0, 198, 255, 0.9), inset 0 0 10px rgba(0, 198, 255, 0.5); 
+}
+
+.avatar-wrapper.diamante .coroa-topo::after {
+    background: linear-gradient(to bottom, #e0ffff, #00c6ff);
+}
+
+/* ASAS (Cristal Afiado) */
+.avatar-wrapper.diamante::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0; /* Atrás da foto */
+    
+    background: linear-gradient(90deg, rgba(0,198,255,0) 0%, rgba(0,198,255,0.8) 20%, rgba(0,198,255,1) 50%, rgba(0,198,255,0.8) 80%, rgba(0,198,255,0) 100%);
+    
+    clip-path: polygon(
+        0% 10%, 20% 30%, 5% 50%, 35% 55%, 
+        50% 50%, 
+        65% 55%, 95% 50%, 80% 30%, 100% 10%, 
+        60% 40%, 50% 20%, 40% 40%
+    );
+    
+    animation: asa-cristal-flutuar 3s ease-in-out infinite;
+}
+
+/* AJUSTE: Asa no CHAT (Agora visível e proporcional) */
+.avatar-wrapper.chat-size.diamante::before {
+    display: block;
+    width: 54px;  /* Mais largo que os 32px da foto */
+    height: 22px;
+    top: 50%;
+    opacity: 1;
+    /* Ajuste fino para centralizar perfeitamente atrás da bolinha */
+    transform: translate(-50%, -50%); 
+}
+
+/* AJUSTE: Asa no POPUP (Distante do centro) */
+.avatar-wrapper.popup-size.diamante::before {
+    width: 280px; height: 120px;
+    top: 50%;
+    transform: translate(-50%, -60%);
+    filter: drop-shadow(0 0 10px #00c6ff);
+}
+
+/* AJUSTE: Asa na LOJA (Visível) */
+.avatar-wrapper.shop-size.diamante::before {
+    width: 130px; height: 50px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 1;
+}
+
+@keyframes asa-cristal-flutuar {
+    0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+@keyframes pulse-wings {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* --- CORREÇÃO: Container de Scroll das Molduras (Estilo Caixa/Roleta) --- */
+.molduras-scroll-container {
+    display: flex;
+    overflow-x: auto; /* Permite rolar para o lado */
+    overflow-y: hidden;
+    gap: 15px;
+    padding: 15px;
+    background: #1a1a1a; /* Fundo da caixa */
+    border: 1px solid var(--cor-borda);
+    border-radius: 12px;
+    margin-top: 10px;
+    white-space: nowrap; /* Garante que fiquem em linha */
+    box-shadow: inset 0 0 10px #000; /* Sombra interna para profundidade */
+    align-items: center; /* Centraliza verticalmente */
+}
+
+/* Barra de rolagem mais bonita para o carrossel */
+.molduras-scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+.molduras-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--cor-destaque);
+    border-radius: 3px;
+}
+.molduras-scroll-container::-webkit-scrollbar-track {
+    background: #333;
+}
+
+/* --- CORREÇÃO: Wrapper da Moldura no CHAT (Pequeno e Alinhado) --- */
+.avatar-wrapper.chat-size {
+    width: 32px; 
+    height: 32px;
+    margin-right: 15px; /* Aumentei a margem para a asa não bater no nome */
+    margin-left: 8px;   /* Espaço na esquerda para a asa */
+    vertical-align: middle; 
+    display: inline-flex; 
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    overflow: visible !important; /* IMPORTANTE: Permite que a asa saia da caixinha */
+}
+
+.avatar-wrapper.chat-size .chat-user-photo {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50%;
+    padding: 1px;
+    margin: 0;
+    display: block;
+    position: relative;
+    z-index: 10; /* Foto acima da asa */
+}
+
+.avatar-wrapper.chat-size .coroa-topo {
+    width: 16px; 
+    height: 10px; 
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15; /* Coroa acima da foto */
+}
+
+/* Garante que as asas (::before) apareçam */
+.avatar-wrapper.chat-size::before {
+    display: block !important;
+    z-index: 0; /* Asa atrás da foto */
+}
+
+/* Removemos aura giratória pesada no chat pequeno para não poluir,
+   mas mantemos o brilho da borda definido nas classes .ouro, .diamante etc */
+.avatar-wrapper.chat-size::after, 
+.avatar-wrapper.chat-size::before {
+    display: none; 
+}
+
+/* --- CORREÇÃO: Wrapper da Moldura no POPUP (Grande) --- */
+.avatar-wrapper.popup-size {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px auto;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.avatar-wrapper.popup-size .perfil-foto-grande {
+    width: 100%;
+    height: 100%;
+    padding: 3px;
+    border-radius: 50%;
+    display: block;
+}
+
+.avatar-wrapper.popup-size .coroa-topo {
+    width: 50px;
+    height: 30px;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* --- MOLDURAS ADMIN (BASEADA NA DIAMANTE) --- */
+
+/* 1. SUPREME BLACK (PRETA) */
+.avatar-wrapper.admin_black .chat-user-photo, 
+.avatar-wrapper.admin_black .perfil-foto-grande,
+.avatar-wrapper.admin_black .avatar-frame-admin-black {
+    background: transparent; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.9), inset 0 0 10px rgba(50, 50, 50, 0.8); 
+}
+.avatar-wrapper.admin_black .coroa-topo::after {
+    background: linear-gradient(to bottom, #444, #000); /* Coroa Preta */
+}
+/* Asas Pretas/Sombrias */
+.avatar-wrapper.admin_black::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 20%, rgba(20,20,20,1) 50%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-sombria-flutuar 3s ease-in-out infinite;
+}
+
+/* 2. SUPREME RED (VERMELHA) */
+.avatar-wrapper.admin_red .chat-user-photo, 
+.avatar-wrapper.admin_red .perfil-foto-grande,
+.avatar-wrapper.admin_red .avatar-frame-admin-red {
+    background: transparent; 
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.9), inset 0 0 10px rgba(192, 57, 43, 0.5); 
+}
+.avatar-wrapper.admin_red .coroa-topo::after {
+    background: linear-gradient(to bottom, #ff6b6b, #c0392b); /* Coroa Vermelha */
+}
+/* Asas de Fogo */
+.avatar-wrapper.admin_red::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(231,76,60,0) 0%, rgba(231,76,60,0.8) 20%, rgba(192,57,43,1) 50%, rgba(231,76,60,0.8) 80%, rgba(231,76,60,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-fogo-flutuar 3s ease-in-out infinite;
+}
+
+/* Animações Específicas e Ajustes de Tamanho */
+@keyframes asa-sombria-flutuar {
+    0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 5px black); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 15px black); }
+}
+@keyframes asa-fogo-flutuar {
+    0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 5px red); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 15px red); }
+}
+
+/* Ajustes de Tamanho para as Asas Admin (Igual Diamante) */
+.avatar-wrapper.chat-size.admin_black::before, .avatar-wrapper.chat-size.admin_red::before {
+    display: block; width: 54px; height: 22px; top: 50%; opacity: 1; transform: translate(-50%, -50%);
+}
+.avatar-wrapper.popup-size.admin_black::before, .avatar-wrapper.popup-size.admin_red::before {
+    width: 280px; height: 120px; top: 50%; transform: translate(-50%, -60%);
+}
+.avatar-wrapper.shop-size.admin_black::before, .avatar-wrapper.shop-size.admin_red::before {
+    width: 130px; height: 50px; top: 50%; transform: translate(-50%, -50%); opacity: 1;
+}
+
+/* Correção para listas horizontais no perfil */
+.molduras-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding: 15px;
+    background: #111;
+    border: 1px solid var(--cor-borda);
+    border-radius: 12px;
+    margin-top: 10px;
+    min-height: 130px; /* Altura mínima garantida */
+    align-items: center;
+}
+
+/* --- CORREÇÃO ROLETA (CSS) --- */
+.roleta-container {
+    background: #0a0a0a;
+    border: 4px solid #d4af37;
+    border-radius: 15px;
+    height: 100px; 
+    margin: 20px auto;
+    position: relative;
+    overflow: hidden;
+    width: 320px; /* Largura fixa para garantir a matemática */
+    box-shadow: inset 0 0 30px rgba(0,0,0,1);
+}
+
+.roleta-faixa {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    will-change: transform;
+    /* A transição será injetada via JS */
+}
+
+/* O item tem 90px TOTAL (80 largura + 5 margem esq + 5 margem dir) */
+.roleta-item {
+    width: 80px; 
+    height: 80px;
+    margin: 0 5px; 
+    flex-shrink: 0; /* ISSO É CRUCIAL: Impede que o item esmague */
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px; 
+    font-weight: 900;
+    background: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden; /* Para conter os efeitos internos */
+}
+
+/* Estilos Específicos dos Itens da Roleta */
+.roleta-item.ponto { color: #eee; }
+.roleta-item.premio-top { background: #111; border: 1px solid gold; }
+.roleta-item.caixa { background: #c0392b; border: 2px solid #e74c3c; animation: pulse-red 1s infinite; }
+
+/* --- PREVIEWS REAIS DENTRO DA ROLETA --- */
+.mini-moldura-preview {
+    width: 50px; height: 50px; 
+    border-radius: 50%; 
+    background: url('https://via.placeholder.com/50/000000/FFFFFF/?text=VC') center/cover;
+    position: relative;
+}
+.mini-balao-preview {
+    width: 60px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    border-radius: 8px;
+}
+
+/* ============================================================
+   ESTILOS COMPLETOS DOS BALÕES DE CHAT (FINAL)
+   ============================================================ */
+
+/* --- BASE PARA TODOS OS BALÕES CUSTOMIZADOS --- */
+.chat-message.custom-bubble {
+    position: relative;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    /* 'isolation' cria um novo contexto de empilhamento.
+       Isso impede que os efeitos de fundo (z-index -1) fiquem atrás do container do chat */
+    isolation: isolate; 
+    z-index: 1;
+    /* Sombra preta forte para garantir que a letra branca apareça em qualquer fundo */
+    text-shadow: 1px 1px 2px #000000, 0 0 5px #000000;
+    font-weight: 600;
+}
+
+/* ============================================================
+   NÍVEL 1: BRONZE (Sólido, Simples)
+   ============================================================ */
+.chat-message.bubble-bronze {
+    border: 1px solid #cd7f32;
+    background: linear-gradient(145deg, #5c3a1e, #2a1a0a);
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    color: #ffdcb0 !important;
+}
+/* Garante limpeza */
+.chat-message.bubble-bronze::before, 
+.chat-message.bubble-bronze::after { display: none !important; }
+
+
+/* ============================================================
+   NÍVEL 2: PRATA (Metálico Fosco - SEM ANIMAÇÃO DE MOVIMENTO)
+   Correção: Fundo aplicado direto no elemento para não bugar.
+   ============================================================ */
+.chat-message.bubble-prata {
+    border: 1px solid #a0a0a0;
+    /* Gradiente cinza metálico chumbo */
+    background: linear-gradient(145deg, #7f7f7f, #2a2a2a);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    color: #ffffff !important; /* Texto Branco Puro */
+}
+.chat-message.bubble-prata::before, 
+.chat-message.bubble-prata::after { display: none !important; }
+
+
+/* ============================================================
+   NÍVEL 3: OURO (Valioso - COM BRILHO NO FUNDO)
+   Correção: Animação direta no background-position.
+   ============================================================ */
+.chat-message.bubble-ouro {
+    border: 1px solid #FFD700;
+    /* Gradiente dourado com uma faixa clara no meio */
+    background: linear-gradient(110deg, #4b3b00 20%, #b88a00 40%, #fff8db 50%, #b88a00 60%, #4b3b00 80%);
+    background-size: 200% 100%; /* Tamanho dobrado para permitir o movimento */
+    color: #fff !important;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    animation: shine-gold 4s linear infinite; /* Brilho passando */
+}
+.chat-message.bubble-ouro::before, 
+.chat-message.bubble-ouro::after { display: none !important; }
+
+
+/* ============================================================
+   NÍVEL 4: DIAMANTE (Movimento LENTO - 15s)
+   ============================================================ */
+.chat-message.bubble-diamante {
+    background: #000 !important; /* Fundo PRETO sólido atrás do texto */
+    color: #e0ffff !important; 
+    border: none; 
+    overflow: visible !important; /* Permite a coroa sair pra fora */
+    margin-top: 12px !important; /* Espaço para a coroa */
+}
+/* Borda Animada (Fica atrás do fundo preto graças ao z-index -1 e isolation) */
+.chat-message.bubble-diamante::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; 
+    z-index: -1; 
+    background: linear-gradient(60deg, #00c6ff, #0072ff, #000, #000, #00c6ff);
+    background-size: 300% 300%;
+    animation: border-travel 15s linear infinite; /* LENTO */
+    opacity: 0.8;
+}
+/* Coroa */
+.chat-message.bubble-diamante::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+
+/* ============================================================
+   ADMIN BLACK (Movimento LENTO - 15s)
+   ============================================================ */
+.chat-message.bubble-admin-black {
+    background: #000 !important;
+    color: #ffffff !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-black::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    /* Gradiente Preto/Branco viajando */
+    background: linear-gradient(60deg, #ffffff, #333, #000, #000, #ffffff);
+    background-size: 300% 300%;
+    animation: border-travel 15s linear infinite; /* LENTO */
+}
+.chat-message.bubble-admin-black::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: grayscale(100%); /* Coroa Cinza */
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+
+/* ============================================================
+   ADMIN RED (Movimento LENTO - 12s)
+   ============================================================ */
+.chat-message.bubble-admin-red {
+    background: #1a0000 !important; 
+    color: #ffe0e0 !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-red::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    /* Gradiente Vermelho Fogo viajando */
+    background: linear-gradient(60deg, #ff0000, #ff4500, #2c0000, #2c0000, #ff0000);
+    background-size: 300% 300%;
+    animation: border-travel 12s linear infinite; /* LENTO */
+}
+.chat-message.bubble-admin-red::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: sepia(100%) saturate(1000%) hue-rotate(-50deg); /* Coroa Vermelha */
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+
+/* ============================================================
+   ANIMAÇÕES GERAIS
+   ============================================================ */
+@keyframes border-travel {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes float-crown {
+    0%, 100% { transform: translateY(0) rotate(5deg); }
+    50% { transform: translateY(-3px) rotate(-5deg); }
+}
+@keyframes shine-gold {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================================================
+   FIX: DESTAQUE DA ASA PRETA NO POPUP (CONTRASTE)
+   ============================================================ */
+
+/* 1. Cria uma "luz" radial atrás do avatar para separar do fundo preto */
+.avatar-wrapper.popup-size.admin_black {
+    /* Brilho difuso branco atrás do conjunto todo */
+    box-shadow: 0 0 50px 15px rgba(255, 255, 255, 0.25);
+    /* Fundo radial sutil para dar profundidade */
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* 2. Reforça o contorno branco na própria asa para definição máxima */
+.avatar-wrapper.popup-size.admin_black::before {
+    /* Drop-shadow branco intenso e nítido ao redor da asa preta */
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)) !important;
+}
+
+/* Estilo Novo do Ranking */
+.ranking-novo-item {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(90deg, var(--cor-botoes), transparent);
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--cor-borda);
+    transition: transform 0.2s;
+}
+.ranking-novo-item:hover {
+    transform: scale(1.02);
+    border-color: var(--cor-destaque);
+}
+.ranking-posicao {
+    font-size: 18px;
+    font-weight: 900;
+    width: 30px;
+    text-align: center;
+    margin-right: 10px;
+    color: #fff;
+}
+/* Cores para o Top 3 */
+.ranking-novo-item:nth-child(1) .ranking-posicao { color: #ffd700; text-shadow: 0 0 5px gold; font-size: 24px; }
+.ranking-novo-item:nth-child(2) .ranking-posicao { color: #c0c0c0; font-size: 22px; }
+.ranking-novo-item:nth-child(3) .ranking-posicao { color: #cd7f32; font-size: 20px; }
+
+.ranking-foto {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #444;
+    margin-right: 10px;
+}
+.ranking-info {
+    flex-grow: 1;
+}
+.ranking-nome {
+    font-weight: 600;
+    font-size: 14px;
+    display: block;
+}
+.ranking-conquistas {
+    font-size: 12px;
+    margin-top: 2px;
+}
+.ranking-score {
+    font-weight: bold;
+    color: var(--cor-destaque);
+    font-size: 16px;
+    background: rgba(0,0,0,0.3);
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+/* --- ALTERAÇÃO 4: BRILHO PARA MOLDURAS SUPREME BLACK (Para ver no fundo escuro) --- */
+.avatar-wrapper.admin_black .coroa-topo {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+}
+/* Adiciona contorno branco suave na asa preta */
+.avatar-wrapper.admin_black::before {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 5px rgba(0, 0, 0, 1)) !important;
+}
+
+/* --- ALTERAÇÃO 2: TAMANHO DO AVATAR NO RANKING --- */
+.avatar-wrapper.ranking-size {
+    width: 45px; height: 45px;
+    margin-right: 10px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Não deixa esmagar */
+}
+.avatar-wrapper.ranking-size .ranking-foto {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    padding: 1px;
+    z-index: 10;
+    position: relative;
+}
+.avatar-wrapper.ranking-size .coroa-topo {
+    width: 20px; height: 12px;
+    top: -12px; /* Posição da coroa no ranking */
+    position: absolute;
+    z-index: 15;
+    left: 50%; transform: translateX(-50%);
+}
+/* Asas no Ranking (Tamanho ajustado) */
+.avatar-wrapper.ranking-size::before {
+    width: 80px; height: 30px; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    opacity: 1;
+    display: block;
+}
+
+/* --- CORREÇÃO VISUAL: ASAS NO CHAT --- */
+/* Garante que a asa (::before) apareça na lista de mensagens */
+.chat-message .avatar-wrapper.chat-size::before {
+    content: '';
+    display: block !important;
+    position: absolute;
+    z-index: 0; /* Atrás da foto */
+    /* Força tamanho visível no chat pequeno */
+    width: 54px !important;
+    height: 22px !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+/* --- CORREÇÃO VISUAL: BRILHO NA ASA E COROA PRETA --- */
+/* Cria um contorno branco brilhante em volta da asa preta para contraste */
+.avatar-wrapper.admin_black::before {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)) !important;
+}
+/* Brilho na coroa preta */
+.avatar-wrapper.admin_black .coroa-topo {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) !important;
+}
+
+/* --- CORREÇÃO VISUAL: RANKING CENTRALIZADO --- */
+.avatar-wrapper.ranking-size {
+    width: 50px; 
+    height: 50px;
+    margin-right: 10px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+.avatar-wrapper.ranking-size .ranking-foto {
+    width: 100% !important; 
+    height: 100% !important;
+    border-radius: 50%;
+    z-index: 10;
+    position: relative;
+}
+/* Centraliza a coroa no ranking */
+.avatar-wrapper.ranking-size .coroa-topo {
+    width: 20px; height: 12px;
+    top: -14px; 
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+    z-index: 15;
+}
+/* Centraliza a asa no ranking */
+.avatar-wrapper.ranking-size::before {
+    width: 90px; height: 35px; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    display: block;
+    opacity: 1;
+}
+
+/* --- CORREÇÃO FINAL: VISUAL CHAT E PERFIL --- */
+
+/* 1. Wrapper no Chat (Pequeno) */
+.avatar-wrapper.chat-size {
+    width: 32px !important;
+    height: 32px !important;
+    margin-right: 8px;
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    vertical-align: middle;
+    overflow: visible !important; /* Permite que a asa saia pra fora */
+}
+
+/* Foto no Chat */
+.avatar-wrapper.chat-size .chat-user-photo {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50%;
+    position: relative;
+    z-index: 10; /* Foto na frente */
+    margin: 0 !important;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Coroa no Chat */
+.avatar-wrapper.chat-size .coroa-topo {
+    width: 16px !important;
+    height: 10px !important;
+    top: -10px !important;
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+    z-index: 15;
+}
+
+/* Asas no Chat (Ajuste Fino) */
+.avatar-wrapper.chat-size::before {
+    content: '';
+    display: block !important;
+    position: absolute;
+    width: 60px !important; /* Asa larga */
+    height: 24px !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0; /* Atrás da foto */
+    pointer-events: none;
+}
+
+/* 2. Wrapper no Popup de Perfil (Grande) */
+.avatar-wrapper.popup-size {
+    width: 120px; height: 120px;
+    margin: 20px auto;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible !important;
+}
+.avatar-wrapper.popup-size .perfil-foto-grande {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    position: relative;
+    z-index: 10;
+    border: 3px solid rgba(255,255,255,0.1);
+}
+.avatar-wrapper.popup-size .coroa-topo {
+    width: 50px; height: 30px;
+    top: -35px;
+    position: absolute;
+    z-index: 15;
+}
+.avatar-wrapper.popup-size::before {
+    width: 280px; height: 120px; /* Asa bem grande no popup */
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+/* --- 3. CORREÇÃO ESPECÍFICA: BRILHO NA ASA E COROA PRETA --- */
+
+/* Brilho Branco ao redor da Asa Preta (Chat e Popup) */
+.avatar-wrapper.admin_black::before {
+    /* Sombra branca sólida (outline) + Sombra difusa */
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) !important;
+    opacity: 1 !important;
+}
+
+/* Brilho Branco na Coroa Preta */
+.avatar-wrapper.admin_black .coroa-topo {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) !important;
+}
+
+/* Borda brilhante na foto preta */
+.avatar-wrapper.admin_black .chat-user-photo,
+.avatar-wrapper.admin_black .perfil-foto-grande {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+  </style>
 </head>
 <body>
 
