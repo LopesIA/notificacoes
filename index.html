@@ -2803,7 +2803,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
             100 Moedas - R$ 100,00
         </button>
     </div>
-    <p style="font-size:10px; margin-top:10px; opacity:0.6; text-align: center;">1 Moeda (C$) = R$ 1,00 em poder de compra digital.</p>
+    <p style="font-size:10px; margin-top:10px; opacity:0.6; text-align: center;">1 Moeda (R$) = R$ 1,00 em poder de compra digital.</p>
     <button data-modal-id="modalPacotesMoedasTWA" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
@@ -6597,7 +6597,7 @@ function assinarVip() {
     }
 
     const titulo = `Confirmar Assinatura VIP`;
-    const mensagem = `Deseja assinar o VIP por C$ ${PRECO_VIP.toFixed(2)}? Será descontado do seu Saldo Digital.`;
+    const mensagem = `Deseja assinar o VIP por R$ ${PRECO_VIP.toFixed(2)}? Será descontado do seu Saldo Digital.`;
     
     exibirConfirmacao(titulo, mensagem, () => {
         exibirAguarde("Ativando VIP...");
@@ -9288,7 +9288,7 @@ async function adminSalvarNovoTipo(uid) {
 async function adminModificarSaldoDigital(uid) {
   const valor = parseFloat(document.getElementById('adminModificarSaldoDigital').value);
   if (!isNaN(valor) && valor !== 0) {
-    if (!confirm(`Confirma adicionar/remover C$ ${valor} do saldo DIGITAL deste usuário?`)) return;
+    if (!confirm(`Confirma adicionar/remover R$ ${valor} do saldo DIGITAL deste usuário?`)) return;
     
     exibirAguarde("Atualizando saldo digital...");
     try {
@@ -9298,7 +9298,7 @@ async function adminModificarSaldoDigital(uid) {
         
         fecharTodosOsModais();
         exibirPopup("Sucesso", "Saldo Digital atualizado!");
-        notifyUser(uid, "💎 Atualização de Saldo", `Um administrador alterou seu Saldo Digital em C$ ${valor.toFixed(2)}.`, { link: '#carteira' });
+        notifyUser(uid, "💎 Atualização de Saldo", `Um administrador alterou seu Saldo Digital em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
         
         // Reabre o modal para ver a mudança
         abrirModalGerenciarUsuario(uid);
