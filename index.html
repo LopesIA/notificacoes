@@ -4555,7 +4555,7 @@ function toggleOnboardOption(element) {
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
     // Limpa qualquer botão antigo se houver e define o loading
-    lista.innerHTML = "<p style='text-align:center; margin-top:20px;'>⏳ Carregando profissionais...</p>";
+    lista.innerHTML = "<p style='text-align:center; margin-top:20px;'>⏳ Carregando os profissionais mais próximos de você...</p>";
 
     // Tenta obter localização se não tiver
     if (!localizacaoCliente) { await obterLocalizacaoAtual().catch(() => {}); }
