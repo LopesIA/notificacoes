@@ -11111,7 +11111,7 @@ async function adminAdicionarGiros(uid) {
     const qtde = parseInt(inputGiros.value);
 
     if (isNaN(qtde) || qtde <= 0) {
-        return exibirPopup("Valor inválido", "Digite uma quantidade válida de giros (ex: 1, 5, 10).");
+        return exibirPopup("Valor inválido", "Digite uma quantidade válida de giros.");
     }
 
     if (!confirm(`Deseja adicionar ${qtde} giros extras para este usuário hoje?`)) return;
@@ -11119,18 +11119,15 @@ async function adminAdicionarGiros(uid) {
     exibirAguarde("Adicionando giros...");
 
     try {
-        // A lógica é: Se 'girosRealizadosHoje' ficar negativo, o cálculo (Total - Realizados) aumenta.
-        // Ex: Limite 1. Usou 1. Resta 0. 
-        // Admin dá 5. 'girosRealizadosHoje' vira 1 - 5 = -4.
-        // Novo Restante: 1 - (-4) = 5. Funciona perfeitamente.
-        
         await db.collection('usuarios').doc(uid).update({
-            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde)
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde),
+            // Atualiza a data para garantir que o front entenda que é "hoje" e use o valor
+            ultimoGiroRoleta: new Date().toDateString() 
         });
 
         fecharTodosOsModais();
-        exibirPopup("Sucesso", `${qtde} giros adicionados ao usuário!`);
-        abrirModalGerenciarUsuario(uid); // Reabre para atualizar
+        exibirPopup("Sucesso", `${qtde} giros adicionados!`);
+        abrirModalGerenciarUsuario(uid); 
     } catch (e) {
         fecharTodosOsModais();
         exibirPopup("Erro", "Não foi possível adicionar giros: " + e.message);
@@ -13198,70 +13195,34 @@ function abrirModalPerfil() {
     const nomeAtual = perfil.nome || "";
     const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    // === PADRÃO VISUAL DA ROLETA (20 ITENS - AJUSTADO) ===
-    // A sequência foi ajustada para não repetir números na emenda do loop.
+    // === PADRÃO VISUAL DA ROLETA ===
     const padraoItens = [
-        // BLOCO 1
-        { tipo: 'txt', val: '1', cls: 'ponto' },         // 0
-        { tipo: 'html', id: 'bronze', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-bronze"></div>', cls: 'premio-top' }, // 1
-        { tipo: 'txt', val: '2', cls: 'ponto' },         // 2
-        { tipo: 'html', id: 'bronze', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-bronze">Chat</div>', cls: 'premio-top' }, // 3
-        
-        // BLOCO 2
-        { tipo: 'txt', val: '3', cls: 'ponto' },         // 4
-        { tipo: 'html', id: 'prata', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-prata"></div>', cls: 'premio-top' }, // 5
-        { tipo: 'txt', val: '4', cls: 'ponto' },         // 6
-        { tipo: 'html', id: 'prata', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-prata">Chat</div>', cls: 'premio-top' }, // 7
-        
-        // BLOCO 3 (MEIO)
-        { tipo: 'txt', val: '5', cls: 'ponto' },         // 8
-        { tipo: 'txt', val: '🎁', cls: 'caixa' },        // 9 (Caixa Surpresa)
-        { tipo: 'txt', val: '6', cls: 'ponto' },         // 10
-        
-        // BLOCO 4
-        { tipo: 'html', id: 'ouro', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 11
-        { tipo: 'txt', val: '7', cls: 'ponto' },         // 12
-        { tipo: 'html', id: 'ouro', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-ouro">Chat</div>', cls: 'premio-top' }, // 13
-        
-        // BLOCO 5
-        { tipo: 'txt', val: '8', cls: 'ponto' },         // 14
-        { tipo: 'html', id: 'diamante', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-diamante"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 15
-        { tipo: 'txt', val: '9', cls: 'ponto' },         // 16
-        { tipo: 'html', id: 'diamante', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-diamante">Chat</div>', cls: 'premio-top' }, // 17
-        
-        // FINAL (Conexão do Loop)
-        { tipo: 'txt', val: '10', cls: 'ponto' },        // 18
-        { tipo: 'txt', val: '4', cls: 'ponto' }          // 19 (Valor '4' para não repetir '1' na emenda com o índice 0)
+        { tipo: 'txt', val: '1', cls: 'ponto' }, { tipo: 'html', id: 'bronze', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-bronze"></div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '2', cls: 'ponto' }, { tipo: 'html', id: 'bronze', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-bronze">Chat</div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '3', cls: 'ponto' }, { tipo: 'html', id: 'prata', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-prata"></div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '4', cls: 'ponto' }, { tipo: 'html', id: 'prata', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-prata">Chat</div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '5', cls: 'ponto' }, { tipo: 'txt', val: '🎁', cls: 'caixa' }, { tipo: 'txt', val: '6', cls: 'ponto' },
+        { tipo: 'html', id: 'ouro', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '7', cls: 'ponto' }, { tipo: 'html', id: 'ouro', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-ouro">Chat</div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '8', cls: 'ponto' }, { tipo: 'html', id: 'diamante', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-diamante"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '9', cls: 'ponto' }, { tipo: 'html', id: 'diamante', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-diamante">Chat</div>', cls: 'premio-top' },
+        { tipo: 'txt', val: '10', cls: 'ponto' }, { tipo: 'txt', val: '4', cls: 'ponto' }
     ];
 
     let faixaHtml = '';
-    // Gera 40 repetições para criar a faixa de rolagem contínua
     for(let i=0; i<40; i++) {
         padraoItens.forEach(item => {
-            let conteudo = '';
-            if (item.tipo === 'txt') {
-                conteudo = `<span>${item.val}</span>`;
-            } else {
-                conteudo = item.html;
-            }
-            faixaHtml += `<div class="roleta-item ${item.cls}">${conteudo}</div>`;
+            faixaHtml += `<div class="roleta-item ${item.cls}">${item.tipo === 'txt' ? `<span>${item.val}</span>` : item.html}</div>`;
         });
     }
 
-    // --- TEXTOS DINÂMICOS E EXPLICATIVOS ---
-    const premioCaixa = perfil.tipo === 'cliente' 
-        ? '<b>VIP (5 Dias)</b>' 
-        : '<b>Ficar no Topo (24h)</b>';
-        
+    const premioCaixa = perfil.tipo === 'cliente' ? '<b>VIP (5 Dias)</b>' : '<b>Ficar no Topo (24h)</b>';
     const infoTexto = `🎁 Caixa Surpresa: ${premioCaixa}`;
-    const infoPremios = `<b>Prêmios Possíveis:</b> Pontos (1-10), Molduras, Balões de Chat e Caixa Surpresa.`;
-
     const modal = document.getElementById('modalMeuPerfil');
     const content = modal.querySelector('.modal-content');
 
     content.innerHTML = `
         <h3>👤 Editar Perfil</h3>
-        
         <div style="text-align: center; margin-bottom: 15px;">
             <div style="position: relative; display: inline-block;">
                 <img id="perfilFotoPreview" src="${fotoAtual}" class="perfil-foto-grande" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #333; object-fit: cover;">
@@ -13275,12 +13236,9 @@ function abrirModalPerfil() {
 
         <div class="popup-section">
             <h4>🎰 Roleta Diária</h4>
-            
             <div style="background: #222; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444;">
                 <p id="roletaInfoPremios" style="font-size: 12px; color: #ffcc00; margin: 0 0 5px 0;">${infoTexto}</p>
-                <p style="font-size: 10px; color: #ccc; margin: 0; line-height: 1.3;">${infoPremios}</p>
             </div>
-            
             <div class="roleta-wrapper-externo" style="position: relative;">
                  <div class="seta-externa topo"></div>
                  <div id="roletaVisual" class="roleta-container" style="margin: 0;">
@@ -13288,7 +13246,6 @@ function abrirModalPerfil() {
                  </div>
                  <div class="seta-externa baixo"></div>
             </div>
-            
             <button id="btnGirarRoleta" onclick="girarRoleta()" style="width: 100%; font-weight: bold; font-size: 16px; margin-top:10px;">Carregando...</button>
         </div>
 
@@ -13315,29 +13272,38 @@ function abrirModalPerfil() {
 
     atualizarBotaoRoleta();
 
-    requestAnimationFrame(() => {
+    // CORREÇÃO: Timeout para garantir que o HTML existe antes de preencher
+    setTimeout(() => {
         renderizarMolduras();
         renderizarBaloes();
         renderizarSelecaoConquistas();
-        iniciarRelogiosPerfil();
-    });
+        iniciarRelogiosPerfil(); // Inicia o timer após renderizar
+    }, 100);
 
     abrirModal('modalMeuPerfil');
 }
 
-// Função auxiliar para atualizar o texto do botão
 function atualizarBotaoRoleta() {
     const btnGirar = document.getElementById('btnGirarRoleta');
-    if (!btnGirar) return;
+    if (!btnGirar || !perfil) return;
 
     const hoje = new Date().toDateString();
     let girosTotais = 1; 
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
+    
     const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
-    const girosUsadosHoje = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
-    let girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
+    let girosRealizados = perfil.girosRealizadosHoje || 0;
+
+    // CORREÇÃO: Se é um novo dia, mas os giros são negativos (extras do admin),
+    // mantemos o valor negativo (crédito). Só zeramos se for positivo (uso).
+    if (isNovoDia && girosRealizados > 0) {
+        girosRealizados = 0;
+    }
+
+    // Cálculo: Total (ex: 1) - Realizados (ex: -999) = 1000 disponíveis
+    let girosRestantes = Math.max(0, girosTotais - girosRealizados);
 
     btnGirar.textContent = `🎲 GIRAR (${girosRestantes} Restantes)`;
     
@@ -13803,14 +13769,17 @@ function iniciarRelogiosPerfil() {
     // Limpa anterior se existir
     if (intervaloRelogiosPerfil) clearInterval(intervaloRelogiosPerfil);
 
-    // Define a função de atualização
     const atualizar = () => {
         const elementos = document.querySelectorAll('.contador-tempo-real');
         if (elementos.length === 0) return;
 
         elementos.forEach(el => {
-            const timestamp = parseInt(el.dataset.expire);
-            if (!timestamp) return;
+            // CORREÇÃO: Garante que é um número
+            const timestamp = parseInt(el.getAttribute('data-expire'));
+            if (!timestamp || isNaN(timestamp)) {
+                el.textContent = "Erro Data";
+                return;
+            }
             
             const dataFutura = new Date(timestamp);
             const texto = formatarTempoRestante(dataFutura);
