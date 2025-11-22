@@ -2424,6 +2424,25 @@ body {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* ============================================================
+   FIX: DESTAQUE DA ASA PRETA NO POPUP (CONTRASTE)
+   ============================================================ */
+
+/* 1. Cria uma "luz" radial atrás do avatar para separar do fundo preto */
+.avatar-wrapper.popup-size.admin_black {
+    /* Brilho difuso branco atrás do conjunto todo */
+    box-shadow: 0 0 50px 15px rgba(255, 255, 255, 0.25);
+    /* Fundo radial sutil para dar profundidade */
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* 2. Reforça o contorno branco na própria asa para definição máxima */
+.avatar-wrapper.popup-size.admin_black::before {
+    /* Drop-shadow branco intenso e nítido ao redor da asa preta */
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)) !important;
+}
   </style>
 </head>
 <body>
