@@ -10399,36 +10399,45 @@ function verificarAcessoBalao(key) {
 function renderizarBaloes() {
     const container = document.getElementById('listaBaloes');
     if (!container) return;
+    
     container.innerHTML = '';
     
     Object.keys(BALOES).forEach(key => {
         const b = BALOES[key];
+        
+        // Filtro de Admin (não mostra se não for admin)
         if (b.adminOnly && perfil.tipo !== 'admin') return;
 
         const selecionado = perfil.balaoSelecionado === key;
         const statusAcesso = verificarAcessoBalao(key);
-        const checkDisplay = selecionado ? 'flex' : 'none';
         
+        const checkDisplay = selecionado ? 'flex' : 'none';
         let rodapeHtml = '';
         let estiloBorda = '';
 
+        // Lógica de visualização do status
         if (statusAcesso.tipo === 'permanente') {
             const texto = b.adminOnly ? 'Exclusivo' : 'Adquirido';
             rodapeHtml = `<span style="font-size:10px; color:#4CAF50; margin-top:2px;">${texto}</span>`;
-            estiloBorda = selecionada ? '' : 'border-color: #4CAF50;'; 
-        } else if (statusAcesso.tipo === 'temporario_pro') {
+            estiloBorda = selecionado ? '' : 'border-color: #4CAF50;'; 
+        } 
+        else if (statusAcesso.tipo === 'temporario_pro') {
             rodapeHtml = `<span style="font-size:9px; color:#00c6ff;">Liberado PRO</span>`;
-            estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
-        } else if (statusAcesso.tipo === 'temporario_roleta') {
-            // AQUI MUDOU: Adicionamos a classe e o data-expire
+            estiloBorda = selecionado ? '' : 'border-color: #00c6ff;';
+        } 
+        else if (statusAcesso.tipo === 'temporario_roleta') {
+            // --- CORREÇÃO AQUI ---
+            // Antes estava calculando horas fixas. Agora usa o sistema de timer em tempo real.
             const ts = statusAcesso.validade.getTime();
-            rodapeHtml = `<span class="contador-tempo-real" data-expire="${ts}" style="font-size:9px; color:#e57373;">Calculando...</span>`;
+            rodapeHtml = `<span class="contador-tempo-real" data-expire="${ts}" style="font-size:9px; color:#e57373; font-weight:bold;">Calculando...</span>`;
             estiloBorda = 'border-color: #e57373;';
-        } else {
+        } 
+        else {
             rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${b.preco}</span>`;
             estiloBorda = 'opacity: 0.7;';
         }
 
+        // Preview Visual do Balão dentro da loja
         const previewHtml = `
             <div class="chat-message ${b.classe} custom-bubble" style="width: 60px; height: 40px; display:flex; align-items:center; justify-content:center; font-size:10px; margin-bottom:5px;">
                 Abc
