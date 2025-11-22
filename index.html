@@ -2828,7 +2828,7 @@ onclick="fecharModal(event)">Fechar</button></div></div>
       <h3> Pague com PIX</h3>
       <p>Escaneie o QR Code ou copie o código abaixo.</p>
       
-      <img src="/qrcode.png" id="pix-qrcode" alt="QR Code PIX" style="max-width: 200px; margin: 15px auto; display: block; border-radius: 10px;">
+      <img src="qrcode.png" id="pix-qrcode" alt="QR Code PIX" style="max-width: 200px; margin: 15px auto; display: block; border-radius: 10px;">
       
       <div class="pix-copia-cola-container">
           <textarea id="pixChaveAleatoria" style="display:none;">00020126770014BR.GOV.BCB.PIX0136ac099e3b-e63e-402f-9d3e-6e20828470b90215Nova Versão APP5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510ERLNMtaT5r63040E73</textarea>
@@ -8800,7 +8800,7 @@ async function verDetalhesSolicitacao(id) {
     const confirmar = confirm(detalhes);
     if (confirmar) {
       if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
-      // CORREÇÃO AQUI: Passando s.subTipo
+      // CORREÇÃO: Passando o s.subTipo para a função saber onde depositar
       else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor, s.subTipo); 
       else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
     } else if (confirm("Deseja recusar a solicitação?")) {
@@ -8832,14 +8832,14 @@ async function aprovarDeposito(id, uid, valor, subTipo) {
         
         const userData = userDoc.data();
         
-        // Define qual campo atualizar
+        // CORREÇÃO: Verifica o subTipo para saber qual carteira encher
         let updates = {};
         
         if (subTipo === 'saldoServicos') {
-            // Depósito para SERVIÇOS (Sem pontos de fidelidade, geralmente)
+            // Depósito para SERVIÇOS (Carteira Verde)
             updates.saldoServicos = firebase.firestore.FieldValue.increment(valor);
         } else {
-            // Depósito DIGITAL (Ganha pontos)
+            // Depósito DIGITAL (Carteira Dourada + Pontos)
             updates.saldo = firebase.firestore.FieldValue.increment(valor);
             
             const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
@@ -9299,7 +9299,6 @@ async function adminModificarSaldo(uid, tipoSaldo) {
     notifyUser(uid, "💸 Ajuste de Saldo", `Admin alterou seu saldo (${nomeCarteira}) em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
     
     exibirPopup("Saldo alterado com sucesso!");
-    // Reabre o modal para atualizar os valores na tela
     abrirModalGerenciarUsuario(uid);
   } else {
       exibirPopup("Valor inválido.");
@@ -13956,7 +13955,7 @@ function abrirModal(modalId) {
         modal.style.zIndex = baseZIndex + incremento;
 
         modal.style.display = 'flex';
-        // Pequeno delay para animação CSS (se houver)
+        // Pequeno delay para animação CSS
         setTimeout(() => modal.classList.add('show'), 10);
         
         // Adiciona à pilha se não estiver no topo
@@ -14001,7 +14000,7 @@ function fecharTodosOsModais() {
     while (modalStack.length > 0) {
         fecharModalAtual(true);
     }
-    // Garantia extra para modais críticos
+    // Garantia extra
     document.querySelectorAll('.modal').forEach(m => {
         m.classList.remove('show');
         m.style.display = 'none';
