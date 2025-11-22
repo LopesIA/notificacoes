@@ -12,6 +12,11 @@
   <style>
     :root {
 /* CORREÇÃO TELA 2: Centraliza e cobre o fundo da tela de onboarding com imagem */
+.onboard-screen[style*="background-image"] {
+    background-repeat: no-repeat;
+    background-position: center center !important; 
+    background-size: cover !important;
+}
 
       --cor-fundo: #0c0c0c;
       --cor-card: #181818;
@@ -25,12 +30,6 @@
       --cor-borda: #333;
       --cor-destaque: var(--cor-destaque-ouro); /* Cor padrão */
     }
-
-.onboard-screen[style*="background-image"] {
-    background-repeat: no-repeat;
-    background-position: center center !important; 
-    background-size: cover !important;
-}
 /* ANIMAÇÃO DE BRILHO DOURADO PARA OPÇÃO SELECIONADA */
 @keyframes brilhoDourado {
     0% {
@@ -1899,20 +1898,6 @@ body {
 
 /* --- TAMANHOS ESPECÍFICOS --- */
 
-/* 1. TAMANHO CHAT (Pequeno - 32px) */
-.avatar-wrapper.chat-size {
-    width: 32px; height: 32px;
-    margin-right: 12px; /* Aumentei a margem direita para a asa não bater no nome */
-    margin-left: 8px;   /* Margem esquerda para a asa não bater na borda */
-}
-.avatar-wrapper.chat-size .chat-user-photo {
-    width: 100% !important; height: 100% !important;
-    border-radius: 50%; padding: 1px;
-}
-.avatar-wrapper.chat-size .coroa-topo {
-    width: 14px; height: 10px; top: -9px;
-}
-
 /* 2. TAMANHO POPUP (Grande - 120px) */
 .avatar-wrapper.popup-size {
     width: 120px; height: 120px;
@@ -2107,6 +2092,12 @@ body {
     z-index: 0; /* Asa atrás da foto */
 }
 
+/* Removemos aura giratória pesada no chat pequeno para não poluir,
+   mas mantemos o brilho da borda definido nas classes .ouro, .diamante etc */
+.avatar-wrapper.chat-size::after, 
+.avatar-wrapper.chat-size::before {
+    overflow: visible 
+}
 
 /* --- CORREÇÃO: Wrapper da Moldura no POPUP (Grande) --- */
 .avatar-wrapper.popup-size {
@@ -2299,7 +2290,7 @@ body {
 }
 /* Garante limpeza */
 .chat-message.bubble-bronze::before, 
-.chat-message.bubble-bronze::after;
+.chat-message.bubble-bronze::after { display: none !important; }
 
 
 /* ============================================================
@@ -2314,7 +2305,7 @@ body {
     color: #ffffff !important; /* Texto Branco Puro */
 }
 .chat-message.bubble-prata::before, 
-.chat-message.bubble-prata::after;
+.chat-message.bubble-prata::after { display: none !important; }
 
 
 /* ============================================================
@@ -2331,7 +2322,7 @@ body {
     animation: shine-gold 4s linear infinite; /* Brilho passando */
 }
 .chat-message.bubble-ouro::before, 
-.chat-message.bubble-ouro::after;
+.chat-message.bubble-ouro::after { display: none !important; }
 
 
 /* ============================================================
@@ -2449,7 +2440,6 @@ body {
     /* Drop-shadow branco intenso e nítido ao redor da asa preta */
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)) !important;
 }
-
   </style>
 </head>
 <body>
@@ -2983,18 +2973,18 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 </div>
 
 <div id="modalBarbeariasCliente" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💈 Profissionais disponíveis</h3>
-    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por profissional ou cidade...">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💈 Profissionais disponíveis</h3>
+    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por profissional ou cidade...">
     
     <button id="btnMostrarFavoritos" 
             onclick="carregarBarbeirosPrincipal('listaBarbeiros', true)" 
             class="btn-favoritos">
         ⭐ Mostrar Favoritos
     </button>
-        <div id='listaBarbeiros' class="scrollable-list"></div>
-    <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
+        <div id='listaBarbeiros' class="scrollable-list"></div>
+    <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
 </div>
 
 <div id="modalHistoricoCliente" class="modal" onclick="fecharModal(event)">
@@ -3967,8 +3957,6 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-storage-compat.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script> 
-
 <script>
 // Firebase e variáveis globais
 const firebaseConfig = {
@@ -4426,12 +4414,7 @@ function fecharModalAtual(forcePopupAguarde = false) {
         setTimeout(() => popup.style.display = 'none', 300);
         return;
     }
-
-    if (intervaloRelogiosPerfil) {
-        clearInterval(intervaloRelogiosPerfil);
-        intervaloRelogiosPerfil = null;
-    }
-
+    
     if (modalStack.length > 0) {
         const modalParaFechar = modalStack.pop();
         modalParaFechar.classList.remove('show');
@@ -6131,7 +6114,8 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
 
     // 4. Cria o documento de avaliação
     t.set(db.collection("avaliacoes").doc(), {
-      barbeiroUid, clienteUid: auth.currentUser.uid, nota,
+      barbeiroUid, clienteUid: auth.
+currentUser.uid, nota,
       comentario: comentario || "Sem comentário",
       ts: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -11112,7 +11096,7 @@ async function adminAdicionarGiros(uid) {
     const qtde = parseInt(inputGiros.value);
 
     if (isNaN(qtde) || qtde <= 0) {
-        return exibirPopup("Valor inválido", "Digite uma quantidade válida de giros.");
+        return exibirPopup("Valor inválido", "Digite uma quantidade válida de giros (ex: 1, 5, 10).");
     }
 
     if (!confirm(`Deseja adicionar ${qtde} giros extras para este usuário hoje?`)) return;
@@ -11120,15 +11104,18 @@ async function adminAdicionarGiros(uid) {
     exibirAguarde("Adicionando giros...");
 
     try {
+        // A lógica é: Se 'girosRealizadosHoje' ficar negativo, o cálculo (Total - Realizados) aumenta.
+        // Ex: Limite 1. Usou 1. Resta 0. 
+        // Admin dá 5. 'girosRealizadosHoje' vira 1 - 5 = -4.
+        // Novo Restante: 1 - (-4) = 5. Funciona perfeitamente.
+        
         await db.collection('usuarios').doc(uid).update({
-            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde),
-            // Atualiza a data para garantir que o front entenda que é "hoje" e use o valor
-            ultimoGiroRoleta: new Date().toDateString() 
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde)
         });
 
         fecharTodosOsModais();
-        exibirPopup("Sucesso", `${qtde} giros adicionados!`);
-        abrirModalGerenciarUsuario(uid); 
+        exibirPopup("Sucesso", `${qtde} giros adicionados ao usuário!`);
+        abrirModalGerenciarUsuario(uid); // Reabre para atualizar
     } catch (e) {
         fecharTodosOsModais();
         exibirPopup("Erro", "Não foi possível adicionar giros: " + e.message);
@@ -11660,7 +11647,8 @@ async function responderConfirmacaoEntrega(pedidoId, aceito) {
 
                 let taxaAplicada = TAXA; // Default fee
                 if (isProAtivo(vendedorData) && vendedorData.proTier && PRECOS_PRO[vendedorData.proTier]) {
-                    taxaAplicada = PRECOS_PRO[vendedorData.proTier].taxa;
+                    taxaAplicada = PRECOS_PRO[vendedor
+Data.proTier].taxa;
                     console.log(`Taxa PRO ${vendedorData.proTier} aplicada: ${taxaAplicada * 100}%`);
                 } else {
                     console.log(`Taxa padrão aplicada: ${taxaAplicada * 100}%`);
@@ -13196,34 +13184,70 @@ function abrirModalPerfil() {
     const nomeAtual = perfil.nome || "";
     const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
     
-    // === PADRÃO VISUAL DA ROLETA ===
+    // === PADRÃO VISUAL DA ROLETA (20 ITENS - AJUSTADO) ===
+    // A sequência foi ajustada para não repetir números na emenda do loop.
     const padraoItens = [
-        { tipo: 'txt', val: '1', cls: 'ponto' }, { tipo: 'html', id: 'bronze', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-bronze"></div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '2', cls: 'ponto' }, { tipo: 'html', id: 'bronze', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-bronze">Chat</div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '3', cls: 'ponto' }, { tipo: 'html', id: 'prata', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-prata"></div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '4', cls: 'ponto' }, { tipo: 'html', id: 'prata', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-prata">Chat</div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '5', cls: 'ponto' }, { tipo: 'txt', val: '🎁', cls: 'caixa' }, { tipo: 'txt', val: '6', cls: 'ponto' },
-        { tipo: 'html', id: 'ouro', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '7', cls: 'ponto' }, { tipo: 'html', id: 'ouro', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-ouro">Chat</div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '8', cls: 'ponto' }, { tipo: 'html', id: 'diamante', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-diamante"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '9', cls: 'ponto' }, { tipo: 'html', id: 'diamante', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-diamante">Chat</div>', cls: 'premio-top' },
-        { tipo: 'txt', val: '10', cls: 'ponto' }, { tipo: 'txt', val: '4', cls: 'ponto' }
+        // BLOCO 1
+        { tipo: 'txt', val: '1', cls: 'ponto' },         // 0
+        { tipo: 'html', id: 'bronze', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-bronze"></div>', cls: 'premio-top' }, // 1
+        { tipo: 'txt', val: '2', cls: 'ponto' },         // 2
+        { tipo: 'html', id: 'bronze', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-bronze">Chat</div>', cls: 'premio-top' }, // 3
+        
+        // BLOCO 2
+        { tipo: 'txt', val: '3', cls: 'ponto' },         // 4
+        { tipo: 'html', id: 'prata', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-prata"></div>', cls: 'premio-top' }, // 5
+        { tipo: 'txt', val: '4', cls: 'ponto' },         // 6
+        { tipo: 'html', id: 'prata', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-prata">Chat</div>', cls: 'premio-top' }, // 7
+        
+        // BLOCO 3 (MEIO)
+        { tipo: 'txt', val: '5', cls: 'ponto' },         // 8
+        { tipo: 'txt', val: '🎁', cls: 'caixa' },        // 9 (Caixa Surpresa)
+        { tipo: 'txt', val: '6', cls: 'ponto' },         // 10
+        
+        // BLOCO 4
+        { tipo: 'html', id: 'ouro', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-ouro"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 11
+        { tipo: 'txt', val: '7', cls: 'ponto' },         // 12
+        { tipo: 'html', id: 'ouro', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-ouro">Chat</div>', cls: 'premio-top' }, // 13
+        
+        // BLOCO 5
+        { tipo: 'txt', val: '8', cls: 'ponto' },         // 14
+        { tipo: 'html', id: 'diamante', cat: 'moldura', html: '<div class="mini-moldura-preview avatar-frame-diamante"><div class="coroa-topo" style="top:-10px; width:20px;"></div></div>', cls: 'premio-top' }, // 15
+        { tipo: 'txt', val: '9', cls: 'ponto' },         // 16
+        { tipo: 'html', id: 'diamante', cat: 'balao', html: '<div class="mini-balao-preview chat-message bubble-diamante">Chat</div>', cls: 'premio-top' }, // 17
+        
+        // FINAL (Conexão do Loop)
+        { tipo: 'txt', val: '10', cls: 'ponto' },        // 18
+        { tipo: 'txt', val: '4', cls: 'ponto' }          // 19 (Valor '4' para não repetir '1' na emenda com o índice 0)
     ];
 
     let faixaHtml = '';
+    // Gera 40 repetições para criar a faixa de rolagem contínua
     for(let i=0; i<40; i++) {
         padraoItens.forEach(item => {
-            faixaHtml += `<div class="roleta-item ${item.cls}">${item.tipo === 'txt' ? `<span>${item.val}</span>` : item.html}</div>`;
+            let conteudo = '';
+            if (item.tipo === 'txt') {
+                conteudo = `<span>${item.val}</span>`;
+            } else {
+                conteudo = item.html;
+            }
+            faixaHtml += `<div class="roleta-item ${item.cls}">${conteudo}</div>`;
         });
     }
 
-    const premioCaixa = perfil.tipo === 'cliente' ? '<b>VIP (5 Dias)</b>' : '<b>Ficar no Topo (24h)</b>';
+    // --- TEXTOS DINÂMICOS E EXPLICATIVOS ---
+    const premioCaixa = perfil.tipo === 'cliente' 
+        ? '<b>VIP (5 Dias)</b>' 
+        : '<b>Ficar no Topo (24h)</b>';
+        
     const infoTexto = `🎁 Caixa Surpresa: ${premioCaixa}`;
+    const infoPremios = `<b>Prêmios Possíveis:</b> Pontos (1-10), Molduras, Balões de Chat e Caixa Surpresa.`;
+
     const modal = document.getElementById('modalMeuPerfil');
     const content = modal.querySelector('.modal-content');
 
     content.innerHTML = `
         <h3>👤 Editar Perfil</h3>
+        
         <div style="text-align: center; margin-bottom: 15px;">
             <div style="position: relative; display: inline-block;">
                 <img id="perfilFotoPreview" src="${fotoAtual}" class="perfil-foto-grande" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #333; object-fit: cover;">
@@ -13237,9 +13261,12 @@ function abrirModalPerfil() {
 
         <div class="popup-section">
             <h4>🎰 Roleta Diária</h4>
+            
             <div style="background: #222; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444;">
                 <p id="roletaInfoPremios" style="font-size: 12px; color: #ffcc00; margin: 0 0 5px 0;">${infoTexto}</p>
+                <p style="font-size: 10px; color: #ccc; margin: 0; line-height: 1.3;">${infoPremios}</p>
             </div>
+            
             <div class="roleta-wrapper-externo" style="position: relative;">
                  <div class="seta-externa topo"></div>
                  <div id="roletaVisual" class="roleta-container" style="margin: 0;">
@@ -13247,6 +13274,7 @@ function abrirModalPerfil() {
                  </div>
                  <div class="seta-externa baixo"></div>
             </div>
+            
             <button id="btnGirarRoleta" onclick="girarRoleta()" style="width: 100%; font-weight: bold; font-size: 16px; margin-top:10px;">Carregando...</button>
         </div>
 
@@ -13273,39 +13301,28 @@ function abrirModalPerfil() {
 
     atualizarBotaoRoleta();
 
-    // CORREÇÃO ROBUSTA: Try-Catch individual para cada função de renderização
-    // Isso garante que se os balões falharem, o relógio ainda inicia!
-    setTimeout(() => {
-        try { renderizarMolduras(); } catch(e) { console.error("Erro molduras:", e); }
-        try { renderizarBaloes(); } catch(e) { console.error("Erro baloes:", e); }
-        try { renderizarSelecaoConquistas(); } catch(e) { console.error("Erro conquistas:", e); }
-        try { iniciarRelogiosPerfil(); } catch(e) { console.error("Erro relogios:", e); }
-    }, 100);
+    requestAnimationFrame(() => {
+        renderizarMolduras();
+        renderizarBaloes();
+        renderizarSelecaoConquistas();
+    });
 
     abrirModal('modalMeuPerfil');
 }
 
+// Função auxiliar para atualizar o texto do botão
 function atualizarBotaoRoleta() {
     const btnGirar = document.getElementById('btnGirarRoleta');
-    if (!btnGirar || !perfil) return;
+    if (!btnGirar) return;
 
     const hoje = new Date().toDateString();
     let girosTotais = 1; 
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
-    
     const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
-    let girosRealizados = perfil.girosRealizadosHoje || 0;
-
-    // CORREÇÃO: Se é um novo dia, mas os giros são negativos (extras do admin),
-    // mantemos o valor negativo (crédito). Só zeramos se for positivo (uso).
-    if (isNovoDia && girosRealizados > 0) {
-        girosRealizados = 0;
-    }
-
-    // Cálculo: Total (ex: 1) - Realizados (ex: -999) = 1000 disponíveis
-    let girosRestantes = Math.max(0, girosTotais - girosRealizados);
+    const girosUsadosHoje = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
+    let girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
 
     btnGirar.textContent = `🎲 GIRAR (${girosRestantes} Restantes)`;
     
@@ -13356,86 +13373,180 @@ async function salvarNomePerfil() {
 }
 
 async function girarRoleta() {
-    if (!auth.currentUser) return;
+    const hoje = new Date().toDateString();
+    let girosTotais = 1; 
+    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
+        girosTotais = PRECOS_PRO[perfil.proTier].giros;
+    }
+    const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
+    let girosRealizados = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
+    
+    if (girosRealizados >= girosTotais) {
+        return exibirPopup("Sem giros", "Você já usou seus giros de hoje! Volte amanhã.");
+    }
 
     const btnGirar = document.getElementById('btnGirarRoleta');
     btnGirar.disabled = true; 
-    btnGirar.textContent = "Sorteando..."; // Feedback inicial
+    btnGirar.textContent = "Girando...";
 
-    // URL do seu Backend (Ajuste se necessário, mas deve ser o mesmo domínio ou configurado no CORS)
-    const API_URL = 'https://navalhabackend.onrender.com/api/girar-roleta'; 
+    // TABELA DE PRÊMIOS (20 ITENS - VISUAL SINCRONIZADO)
+    const arrayPremios = [
+        { tipo: 'ponto', valor: 1 },           // 0
+        { tipo: 'moldura', key: 'bronze', nome: 'Bronze' }, // 1
+        { tipo: 'ponto', valor: 2 },           // 2
+        { tipo: 'balao', key: 'bronze', nome: 'Chat Bronze' }, // 3
+        { tipo: 'ponto', valor: 3 },           // 4
+        { tipo: 'moldura', key: 'prata', nome: 'Prata' }, // 5
+        { tipo: 'ponto', valor: 4 },           // 6
+        { tipo: 'balao', key: 'prata', nome: 'Chat Prata' }, // 7
+        { tipo: 'ponto', valor: 5 },           // 8
+        { tipo: 'caixa', valor: 0 },           // 9
+        { tipo: 'ponto', valor: 6 },           // 10
+        { tipo: 'moldura', key: 'ouro', nome: 'Ouro' }, // 11
+        { tipo: 'ponto', valor: 7 },           // 12
+        { tipo: 'balao', key: 'ouro', nome: 'Chat Ouro' }, // 13
+        { tipo: 'ponto', valor: 8 },           // 14
+        { tipo: 'moldura', key: 'diamante', nome: 'Diamante' }, // 15
+        { tipo: 'ponto', valor: 9 },           // 16
+        { tipo: 'balao', key: 'diamante', nome: 'Chat Diamante' }, // 17
+        { tipo: 'ponto', valor: 10 },          // 18
+        { tipo: 'ponto', valor: 4 }            // 19
+    ];
 
-    try {
-        // 1. Chama o servidor para decidir o prêmio
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid: auth.currentUser.uid })
-        });
+    let targetIndex = Math.floor(Math.random() * 20);
 
-        const data = await response.json();
+    const ITEM_WIDTH = 90; 
+    const ITEMS_PER_SET = 20; 
+    const LOOPS = 30; 
+    const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
 
-        if (!data.success) {
-            throw new Error(data.message || "Erro ao processar roleta.");
-        }
+    const containerWidth = 320; 
+    const targetCenterPixel = (finalIndex * ITEM_WIDTH) + (ITEM_WIDTH / 2);
+    const viewCenterPixel = containerWidth / 2;
+    let moveX = targetCenterPixel - viewCenterPixel;
+    const jitter = Math.floor(Math.random() * 50) - 25; 
+    moveX += jitter;
 
-        // 2. O servidor retornou o índice vencedor (0-19)
-        const targetIndex = data.targetIndex;
-        btnGirar.textContent = "Girando...";
+    const faixa = document.getElementById('roletaFaixa');
+    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
+    faixa.style.transform = `translateX(-${moveX}px)`;
 
-        // 3. Inicia a animação visual para cair no índice correto
-        const ITEM_WIDTH = 90; 
-        const ITEMS_PER_SET = 20; 
-        const LOOPS = 30; // Voltas visuais
+    const premioGanho = arrayPremios[targetIndex];
+    let premioKey = '';
+    let msgPremio = '';
+
+    if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
+        premioKey = premioGanho.key;
+        msgPremio = premioGanho.nome;
+    }
+
+    setTimeout(async () => {
+        let updates = { ultimoGiroRoleta: hoje };
+        updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
         
-        // Calcula a posição exata para parar no item sorteado pelo servidor
-        const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
+        let tituloPopup = "🎉 Parabéns!";
+        let corpoPopup = "";
 
-        const containerWidth = 320; 
-        const targetCenterPixel = (finalIndex * ITEM_WIDTH) + (ITEM_WIDTH / 2);
-        const viewCenterPixel = containerWidth / 2;
-        let moveX = targetCenterPixel - viewCenterPixel;
-        
-        // Adiciona um pequeno "jitter" aleatório para parecer física real (dentro do quadrado do item)
-        // Mas garante que não saia do item sorteado
-        const jitter = Math.floor(Math.random() * 40) - 20; 
-        moveX += jitter;
-
-        const faixa = document.getElementById('roletaFaixa');
-        // Aumenta o tempo para dar suspense (6s) e usa bezier para desacelerar no final
-        faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
-        faixa.style.transform = `translateX(-${moveX}px)`;
-
-        // 4. Aguarda a animação terminar para mostrar o resultado
-        setTimeout(async () => {
-            // Confetis
-            if (typeof confetti === 'function') {
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 9999 });
+        if (premioGanho.tipo === 'ponto') {
+            corpoPopup = `Você ganhou ${premioGanho.valor} pontos de fidelidade!`;
+            updates.pontosFidelidade = firebase.firestore.FieldValue.increment(premioGanho.valor);
+        } 
+        else if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
+            tituloPopup = "🎁 Item Temporário!";
+            const tipoItem = premioGanho.tipo === 'moldura' ? 'Moldura' : 'Estilo de Chat';
+            
+            // --- LÓGICA DE ACUMULAR TEMPO (MOLDURA/BALÃO) ---
+            let baseDate = new Date(); // Começa com agora
+            const chaveObjeto = premioGanho.tipo === 'moldura' ? `moldura_${premioKey}` : `balao_${premioKey}`;
+            
+            // Verifica se já existe um prêmio desse tipo ativo
+            if (perfil.premiosTemporarios && perfil.premiosTemporarios[chaveObjeto]) {
+                let existingDate = perfil.premiosTemporarios[chaveObjeto];
+                // Converte Timestamp do Firebase para Date se necessário
+                if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
+                
+                // Se a data existente for no futuro, usamos ela como base (ACUMULA)
+                if (existingDate > new Date()) {
+                    baseDate = existingDate;
+                }
             }
 
-            // Busca dados atualizados do usuário (já salvos pelo servidor)
-            const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
-            perfil = userDoc.data(); // Atualiza variável global
+            // Adiciona 24 horas ao tempo base (seja ele agora ou o futuro acumulado)
+            baseDate.setHours(baseDate.getHours() + 24);
             
-            // Mostra o popup com a mensagem que veio do servidor
-            let tituloPopup = "🎉 Parabéns!";
-            if (data.tipoPr === 'item') tituloPopup = "🎁 Item Temporário!";
-            else if (data.tipoPr === 'caixa') tituloPopup = "🎁 CAIXA MISTERIOSA!";
+            corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por +24 horas! (Acumulado)`;
+            
+            // Salva no Firestore
+            if (premioGanho.tipo === 'moldura') {
+                updates[`premiosTemporarios.moldura_${premioKey}`] = firebase.firestore.Timestamp.fromDate(baseDate);
+            }
+            if (premioGanho.tipo === 'balao') {
+                updates[`premiosTemporarios.balao_${premioKey}`] = firebase.firestore.Timestamp.fromDate(baseDate);
+            }
+        } 
+        else if (premioGanho.tipo === 'caixa') {
+            tituloPopup = "🎁 CAIXA MISTERIOSA!";
+            
+            if (perfil.tipo !== 'cliente') {
+                // --- PRÊMIO PROFISSIONAL: BOOST ---
+                let baseDate = new Date();
+                if (perfil.boostExpiracao) {
+                    let existingDate = perfil.boostExpiracao;
+                    if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
+                    // Se já tem boost ativo, acumula em cima dele
+                    if (existingDate > new Date()) {
+                        baseDate = existingDate;
+                    }
+                }
+                // Soma +24 horas
+                baseDate.setHours(baseDate.getHours() + 24);
+                
+                updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(baseDate);
+                updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
+                corpoPopup = "Você ganhou +24 horas de Perfil Turbinado (Acumulado)!";
+                
+            } else {
+                // --- PRÊMIO CLIENTE: VIP ---
+                let baseDate = new Date();
+                
+                // Verifica se já é VIP (com data de expiração)
+                if (perfil.vip && perfil.vipExpirationDate) {
+                    let existingDate = perfil.vipExpirationDate;
+                    if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
+                    // Se já é VIP e não expirou, acumula
+                    if (existingDate > new Date()) {
+                        baseDate = existingDate;
+                    }
+                }
+                
+                // Soma +5 dias
+                baseDate.setDate(baseDate.getDate() + 5);
+                
+                updates.vip = true; 
+                updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(baseDate);
+                corpoPopup = "Incrível! Você ganhou +5 Dias de VIP Grátis (Acumulado)!";
+            }
+        }
 
-            exibirPopupBloqueante(tituloPopup, data.msgRetorno, () => {
-                abrirModalPerfil(); // Reabre o perfil para atualizar a lista
+        try {
+            await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+            
+            exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
+                // Busca dados novos para atualizar a UI (roleta e listas desbloqueadas)
+                db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
+                    perfil = doc.data();
+                    abrirModalPerfil(); // Recarrega o modal para mostrar os itens liberados
+                });
             });
 
-            // Notifica no front (opcional, pois o user já viu o popup)
-            notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", data.msgRetorno);
+            notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
 
-        }, 6000); // Sincronizado com o tempo da transição CSS
+        } catch (e) {
+            exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
+            atualizarBotaoRoleta();
+        }
 
-    } catch (e) {
-        console.error(e);
-        exibirPopup("Erro", e.message);
-        atualizarBotaoRoleta(); // Restaura botão se der erro
-    }
+    }, 6000);
 }
 
 function verificarAcessoMoldura(key) {
@@ -13467,36 +13578,51 @@ function verificarAcessoMoldura(key) {
 
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
+    // Define a classe para garantir a rolagem horizontal correta
     container.className = 'molduras-scroll-container'; 
     container.innerHTML = '';
     
     Object.keys(MOLDURAS).forEach(key => {
         const m = MOLDURAS[key];
-        if (m.adminOnly && perfil.tipo !== 'admin') return;
+        
+        // --- FILTRO DE SEGURANÇA ---
+        // Se for moldura de admin e o usuário NÃO for admin, pula e não mostra.
+        if (m.adminOnly && perfil.tipo !== 'admin') {
+            return;
+        }
 
         const selecionada = perfil.molduraSelecionada === key;
         const statusAcesso = verificarAcessoMoldura(key); 
+        
         const checkDisplay = selecionada ? 'flex' : 'none';
         
         let rodapeHtml = '';
         let estiloBorda = '';
 
         if (statusAcesso.tipo === 'permanente') {
+            // Para Admin, aparece como "Exclusivo" ou "Adquirido"
             const texto = m.adminOnly ? 'Exclusivo Admin' : 'Adquirido';
             rodapeHtml = `<span style="font-size:10px; color:#4CAF50; margin-top:2px;">${texto}</span>`;
             estiloBorda = selecionada ? '' : 'border-color: #4CAF50;'; 
         } 
         else if (statusAcesso.tipo === 'temporario') {
-            rodapeHtml = `<span style="font-size:9px; color:#00c6ff; font-weight:bold; margin-top:2px;">Liberado PRO</span>`;
+            // Acesso via plano PRO
+            rodapeHtml = `
+                <span style="font-size:9px; color:#00c6ff; font-weight:bold; margin-top:2px;">Liberado PRO</span>
+                <span style="font-size:9px; color:#ff9800; opacity:0.7;">(Comprar: R$${m.preco})</span>
+            `;
             estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
         } 
+        // --- AQUI ESTÁ A ADIÇÃO PARA A ROLETA ---
         else if (statusAcesso.tipo === 'temporario_roleta') {
-            // AQUI MUDOU: Adicionamos a classe e o data-expire
-            const ts = statusAcesso.validade.getTime();
-            rodapeHtml = `<span class="contador-tempo-real" data-expire="${ts}" style="font-size:9px; color:#e57373; font-weight:bold; margin-top:2px;">Calculando...</span>`;
+            // Calcula horas restantes
+            const horasRestantes = Math.ceil((statusAcesso.validade - new Date()) / (1000 * 60 * 60));
+            rodapeHtml = `<span style="font-size:9px; color:#e57373; font-weight:bold; margin-top:2px;">Prêmio: ${horasRestantes}h</span>`;
             estiloBorda = 'border-color: #e57373;';
         } 
+        // ---------------------------------------
         else {
+            // Não tem acesso, mostra o preço
             rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${m.preco}</span>`;
             estiloBorda = 'opacity: 0.7;';
         }
@@ -13507,10 +13633,12 @@ function renderizarMolduras() {
                  style="flex: 0 0 auto; width: 80px; display:flex; flex-direction:column; align-items:center; position:relative; cursor:pointer; margin: 0; ${estiloBorda}"> 
                  
                 <div class="moldura-check" style="display: ${checkDisplay}; right: 10px;">✅</div>
+                
                 <div class="avatar-wrapper shop-size ${key}" style="display: flex; justify-content: center; align-items: center;">
                     <div class="coroa-topo"></div> 
                     <div class="${m.classe}" style="width: 60px; height: 60px; border-radius: 50%; background: #222;"></div>
                 </div>
+
                 <span style="font-size:12px; margin-top:8px; font-weight:bold; color: #fff;">${m.nome}</span>
                 ${rodapeHtml}
             </div>`;
@@ -13531,36 +13659,40 @@ function selecionarMolduraVisualmente(element) {
 function renderizarBaloes() {
     const container = document.getElementById('listaBaloes');
     if (!container) return;
+    
     container.innerHTML = '';
     
     Object.keys(BALOES).forEach(key => {
         const b = BALOES[key];
+        
+        // Filtro de Admin (não mostra se não for admin)
         if (b.adminOnly && perfil.tipo !== 'admin') return;
 
         const selecionado = perfil.balaoSelecionado === key;
         const statusAcesso = verificarAcessoBalao(key);
-        const checkDisplay = selecionado ? 'flex' : 'none';
         
+        const checkDisplay = selecionado ? 'flex' : 'none';
         let rodapeHtml = '';
         let estiloBorda = '';
 
+        // Lógica de visualização do status (Comprado, PRO, Roleta)
         if (statusAcesso.tipo === 'permanente') {
             const texto = b.adminOnly ? 'Exclusivo' : 'Adquirido';
             rodapeHtml = `<span style="font-size:10px; color:#4CAF50; margin-top:2px;">${texto}</span>`;
-            estiloBorda = selecionada ? '' : 'border-color: #4CAF50;'; 
+            estiloBorda = selecionado ? '' : 'border-color: #4CAF50;'; 
         } else if (statusAcesso.tipo === 'temporario_pro') {
             rodapeHtml = `<span style="font-size:9px; color:#00c6ff;">Liberado PRO</span>`;
-            estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
+            estiloBorda = selecionado ? '' : 'border-color: #00c6ff;';
         } else if (statusAcesso.tipo === 'temporario_roleta') {
-            // AQUI MUDOU: Adicionamos a classe e o data-expire
-            const ts = statusAcesso.validade.getTime();
-            rodapeHtml = `<span class="contador-tempo-real" data-expire="${ts}" style="font-size:9px; color:#e57373;">Calculando...</span>`;
+            const horasRestantes = Math.ceil((statusAcesso.validade - new Date()) / (1000 * 60 * 60));
+            rodapeHtml = `<span style="font-size:9px; color:#e57373;">Prêmio: ${horasRestantes}h</span>`;
             estiloBorda = 'border-color: #e57373;';
         } else {
             rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${b.preco}</span>`;
             estiloBorda = 'opacity: 0.7;';
         }
 
+        // Preview Visual do Balão dentro da loja
         const previewHtml = `
             <div class="chat-message ${b.classe} custom-bubble" style="width: 60px; height: 40px; display:flex; align-items:center; justify-content:center; font-size:10px; margin-bottom:5px;">
                 Abc
@@ -13568,7 +13700,7 @@ function renderizarBaloes() {
         `;
 
         container.innerHTML += `
-            <div id="balao_${key}" class="moldura-item ${selecionada ? 'selecionada' : ''}" 
+            <div id="balao_${key}" class="moldura-item ${selecionado ? 'selecionada' : ''}" 
                  onclick="gerenciarBalao('${key}', this)" 
                  style="flex: 0 0 auto; width: 90px; display:flex; flex-direction:column; align-items:center; position:relative; cursor:pointer; margin: 0; ${estiloBorda}"> 
                  
@@ -13741,62 +13873,6 @@ function renderizarSelecaoConquistas() {
             </div>
         `;
     });
-}
-
-// Função auxiliar para formatar tempo restante
-function formatarTempoRestante(dataFutura) {
-    const agora = new Date();
-    const diff = dataFutura - agora;
-
-    if (diff <= 0) return "Expirado";
-
-    // Calcula dias, horas, minutos, segundos
-    const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const segundos = Math.floor((diff % (1000 * 60)) / 1000);
-
-    // Se tiver mais de 1 dia, mostra "Xd HH:MM:SS"
-    if (dias > 0) {
-        return `${dias}d ${horas.toString().padStart(2,'0')}:${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
-    }
-    // Senão mostra "HH:MM:SS"
-    return `${horas.toString().padStart(2,'0')}:${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
-}
-
-// Variável global para o intervalo dos relógios
-let intervaloRelogiosPerfil = null;
-
-function iniciarRelogiosPerfil() {
-    // Limpa anterior se existir
-    if (intervaloRelogiosPerfil) clearInterval(intervaloRelogiosPerfil);
-
-    const atualizar = () => {
-        const elementos = document.querySelectorAll('.contador-tempo-real');
-        if (elementos.length === 0) return;
-
-        elementos.forEach(el => {
-            // CORREÇÃO: Garante que é um número
-            const timestamp = parseInt(el.getAttribute('data-expire'));
-            if (!timestamp || isNaN(timestamp)) {
-                el.textContent = "Erro Data";
-                return;
-            }
-            
-            const dataFutura = new Date(timestamp);
-            const texto = formatarTempoRestante(dataFutura);
-            
-            el.textContent = texto;
-            
-            if (texto === "Expirado") {
-                el.style.color = "gray";
-            }
-        });
-    };
-
-    // Roda imediatamente e depois a cada 1s
-    atualizar();
-    intervaloRelogiosPerfil = setInterval(atualizar, 1000);
 }
 
 async function toggleConquistaChat(cId) {
