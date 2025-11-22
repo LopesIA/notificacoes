@@ -5563,11 +5563,12 @@ async function abrirModalCarteira() {
     const saldoServicos = perfil.saldo || 0; // R$ Real (Físico)
     const saldoDigital = perfil.saldoDigital || 0; // Coins (Digital)
     
-    // Verifica perfil para lógica de SAQUE (Regra de 20 dias)
+    // Verifica se é profissional (Barbeiro, Manicure, etc - exceto Admin e Cliente)
     const isProfissional = perfil.tipo !== 'cliente' && perfil.tipo !== 'admin';
-    let htmlSaqueProfissional = '';
+    let htmlSaqueArea = '';
     
     if (isProfissional) {
+        // --- LÓGICA PARA PROFISSIONAIS (COM REGRA DE 20 DIAS) ---
         try {
             const vinteDiasAtras = new Date();
             vinteDiasAtras.setDate(vinteDiasAtras.getDate() - 20);
@@ -5588,7 +5589,7 @@ async function abrirModalCarteira() {
             if (disponivelSaque < 0) disponivelSaque = 0;
             if (disponivelSaque > saldoServicos) disponivelSaque = saldoServicos;
 
-            htmlSaqueProfissional = `
+            htmlSaqueArea = `
                 <div style="background: #222; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #f1c40f; text-align: left;">
                     <p style="font-size:12px; color:#aaa; margin-bottom:5px;">📅 Regra de Liberação (20 dias)</p>
                     <div style="display:flex; justify-content:space-between; font-size: 13px;">
@@ -5599,46 +5600,44 @@ async function abrirModalCarteira() {
                         <span>✅ Disponível:</span>
                         <span style="color: #2ecc71;">R$ ${disponivelSaque.toFixed(2)}</span>
                     </div>
-                    <button onclick="iniciarSaque()" ${disponivelSaque <= 0 ? 'disabled' : ''} style="width:100%; margin-top:10px; background:#27ae60; opacity: ${disponivelSaque <= 0 ? '0.5' : '1'};">📤 Solicitar Saque</button>
+                    <button onclick="iniciarSaque()" ${disponivelSaque <= 0 ? 'disabled' : ''} style="width:100%; margin-top:10px; background:#27ae60; opacity: ${disponivelSaque <= 0 ? '0.5' : '1'};">📤 Sacar</button>
                 </div>
             `;
         } catch (e) {
             console.error("Erro ao calcular saldo bloqueado:", e);
-            htmlSaqueProfissional = `<p style="color:red; font-size:12px;">Erro ao calcular retenção.</p>`;
+            htmlSaqueArea = `<p style="color:red; font-size:12px;">Erro ao calcular retenção.</p>`;
         }
-    } else if (perfil.tipo === 'admin') {
-         // Admin vê botão de saque direto (apenas visual/teste)
-         htmlSaqueProfissional = `<button onclick="iniciarSaque()" style="width:100%; margin-top:10px; border: 1px solid #aaa; background: transparent;">📤 Sacar (Admin)</button>`;
     } else {
-        // Cliente não vê botão de saque, apenas depósito
-        htmlSaqueProfissional = '';
+        // --- LÓGICA PARA ADMIN E CLIENTES (SEM REGRA DE 20 DIAS) ---
+        // Agora aparece para todos (Clientes podem querer sacar reembolso, Admin para teste)
+         htmlSaqueArea = `<button onclick="iniciarSaque()" style="width:100%; margin-top:10px; border: 1px solid #aaa; background: transparent; color: #fff;">📤 Sacar</button>`;
     }
 
-    // 3. Renderiza o HTML final com os DOIS SALDOS e DOIS BOTÕES DE DEPÓSITO
+    // 3. Renderiza o HTML final
     container.innerHTML = `
         <h3>💰 Minha Carteira</h3>
         
         <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; border: 1px solid #444; margin-bottom: 15px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="text-align:left;">
-                    <span style="font-size:14px; display:block;">Saldo Virtual NV</span>
-                    <span style="font-size:11px; color:#aaa;">SOMENTE PARA SERVIÇOS</span>
+                    <span style="font-size:14px; display:block;">🇧🇷 Saldo (Serviços)</span>
+                    <span style="font-size:11px; color:#aaa;">Para pagar/receber cortes</span>
                 </div>
                 <span style="font-size:20px; font-weight:bold; color:#fff;">R$ ${saldoServicos.toFixed(2)}</span>
             </div>
             
             <button onclick="iniciarDepositoServico()" style="width:100%; margin-top:15px; background:var(--cor-botoes); border:1px solid #555;">📥 Depositar (PIX/Cartão)</button>
             
-            ${htmlSaqueProfissional}
+            ${htmlSaqueArea}
         </div>
 
         <div style="background: linear-gradient(135deg, #1a2530, #000); padding: 15px; border-radius: 12px; border: 1px solid var(--cor-destaque-azul);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="text-align:left;">
                     <span style="font-size:14px; color: #00c6ff; display:block;">💎 Saldo Digital</span>
-                    <span style="font-size:11px; color:#aaa;">PARA: PRODUTOS, VIPS, PERFIL</span>
+                    <span style="font-size:11px; color:#aaa;">Para VIP e Itens do App</span>
                 </div>
-                <span style="font-size:20px; font-weight:bold; color:#00c6ff;">R$ ${saldoDigital.toFixed(2)}</span>
+                <span style="font-size:20px; font-weight:bold; color:#00c6ff;">C$ ${saldoDigital.toFixed(2)}</span>
             </div>
 
             <button onclick="iniciarCompraMoedas()" style="width:100%; margin-top:15px; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff); font-weight:bold;">💎 Comprar Moedas</button>
