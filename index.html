@@ -13369,173 +13369,86 @@ async function salvarNomePerfil() {
 }
 
 async function girarRoleta() {
-    const hoje = new Date().toDateString();
-    let girosTotais = 1; 
-    if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-        girosTotais = PRECOS_PRO[perfil.proTier].giros;
-    }
-    const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
-    let girosRealizados = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
-    
-    if (girosRealizados >= girosTotais) {
-        return exibirPopup("Sem giros", "Você já usou seus giros de hoje! Volte amanhã.");
-    }
+    if (!auth.currentUser) return;
 
     const btnGirar = document.getElementById('btnGirarRoleta');
     btnGirar.disabled = true; 
-    btnGirar.textContent = "Girando...";
+    btnGirar.textContent = "Sorteando..."; // Feedback inicial
 
-    // TABELA DE PRÊMIOS
-    const arrayPremios = [
-        { tipo: 'ponto', valor: 1 },           // 0
-        { tipo: 'moldura', key: 'bronze', nome: 'Bronze' }, // 1
-        { tipo: 'ponto', valor: 2 },           // 2
-        { tipo: 'balao', key: 'bronze', nome: 'Chat Bronze' }, // 3
-        { tipo: 'ponto', valor: 3 },           // 4
-        { tipo: 'moldura', key: 'prata', nome: 'Prata' }, // 5
-        { tipo: 'ponto', valor: 4 },           // 6
-        { tipo: 'balao', key: 'prata', nome: 'Chat Prata' }, // 7
-        { tipo: 'ponto', valor: 5 },           // 8
-        { tipo: 'caixa', valor: 0 },           // 9
-        { tipo: 'ponto', valor: 6 },           // 10
-        { tipo: 'moldura', key: 'ouro', nome: 'Ouro' }, // 11
-        { tipo: 'ponto', valor: 7 },           // 12
-        { tipo: 'balao', key: 'ouro', nome: 'Chat Ouro' }, // 13
-        { tipo: 'ponto', valor: 8 },           // 14
-        { tipo: 'moldura', key: 'diamante', nome: 'Diamante' }, // 15
-        { tipo: 'ponto', valor: 9 },           // 16
-        { tipo: 'balao', key: 'diamante', nome: 'Chat Diamante' }, // 17
-        { tipo: 'ponto', valor: 10 },          // 18
-        { tipo: 'ponto', valor: 4 }            // 19
-    ];
+    // URL do seu Backend (Ajuste se necessário, mas deve ser o mesmo domínio ou configurado no CORS)
+    const API_URL = 'https://navalhabackend.onrender.com/api/girar-roleta'; 
 
-    let targetIndex = Math.floor(Math.random() * 20);
+    try {
+        // 1. Chama o servidor para decidir o prêmio
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: auth.currentUser.uid })
+        });
 
-    const ITEM_WIDTH = 90; 
-    const ITEMS_PER_SET = 20; 
-    const LOOPS = 30; 
-    const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
+        const data = await response.json();
 
-    const containerWidth = 320; 
-    const targetCenterPixel = (finalIndex * ITEM_WIDTH) + (ITEM_WIDTH / 2);
-    const viewCenterPixel = containerWidth / 2;
-    let moveX = targetCenterPixel - viewCenterPixel;
-    const jitter = Math.floor(Math.random() * 50) - 25; 
-    moveX += jitter;
-
-    const faixa = document.getElementById('roletaFaixa');
-    faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
-    faixa.style.transform = `translateX(-${moveX}px)`;
-
-    const premioGanho = arrayPremios[targetIndex];
-    let premioKey = '';
-    let msgPremio = '';
-
-    if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
-        premioKey = premioGanho.key;
-        msgPremio = premioGanho.nome;
-    }
-
-    setTimeout(async () => {
-        // --- NOVO: DISPARAR CONFETES ---
-        if (typeof confetti === 'function') {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                zIndex: 9999 // Garante que fique acima dos modais
-            });
+        if (!data.success) {
+            throw new Error(data.message || "Erro ao processar roleta.");
         }
-        // -------------------------------
 
-        let updates = { ultimoGiroRoleta: hoje };
-        updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
+        // 2. O servidor retornou o índice vencedor (0-19)
+        const targetIndex = data.targetIndex;
+        btnGirar.textContent = "Girando...";
+
+        // 3. Inicia a animação visual para cair no índice correto
+        const ITEM_WIDTH = 90; 
+        const ITEMS_PER_SET = 20; 
+        const LOOPS = 30; // Voltas visuais
         
-        let tituloPopup = "🎉 Parabéns!";
-        let corpoPopup = "";
+        // Calcula a posição exata para parar no item sorteado pelo servidor
+        const finalIndex = (LOOPS * ITEMS_PER_SET) + targetIndex;
 
-        if (premioGanho.tipo === 'ponto') {
-            corpoPopup = `Você ganhou ${premioGanho.valor} pontos de fidelidade!`;
-            updates.pontosFidelidade = firebase.firestore.FieldValue.increment(premioGanho.valor);
-        } 
-        else if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
-            tituloPopup = "🎁 Item Temporário!";
-            const tipoItem = premioGanho.tipo === 'moldura' ? 'Moldura' : 'Estilo de Chat';
-            
-            let baseDate = new Date(); 
-            const chaveObjeto = premioGanho.tipo === 'moldura' ? `moldura_${premioKey}` : `balao_${premioKey}`;
-            
-            if (perfil.premiosTemporarios && perfil.premiosTemporarios[chaveObjeto]) {
-                let existingDate = perfil.premiosTemporarios[chaveObjeto];
-                if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
-                if (existingDate > new Date()) {
-                    baseDate = existingDate;
-                }
+        const containerWidth = 320; 
+        const targetCenterPixel = (finalIndex * ITEM_WIDTH) + (ITEM_WIDTH / 2);
+        const viewCenterPixel = containerWidth / 2;
+        let moveX = targetCenterPixel - viewCenterPixel;
+        
+        // Adiciona um pequeno "jitter" aleatório para parecer física real (dentro do quadrado do item)
+        // Mas garante que não saia do item sorteado
+        const jitter = Math.floor(Math.random() * 40) - 20; 
+        moveX += jitter;
+
+        const faixa = document.getElementById('roletaFaixa');
+        // Aumenta o tempo para dar suspense (6s) e usa bezier para desacelerar no final
+        faixa.style.transition = `transform 6s cubic-bezier(0.1, 0, 0.1, 1)`; 
+        faixa.style.transform = `translateX(-${moveX}px)`;
+
+        // 4. Aguarda a animação terminar para mostrar o resultado
+        setTimeout(async () => {
+            // Confetis
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 9999 });
             }
 
-            baseDate.setHours(baseDate.getHours() + 24);
-            corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por +24 horas! (Acumulado)`;
+            // Busca dados atualizados do usuário (já salvos pelo servidor)
+            const userDoc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
+            perfil = userDoc.data(); // Atualiza variável global
             
-            if (premioGanho.tipo === 'moldura') {
-                updates[`premiosTemporarios.moldura_${premioKey}`] = firebase.firestore.Timestamp.fromDate(baseDate);
-            }
-            if (premioGanho.tipo === 'balao') {
-                updates[`premiosTemporarios.balao_${premioKey}`] = firebase.firestore.Timestamp.fromDate(baseDate);
-            }
-        } 
-        else if (premioGanho.tipo === 'caixa') {
-            tituloPopup = "🎁 CAIXA MISTERIOSA!";
-            
-            if (perfil.tipo !== 'cliente') {
-                let baseDate = new Date();
-                if (perfil.boostExpiracao) {
-                    let existingDate = perfil.boostExpiracao;
-                    if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
-                    if (existingDate > new Date()) {
-                        baseDate = existingDate;
-                    }
-                }
-                baseDate.setHours(baseDate.getHours() + 24);
-                
-                updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(baseDate);
-                updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
-                corpoPopup = "Você ganhou +24 horas de Perfil Turbinado (Acumulado)!";
-                
-            } else {
-                let baseDate = new Date();
-                if (perfil.vip && perfil.vipExpirationDate) {
-                    let existingDate = perfil.vipExpirationDate;
-                    if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
-                    if (existingDate > new Date()) {
-                        baseDate = existingDate;
-                    }
-                }
-                baseDate.setDate(baseDate.getDate() + 5);
-                
-                updates.vip = true; 
-                updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(baseDate);
-                corpoPopup = "Incrível! Você ganhou +5 Dias de VIP Grátis (Acumulado)!";
-            }
-        }
+            // Mostra o popup com a mensagem que veio do servidor
+            let tituloPopup = "🎉 Parabéns!";
+            if (data.tipoPr === 'item') tituloPopup = "🎁 Item Temporário!";
+            else if (data.tipoPr === 'caixa') tituloPopup = "🎁 CAIXA MISTERIOSA!";
 
-        try {
-            await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
-            
-            exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
-                db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
-                    perfil = doc.data();
-                    abrirModalPerfil(); 
-                });
+            exibirPopupBloqueante(tituloPopup, data.msgRetorno, () => {
+                abrirModalPerfil(); // Reabre o perfil para atualizar a lista
             });
 
-            notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
+            // Notifica no front (opcional, pois o user já viu o popup)
+            notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", data.msgRetorno);
 
-        } catch (e) {
-            exibirPopup("Erro", "Erro ao salvar prêmio: " + e.message);
-            atualizarBotaoRoleta();
-        }
+        }, 6000); // Sincronizado com o tempo da transição CSS
 
-    }, 6000);
+    } catch (e) {
+        console.error(e);
+        exibirPopup("Erro", e.message);
+        atualizarBotaoRoleta(); // Restaura botão se der erro
+    }
 }
 
 function verificarAcessoMoldura(key) {
@@ -13567,51 +13480,36 @@ function verificarAcessoMoldura(key) {
 
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
-    // Define a classe para garantir a rolagem horizontal correta
     container.className = 'molduras-scroll-container'; 
     container.innerHTML = '';
     
     Object.keys(MOLDURAS).forEach(key => {
         const m = MOLDURAS[key];
-        
-        // --- FILTRO DE SEGURANÇA ---
-        // Se for moldura de admin e o usuário NÃO for admin, pula e não mostra.
-        if (m.adminOnly && perfil.tipo !== 'admin') {
-            return;
-        }
+        if (m.adminOnly && perfil.tipo !== 'admin') return;
 
         const selecionada = perfil.molduraSelecionada === key;
         const statusAcesso = verificarAcessoMoldura(key); 
-        
         const checkDisplay = selecionada ? 'flex' : 'none';
         
         let rodapeHtml = '';
         let estiloBorda = '';
 
         if (statusAcesso.tipo === 'permanente') {
-            // Para Admin, aparece como "Exclusivo" ou "Adquirido"
             const texto = m.adminOnly ? 'Exclusivo Admin' : 'Adquirido';
             rodapeHtml = `<span style="font-size:10px; color:#4CAF50; margin-top:2px;">${texto}</span>`;
             estiloBorda = selecionada ? '' : 'border-color: #4CAF50;'; 
         } 
         else if (statusAcesso.tipo === 'temporario') {
-            // Acesso via plano PRO
-            rodapeHtml = `
-                <span style="font-size:9px; color:#00c6ff; font-weight:bold; margin-top:2px;">Liberado PRO</span>
-                <span style="font-size:9px; color:#ff9800; opacity:0.7;">(Comprar: R$${m.preco})</span>
-            `;
+            rodapeHtml = `<span style="font-size:9px; color:#00c6ff; font-weight:bold; margin-top:2px;">Liberado PRO</span>`;
             estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
         } 
-        // --- AQUI ESTÁ A ADIÇÃO PARA A ROLETA ---
         else if (statusAcesso.tipo === 'temporario_roleta') {
-            // Calcula horas restantes
-            const horasRestantes = Math.ceil((statusAcesso.validade - new Date()) / (1000 * 60 * 60));
-            rodapeHtml = `<span style="font-size:9px; color:#e57373; font-weight:bold; margin-top:2px;">Prêmio: ${horasRestantes}h</span>`;
+            // AQUI MUDOU: Adicionamos a classe e o data-expire
+            const ts = statusAcesso.validade.getTime();
+            rodapeHtml = `<span class="contador-tempo-real" data-expire="${ts}" style="font-size:9px; color:#e57373; font-weight:bold; margin-top:2px;">Calculando...</span>`;
             estiloBorda = 'border-color: #e57373;';
         } 
-        // ---------------------------------------
         else {
-            // Não tem acesso, mostra o preço
             rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${m.preco}</span>`;
             estiloBorda = 'opacity: 0.7;';
         }
@@ -13622,12 +13520,10 @@ function renderizarMolduras() {
                  style="flex: 0 0 auto; width: 80px; display:flex; flex-direction:column; align-items:center; position:relative; cursor:pointer; margin: 0; ${estiloBorda}"> 
                  
                 <div class="moldura-check" style="display: ${checkDisplay}; right: 10px;">✅</div>
-                
                 <div class="avatar-wrapper shop-size ${key}" style="display: flex; justify-content: center; align-items: center;">
                     <div class="coroa-topo"></div> 
                     <div class="${m.classe}" style="width: 60px; height: 60px; border-radius: 50%; background: #222;"></div>
                 </div>
-
                 <span style="font-size:12px; margin-top:8px; font-weight:bold; color: #fff;">${m.nome}</span>
                 ${rodapeHtml}
             </div>`;
@@ -13823,6 +13719,59 @@ function executarCompraMoldura(key, m) {
             });
         }
     );
+}
+
+// Função auxiliar para formatar tempo restante
+function formatarTempoRestante(dataFutura) {
+    const agora = new Date();
+    const diff = dataFutura - agora;
+
+    if (diff <= 0) return "Expirado";
+
+    // Calcula dias, horas, minutos, segundos
+    const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const segundos = Math.floor((diff % (1000 * 60)) / 1000);
+
+    // Se tiver mais de 1 dia, mostra "Xd HH:MM:SS"
+    if (dias > 0) {
+        return `${dias}d ${horas.toString().padStart(2,'0')}:${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
+    }
+    // Senão mostra "HH:MM:SS"
+    return `${horas.toString().padStart(2,'0')}:${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
+}
+
+// Variável global para o intervalo dos relógios
+let intervaloRelogiosPerfil = null;
+
+function iniciarRelogiosPerfil() {
+    // Limpa anterior se existir
+    if (intervaloRelogiosPerfil) clearInterval(intervaloRelogiosPerfil);
+
+    // Define a função de atualização
+    const atualizar = () => {
+        const elementos = document.querySelectorAll('.contador-tempo-real');
+        if (elementos.length === 0) return;
+
+        elementos.forEach(el => {
+            const timestamp = parseInt(el.dataset.expire);
+            if (!timestamp) return;
+            
+            const dataFutura = new Date(timestamp);
+            const texto = formatarTempoRestante(dataFutura);
+            
+            el.textContent = texto;
+            
+            if (texto === "Expirado") {
+                el.style.color = "gray";
+            }
+        });
+    };
+
+    // Roda imediatamente e depois a cada 1s
+    atualizar();
+    intervaloRelogiosPerfil = setInterval(atualizar, 1000);
 }
 
 function renderizarSelecaoConquistas() {
