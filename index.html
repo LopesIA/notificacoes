@@ -1896,8 +1896,6 @@ body {
     clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
 }
 
-/* --- TAMANHOS ESPECÍFICOS --- */
-
 /* 2. TAMANHO POPUP (Grande - 120px) */
 .avatar-wrapper.popup-size {
     width: 120px; height: 120px;
@@ -2096,7 +2094,7 @@ body {
    mas mantemos o brilho da borda definido nas classes .ouro, .diamante etc */
 .avatar-wrapper.chat-size::after, 
 .avatar-wrapper.chat-size::before {
-    overflow: visible 
+    display: none; 
 }
 
 /* --- CORREÇÃO: Wrapper da Moldura no POPUP (Grande) --- */
