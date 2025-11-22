@@ -2466,7 +2466,7 @@ body {
     
     <button id="btnConfig" onclick="abrirModal('modalConfiguracoes')" style="background:none; border:none;">⚙️</button>
     
-    <button id="btnCarteiraTop" class="hidden" onclick="abrirModal('modalCarteira')">💰 <span id="saldoHeader">0</span></button>
+    <button id="btnCarteiraTop" class="hidden" onclick="abrirModalCarteira()">💰 <span id="saldoHeader">0</span></button>
     
   </div>
 </div>
@@ -2536,7 +2536,7 @@ body {
         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;">
           <button id="btnHistoricoCliente" onclick="abrirHistoricoCliente()" style="width:45%">📜 Histórico</button>
           <button id="btnVip" onclick="abrirModalVip()" style="width:45%">💎 VIP</button>
-          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+          <button onclick="abrirModalCarteira()" style="width:45%">💰 Carteira</button>
           <button onclick="abrirModalFidelidade()" style="width:45%">🏆 Fidelidade</button>
           <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
           <button onclick="abrirModalConquistas()" style="width:45%">🏅 Conquistas</button>
@@ -2559,7 +2559,7 @@ body {
           <button id="btnAgendamentosBarbeiro" onclick="abrirAgendamentosBarbeiro()" style="width:45%">⏰ Agendamentos</button>
           <button onclick="abrirClientesBarbeiro()" style="width:45%">🧑‍🤝‍🧑 Clientes</button>
           <button onclick="abrirPromocoes()" style="width:45%">🎁 Promoções</button>
-          <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+          <button onclick="abrirModalCarteira()" style="width:45%">💰 Carteira</button>
           <button onclick="abrirModalFidelidade()" style="width:45%">🏆 Fidelidade</button>
           <button onclick="abrirHistoricoBarbeiro()" style="width:45%">📜 Histórico</button>
           <button id="btnAvaliacoesBarbeiro" onclick="abrirAvaliacoesBarbeiro()" style="width:45%">⭐ Avaliações</button>
@@ -2589,7 +2589,7 @@ body {
       <button id="btnAdminSolicitacoes" onclick="abrirModalSolicitacoes()" style="width:45%">📥 Solicitações</button>
       <button onclick="abrirModalUsuarios()" style="width:45%">👥 Usuários</button>
       <button id="btnAdminDenuncias" onclick="abrirDenuncias()" style="width:45%">🚨 Denúncias</button>
-      <button onclick="abrirModal('modalCarteira')" style="width:45%">💰 Carteira</button>
+      <button onclick="abrirModalCarteira()" style="width:45%">💰 Carteira</button>
       <button onclick="abrirGerenciarLojaAdmin()" style="width:45%">🛍️ Gerenciar Loja</button>
       <button onclick="abrirModal('modalBlogAdmin')" style="width:45%">✍️ Publicar Blog</button>
       
@@ -5573,7 +5573,6 @@ async function abrirModalCarteira() {
             vinteDiasAtras.setDate(vinteDiasAtras.getDate() - 20);
             
             // Busca lançamentos recentes que ainda não liberaram
-            // Nota: Isso exige que a função 'concluirAgendamento' crie o registro em 'extrato_financeiro'
             const ganhosBloqueadosSnap = await db.collection('extrato_financeiro')
                 .where('usuarioUid', '==', auth.currentUser.uid)
                 .where('tipo', '==', 'entrada_servico')
