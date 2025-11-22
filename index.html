@@ -5551,6 +5551,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     }
 });
 
+// SUBSTITUA A FUNÇÃO abrirModalCarteira INTEIRA POR ESTA:
 async function abrirModalCarteira() {
     abrirModal('modalCarteira');
     const container = document.querySelector("#modalCarteira .modal-content");
@@ -5559,16 +5560,15 @@ async function abrirModalCarteira() {
     container.innerHTML = '<h3>💰 Minha Carteira</h3><p>Carregando saldos...</p>';
 
     // 1. Pega dados atuais
-    const saldoServicos = perfil.saldo || 0; // Saldo para Saque/Serviços (R$)
-    const saldoDigital = perfil.saldoDigital || 0; // Saldo para VIP/Boost (Moedas)
-    const isProfissional = perfil.tipo !== 'cliente' && perfil.tipo !== 'admin';
-
-    let htmlProfissional = '';
+    const saldoServicos = perfil.saldo || 0; // R$ Real (Físico)
+    const saldoDigital = perfil.saldoDigital || 0; // Coins (Digital)
     
-    // 2. LÓGICA DOS 20 DIAS (Apenas para Profissionais)
+    // Verifica perfil para lógica de SAQUE (Regra de 20 dias)
+    const isProfissional = perfil.tipo !== 'cliente' && perfil.tipo !== 'admin';
+    let htmlSaqueProfissional = '';
+    
     if (isProfissional) {
         try {
-            // Data limite: Hoje menos 20 dias
             const vinteDiasAtras = new Date();
             vinteDiasAtras.setDate(vinteDiasAtras.getDate() - 20);
             
@@ -5584,13 +5584,11 @@ async function abrirModalCarteira() {
                 valorBloqueado += (doc.data().valorLiquido || 0);
             });
 
-            // O disponível é o Total menos o Bloqueado
             let disponivelSaque = saldoServicos - valorBloqueado;
-            // Proteção contra negativos ou erros de arredondamento
             if (disponivelSaque < 0) disponivelSaque = 0;
             if (disponivelSaque > saldoServicos) disponivelSaque = saldoServicos;
 
-            htmlProfissional = `
+            htmlSaqueProfissional = `
                 <div style="background: #222; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #f1c40f; text-align: left;">
                     <p style="font-size:12px; color:#aaa; margin-bottom:5px;">📅 Regra de Liberação (20 dias)</p>
                     <div style="display:flex; justify-content:space-between; font-size: 13px;">
@@ -5606,36 +5604,47 @@ async function abrirModalCarteira() {
             `;
         } catch (e) {
             console.error("Erro ao calcular saldo bloqueado:", e);
-            htmlProfissional = `<p style="color:red; font-size:12px;">Erro ao calcular retenção.</p>`;
+            htmlSaqueProfissional = `<p style="color:red; font-size:12px;">Erro ao calcular retenção.</p>`;
         }
     } else if (perfil.tipo === 'admin') {
-         htmlProfissional = `<button onclick="iniciarSaque()" style="width:100%; margin-top:10px;">📤 Sacar (Admin)</button>`;
+         // Admin vê botão de saque direto (apenas visual/teste)
+         htmlSaqueProfissional = `<button onclick="iniciarSaque()" style="width:100%; margin-top:10px; border: 1px solid #aaa; background: transparent;">📤 Sacar (Admin)</button>`;
+    } else {
+        // Cliente não vê botão de saque, apenas depósito
+        htmlSaqueProfissional = '';
     }
 
-    // 3. Renderiza o HTML final
+    // 3. Renderiza o HTML final com os DOIS SALDOS e DOIS BOTÕES DE DEPÓSITO
     container.innerHTML = `
         <h3>💰 Minha Carteira</h3>
         
         <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; border: 1px solid #444; margin-bottom: 15px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:14px;">💵 Saldo (Serviços)</span>
-                <span style="font-size:18px; font-weight:bold; color:#fff;">R$ ${saldoServicos.toFixed(2)}</span>
+                <div style="text-align:left;">
+                    <span style="font-size:14px; display:block;">🇧🇷 Saldo (Serviços)</span>
+                    <span style="font-size:11px; color:#aaa;">Para pagar/receber cortes</span>
+                </div>
+                <span style="font-size:20px; font-weight:bold; color:#fff;">R$ ${saldoServicos.toFixed(2)}</span>
             </div>
-            <p style="font-size:11px; color:#aaa; margin-top:5px; text-align:left;">Exclusivo para pagar profissionais e receber pagamentos de cortes.</p>
-            ${perfil.tipo === 'cliente' ? `<button onclick="iniciarDepositoServico()" style="width:100%; margin-top:10px; background:var(--cor-botoes); border:1px solid #555;">📥 Adicionar R$ (PIX/Cartão)</button>` : ''}
-            ${htmlProfissional}
+            
+            <button onclick="iniciarDepositoServico()" style="width:100%; margin-top:15px; background:var(--cor-botoes); border:1px solid #555;">📥 Depositar (PIX/Cartão)</button>
+            
+            ${htmlSaqueProfissional}
         </div>
 
         <div style="background: linear-gradient(135deg, #1a2530, #000); padding: 15px; border-radius: 12px; border: 1px solid var(--cor-destaque-azul);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:14px; color: #00c6ff;">💎 Saldo Digital</span>
-                <span style="font-size:18px; font-weight:bold; color:#00c6ff;">C$ ${saldoDigital.toFixed(2)}</span>
+                <div style="text-align:left;">
+                    <span style="font-size:14px; color: #00c6ff; display:block;">💎 Saldo Digital</span>
+                    <span style="font-size:11px; color:#aaa;">Para VIP e Itens do App</span>
+                </div>
+                <span style="font-size:20px; font-weight:bold; color:#00c6ff;">C$ ${saldoDigital.toFixed(2)}</span>
             </div>
-            <p style="font-size:11px; color:#aaa; margin-top:5px; text-align:left;">Use para comprar VIP, Boost, Molduras e Itens do App.</p>
-            <button onclick="iniciarCompraMoedas()" style="width:100%; margin-top:10px; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff);">💎 Comprar Moedas</button>
+
+            <button onclick="iniciarCompraMoedas()" style="width:100%; margin-top:15px; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff); font-weight:bold;">💎 Comprar Moedas</button>
         </div>
 
-        <button data-modal-id="modalCarteira" onclick="fecharModal(event)" style="margin-top: 20px; background:#555;">❌ Fechar</button>
+        <button data-modal-id="modalCarteira" onclick="fecharModal(event)" style="margin-top: 10px; background:#555;">❌ Fechar</button>
     `;
 }
 
@@ -9003,6 +9012,7 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => exibirPopup("Denúncia fechada!"));
 }
 
+// SUBSTITUA A FUNÇÃO abrirModalGerenciarUsuario INTEIRA POR ESTA:
 async function abrirModalGerenciarUsuario(uid) {
     exibirAguarde("Carregando dados do usuário...");
     try {
@@ -9020,12 +9030,10 @@ async function abrirModalGerenciarUsuario(uid) {
         const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
         const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
 
-        // --- 1. PREPARA A LISTA DE MOLDURAS (LÓGICA VEM ANTES DO HTML) ---
+        // --- LÓGICA DE MOLDURAS (Mantida) ---
         let moldurasHtml = '';
         const moldurasAdquiridas = u.moldurasAdquiridas || [];
         const molduraEquipada = u.molduraSelecionada;
-
-        // Helper para verificar se é temporária do PRO
         const checkProAccess = (key) => {
             if (!isProAtivo(u) || !u.proTier) return false;
             const tier = u.proTier;
@@ -9041,171 +9049,125 @@ async function abrirModalGerenciarUsuario(uid) {
             const isDefinitiva = moldurasAdquiridas.includes(key);
             const isTemporaria = !isDefinitiva && checkProAccess(key);
             const isEquipada = molduraEquipada === key;
-
             if (isDefinitiva || isTemporaria) {
-                const tipoBadge = isDefinitiva 
-                    ? '<span style="background:#27ae60; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">DEFINITIVA (Comprada)</span>' 
-                    : '<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">TEMPORÁRIA (PRO)</span>';
-                
+                const tipoBadge = isDefinitiva ? '<span style="background:#27ae60; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">DEFINITIVA</span>' : '<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">TEMPORÁRIA (PRO)</span>';
                 const equipadaBadge = isEquipada ? '✅ Em uso' : '';
-
                 moldurasHtml += `
                     <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cor-botoes); padding:8px; margin-bottom:5px; border-radius:8px; border: 1px solid var(--cor-borda);">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <div class="${m.classe}" style="width:30px; height:30px; border-radius:50%;"></div>
-                            <div>
-                                <div style="font-weight:bold; font-size:14px;">${m.nome} ${equipadaBadge}</div>
-                                ${tipoBadge}
-                            </div>
+                            <div><div style="font-weight:bold; font-size:14px;">${m.nome} ${equipadaBadge}</div>${tipoBadge}</div>
                         </div>
                         <button onclick="adminRemoverMoldura('${uid}', '${key}', ${isDefinitiva})" style="background:#c0392b; font-size:12px; padding:5px 10px; width:auto;">Remover</button>
-                    </div>
-                `;
+                    </div>`;
             }
         });
+        if (moldurasHtml === '') moldurasHtml = '<p style="font-size:12px; opacity:0.7;">Sem molduras.</p>';
 
-        if (moldurasHtml === '') {
-            moldurasHtml = '<p style="font-size:12px; opacity:0.7;">Este usuário não possui molduras liberadas.</p>';
-        }
-        // --- FIM DA LÓGICA DE MOLDURAS ---
-
-
-        // --- 2. MONTA O HTML DO MODAL ---
+        // --- MONTA O HTML DO MODAL (COM OS 2 SALDOS) ---
         const container = document.getElementById('adminGerenciarConteudo');
         container.innerHTML = `
             <h4 style="word-break: break-all;">${u.nome}</h4>
-            <p style="font-size: 11px; opacity: 0.7; word-break: break-all;">UID: ${uid}</p>
+            <p style="font-size: 11px; opacity: 0.7;">UID: ${uid}</p>
             
             <div class="popup-section">
-                <p><strong>Informações da Conta:</strong></p>
-                <p style="font-size: 14px;"><strong>Criada em:</strong> ${creationTime}</p>
-                <p style="font-size: 14px;"><strong>Último Login:</strong> ${lastSignInTime}</p>
-                <p style="font-size: 14px;"><strong>Conta:</strong> <span style="color: ${userRecord.disabled ? '#e74c3c' : '#2ecc71'};">${userRecord.disabled ? 'Desabilitada' : 'Ativa'}</span></p>
-            </div>
-
-            <div class="popup-section">
-                <button onclick="document.getElementById('adminDadosCadastroOculto').classList.toggle('hidden')">📋 Mostrar/Ocultar Dados de Cadastro</button>
-                <div id="adminDadosCadastroOculto" class="hidden" style="margin-top: 10px; background: var(--cor-fundo); padding: 10px; border-radius: 8px;">
-                    <p style="font-size: 14px;"><strong>Email:</strong> ${u.email || 'N/A'}</p>
-                    <p style="font-size: 14px;"><strong>Telefone:</strong> ${u.telefone || 'N/A'}</p>
-                    <p style="font-size: 14px;"><strong>Estado:</strong> ${u.estado || 'N/A'}</p>
-                    <p style="font-size: 14px;"><strong>Cidade:</strong> ${u.cidade || 'N/A'}</p>
-                    <p style="font-size: 14px;"><strong>Endereço (Rua):</strong> ${u.rua || 'N/A'}</p>
-                    <p style="font-size: 14px;"><strong>Endereço (Número):</strong> ${u.numero || 'N/A'}</p>
-                    <p style="font-size: 14px;"><strong>Indicado Por (Email):</strong> ${u.indicadoPorEmail || 'N/A'}</p>
-                    <p style="font-size: 14px;"><strong>Coordenadas (Lat/Lon):</strong> ${u.latitude ? u.latitude.toFixed(4) : 'N/A'} / ${u.longitude ? u.longitude.toFixed(4) : 'N/A'}</p>
-                </div>
-            </div>
-
-            <div class="popup-section">
-                <p><strong>Alterar Dados Cadastrais:</strong></p>
-                <label for="adminNovoNome">Nome de Exibição:</label>
-                <input id="adminNovoNome" type="text" value="${u.nome}">
-                <label for="adminNovoTelefone">Telefone (ex: 27999999999):</label>
-                <input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
-
-                <label for="adminNovoEstado">Estado:</label>
-                <input id="adminNovoEstado" type="text" value="${u.estado || ''}" placeholder="Digite o estado" oninput="this.value = formatarNomeProprio(this.value)">
-                <label for="adminNovoCidade">Cidade:</label>
-                <input id="adminNovoCidade" type="text" value="${u.cidade || ''}" placeholder="Digite a cidade" oninput="this.value = formatarNomeProprio(this.value)">
-                <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 10px;">💾 Salvar Dados</button>
-            </div>
-
-            <div class="popup-section">
-                <p><strong>Gerenciar Molduras:</strong></p>
-                ${moldurasHtml}
-            </div>
-
-            <div class="popup-section">
-                <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
+                <p><strong>💰 Gerenciar Financeiro:</strong></p>
                 
-                <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
-                <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                    <input id="adminModificarSaldo" type="number" placeholder="Valor (+ ou -)" style="margin:0;">
-                    <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
-                </div>
-                <hr style="border-color: var(--cor-borda); margin: 10px 0;">
-                
-                <p><strong>Roleta Diária:</strong></p>
-                <div style="display:flex; gap:5px; align-items: center;">
-                    <input id="adminInputGiros" type="number" placeholder="Qtd Giros" style="margin:0; width: 80px;">
-                    <button onclick="adminAdicionarGiros('${uid}')" style="background-color: var(--cor-destaque-ouro); color: #000;">🎲 Dar Giros</button>
-                </div>
-                <p style="font-size:10px; opacity:0.7; margin-top:5px;">Adiciona giros extras para hoje.</p>
-                <hr style="border-color: var(--cor-borda); margin: 10px 0;">
-
-                <p><strong>VIP Ativo:</strong> ${isVipAtivo(u) ? '<span style="color:#2ecc71; font-weight:bold;">Sim ✅</span>' : '<span style="color:#e74c3c">Não ❌</span>'}</p>
-                ${isVipAtivo(u) 
-                    ? `<button onclick="adminToggleVip('${uid}', false)" style="background-color: #c0392b; border: 1px solid red;">🚫 Remover VIP</button>` 
-                    : `<button onclick="adminToggleVip('${uid}', true)" style="background-color: var(--cor-destaque);">👑 Conceder VIP (6 meses)</button>`
-                }
-                <hr style="border-color: var(--cor-borda); margin: 10px 0;">
-
-                <p><strong>PRO Ativo:</strong> ${isProAtivo(u) ? `<span style="color:#00c6ff; font-weight:bold;">Sim ✅ (Tier: ${u.proTier || '?'})</span>` : '<span style="color:#e74c3c">Não ❌</span>'}</p>
-                
-                ${!isProAtivo(u) ? `
-                    <div style="display:flex; gap:5px; flex-direction: column; margin-top:5px;">
-                        <label style="font-size:12px;">Selecione o Plano:</label>
-                        <select id="adminConcederProTier" style="margin:0; padding: 8px; background:#222; color:white; border:1px solid #555;">
-                            <option value="tier1">Bronze (4%)</option>
-                            <option value="tier2">Prata (2%)</option>
-                            <option value="tier3">Ouro (0%)</option>
-                        </select>
-                        <button onclick="adminTogglePro('${uid}', true)" style="background-color: var(--cor-destaque-azul); margin-top:5px;">🌟 Conceder PRO</button>
+                <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:10px;">
+                    <p style="margin:0 0 5px 0;">🇧🇷 Saldo Serviços: <strong>R$ ${(u.saldo || 0).toFixed(2)}</strong></p>
+                    <div style="display:flex; gap:5px;">
+                        <input id="adminModificarSaldo" type="number" placeholder="+/- Valor" style="margin:0;">
+                        <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
                     </div>
-                ` : `
-                    <button onclick="adminTogglePro('${uid}', false)" style="background-color: #c0392b; border: 1px solid red; margin-top:5px;">🚫 Remover PRO</button>
-                `}
-                <hr style="border-color: var(--cor-borda); margin: 10px 0;">
+                </div>
 
-                 <p><strong>Pontos Fidelidade:</strong> ${u.pontosFidelidade || 0}</p>
-                 <div style="display:flex; gap:5px;">
-                    <input id="adminModificarPontos" type="number" placeholder="Pontos (+ ou -)" style="margin:0;">
-                    <button onclick="adminModificarPontos('${uid}')" style="width:auto;">Aplicar</button>
-                 </div>
-            </div>
-
-            <div class="popup-section">
-                <p><strong>Acesso à Loja:</strong></p>
-                <p><strong>Loja Liberada:</strong> ${u.lojaLiberada ? 'Sim ✅' : 'Não ❌'}</p>
-                <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">
-                    ${u.lojaLiberada ? 'Bloquear Acesso à Loja' : 'Liberar Acesso à Loja'}
-                </button>
-            </div>
-
-            <div class="popup-section">
-                <p><strong>Alterar Tipo de Conta:</strong></p>
-                <p>Tipo Atual: <strong>${u.tipo}</strong></p>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; justify-content: center;">
-                    <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'admin')">🧠 Admin</button>
-                    <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'cliente')" ${u.tipo === 'cliente' ? 'disabled' : ''}>🙋 Cliente</button>
-                    <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" ${u.tipo === 'barbeiro' ? 'disabled' : ''}>💈 Barbeiro</button>
-                    <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'manicure_pedicure')" ${u.tipo === 'manicure_pedicure' ? 'disabled' : ''}>💅 Manicure/Pedicure</button>
-                    <button style="flex-basis: 45%;" onclick="adminMudarTipoUsuario('${uid}', 'designer_cilios')" ${u.tipo === 'designer_cilios' ? 'disabled' : ''}>👁️ Designer Cílios</button>
+                <div style="background:rgba(0, 198, 255, 0.1); padding:10px; border-radius:8px; border:1px solid rgba(0, 198, 255, 0.3);">
+                    <p style="margin:0 0 5px 0; color:#00c6ff;">💎 Saldo Digital: <strong>C$ ${(u.saldoDigital || 0).toFixed(2)}</strong></p>
+                    <div style="display:flex; gap:5px;">
+                        <input id="adminModificarSaldoDigital" type="number" placeholder="+/- Moedas" style="margin:0;">
+                        <button onclick="adminModificarSaldoDigital('${uid}')" style="width:auto; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff);">Aplicar</button>
+                    </div>
                 </div>
             </div>
 
             <div class="popup-section">
-                <p><strong>Ações de Segurança:</strong></p>
-                <input id="adminNovaSenha" type="password" placeholder="🔑 Definir Nova Senha para o Usuário">
-                <button onclick="adminDefinirNovaSenha('${uid}')">Definir Nova Senha</button>
+                <button onclick="document.getElementById('adminDadosCadastroOculto').classList.toggle('hidden')">📋 Ver Dados Cadastrais</button>
+                <div id="adminDadosCadastroOculto" class="hidden" style="margin-top:10px; padding:10px; background:var(--cor-fundo);">
+                    <p>Email: ${u.email}</p><p>Tel: ${u.telefone}</p><p>Local: ${u.cidade}/${u.estado}</p>
+                    <p>End: ${u.rua}, ${u.numero}</p>
+                </div>
             </div>
 
             <div class="popup-section">
-                <p><strong>Ações de Conta:</strong></p>
-                <button style="background-color: ${userRecord.disabled ? '#2ecc71' : '#f1c40f'};" onclick="adminToggleUserStatus('${uid}', ${!userRecord.disabled})">${userRecord.disabled ? 'Reativar Conta' : 'Desativar Conta'}</button>
-                <button style="background-color: #c0392b; margin-top: 10px;" onclick="adminDeletarUsuario('${uid}', '${u.nome}')">DELETAR USUÁRIO</button>
+                <label>Nome:</label><input id="adminNovoNome" type="text" value="${u.nome}">
+                <label>Telefone:</label><input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
+                <label>Estado:</label><input id="adminNovoEstado" value="${u.estado || ''}" oninput="this.value = formatarNomeProprio(this.value)">
+                <label>Cidade:</label><input id="adminNovoCidade" value="${u.cidade || ''}" oninput="this.value = formatarNomeProprio(this.value)">
+                <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 5px;">💾 Salvar Dados</button>
             </div>
-            <button data-modal-id="modalGerenciarUsuario" onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
+
+            <div class="popup-section"><p><strong>Molduras:</strong></p>${moldurasHtml}</div>
+
+            <div class="popup-section">
+                <p><strong>VIP / PRO / Pontos:</strong></p>
+                <p>VIP: ${isVipAtivo(u) ? '✅' : '❌'} | PRO: ${isProAtivo(u) ? `✅ (${u.proTier})` : '❌'}</p>
+                ${isVipAtivo(u) ? `<button onclick="adminToggleVip('${uid}', false)" style="background:#c0392b;">Remover VIP</button>` : `<button onclick="adminToggleVip('${uid}', true)">Conceder VIP</button>`}
+                <div style="margin-top:5px;"></div>
+                ${isProAtivo(u) ? `<button onclick="adminTogglePro('${uid}', false)" style="background:#c0392b;">Remover PRO</button>` : `<button onclick="adminTogglePro('${uid}', true)" style="background:#00c6ff; color:black;">Conceder PRO (Ouro)</button>`}
+                
+                <hr style="border-color:#444; margin:10px 0;">
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <span>Pontos: ${u.pontosFidelidade || 0}</span>
+                    <input id="adminModificarPontos" type="number" placeholder="+/-" style="margin:0; width:60px;">
+                    <button onclick="adminModificarPontos('${uid}')" style="width:auto;">Ok</button>
+                </div>
+            </div>
+
+            <div class="popup-section">
+                <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Bloquear Loja' : 'Liberar Loja'}</button>
+                <div style="margin-top:10px;">
+                   <button onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" style="width:48%;">Virar Barbeiro</button>
+                   <button onclick="adminMudarTipoUsuario('${uid}', 'cliente')" style="width:48%;">Virar Cliente</button>
+                </div>
+            </div>
+
+            <button onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
         `;
 
-        fecharTodosOsModais(); // Fecha o "Aguarde..."
-        abrirModal('modalGerenciarUsuario'); // Abre o modal
+        fecharTodosOsModais();
+        abrirModal('modalGerenciarUsuario');
     } catch (error) {
         fecharTodosOsModais();
-        console.error("Erro ao buscar dados do usuário:", error);
-        exibirPopup("Não foi possível carregar os dados completos do usuário. " + error.message);
+        console.error(error);
+        exibirPopup("Erro ao carregar usuário: " + error.message);
     }
+}
+
+// NOVA FUNÇÃO: ADMIN MODIFICAR SALDO DIGITAL
+async function adminModificarSaldoDigital(uid) {
+  const valor = parseFloat(document.getElementById('adminModificarSaldoDigital').value);
+  if (!isNaN(valor) && valor !== 0) {
+    if (!confirm(`Confirma adicionar/remover C$ ${valor} do saldo DIGITAL deste usuário?`)) return;
+    
+    exibirAguarde("Atualizando saldo digital...");
+    try {
+        await db.collection("usuarios").doc(uid).update({ 
+            saldoDigital: firebase.firestore.FieldValue.increment(valor) 
+        });
+        
+        fecharTodosOsModais();
+        exibirPopup("Sucesso", "Saldo Digital atualizado!");
+        notifyUser(uid, "💎 Atualização de Saldo", `Um administrador alterou seu Saldo Digital em C$ ${valor.toFixed(2)}.`, { link: '#carteira' });
+        
+        // Reabre o modal para ver a mudança
+        abrirModalGerenciarUsuario(uid);
+    } catch(e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao atualizar: " + e.message);
+    }
+  } else {
+      exibirPopup("Digite um valor válido diferente de zero.");
+  }
 }
 
 function prepararDeletarConta() {
