@@ -2438,6 +2438,63 @@ body {
     /* Drop-shadow branco intenso e nítido ao redor da asa preta */
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)) !important;
 }
+
+/* Estilo Novo do Ranking */
+.ranking-novo-item {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(90deg, var(--cor-botoes), transparent);
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--cor-borda);
+    transition: transform 0.2s;
+}
+.ranking-novo-item:hover {
+    transform: scale(1.02);
+    border-color: var(--cor-destaque);
+}
+.ranking-posicao {
+    font-size: 18px;
+    font-weight: 900;
+    width: 30px;
+    text-align: center;
+    margin-right: 10px;
+    color: #fff;
+}
+/* Cores para o Top 3 */
+.ranking-novo-item:nth-child(1) .ranking-posicao { color: #ffd700; text-shadow: 0 0 5px gold; font-size: 24px; }
+.ranking-novo-item:nth-child(2) .ranking-posicao { color: #c0c0c0; font-size: 22px; }
+.ranking-novo-item:nth-child(3) .ranking-posicao { color: #cd7f32; font-size: 20px; }
+
+.ranking-foto {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #444;
+    margin-right: 10px;
+}
+.ranking-info {
+    flex-grow: 1;
+}
+.ranking-nome {
+    font-weight: 600;
+    font-size: 14px;
+    display: block;
+}
+.ranking-conquistas {
+    font-size: 12px;
+    margin-top: 2px;
+}
+.ranking-score {
+    font-weight: bold;
+    color: var(--cor-destaque);
+    font-size: 16px;
+    background: rgba(0,0,0,0.3);
+    padding: 5px 10px;
+    border-radius: 20px;
+}
   </style>
 </head>
 <body>
@@ -4183,12 +4240,39 @@ function toggleOnboardOption(element) {
     }
 }
 
+let searchInterval = null; // Variável global para controlar o intervalo
+
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
-    // Feedback imediato de carregamento
-    lista.innerHTML = "<p style='text-align:center; margin-top:20px; opacity:0.7;'>⏳ Buscando os profissionais mais próximos de você...</p>";
+    
+    // --- LÓGICA DE MENSAGENS ANIMADAS (Alteração 6) ---
+    const mensagensBusca = [
+        "🔍 Localizando profissionais próximos...",
+        "⭐ Verificando reputação...",
+        "📅 Checando horários disponíveis...",
+        "✂️ Filtrando melhores serviços...",
+        "🚀 Carregando perfis..."
+    ];
+    let msgIndex = 0;
 
-    // Tenta obter localização em paralelo (sem travar se falhar rápido)
+    // Limpa intervalo anterior se existir
+    if (searchInterval) clearInterval(searchInterval);
+
+    // Função interna para atualizar o texto
+    const atualizarTextoBusca = () => {
+        lista.innerHTML = `
+            <div style='text-align:center; margin-top:40px; opacity:0.8;'>
+                <div class="spinner" style="margin: 0 auto 15px auto;"></div>
+                <p id="textoBuscaAnimado" style="font-size:14px; transition: opacity 0.5s;">${mensagensBusca[msgIndex]}</p>
+            </div>`;
+        msgIndex = (msgIndex + 1) % mensagensBusca.length;
+    };
+
+    atualizarTextoBusca(); // Chama a primeira vez
+    searchInterval = setInterval(atualizarTextoBusca, 2000); // Troca a cada 2 segundos
+    // ---------------------------------------------------
+
+    // Tenta obter localização em paralelo
     if (!localizacaoCliente) { 
         try { await obterLocalizacaoAtual(); } catch(e) {} 
     }
@@ -4196,7 +4280,6 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     if (barbeirosListener) barbeirosListener(); 
     
     let tipoParaBuscar = 'barbeiro'; 
-
     if (isGuest) {
         tipoParaBuscar = localStorage.getItem('onboard_tipo_uso') || 'barbeiro';
         if (tipoParaBuscar === 'cliente' || tipoParaBuscar === 'profissional') tipoParaBuscar = 'barbeiro';
@@ -4207,6 +4290,12 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     let query = db.collection("usuarios").where("tipo", "==", tipoParaBuscar);
     
     barbeirosListener = query.onSnapshot(snap => {
+        // PARA A ANIMAÇÃO ASSIM QUE O SNAPSHOT CHEGA
+        if (searchInterval) {
+            clearInterval(searchInterval);
+            searchInterval = null;
+        }
+
         if (snap.empty) {
              let nomeCategoria = "nesta categoria";
              if(tipoParaBuscar === 'barbeiro') nomeCategoria = "Barbearias";
@@ -4233,7 +4322,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             barbeiros.push(b);
         });
 
-        // ORDENAÇÃO INTELIGENTE
+        // ORDENAÇÃO
         barbeiros.sort((a, b) => {
             if (a.isFavorito && !b.isFavorito) return -1;
             if (!a.isFavorito && b.isFavorito) return 1;
@@ -4253,8 +4342,6 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             return a.distancia - b.distancia;
         });
         
-        // --- OTIMIZAÇÃO DE PERFORMANCE (BUFFER) ---
-        // Acumula todo o HTML em uma string gigante antes de jogar na tela
         let htmlBuffer = "";
         
         barbeiros.forEach(b => {
@@ -4292,7 +4379,6 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
             const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
 
-            // Adiciona ao buffer em vez de desenhar na tela
             htmlBuffer += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon} ${favoriteBtn} ${shareBtn}
@@ -4308,7 +4394,6 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
               </div>`;
         });
 
-        // INJEÇÃO ÚNICA (Muito mais rápido)
         lista.innerHTML = htmlBuffer;
     });
 }
@@ -6378,7 +6463,6 @@ function resgatarPontos() {
 function abrirModalVip() {
     const container = document.getElementById('vipContentContainer');
     if (isVipAtivo(perfil)) {
-        // (Código existente para vip ativo)
         const dataExpiracao = perfil.vipExpirationDate.toDate().toLocaleDateString('pt-BR');
         container.innerHTML = `
             <div class="vip-glow" style="padding: 20px; border-radius: 15px; text-align: center;">
@@ -6390,12 +6474,11 @@ function abrirModalVip() {
                         <li>Desconto de 10% em todos os serviços.</li>
                         <li>O dobro de pontos de fidelidade.</li>
                         <li>Símbolo de prestígio 👑 no chat global.</li>
-                    </ul>
+                        <li><strong>🎰 4 Giros Diários na Roleta!</strong></li> </ul>
                 </div>
             </div>
         `;
     } else {
-        // (Código atualizado com preço 29.90/mês)
         container.innerHTML = `
             <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque);">💎 Torne-se um Membro VIP!</h3>
@@ -6407,7 +6490,7 @@ function abrirModalVip() {
                         <li><strong>10% de Desconto</strong> em todos os serviços.</li>
                         <li><strong>Dobro de Pontos</strong> de fidelidade.</li>
                         <li><strong>Status de Prestígio</strong> com um ícone 👑 no chat.</li>
-                    </ul>
+                        <li><strong>🎰 4 Giros Diários</strong> na Roleta!</li> </ul>
                 </div>
                 <button onclick="assinarVip()" style="margin-top: 15px;">💎 Assinar Agora</button>
             </div>
@@ -9030,119 +9113,174 @@ async function abrirModalGerenciarUsuario(uid) {
             throw new Error(errorData.message || `Erro ${response.status}`);
         }
         const { auth: userRecord, firestore: u } = await response.json();
-        const creationTime = new Date(userRecord.metadata.creationTime).toLocaleDateString('pt-BR');
-        const lastSignInTime = new Date(userRecord.metadata.lastSignInTime).toLocaleString('pt-BR');
 
-        // --- LÓGICA DE MOLDURAS (Mantida) ---
+        // Lógica de Molduras (Mantida)
         let moldurasHtml = '';
         const moldurasAdquiridas = u.moldurasAdquiridas || [];
         const molduraEquipada = u.molduraSelecionada;
-        const checkProAccess = (key) => {
-            if (!isProAtivo(u) || !u.proTier) return false;
-            const tier = u.proTier;
-            const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
-            const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
-            const idxUser = niveis.indexOf(tier);
-            const idxMoldura = moldurasOrdem.indexOf(key);
-            return (idxUser >= 0 && idxMoldura >= 0 && idxUser >= idxMoldura);
-        };
-
+        
         Object.keys(MOLDURAS).forEach(key => {
             const m = MOLDURAS[key];
-            const isDefinitiva = moldurasAdquiridas.includes(key);
-            const isTemporaria = !isDefinitiva && checkProAccess(key);
-            const isEquipada = molduraEquipada === key;
-            if (isDefinitiva || isTemporaria) {
-                const tipoBadge = isDefinitiva ? '<span style="background:#27ae60; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">DEFINITIVA</span>' : '<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px;">TEMPORÁRIA (PRO)</span>';
-                const equipadaBadge = isEquipada ? '✅ Em uso' : '';
-                moldurasHtml += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cor-botoes); padding:8px; margin-bottom:5px; border-radius:8px; border: 1px solid var(--cor-borda);">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <div class="${m.classe}" style="width:30px; height:30px; border-radius:50%;"></div>
-                            <div><div style="font-weight:bold; font-size:14px;">${m.nome} ${equipadaBadge}</div>${tipoBadge}</div>
-                        </div>
-                        <button onclick="adminRemoverMoldura('${uid}', '${key}', ${isDefinitiva})" style="background:#c0392b; font-size:12px; padding:5px 10px; width:auto;">Remover</button>
-                    </div>`;
+            if (moldurasAdquiridas.includes(key) || u.proAtivo) { // Simplificado para visualização
+                moldurasHtml += `<div style="font-size:12px; margin-bottom:2px;">• ${m.nome} <button onclick="adminRemoverMoldura('${uid}', '${key}', true)" style="padding:2px 5px; font-size:10px; background:#c0392b;">Remover</button></div>`;
             }
         });
         if (moldurasHtml === '') moldurasHtml = '<p style="font-size:12px; opacity:0.7;">Sem molduras.</p>';
 
-        // --- MONTA O HTML DO MODAL (COM OS 2 SALDOS) ---
         const container = document.getElementById('adminGerenciarConteudo');
         container.innerHTML = `
-            <h4 style="word-break: break-all;">${u.nome}</h4>
+            <h4 style="word-break: break-all;">${u.nome} (${u.tipo})</h4>
             <p style="font-size: 11px; opacity: 0.7;">UID: ${uid}</p>
             
             <div class="popup-section">
-                <p><strong>💰 Gerenciar Financeiro:</strong></p>
+                <p><strong>💰 Financeiro:</strong></p>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <input id="adminModificarSaldo" type="number" placeholder="Saldo Real" style="margin:0;">
+                    <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Ok</button>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <input id="adminModificarSaldoDigital" type="number" placeholder="Moedas Digitais" style="margin:0;">
+                    <button onclick="adminModificarSaldoDigital('${uid}')" style="width:auto; background: #0072ff;">Ok</button>
+                </div>
+            </div>
+
+            <div class="popup-section">
+                <p><strong>🎰 Giros da Roleta (Hoje):</strong></p>
+                <p style="font-size:12px;">Realizados: ${u.girosRealizadosHoje || 0} (Negativo = Crédito)</p>
+                <div style="display:flex; gap:5px;">
+                    <input id="adminInputGiros" type="number" placeholder="Qtd de Giros" style="margin:0;">
+                    <button onclick="adminAdicionarGiros('${uid}')" style="width:auto; background: #2ecc71;">Adicionar</button>
+                    <button onclick="adminRemoverGiros('${uid}')" style="width:auto; background: #e74c3c;">Remover</button>
+                </div>
+            </div>
+
+            <div class="popup-section">
+                <p><strong>👤 Tipo de Conta:</strong></p>
+                <div style="display:flex; gap:5px;">
+                    <select id="adminSelectTipoUsuario" style="margin:0; padding:8px;">
+                        <option value="cliente" ${u.tipo === 'cliente' ? 'selected' : ''}>Cliente</option>
+                        <option value="barbeiro" ${u.tipo === 'barbeiro' ? 'selected' : ''}>Barbeiro</option>
+                        <option value="manicure_pedicure" ${u.tipo === 'manicure_pedicure' ? 'selected' : ''}>Manicure/Pedicure</option>
+                        <option value="designer_cilios" ${u.tipo === 'designer_cilios' ? 'selected' : ''}>Designer de Cílios</option>
+                        <option value="admin" ${u.tipo === 'admin' ? 'selected' : ''}>Administrador</option>
+                    </select>
+                    <button onclick="adminSalvarNovoTipo('${uid}')" style="width:auto;">Salvar</button>
+                </div>
+            </div>
+
+            <div class="popup-section">
+                <p><strong>💎 Status VIP / PRO:</strong></p>
                 
-                <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:10px;">
-                    <p style="margin:0 0 5px 0;">💶 Saldo Serviços: <strong>R$ ${(u.saldo || 0).toFixed(2)}</strong></p>
-                    <div style="display:flex; gap:5px;">
-                        <input id="adminModificarSaldo" type="number" placeholder="+/- Valor" style="margin:0;">
-                        <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
-                    </div>
+                <div style="margin-bottom:10px; padding-bottom:5px; border-bottom:1px dashed #444;">
+                    <span style="margin-right:10px;">VIP: ${isVipAtivo(u) ? '✅' : '❌'}</span>
+                    ${isVipAtivo(u) 
+                        ? `<button onclick="adminToggleVip('${uid}', false)" style="padding:4px 8px; font-size:12px; background:#c0392b;">Remover</button>` 
+                        : `<button onclick="adminToggleVip('${uid}', true)" style="padding:4px 8px; font-size:12px;">Dar VIP</button>`
+                    }
                 </div>
 
-                <div style="background:rgba(0, 198, 255, 0.1); padding:10px; border-radius:8px; border:1px solid rgba(0, 198, 255, 0.3);">
-                    <p style="margin:0 0 5px 0; color:#00c6ff;">💎 Saldo Digital: <strong>R$ ${(u.saldoDigital || 0).toFixed(2)}</strong></p>
-                    <div style="display:flex; gap:5px;">
-                        <input id="adminModificarSaldoDigital" type="number" placeholder="+/- Moedas" style="margin:0;">
-                        <button onclick="adminModificarSaldoDigital('${uid}')" style="width:auto; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff);">Aplicar</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="popup-section">
-                <button onclick="document.getElementById('adminDadosCadastroOculto').classList.toggle('hidden')">📋 Ver Dados Cadastrais</button>
-                <div id="adminDadosCadastroOculto" class="hidden" style="margin-top:10px; padding:10px; background:var(--cor-fundo);">
-                    <p>Email: ${u.email}</p><p>Tel: ${u.telefone}</p><p>Local: ${u.cidade}/${u.estado}</p>
-                    <p>End: ${u.rua}, ${u.numero}</p>
-                </div>
-            </div>
-
-            <div class="popup-section">
-                <label>Nome:</label><input id="adminNovoNome" type="text" value="${u.nome}">
-                <label>Telefone:</label><input id="adminNovoTelefone" type="tel" value="${u.telefone || ''}">
-                <label>Estado:</label><input id="adminNovoEstado" value="${u.estado || ''}" oninput="this.value = formatarNomeProprio(this.value)">
-                <label>Cidade:</label><input id="adminNovoCidade" value="${u.cidade || ''}" oninput="this.value = formatarNomeProprio(this.value)">
-                <button onclick="adminSalvarAlteracoesUsuario('${uid}')" style="margin-top: 5px;">💾 Salvar Dados</button>
-            </div>
-
-            <div class="popup-section"><p><strong>Molduras:</strong></p>${moldurasHtml}</div>
-
-            <div class="popup-section">
-                <p><strong>VIP / PRO / Pontos:</strong></p>
-                <p>VIP: ${isVipAtivo(u) ? '✅' : '❌'} | PRO: ${isProAtivo(u) ? `✅ (${u.proTier})` : '❌'}</p>
-                ${isVipAtivo(u) ? `<button onclick="adminToggleVip('${uid}', false)" style="background:#c0392b;">Remover VIP</button>` : `<button onclick="adminToggleVip('${uid}', true)">Conceder VIP</button>`}
-                <div style="margin-top:5px;"></div>
-                ${isProAtivo(u) ? `<button onclick="adminTogglePro('${uid}', false)" style="background:#c0392b;">Remover PRO</button>` : `<button onclick="adminTogglePro('${uid}', true)" style="background:#00c6ff; color:black;">Conceder PRO (Ouro)</button>`}
-                
-                <hr style="border-color:#444; margin:10px 0;">
                 <div style="display:flex; gap:5px; align-items:center;">
-                    <span>Pontos: ${u.pontosFidelidade || 0}</span>
-                    <input id="adminModificarPontos" type="number" placeholder="+/-" style="margin:0; width:60px;">
-                    <button onclick="adminModificarPontos('${uid}')" style="width:auto;">Ok</button>
+                    <span>PRO: ${isProAtivo(u) ? `✅ (${u.proTier})` : '❌'}</span>
+                    ${isProAtivo(u) 
+                        ? `<button onclick="adminTogglePro('${uid}', false)" style="padding:4px 8px; font-size:12px; background:#c0392b; margin-left:auto;">Remover</button>`
+                        : `
+                        <select id="adminConcederProTier" style="margin:0; width:80px; padding:4px; font-size:12px;">
+                            <option value="tier1">Bronze</option>
+                            <option value="tier2">Prata</option>
+                            <option value="tier3">Ouro</option>
+                            <option value="tier4">Diamante</option>
+                        </select>
+                        <button onclick="adminTogglePro('${uid}', true)" style="padding:4px 8px; font-size:12px; background:#00c6ff; color:black;">Dar PRO</button>
+                        `
+                    }
                 </div>
             </div>
 
             <div class="popup-section">
+                <p><strong>⚙️ Outros:</strong></p>
                 <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Bloquear Loja' : 'Liberar Loja'}</button>
-                <div style="margin-top:10px;">
-                   <button onclick="adminMudarTipoUsuario('${uid}', 'barbeiro')" style="width:48%;">Virar Barbeiro</button>
-                   <button onclick="adminMudarTipoUsuario('${uid}', 'cliente')" style="width:48%;">Virar Cliente</button>
-                </div>
+                <button onclick="adminToggleUserStatus('${uid}', ${!userRecord.disabled})" style="margin-top:5px; background:${userRecord.disabled ? '#2ecc71' : '#e74c3c'};">${userRecord.disabled ? 'Reativar Conta' : 'Banir/Desativar'}</button>
             </div>
 
-            <button onclick="fecharModal(event)" style="margin-top: 20px;">❌ Fechar</button>
+            <button onclick="fecharModalAtual()" style="margin-top: 20px; background:#555;">❌ Fechar</button>
         `;
 
         fecharTodosOsModais();
         abrirModal('modalGerenciarUsuario');
     } catch (error) {
         fecharTodosOsModais();
-        console.error(error);
         exibirPopup("Erro ao carregar usuário: " + error.message);
+    }
+}
+
+// (Alteração 1) Adicionar Giros (Decrementa o contador de realizados, criando crédito)
+async function adminAdicionarGiros(uid) {
+    const qtde = parseInt(document.getElementById('adminInputGiros').value);
+    if (isNaN(qtde) || qtde <= 0) return exibirPopup("Digite uma quantidade válida.");
+
+    exibirAguarde("Adicionando giros...");
+    try {
+        // Subtrai dos realizados. Se user fez 1 e subtraio 5, fica -4.
+        // Se o limite é 1, 1 - (-4) = 5 giros disponíveis.
+        await db.collection('usuarios').doc(uid).update({
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde),
+            ultimoGiroRoleta: new Date().toDateString() // Garante que vale para hoje
+        });
+        fecharTodosOsModais();
+        exibirPopup("Sucesso", `${qtde} giros adicionados!`);
+        abrirModalGerenciarUsuario(uid); 
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro: " + e.message);
+    }
+}
+
+// (Alteração 1) Remover Giros (Aumenta o contador de realizados)
+async function adminRemoverGiros(uid) {
+    const qtde = parseInt(document.getElementById('adminInputGiros').value);
+    if (isNaN(qtde) || qtde <= 0) return exibirPopup("Digite uma quantidade válida.");
+
+    exibirAguarde("Removendo giros...");
+    try {
+        await db.collection('usuarios').doc(uid).update({
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(qtde),
+            ultimoGiroRoleta: new Date().toDateString()
+        });
+        fecharTodosOsModais();
+        exibirPopup("Sucesso", `${qtde} giros removidos!`);
+        abrirModalGerenciarUsuario(uid); 
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro: " + e.message);
+    }
+}
+
+// (Alteração 4) Salvar Novo Tipo de Usuário
+async function adminSalvarNovoTipo(uid) {
+    const novoTipo = document.getElementById('adminSelectTipoUsuario').value;
+    if (!confirm(`Alterar este usuário para "${novoTipo}"? O app dele será reiniciado.`)) return;
+
+    exibirAguarde("Alterando tipo...");
+    try {
+        let updates = { 
+            tipo: novoTipo,
+            forceReloadTimestamp: firebase.firestore.FieldValue.serverTimestamp() // Força reload
+        };
+        
+        // Limpa campos se virar cliente
+        if (novoTipo === 'cliente') {
+            updates.listaServicos = [];
+            updates.agenda = {};
+            updates.vagaImediata = false;
+        }
+
+        await db.collection('usuarios').doc(uid).update(updates);
+        fecharTodosOsModais();
+        exibirPopup("Sucesso", `Usuário agora é ${novoTipo}.`);
+        abrirModalGerenciarUsuario(uid);
+    } catch (error) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao alterar tipo: " + error.message);
     }
 }
 
@@ -9925,28 +10063,78 @@ function abrirModalConquistasBarbeiro() {
 async function abrirModalRankingUnificado() {
     abrirModal('modalRankingUnificado');
     const container = document.getElementById('listaRankingUnificado');
-    container.innerHTML = '<p>Carregando...</p>';
+    container.innerHTML = `
+        <div style="text-align:center; padding: 20px;">
+            <div class="spinner" style="margin: 0 auto;"></div>
+            <p>Carregando os melhores...</p>
+        </div>`;
     
     try {
+        // Busca clientes e profissionais (Limitando a 30 de cada para não pesar)
         const [clientesSnap, profissionaisSnap] = await Promise.all([
-            db.collection('usuarios').where('tipo', '==', 'cliente').orderBy('cortesRealizados', 'desc').limit(50).get(),
-            db.collection('usuarios').where('tipo', 'in', ['barbeiro', 'manicure_pedicure', 'designer_cilios']).orderBy('clientesAtendidos', 'desc').limit(50).get()
+            db.collection('usuarios').where('tipo', '==', 'cliente').orderBy('cortesRealizados', 'desc').limit(30).get(),
+            db.collection('usuarios').where('tipo', 'in', ['barbeiro', 'manicure_pedicure', 'designer_cilios']).orderBy('clientesAtendidos', 'desc').limit(30).get()
         ]);
         
         let ranking = [];
-        clientesSnap.forEach(doc => ranking.push({ nome: doc.data().nome, contagem: doc.data().cortesRealizados || 0, tipo: 'cliente' }));
-        profissionaisSnap.forEach(doc => ranking.push({ nome: doc.data().nome, contagem: doc.data().clientesAtendidos || 0, tipo: 'profissional' }));
+        
+        // Processa Clientes
+        clientesSnap.forEach(doc => {
+            const d = doc.data();
+            ranking.push({ 
+                uid: doc.id,
+                nome: d.nome, 
+                foto: d.fotoPerfil || 'https://via.placeholder.com/50',
+                contagem: d.cortesRealizados || 0, 
+                tipo: 'cliente',
+                conquistas: d.conquistas || []
+            });
+        });
 
+        // Processa Profissionais
+        profissionaisSnap.forEach(doc => {
+            const d = doc.data();
+            ranking.push({ 
+                uid: doc.id,
+                nome: d.nome, 
+                foto: d.logo_url || d.fotoPerfil || 'https://via.placeholder.com/50', // Logo ou foto
+                contagem: d.clientesAtendidos || 0, 
+                tipo: 'profissional',
+                conquistas: d.conquistas || []
+            });
+        });
+
+        // Ordena geral
         ranking.sort((a, b) => b.contagem - a.contagem);
         
         container.innerHTML = "";
-        ranking.slice(0, 100).forEach((item, i) => {
-            const icone = item.tipo === 'cliente' ? '🙋' : '💼';
-            container.innerHTML += `<div class="ranking-item"><span>${i + 1}. ${icone} ${item.nome}</span><span>${item.contagem}</span></div>`;
+        
+        if (ranking.length === 0) {
+            container.innerHTML = "<p style='text-align:center'>Ranking vazio.</p>";
+            return;
+        }
+
+        ranking.slice(0, 50).forEach((item, i) => {
+            // Pega a melhor conquista para exibir ao lado do nome (opcional)
+            let medalhaHtml = obterIconeMaiorConquista(item.conquistas, item.tipo);
+            const tipoEmoji = item.tipo === 'cliente' ? '🙋' : '💈';
+            
+            container.innerHTML += `
+                <div class="ranking-novo-item" onclick="abrirPerfilUsuarioChat('${item.uid}')">
+                    <div class="ranking-posicao">#${i + 1}</div>
+                    <img src="${item.foto}" class="ranking-foto" onerror="this.src='https://via.placeholder.com/50'">
+                    <div class="ranking-info">
+                        <span class="ranking-nome" style="color: ${item.tipo === 'profissional' ? 'var(--cor-destaque)' : '#fff'}">
+                            ${item.nome} ${tipoEmoji}
+                        </span>
+                        <div class="ranking-conquistas">${medalhaHtml}</div>
+                    </div>
+                    <div class="ranking-score">${item.contagem}</div>
+                </div>`;
         });
 
     } catch (e) { 
-        container.innerHTML = '<p>Erro ao carregar ranking.</p>'; 
+        container.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar ranking.</p>'; 
         console.error(e);
     }
 }
