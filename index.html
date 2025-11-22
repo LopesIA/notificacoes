@@ -2976,18 +2976,18 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 </div>
 
 <div id="modalBarbeariasCliente" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💈 Profissionais disponíveis</h3>
-    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por profissional ou cidade...">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💈 Profissionais disponíveis</h3>
+    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por profissional ou cidade...">
     
     <button id="btnMostrarFavoritos" 
             onclick="carregarBarbeirosPrincipal('listaBarbeiros', true)" 
             class="btn-favoritos">
         ⭐ Mostrar Favoritos
     </button>
-        <div id='listaBarbeiros' class="scrollable-list"></div>
-    <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
+        <div id='listaBarbeiros' class="scrollable-list"></div>
+    <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
 </div>
 
 <div id="modalHistoricoCliente" class="modal" onclick="fecharModal(event)">
@@ -6117,8 +6117,7 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
 
     // 4. Cria o documento de avaliação
     t.set(db.collection("avaliacoes").doc(), {
-      barbeiroUid, clienteUid: auth.
-currentUser.uid, nota,
+      barbeiroUid, clienteUid: auth.currentUser.uid, nota,
       comentario: comentario || "Sem comentário",
       ts: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -11649,8 +11648,7 @@ async function responderConfirmacaoEntrega(pedidoId, aceito) {
 
                 let taxaAplicada = TAXA; // Default fee
                 if (isProAtivo(vendedorData) && vendedorData.proTier && PRECOS_PRO[vendedorData.proTier]) {
-                    taxaAplicada = PRECOS_PRO[vendedor
-Data.proTier].taxa;
+                    taxaAplicada = PRECOS_PRO[vendedorData.proTier].taxa;
                     console.log(`Taxa PRO ${vendedorData.proTier} aplicada: ${taxaAplicada * 100}%`);
                 } else {
                     console.log(`Taxa padrão aplicada: ${taxaAplicada * 100}%`);
