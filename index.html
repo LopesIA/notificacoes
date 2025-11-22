@@ -13461,36 +13461,77 @@ async function girarRoleta() {
         else if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
             tituloPopup = "🎁 Item Temporário!";
             const tipoItem = premioGanho.tipo === 'moldura' ? 'Moldura' : 'Estilo de Chat';
-            corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por 24 horas! Ele foi desbloqueado na sua lista.`;
             
-            const expiraEm = new Date();
-            expiraEm.setHours(expiraEm.getHours() + 24);
+            // --- LÓGICA DE ACUMULAR TEMPO (MOLDURA/BALÃO) ---
+            let baseDate = new Date(); // Começa com agora
+            const chaveObjeto = premioGanho.tipo === 'moldura' ? `moldura_${premioKey}` : `balao_${premioKey}`;
             
-            // SALVA O ITEM DE FORMA INDIVIDUAL (SEM EQUIPAR)
+            // Verifica se já existe um prêmio desse tipo ativo
+            if (perfil.premiosTemporarios && perfil.premiosTemporarios[chaveObjeto]) {
+                let existingDate = perfil.premiosTemporarios[chaveObjeto];
+                // Converte Timestamp do Firebase para Date se necessário
+                if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
+                
+                // Se a data existente for no futuro, usamos ela como base (ACUMULA)
+                if (existingDate > new Date()) {
+                    baseDate = existingDate;
+                }
+            }
+
+            // Adiciona 24 horas ao tempo base (seja ele agora ou o futuro acumulado)
+            baseDate.setHours(baseDate.getHours() + 24);
+            
+            corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por +24 horas! (Acumulado)`;
+            
+            // Salva no Firestore
             if (premioGanho.tipo === 'moldura') {
-                // Usa a chave moldura_KEY para não conflitar
-                updates[`premiosTemporarios.moldura_${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
+                updates[`premiosTemporarios.moldura_${premioKey}`] = firebase.firestore.Timestamp.fromDate(baseDate);
             }
             if (premioGanho.tipo === 'balao') {
-                // Usa a chave balao_KEY para não conflitar
-                updates[`premiosTemporarios.balao_${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
+                updates[`premiosTemporarios.balao_${premioKey}`] = firebase.firestore.Timestamp.fromDate(baseDate);
             }
-            // NOTA: Removi as linhas que faziam o auto-equip (updates.molduraSelecionada = ...)
         } 
         else if (premioGanho.tipo === 'caixa') {
             tituloPopup = "🎁 CAIXA MISTERIOSA!";
+            
             if (perfil.tipo !== 'cliente') {
-                const exp = new Date(); 
-                exp.setHours(exp.getHours() + 24); 
-                updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(exp);
+                // --- PRÊMIO PROFISSIONAL: BOOST ---
+                let baseDate = new Date();
+                if (perfil.boostExpiracao) {
+                    let existingDate = perfil.boostExpiracao;
+                    if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
+                    // Se já tem boost ativo, acumula em cima dele
+                    if (existingDate > new Date()) {
+                        baseDate = existingDate;
+                    }
+                }
+                // Soma +24 horas
+                baseDate.setHours(baseDate.getHours() + 24);
+                
+                updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(baseDate);
                 updates.ultimoBoostComprado = firebase.firestore.FieldValue.serverTimestamp();
-                corpoPopup = "Você ganhou 24 horas de Perfil Turbinado (Topo da Lista)!";
+                corpoPopup = "Você ganhou +24 horas de Perfil Turbinado (Acumulado)!";
+                
             } else {
-                const exp = new Date();
-                exp.setDate(exp.getDate() + 5); 
+                // --- PRÊMIO CLIENTE: VIP ---
+                let baseDate = new Date();
+                
+                // Verifica se já é VIP (com data de expiração)
+                if (perfil.vip && perfil.vipExpirationDate) {
+                    let existingDate = perfil.vipExpirationDate;
+                    if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
+                    // Se já é VIP e não expirou, acumula
+                    if (existingDate > new Date()) {
+                        baseDate = existingDate;
+                    }
+                }
+                
+                // Soma +5 dias
+                baseDate.setDate(baseDate.getDate() + 5);
+                
                 updates.vip = true; 
-                updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(exp);
-                corpoPopup = "Incrível! Você ganhou 5 Dias de VIP Grátis!";
+                updates.vipExpirationDate = firebase.firestore.Timestamp.fromDate(baseDate);
+                corpoPopup = "Incrível! Você ganhou +5 Dias de VIP Grátis (Acumulado)!";
             }
         }
 
