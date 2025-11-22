@@ -2553,6 +2553,162 @@ body {
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
+
+/* --- ASAS DO ADMIN (ATUALIZADO: BRILHO BRANCO NO BLACK) --- */
+
+/* 1. SUPREME BLACK (PRETA) */
+.avatar-wrapper.admin_black .chat-user-photo, 
+.avatar-wrapper.admin_black .perfil-foto-grande,
+.avatar-wrapper.admin_black .avatar-frame-admin-black {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Borda mais clara */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.9);
+}
+.avatar-wrapper.admin_black .coroa-topo::after {
+    background: linear-gradient(to bottom, #555, #000);
+}
+/* Asa Preta com Brilho Branco ao redor */
+.avatar-wrapper.admin_black::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, #333 20%, #000 50%, #333 80%, rgba(0,0,0,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-sombria-flutuar 3s ease-in-out infinite;
+    /* O SEGREDO: Sombra branca para destacar no fundo preto */
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)); 
+}
+
+/* 2. SUPREME RED (VERMELHA) */
+.avatar-wrapper.admin_red .chat-user-photo, 
+.avatar-wrapper.admin_red .perfil-foto-grande,
+.avatar-wrapper.admin_red .avatar-frame-admin-red {
+    background: transparent;
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.9);
+}
+.avatar-wrapper.admin_red .coroa-topo::after {
+    background: linear-gradient(to bottom, #ff6b6b, #c0392b);
+}
+.avatar-wrapper.admin_red::before {
+    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
+    background: linear-gradient(90deg, rgba(231,76,60,0) 0%, rgba(231,76,60,0.8) 20%, rgba(192,57,43,1) 50%, rgba(231,76,60,0.8) 80%, rgba(231,76,60,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    animation: asa-fogo-flutuar 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px red);
+}
+
+/* --- BALÕES DE CHAT HIERÁRQUICOS --- */
+
+/* Base */
+.chat-message.custom-bubble {
+    position: relative;
+    transition: all 0.3s;
+    z-index: 1;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8); 
+}
+
+/* 1. BRONZE (Simples) */
+.chat-message.bubble-bronze {
+    border: 1px solid #8c5a2b;
+    background: #2e2015; /* Marrom escuro flat */
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* 2. PRATA (Metálico) */
+.chat-message.bubble-prata {
+    border: 1px solid #a0a0a0;
+    background: linear-gradient(145deg, #333, #1a1a1a); /* Gradiente leve */
+    box-shadow: 0 0 4px rgba(192, 192, 192, 0.2);
+}
+
+/* 3. OURO (Brilho Rico) */
+.chat-message.bubble-ouro {
+    border: 1px solid #ffd700;
+    background: linear-gradient(135deg, #423102, #0c0c0c);
+    /* Animação de pulsação na sombra */
+    animation: pulse-gold-border 2s infinite alternate;
+}
+
+/* 4. DIAMANTE (Borda Animada + Coroa) */
+.chat-message.bubble-diamante {
+    background: #050505; 
+    color: #e0ffff; 
+    text-shadow: 0 0 3px #00c6ff;
+    border: none; /* Borda feita pelo ::before */
+    overflow: visible !important; /* Pra coroa sair */
+    margin-top: 12px !important; /* Espaço pra coroa não cortar */
+}
+.chat-message.bubble-diamante::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    /* Gradiente que se move */
+    background: linear-gradient(60deg, #00c6ff, #0072ff, #000, #000, #00c6ff);
+    background-size: 300% 300%;
+    animation: border-travel 3s linear infinite;
+}
+.chat-message.bubble-diamante::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    animation: float-crown 2s ease-in-out infinite;
+}
+
+/* ADMIN BLACK (Borda Animada + Coroa) */
+.chat-message.bubble-admin-black {
+    background: #000; 
+    color: #fff; 
+    text-shadow: 0 0 3px #fff;
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-black::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    /* Preto e Branco viajando */
+    background: linear-gradient(60deg, #ffffff, #333, #000, #000, #ffffff);
+    background-size: 300% 300%;
+    animation: border-travel 3s linear infinite;
+}
+.chat-message.bubble-admin-black::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: grayscale(100%); /* Coroa prateada/escura */
+    animation: float-crown 2s ease-in-out infinite;
+}
+
+/* ADMIN RED (Borda Animada + Coroa) */
+.chat-message.bubble-admin-red {
+    background: #1a0000; 
+    color: #ffcccc; 
+    text-shadow: 0 0 3px #ff0000;
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-red::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    /* Vermelho e Laranja viajando */
+    background: linear-gradient(60deg, #ff0000, #ff4500, #2c0000, #2c0000, #ff0000);
+    background-size: 300% 300%;
+    animation: border-travel 2s linear infinite;
+}
+.chat-message.bubble-admin-red::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: sepia(100%) saturate(1000%) hue-rotate(-50deg); /* Coroa avermelhada */
+    animation: float-crown 2s ease-in-out infinite;
+}
+
+/* ANIMAÇÕES */
+@keyframes border-travel {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes float-crown {
+    0%, 100% { transform: translateY(0) rotate(5deg); }
+    50% { transform: translateY(-3px) rotate(-5deg); }
+}
   </style>
 </head>
 <body>
@@ -10500,33 +10656,23 @@ function verificarAcessoBalao(key) {
     if (b.adminOnly) {
         return perfil.tipo === 'admin' ? { acesso: true, tipo: 'permanente' } : { acesso: false, tipo: 'bloqueado_admin' };
     }
+    if (meusBaloes.includes(key)) return { acesso: true, tipo: 'permanente' };
 
-    // 1. Permanente (Comprado)
-    if (meusBaloes.includes(key)) {
-        return { acesso: true, tipo: 'permanente' };
-    }
-
-    // 2. Temporário (Roleta) - CORREÇÃO AQUI
-    // Agora verifica a chave composta 'balao_key'
+    // VERIFICAÇÃO CORRETA DO PRÊMIO
     if (perfil.premiosTemporarios && perfil.premiosTemporarios[`balao_${key}`]) {
         const validade = perfil.premiosTemporarios[`balao_${key}`].toDate();
-        if (validade > new Date()) {
-            return { acesso: true, tipo: 'temporario_roleta', validade };
-        }
+        if (validade > new Date()) return { acesso: true, tipo: 'temporario_roleta', validade };
     }
-
-    // 3. Temporário (PRO)
+    
     if (isProAtivo(perfil) && perfil.proTier) {
-        const tier = perfil.proTier;
-        const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
-        const baloesOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
-        const idxUser = niveis.indexOf(tier);
-        const idxBalao = baloesOrdem.indexOf(key);
-        if (idxUser >= 0 && idxBalao >= 0 && idxUser >= idxBalao) {
-            return { acesso: true, tipo: 'temporario_pro' };
-        }
+        // ... (lógica pro mantida) ...
+         const tier = perfil.proTier;
+         const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
+         const baloesOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
+         if (niveis.indexOf(tier) >= baloesOrdem.indexOf(key) && niveis.indexOf(tier) > -1) {
+             return { acesso: true, tipo: 'temporario_pro' };
+         }
     }
-
     return { acesso: false, tipo: 'nenhum' };
 }
 
@@ -13527,7 +13673,7 @@ async function girarRoleta() {
     btnGirar.disabled = true; 
     btnGirar.textContent = "Girando...";
 
-    // TABELA DE PRÊMIOS (16 ITENS)
+    // TABELA DE PRÊMIOS (20 ITENS - VISUAL SINCRONIZADO)
     const arrayPremios = [
         { tipo: 'ponto', valor: 1 },           // 0
         { tipo: 'moldura', key: 'bronze', nome: 'Bronze' }, // 1
@@ -13592,20 +13738,21 @@ async function girarRoleta() {
         else if (premioGanho.tipo === 'moldura' || premioGanho.tipo === 'balao') {
             tituloPopup = "🎁 Item Temporário!";
             const tipoItem = premioGanho.tipo === 'moldura' ? 'Moldura' : 'Estilo de Chat';
-            corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por 24 horas!`;
+            corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por 24 horas! Ele foi desbloqueado na sua lista.`;
             
             const expiraEm = new Date();
             expiraEm.setHours(expiraEm.getHours() + 24);
             
-            // --- CORREÇÃO CRÍTICA: USA PREFIXO PARA SALVAR ---
+            // SALVA O ITEM DE FORMA INDIVIDUAL (SEM EQUIPAR)
             if (premioGanho.tipo === 'moldura') {
+                // Usa a chave moldura_KEY para não conflitar
                 updates[`premiosTemporarios.moldura_${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
-                updates.molduraSelecionada = premioKey; // Equipa
             }
             if (premioGanho.tipo === 'balao') {
+                // Usa a chave balao_KEY para não conflitar
                 updates[`premiosTemporarios.balao_${premioKey}`] = firebase.firestore.Timestamp.fromDate(expiraEm);
-                updates.balaoSelecionado = premioKey; // Equipa
             }
+            // NOTA: Removi as linhas que faziam o auto-equip (updates.molduraSelecionada = ...)
         } 
         else if (premioGanho.tipo === 'caixa') {
             tituloPopup = "🎁 CAIXA MISTERIOSA!";
@@ -13628,8 +13775,11 @@ async function girarRoleta() {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
             
             exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
-                // Atualiza a página instantaneamente para refletir o prêmio equipado
-                location.reload();
+                // Busca dados novos para atualizar a UI (roleta e listas desbloqueadas)
+                db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
+                    perfil = doc.data();
+                    abrirModalPerfil(); // Recarrega o modal para mostrar os itens liberados
+                });
             });
 
             notifyUser(auth.currentUser.uid, "🎰 Prêmio da Roleta", corpoPopup);
@@ -13649,33 +13799,23 @@ function verificarAcessoMoldura(key) {
     if (m.adminOnly) {
         return perfil.tipo === 'admin' ? { acesso: true, tipo: 'permanente' } : { acesso: false, tipo: 'bloqueado_admin' };
     }
+    if (minhasMolduras.includes(key)) return { acesso: true, tipo: 'permanente' };
 
-    // 1. Permanente (Comprado)
-    if (minhasMolduras.includes(key)) {
-        return { acesso: true, tipo: 'permanente' };
-    }
-
-    // 2. Temporário (Roleta) - CORREÇÃO AQUI
-    // Agora verifica a chave composta 'moldura_key'
+    // VERIFICAÇÃO CORRETA DO PRÊMIO
     if (perfil.premiosTemporarios && perfil.premiosTemporarios[`moldura_${key}`]) {
         const validade = perfil.premiosTemporarios[`moldura_${key}`].toDate();
-        if (validade > new Date()) {
-            return { acesso: true, tipo: 'temporario_roleta', validade };
-        }
+        if (validade > new Date()) return { acesso: true, tipo: 'temporario_roleta', validade };
     }
 
-    // 3. Temporário (PRO)
     if (isProAtivo(perfil) && perfil.proTier) {
-        const tier = perfil.proTier;
-        const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
-        const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
-        const idxUser = niveis.indexOf(tier);
-        const idxMoldura = moldurasOrdem.indexOf(key);
-        if (idxUser >= 0 && idxMoldura >= 0 && idxUser >= idxMoldura) {
-            return { acesso: true, tipo: 'temporario' };
-        }
+         // ... (lógica pro mantida) ...
+         const tier = perfil.proTier;
+         const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
+         const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
+         if (niveis.indexOf(tier) >= moldurasOrdem.indexOf(key) && niveis.indexOf(tier) > -1) {
+             return { acesso: true, tipo: 'temporario' };
+         }
     }
-
     return { acesso: false, tipo: 'nenhum' };
 }	
 
