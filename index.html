@@ -2950,6 +2950,154 @@ body {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* --- BALÕES DE CHAT ESTILIZADOS E CORRIGIDOS --- */
+
+/* Base para balões customizados */
+.chat-message.custom-bubble {
+    position: relative;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    /* CRUCIAL: Cria um contexto de pilha para que o z-index -1 funcione dentro do balão */
+    isolation: isolate; 
+    z-index: 1;
+    /* Sombra no texto para leitura perfeita em qualquer fundo */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    font-weight: 500;
+}
+
+/* ============================================================
+   NÍVEL 2: PRATA (Metálico Fosco, Elegante, Sem Animação)
+   ============================================================ */
+.chat-message.bubble-prata {
+    border: 1px solid #a0a0a0;
+    color: #ffffff !important;
+    background: transparent; /* Fundo gerado pelo ::before */
+    overflow: hidden;
+}
+
+/* Camada de fundo do Prata (Atrás do texto) */
+.chat-message.bubble-prata::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(145deg, #555555, #2a2a2a); /* Gradiente chumbo metálico */
+    z-index: -1; /* Fica atrás do texto */
+    border-radius: 10px;
+}
+
+/* ============================================================
+   NÍVEL 3: OURO (Valioso, Com Brilho em Movimento Lento)
+   ============================================================ */
+.chat-message.bubble-ouro {
+    border: 1px solid #ffd700;
+    color: #fffbe6 !important; /* Branco levemente dourado */
+    background: transparent; /* Fundo gerado pelo ::before */
+    overflow: hidden; /* Impede que o brilho saia da borda */
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.2);
+}
+
+/* Camada de fundo animada do Ouro (Atrás do texto) */
+.chat-message.bubble-ouro::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1; /* Fica atrás do texto */
+    border-radius: 10px;
+    /* Gradiente dourado com uma faixa de luz mais clara no meio */
+    background: linear-gradient(120deg, #4b3b00 0%, #8a6e0a 30%, #ffeeb0 50%, #8a6e0a 70%, #4b3b00 100%);
+    background-size: 200% 100%;
+    animation: gold-shimmer 6s linear infinite; /* Movimento contínuo e lento */
+}
+
+/* ============================================================
+   NÍVEL 4: DIAMANTE (Borda Animada Suave)
+   ============================================================ */
+.chat-message.bubble-diamante {
+    background: #0c0c0c; 
+    color: #e0ffff !important; 
+    border: none; 
+    overflow: visible !important; 
+    margin-top: 12px !important;
+}
+/* Borda */
+.chat-message.bubble-diamante::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; 
+    z-index: -1; /* Atrás do balão preto */
+    background: linear-gradient(60deg, #00c6ff, #0072ff, #000, #000, #00c6ff);
+    background-size: 300% 300%;
+    animation: border-travel 12s linear infinite; /* Movimento BEM lento */
+    opacity: 0.8;
+}
+/* Coroa */
+.chat-message.bubble-diamante::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+/* ============================================================
+   ADMIN (Movimento Suave)
+   ============================================================ */
+/* ADMIN BLACK */
+.chat-message.bubble-admin-black {
+    background: #0a0a0a !important;
+    color: #ffffff !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-black::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #ffffff, #333, #000, #000, #ffffff);
+    background-size: 300% 300%;
+    animation: border-travel 12s linear infinite; /* Lento */
+}
+.chat-message.bubble-admin-black::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: grayscale(100%);
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+/* ADMIN RED */
+.chat-message.bubble-admin-red {
+    background: #1a0000 !important; 
+    color: #ffe0e0 !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-red::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #ff0000, #ff4500, #2c0000, #2c0000, #ff0000);
+    background-size: 300% 300%;
+    animation: border-travel 10s linear infinite; /* Lento */
+}
+.chat-message.bubble-admin-red::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: sepia(100%) saturate(1000%) hue-rotate(-50deg);
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+/* ANIMAÇÕES */
+@keyframes border-travel {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes float-crown {
+    0%, 100% { transform: translateY(0) rotate(5deg); }
+    50% { transform: translateY(-3px) rotate(-5deg); }
+}
+@keyframes gold-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
   </style>
 </head>
 <body>
