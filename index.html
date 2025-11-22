@@ -6950,17 +6950,20 @@ function alternarChat(tipo) {
         document.getElementById("chatTitle").textContent = '💬 Chat Global';
     }
 
+    // CORREÇÃO AQUI: Alterado de limit(50) para limit(10)
     query = query.where("deleteAt", ">", agora) 
                  .orderBy("ts", "desc")         
-                 .limit(50);                     
+                 .limit(10);                     
 
     chatListener = query.onSnapshot(async snapshot => {
         const chatContainer = document.getElementById("chatMessages");
         const carregarMaisBtn = document.getElementById('carregarMaisMsgBtn');
-        const deveRolarParaBaixo = (chatContainer.scrollTop + chatContainer.clientHeight + 150) >= chatContainer.scrollHeight;
+        // Só rola para baixo automaticamente se estiver perto do fundo ou se for o primeiro load
+        const deveRolarParaBaixo = (chatContainer.scrollTop + chatContainer.clientHeight + 150) >= chatContainer.scrollHeight || chatContainer.innerHTML === "";
         
         const changes = snapshot.docChanges();
 
+        // Verifica se é a carga inicial limpa
         const isFirstLoad = chatContainer.children.length === 0 || 
                           (chatContainer.children.length === 1 && chatContainer.children[0].tagName === 'P');
 
@@ -6989,29 +6992,33 @@ function alternarChat(tipo) {
                 chatContainer.appendChild(messageDiv);
             }
         } else {
-            // Processa apenas as mudanças
+            // Processa apenas as mudanças subsequentes
             for (const change of changes) {
                 if (change.type === 'added') {
+                    // Verifica duplicidade
                     const existingMsg = chatContainer.querySelector(`[data-doc-id="${change.doc.id}"]`);
-                    if (!existingMsg && change.newIndex === 0) { // Mensagem nova
+                    if (!existingMsg) { 
+                        // Se for mensagem nova (newIndex 0 na query desc), adiciona no final
+                        // Se veio de paginação ou atualização histórica, a lógica seria outra, 
+                        // mas aqui focamos em mensagens novas chegando em tempo real.
                         const msg = change.doc.data();
                         const messageDiv = await createMessageDiv(msg, change.doc.id); 
                         chatContainer.appendChild(messageDiv); 
                     }
                 }
-                // *** ESTE É O NOVO BLOCO ***
                 if (change.type === 'removed') {
                     const existingMsg = chatContainer.querySelector(`[data-doc-id="${change.doc.id}"]`);
                     if (existingMsg) {
                         existingMsg.remove(); // Remove a mensagem da tela
                     }
                 }
-                // *** FIM DO NOVO BLOCO ***
             }
         }
 
         if (deveRolarParaBaixo) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100);
         }
 
     }, error => { 
@@ -7023,7 +7030,7 @@ function alternarChat(tipo) {
     const chatInput = document.getElementById('chatInput');
     chatInput.removeEventListener('keydown', handleChatEnter);
     chatInput.addEventListener('keydown', handleChatEnter);
- }
+}
 
 async function carregarMensagensAnteriores() {
     if (!oldestMessageSnapshot) {
@@ -7168,18 +7175,19 @@ async function createMessageDiv(msg, docId) {
     } else {
         try {
             let remetenteData;
-            // Tenta usar cache ou busca simples se for o próprio usuário
+            
+            // ATUALIZAÇÃO CRÍTICA: Sempre busca dados frescos se for o usuário atual para pegar a troca de balão imediata
             if (isCurrentUser) {
+                // Recarrega o perfil global se necessário ou usa o atual (que já deve ter sido atualizado pelo listener do perfil)
                 remetenteData = perfil; 
             } else {
-                // Nota: Em um app real com muito tráfego, ideal seria cachear esses usuários
+                // Para outros usuários, busca no banco
                 const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
                 if (remetenteDoc.exists) remetenteData = remetenteDoc.data();
             }
 
             if(remetenteData) {
-                // --- 1. APLICA O BALÃO SELECIONADO ---
-                // Verifica se existe e se está na lista de balões válidos
+                // --- 1. APLICA O BALÃO SELECIONADO (CORREÇÃO) ---
                 if (remetenteData.balaoSelecionado && BALOES[remetenteData.balaoSelecionado]) {
                     // Adiciona a classe CSS do balão (ex: bubble-ouro)
                     balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
@@ -7209,16 +7217,14 @@ async function createMessageDiv(msg, docId) {
                 const fotoUrl = remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
-                // Verifica se tem moldura selecionada e válida
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
-                    const classeMoldura = MOLDURAS[remetenteData.molduraSelecionada].classe; // ex: avatar-frame-ouro
+                    const classeMoldura = MOLDURAS[remetenteData.molduraSelecionada].classe;
                     avatarHtml = `
                     <div class="avatar-wrapper chat-size" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; display: inline-flex; position: relative; vertical-align: middle; margin-right: 8px;">
                         <img src="${fotoUrl}" class="chat-user-photo ${classeMoldura}" style="width:32px; height:32px; border-radius:50%; padding:2px;">
                         <div class="coroa-topo" style="position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:10px;"></div>
                     </div>`;
                 } else {
-                    // Sem moldura
                     avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
                 }
 
@@ -7235,7 +7241,7 @@ async function createMessageDiv(msg, docId) {
         }
     }
 
-    // Aplica as classes finais (Layout + Balão Personalizado)
+    // Aplica as classes finais (Garante que classes antigas não interfiram)
     messageDiv.className = classesDiv + balaoCustomClass;
 
     messageDiv.innerHTML = `
