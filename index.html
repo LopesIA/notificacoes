@@ -2697,32 +2697,12 @@ body {
 onclick="fecharModal(event)">Fechar</button></div></div>
 
 <div id="modalCarteira" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 450px;">
+  <div class="modal-content" onclick="event.stopPropagation()">
     <h3>💰 Minha Carteira</h3>
-    
-    <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #2ecc71;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size: 14px; color: #ccc;">💇 Saldo para Serviços</span>
-            <span style="font-size: 20px; font-weight: bold; color: #2ecc71;">R$ <span id="saldoServicosDisplay">0,00</span></span>
-        </div>
-        <p style="font-size: 11px; opacity: 0.6; margin: 5px 0 10px 0;">Exclusivo para pagar profissionais (Cortes, Unhas, etc).</p>
-        <button onclick="iniciarDepositoServicos()" style="background: #2ecc71; color: #000; width: 100%; font-weight: bold;">➕ Adicionar (PIX)</button>
-    </div>
-
-    <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--cor-destaque);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size: 14px; color: #ccc;">💎 Saldo Digital (Loja/VIP)</span>
-            <span style="font-size: 20px; font-weight: bold; color: var(--cor-destaque);">R$ <span id="saldoDigitalDisplay">0,00</span></span>
-        </div>
-        <p style="font-size: 11px; opacity: 0.6; margin: 5px 0 10px 0;">Para Compras na Loja, VIP, Boost e Roleta.</p>
-        <button onclick="iniciarDepositoDigital()" style="background: var(--cor-destaque); color: #000; width: 100%; font-weight: bold;">➕ Comprar Créditos</button>
-    </div>
-
-    <div style="display: flex; gap: 10px;">
-        <button onclick="iniciarSaque()" style="flex: 1; background: #333; border: 1px solid #555;">📤 Sacar (Profissional)</button>
-    </div>
-
-    <button data-modal-id="modalCarteira" onclick="fecharModal(event)" style="margin-top: 15px; background: transparent; border: 1px solid #555;">❌ Fechar</button>
+    <p>Seu saldo atual é: <b style="color: var(--cor-destaque);">R$ <span id="saldoModal">0,00</span></b></p>
+    <button onclick="iniciarDeposito()">📥 Depositar</button>
+    <button onclick="iniciarSaque()">📤 Sacar</button>
+    <button data-modal-id="modalCarteira" onclick="fecharModal(event)">❌ Fechar</button>
   </div>
 </div>
 
@@ -2823,24 +2803,17 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     </div>
 </div>
 
-<div id="modalExibirPixAprimorado" class="modal" style="z-index: 2005;">
+<div id="modalExibirPixAprimorado" class="modal">
     <div class="modal-content" style="text-align: center;">
       <h3> Pague com PIX</h3>
-      <p>Escaneie o QR Code ou copie o código abaixo.</p>
-      
-      <img src="qrcode.png" id="pix-qrcode" alt="QR Code PIX" style="max-width: 200px; margin: 15px auto; display: block; border-radius: 10px;">
-      
+      <p>Escaneie o QR Code abaixo com seu app de banco.</p>
+      <img src="https://i.postimg.cc/fTZyFN6G/qrcode.jpg" id="pix-qrcode" alt="QR Code PIX">
       <div class="pix-copia-cola-container">
-          <textarea id="pixChaveAleatoria" style="display:none;">00020126770014BR.GOV.BCB.PIX0136ac099e3b-e63e-402f-9d3e-6e20828470b90215Nova Versão APP5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510ERLNMtaT5r63040E73</textarea>
-          
-          <button id="btnCopiarPixFinal" onclick="copiarPixEFinalizar(event)" style="background-color: #2ecc71; color: #fff; font-weight: bold; padding: 15px; width: 100%;">
-              📑 COPIAR CÓDIGO PIX
-          </button>
+          <textarea id="pixChaveAleatoria">00020126770014BR.GOV.BCB.PIX0136ec4a8f0f-ec59-44bc-afcf-dff364f971de0215NAVALHA DE OURO5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510vuyKg7Qnmx63041C39</textarea>
+          <button onclick="copiarCodigoPixAprimorado(event)">Copiar Chave Aleatória PIX</button>
       </div>
-      
-      <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">Ao clicar em copiar, você será direcionado ao WhatsApp para enviar o comprovante.</p>
-      
-      <button onclick="fecharTodosOsModais()" style="background: transparent; border: 1px solid #555; margin-top: 10px;">Cancelar</button>
+      <p style="font-size: 14px; color: #ff9800; margin-top: 15px;">Este código expira em: <b id="pixTimer">10:00</b></p>
+      <button onclick="confirmarEnvioComprovante()">CONFIRMAR</button>
     </div>
 </div>
 
@@ -2998,18 +2971,18 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 </div>
 
 <div id="modalBarbeariasCliente" class="modal" onclick="fecharModal(event)">
-  <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>💈 Profissionais disponíveis</h3>
-    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por profissional ou cidade...">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>💈 Profissionais disponíveis</h3>
+    <input type="text" id="filtroBarbeiro" onkeyup="filtrarBarbeiros()" placeholder="🔎 Buscar por profissional ou cidade...">
     
     <button id="btnMostrarFavoritos" 
             onclick="carregarBarbeirosPrincipal('listaBarbeiros', true)" 
             class="btn-favoritos">
         ⭐ Mostrar Favoritos
     </button>
-        <div id='listaBarbeiros' class="scrollable-list"></div>
-    <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
-  </div>
+        <div id='listaBarbeiros' class="scrollable-list"></div>
+    <button data-modal-id="modalBarbeariasCliente" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
 </div>
 
 <div id="modalHistoricoCliente" class="modal" onclick="fecharModal(event)">
@@ -4393,6 +4366,33 @@ function fecharAguarde(event, force = false) {
     }
 }
 
+function abrirModal(modalId) {
+    const novoModal = document.getElementById(modalId);
+
+    // Verifica se o modal existe e se já não está aberto
+    if (novoModal && !novoModal.classList.contains('show')) {
+        
+        // --- NOVA LÓGICA DE EMPILHAMENTO (STACKING) ---
+        // 1. Definimos uma base alta (2000) para ficar acima de botões fixos como o do Chat
+        const baseZIndex = 2000;
+        
+        // 2. Calculamos o incremento: Se já tem 1 modal aberto, soma +10. Se tem 2, +20.
+        // Isso garante que o novo SEMPRE tenha um número maior que o anterior.
+        const incremento = modalStack.length * 10;
+        
+        // 3. Aplica o novo Z-Index diretamente no elemento
+        novoModal.style.zIndex = baseZIndex + incremento;
+
+        // --- FIM DA LÓGICA NOVA ---
+
+        novoModal.style.display = 'flex';
+        setTimeout(() => {
+            novoModal.classList.add('show');
+            modalStack.push(novoModal); // Adiciona à pilha para controle do botão voltar/fechar
+        }, 10);
+    }
+}
+
 function fecharModal(event) {
     // Permite fechar clicando no fundo (classe .modal) ou em um botão com data-modal-id
     if (event && event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id')) {
@@ -4404,6 +4404,28 @@ function fecharModal(event) {
         }
         
         fecharModalAtual();
+    }
+}
+
+function fecharModalAtual(forcePopupAguarde = false) {
+    if (forcePopupAguarde) {
+        const popup = document.getElementById('popupAguarde');
+        popup.classList.remove('show');
+        setTimeout(() => popup.style.display = 'none', 300);
+        return;
+    }
+    
+    if (intervaloRelogiosPerfil) {
+        clearInterval(intervaloRelogiosPerfil);
+        intervaloRelogiosPerfil = null;
+    }
+
+    if (modalStack.length > 0) {
+        const modalParaFechar = modalStack.pop();
+        modalParaFechar.classList.remove('show');
+        setTimeout(() => {
+            modalParaFechar.style.display = 'none';
+        }, 300);
     }
 }
 
@@ -5084,33 +5106,18 @@ auth.onAuthStateChanged(async user => {
 
     // --- Atualização normal da UI ---
     console.log("Atualizando UI com dados do perfil...");
-    // --- ATUALIZAÇÃO UI CARTEIRA SEPARADA (SUBSTITUIÇÃO) ---
-    const saldoServicos = (perfil.saldoServicos || 0).toFixed(2);
-    const saldoDigital = (perfil.saldo || 0).toFixed(2); // 'saldo' antigo continua sendo o Digital
-
-    // Atualiza Header (Soma visual ou escolhe um principal - aqui somamos para mostrar o total global)
-    const saldoTotal = (perfil.saldoServicos || 0) + (perfil.saldo || 0);
-    let saldoTotalFormatado = saldoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const saldo = (perfil.saldo || 0).toFixed(2);
+    let saldoFormatado = parseFloat(perfil.saldo || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
-    // Se o valor for muito grande, diminui a fonte do topo
-    if (saldoTotalFormatado.length > 8) {
-        document.getElementById("btnCarteiraTop").style.fontSize = "12px"; 
+    // Se o valor for muito grande (ex: admin), diminui a fonte ou abrevia visualmente no topo
+    if (saldoFormatado.length > 8) {
+        document.getElementById("btnCarteiraTop").style.fontSize = "12px"; // Diminui fonte
     } else {
         document.getElementById("btnCarteiraTop").style.fontSize = "14px";
     }
     
-    // Atualiza o botão do topo e o modal antigo se ainda existir
-    if(document.getElementById("saldoHeader")) document.getElementById("saldoHeader").textContent = saldoTotalFormatado;
-    if(document.getElementById("saldoModal")) document.getElementById("saldoModal").textContent = saldoTotalFormatado;
-
-    // Atualiza os displays da NOVA Carteira Separada
-    if(document.getElementById("saldoServicosDisplay")) {
-        document.getElementById("saldoServicosDisplay").textContent = parseFloat(saldoServicos).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    }
-    if(document.getElementById("saldoDigitalDisplay")) {
-        document.getElementById("saldoDigitalDisplay").textContent = parseFloat(saldoDigital).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    }
-    // --- FIM DA SUBSTITUIÇÃO ---
+    document.getElementById("saldoHeader").textContent = saldoFormatado;
+    document.getElementById("saldoModal").textContent = saldoFormatado;
 
     // (O restante da lógica de atualização da UI permanece igual...)
     const btnVip = document.getElementById('btnVip');
@@ -5888,74 +5895,56 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
 
 function confirmarAgendamento() {
     const { barbeiroUid, barbeiroNome, servico, horario } = agendamentoState;
-    
-    // Validação básica
-    if (!barbeiroUid || !servico || (!horario && horario !== "imediato")) {
-        return exibirPopup("Erro", "Informações do agendamento incompletas.");
+    if (!servico || !horario) {
+        fecharModalAtual();
+        return;
     }
 
     const preco = isVipAtivo(perfil) ? servico.valor * 0.9 : servico.valor;
     
-    // --- MUDANÇA CRÍTICA: Verifica o saldoServicos ---
-    const saldoDisponivelServicos = perfil.saldoServicos || 0;
-
-    if (saldoDisponivelServicos < preco) {
+    if (perfil.saldo < preco) {
         fecharModalAtual();
-        exibirPopup(
-            "💸 Saldo de Serviços Insuficiente", 
-            `Seu saldo para serviços é R$ ${saldoDisponivelServicos.toFixed(2)}. O serviço custa R$ ${preco.toFixed(2)}.\n\nPor favor, adicione saldo na carteira de SERVIÇOS (exclusivo para pagamentos de profissionais).`, 
-            'aviso', 
-            () => {
-                // Abre a carteira já sugerindo depósito de serviços
-                abrirModal('modalCarteira');
-            }
-        );
+        exibirPopup("💸 Saldo insuficiente.", "Por favor, deposite mais dinheiro em sua carteira.", 'aviso', () => {
+            abrirModal('modalCarteira');
+        });
         return;
     }
     
-    let mensagemConfirmacao = `Confirmar ${servico.nome} com ${barbeiroNome}`;
-    if (horario === "imediato") mensagemConfirmacao += ` AGORA (Vaga Imediata)?`;
-    else mensagemConfirmacao += ` às ${horario}?`;
-    
-    mensagemConfirmacao += `\nValor: R$ ${preco.toFixed(2)}`;
+    const horarioTexto = horario === 'imediato' ? 'uma Vaga Imediata' : `o horário das ${horario}`;
+    let detalhes = `Profissional: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
+    if (servico.duracao) detalhes += `Duração Estimada: ${servico.duracao} minutos\n`;
+    detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${isVipAtivo(perfil) ? ' (Desconto VIP de 10% aplicado)' : ''}`;
 
-    exibirConfirmacao("Confirmar Agendamento?", mensagemConfirmacao, () => {
+    // Usa o novo popup de confirmação
+    exibirConfirmacao("Confirmar Agendamento?", detalhes, () => {
+        // Esta função de callback só executa se o usuário clicar "Sim"
         exibirAguarde("Agendando...");
-        
+    
         const agendamentoData = {
-            clienteUid: auth.currentUser.uid,
-            clienteNome: perfil.nome,
-            clienteTelefone: perfil.telefone || "",
-            barbeiroUid: barbeiroUid,
-            barbeiroNome: barbeiroNome,
-            servico: servico.nome,
-            valor: preco,
-            horario: horario === "imediato" ? null : horario,
-            status: horario === "imediato" ? "imediato" : "pendente",
+            clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
+            barbeiroUid, barbeiroNome, servico: servico.nome, valor: preco,
+            status: horario === 'imediato' ? 'imediato' : 'pendente',
             ts: firebase.firestore.FieldValue.serverTimestamp(),
-            avaliado: false,
-            clienteNotificado: false,
-            avisoAvaliacaoEnviado: false,
-            lembreteEnviado: false,
-            lembreteConcluirEnviado: false
+            avaliado: false, lembreteEnviado: false,
+            clienteNotificado: false, // <-- REQUERIDO PARA O POPUP DO CLIENTE
+            lembreteConcluirEnviado: false, // <-- REQUERIDO PARA O LEMBRETE DO PROFISSIONAL
+            avisoAvaliacaoEnviado: false
         };
+        if (horario !== 'imediato') agendamentoData.horario = horario;
 
-        db.collection("agendamentos").add(agendamentoData).then((docRef) => {
-             fecharTodosOsModais();
-             
-             if (horario === "imediato") {
-                 exibirPopup("Solicitação Enviada!", "Aguarde a confirmação do profissional para se dirigir ao local.");
-                 notifyUser(barbeiroUid, "⚡ Vaga Imediata!", `Novo pedido de vaga imediata de ${perfil.nome}!`, { link: '#agendamentos' });
-             } else {
-                 exibirPopup("Solicitação Enviada!", "Aguarde a aprovação do profissional.");
-                 notifyUser(barbeiroUid, "📅 Novo Agendamento", `${perfil.nome} agendou para ${horario}.`, { link: '#agendamentos' });
-             }
-             
-             // Limpa estado
-             resetAgendamentoState();
+        db.collection("agendamentos").add(agendamentoData).then(() => {
+            const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
+            
+            // ATENÇÃO: Aviso para o barbeiro ainda é necessário para o popup persistente
+            criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`, 'novo-agendamento', agendamentoData);
+            
+            notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
+            
+            fecharTodosOsModais();
+            exibirPopup("Sucesso!", "Pedido enviado com sucesso! Aguarde a aprovação do profissional.");
         }).catch(e => {
             fecharTodosOsModais();
-            exibirPopup("Erro ao agendar: " + e.message);
+            exibirPopup("Erro ao enviar pedido: " + e.message, 'erro');
         });
     });
 }
@@ -6129,7 +6118,8 @@ async function avaliarServico(agendamentoId, barbeiroUid, nota, comentario, foto
     t.update(barbeiroRef, barbeiroUpdates); 
 
     // 4. Cria o documento de avaliação
-    t.set(db.collection("avaliacoes").doc(), {
+    t.set(d
+b.collection("avaliacoes").doc(), {
       barbeiroUid, clienteUid: auth.currentUser.uid, nota,
       comentario: comentario || "Sem comentário",
       ts: firebase.firestore.FieldValue.serverTimestamp()
@@ -8148,52 +8138,31 @@ function abrirAvaliacoesBarbeiro() {
     });
 }
 
-// Variável para guardar os dados temporariamente
-// Variável para guardar os dados temporariamente
-let dadosDepositoTemporario = {};
+// ======================================================================
+// --- NOVAS FUNÇÕES DE PAGAMENTO (APRIMORADO) ---
+// ======================================================================
 
-// 1. Iniciar Depósito Serviços (Formulário)
-function iniciarDepositoServicos() {
-    window.tipoDepositoAtual = 'servicos'; 
-    document.getElementById('depositoValor').placeholder = "Valor para Serviços (PIX)";
-    abrirModal('modalDepositoFormulario'); 
-    configurarBotaoFormulario();
-}
+// SUBSTITUA a função 'iniciarDeposito' inteira (Linha ~4661) por esta:
 
-// 2. Iniciar Depósito Digital (Play Store ou Form)
-function iniciarDepositoDigital() {
-    window.tipoDepositoAtual = 'digital';
+function iniciarDeposito() {
     if (isTwa) {
-        abrirModal('modalDepositoPlayStore'); // Play Store direto no App
+        // Ambiente TWA (Play Store): Abre o modal de depósito do Google Play
+        abrirModal('modalDepositoPlayStore');
     } else {
-        document.getElementById('depositoValor').placeholder = "Valor Créditos Digitais";
-        abrirModal('modalDepositoFormulario'); // Web usa formulário
-        configurarBotaoFormulario();
+        // Ambiente Web (Navegador): Abre o formulário de depósito (PIX/Cartão)
+        abrirModal('modalDepositoFormulario');
+        const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
+        const btn = document.getElementById('btnContinuarDeposito');
+        inputs.forEach(id => {
+            document.getElementById(id).oninput = () => {
+                const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
+                btn.disabled = !allFilled;
+            };
+        });
     }
 }
 
-// Auxiliar para configurar validação do formulário
-function configurarBotaoFormulario() {
-    const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
-    const btn = document.getElementById('btnContinuarDeposito');
-    
-    // Remove listeners antigos clonando o botão
-    const novoBtn = btn.cloneNode(true);
-    btn.parentNode.replaceChild(novoBtn, btn);
-    
-    // Define a nova ação: APENAS AVANÇAR PARA TELA DO PIX (Sem salvar ainda)
-    novoBtn.onclick = prepararTelaPix; 
-
-    inputs.forEach(id => {
-        document.getElementById(id).oninput = () => {
-            const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
-            novoBtn.disabled = !allFilled;
-        };
-    });
-}
-
-// 3. Preparar Tela do PIX (Valida e Guarda Dados)
-function prepararTelaPix() {
+async function criarSolicitacaoDeposito() {
     const primeiroNome = document.getElementById('depositoPrimeiroNome').value.trim();
     const segundoNome = document.getElementById('depositoSegundoNome').value.trim();
     const cpf = document.getElementById('depositoCpf').value.trim();
@@ -8201,104 +8170,34 @@ function prepararTelaPix() {
     const valor = parseFloat(document.getElementById('depositoValor').value);
 
     if (!primeiroNome || !segundoNome || !cpf || !telefone || isNaN(valor) || valor <= 0) {
-        return exibirPopup("Por favor, preencha todos os campos corretamente.");
+        return exibirPopup("Por favor, preencha todos os campos corretamente, incluindo um valor válido.");
     }
 
-    // Guarda na variável global temporária (Não salva no banco ainda)
-    dadosDepositoTemporario = {
-        nomeCompleto: `${primeiroNome} ${segundoNome}`,
-        cpf,
-        telefone,
-        valor,
-        tipo: window.tipoDepositoAtual === 'servicos' ? 'saldoServicos' : 'saldo'
-    };
+    const nomeCompleto = `${primeiroNome} ${segundoNome}`;
 
-    // Fecha form e abre PIX
-    fecharModalAtual(); 
-    
-    // Se for Digital na Web, pergunta se quer PIX ou Cartão
-    if (window.tipoDepositoAtual === 'digital' && !isTwa) {
-         abrirModal('modalDeposito'); // Modal de escolha (PIX/Cartão)
-         // Atualiza o botão PIX lá para abrir o nosso modal novo
-         setTimeout(() => {
-             const btnPix = document.getElementById('btnPagarComPix');
-             if(btnPix) btnPix.onclick = exibirModalPixReal;
-         }, 100);
-    } else {
-         // Se for serviços, vai direto pro PIX
-         exibirModalPixReal();
-    }
-}
-
-// 4. Exibe o Modal com o QR Code
-function exibirModalPixReal() {
-    // Garante que o modal de escolha anterior fechou
-    const modalDep = document.getElementById('modalDeposito');
-    if (modalDep && modalDep.classList.contains('show')) {
-        modalDep.classList.remove('show');
-        modalDep.style.display = 'none';
-    }
-    
-    abrirModal('modalExibirPixAprimorado');
-}
-
-// 5. AÇÃO FINAL: Copia, Salva no Banco e Abre WhatsApp
-async function copiarPixEFinalizar(event) {
-    const btn = event.target;
-    const textoPix = document.getElementById('pixChaveAleatoria').value;
-    
-    // 1. Copiar para área de transferência
-    try {
-        await navigator.clipboard.writeText(textoPix);
-        btn.textContent = "✅ COPIADO! Processando...";
-        btn.style.backgroundColor = "#27ae60";
-    } catch (err) {
-        console.error("Erro ao copiar", err);
-        btn.textContent = "Erro ao copiar, tente manual";
-    }
-
-    // 2. Salvar Solicitação no Firestore (AGORA SIM O ADMIN RECEBE)
     try {
         await db.collection("solicitacoes").add({
             tipo: "deposito",
-            subTipo: dadosDepositoTemporario.tipo, 
             usuarioUid: auth.currentUser.uid,
             usuarioNome: perfil.nome,
             dadosDeposito: {
-                nomeCompleto: dadosDepositoTemporario.nomeCompleto,
-                cpf: dadosDepositoTemporario.cpf,
-                telefone: dadosDepositoTemporario.telefone
+                nomeCompleto,
+                cpf,
+                telefone
             },
-            valor: dadosDepositoTemporario.valor,
+            valor: valor,
             status: "pendente",
             ts: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
-        // Notifica admins
-        const nomeDestino = dadosDepositoTemporario.tipo === 'saldoServicos' ? 'SERVIÇOS (Cortes)' : 'DIGITAL (Loja/VIP)';
-        notifyAdmins("📥 Depósito Solicitado!", `${perfil.nome} iniciou depósito de R$${dadosDepositoTemporario.valor.toFixed(2)} para ${nomeDestino}.`, { link: '#solicitacoes' });
 
-    } catch (e) {
-        console.error("Erro ao salvar solicitação", e);
+        fecharTodosOsModais();      
+        notifyAdmins("📥 Novo Pedido de Depósito!", `${perfil.nome} solicitou um depósito de R$${valor.toFixed(2)}.`, { link: '#solicitacoes' });
+
+    } catch (error) {
+        console.error("Erro ao criar solicitação de depósito:", error);
+        exibirPopup("Ocorreu um erro ao enviar sua solicitação. Tente novamente.");
     }
-
-    // 3. Redirecionar para WhatsApp após 1.5 segundos
-    setTimeout(() => {
-        const mensagem = encodeURIComponent(
-            `Olá! Acabei de fazer um pagamento PIX no app.\n\n` +
-            `Nome: ${dadosDepositoTemporario.nomeCompleto}\n` +
-            `Valor: R$ ${dadosDepositoTemporario.valor.toFixed(2)}\n` +
-            `CPF: ${dadosDepositoTemporario.cpf}\n\n` +
-            `Aguardo a liberação dos créditos!`
-        );
-        
-        // Usa o número do admin definido no topo do script
-        const phoneNum = WHATSAPP_ADM_PHONE.startsWith('55') ? WHATSAPP_ADM_PHONE : `55${WHATSAPP_ADM_PHONE.replace(/\D/g, '')}`;
-        window.open(`https://wa.me/${phoneNum}?text=${mensagem}`, '_blank');
-        
-        fecharTodosOsModais();
-        exibirPopup("Sucesso!", "Código copiado e solicitação enviada. Finalize o pagamento no seu banco.");
-    }, 1500);
+    abrirModal('modalDeposito');
 }
 
 function iniciarSaque() {
@@ -8787,7 +8686,6 @@ async function verDetalhesSolicitacao(id) {
     if(s.tipo === 'saque') {
       detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
     } else if (s.tipo === 'deposito') {
-       const destinoTexto = s.subTipo === 'saldoServicos' ? 'SALDO DE SERVIÇOS (Cortes)' : 'SALDO DIGITAL (Loja/VIP)';
       detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
     } else if (s.tipo === "liberacao_loja") {
         detalhes += `\nAprovar liberação da loja para ${s.usuarioNome}?`;
@@ -8800,8 +8698,7 @@ async function verDetalhesSolicitacao(id) {
     const confirmar = confirm(detalhes);
     if (confirmar) {
       if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
-      // CORREÇÃO: Passando o s.subTipo para a função saber onde depositar
-      else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor, s.subTipo); 
+      else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
       else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
     } else if (confirm("Deseja recusar a solicitação?")) {
       recusarSolicitacao(id, s.usuarioUid, s.tipo);
@@ -8822,47 +8719,35 @@ function aprovarSaque(id, uid, valor) {
   }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
-async function aprovarDeposito(id, uid, valor, subTipo) {
-  exibirAguarde("Aprovando...");
-  try {
-      await db.runTransaction(async t => {
-        const userRef = db.collection("usuarios").doc(uid);
-        const userDoc = await t.get(userRef);
-        if (!userDoc.exists) throw new Error("Usuário não encontrado!");
-        
-        const userData = userDoc.data();
-        
-        // CORREÇÃO: Verifica o subTipo para saber qual carteira encher
-        let updates = {};
-        
-        if (subTipo === 'saldoServicos') {
-            // Depósito para SERVIÇOS (Carteira Verde)
-            updates.saldoServicos = firebase.firestore.FieldValue.increment(valor);
-        } else {
-            // Depósito DIGITAL (Carteira Dourada + Pontos)
-            updates.saldo = firebase.firestore.FieldValue.increment(valor);
-            
-            const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
-            const pontosGanhos = Math.floor(valor / 10) * pontosPorDezReais;
-            if (pontosGanhos > 0) {
-                updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
-            }
-        }
+function aprovarDeposito(id, uid, valor) {
+  db.runTransaction(async t => {
+    const userRef = db.collection("usuarios").doc(uid);
+    const userDoc = await t.get(userRef);
+    if (!userDoc.exists) throw new Error("Usuário não encontrado!");
+    
+    const userData = userDoc.data();
+    const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
+    const pontosGanhos = Math.floor(valor / 10) * pontosPorDezReais;
+    
+    const updates = { saldo: firebase.firestore.FieldValue.increment(valor) };
+    if (pontosGanhos > 0) {
+        updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
+    }
 
-        t.update(userRef, updates);
-        t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
-      });
+    t.update(userRef, updates);
+    t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
+    return pontosGanhos;
 
-      fecharTodosOsModais();
-      exibirPopup("Depósito aprovado e saldo adicionado na carteira correta!");
-      
-      let msgDestino = subTipo === 'saldoServicos' ? "Carteira de Serviços" : "Carteira Digital";
-      notifyUser(uid, "💰 Depósito Aprovado!", `Seu depósito de R$ ${valor.toFixed(2)} foi adicionado em: ${msgDestino}.`, { link: '#carteira' });
-
-  } catch(e) {
-      fecharTodosOsModais();
-      exibirPopup("Erro ao aprovar depósito: " + e.message);
-  }
+  }).then((pontosGanhos) => {
+    exibirPopup("Depósito aprovado e saldo adicionado!");
+    let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`;
+    if (pontosGanhos > 0) {
+        notificationBody += ` Você ganhou ${pontosGanhos} pontos de fidelidade!`;
+    }
+    notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
+  }).catch(e => {
+    exibirPopup("Erro ao aprovar depósito: " + e.message);
+  });
 }
 
 function recusarSolicitacao(id, uid, tipo) {
@@ -9026,25 +8911,14 @@ async function abrirModalGerenciarUsuario(uid) {
                 ${moldurasHtml}
             </div>
 
-            Gerenciar Saldo" e SUBSTITUA aquele trecho (<div class="popup-section">... até <hr>) por este novo bloco que tem os dois saldos:
-
-JavaScript
-
             <div class="popup-section">
-                <p><strong>Gerenciar Saldos:</strong></p>
+                <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
                 
-                <p>💎 Digital (Loja/VIP): <strong>R$ ${(u.saldo || 0).toFixed(2)}</strong></p>
+                <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
                 <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                    <input id="adminModificarSaldoDigital" type="number" placeholder="+ ou -" style="margin:0;">
-                    <button onclick="adminModificarSaldo('${uid}', 'digital')" style="width:auto;">Aplicar</button>
+                    <input id="adminModificarSaldo" type="number" placeholder="Valor (+ ou -)" style="margin:0;">
+                    <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
                 </div>
-
-                <p>💇 Serviços (Cortes): <strong>R$ ${(u.saldoServicos || 0).toFixed(2)}</strong></p>
-                <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                    <input id="adminModificarSaldoServicos" type="number" placeholder="+ ou -" style="margin:0;">
-                    <button onclick="adminModificarSaldo('${uid}', 'servicos')" style="width:auto;">Aplicar</button>
-                </div>
-                
                 <hr style="border-color: var(--cor-borda); margin: 10px 0;">
                 
                 <p><strong>Roleta Diária:</strong></p>
@@ -9285,24 +9159,14 @@ async function adminMudarTipo(uid) {
   exibirPopup("Tipo alterado!");
   fecharModalAtual();
 }
-
-async function adminModificarSaldo(uid, tipoSaldo) {
-  let inputId = tipoSaldo === 'servicos' ? 'adminModificarSaldoServicos' : 'adminModificarSaldoDigital';
-  let campoDb = tipoSaldo === 'servicos' ? 'saldoServicos' : 'saldo';
-  
-  const valor = parseFloat(document.getElementById(inputId).value);
-  
+async function adminModificarSaldo(uid) {
+  const valor = parseFloat(document.getElementById('adminModificarSaldo').value);
   if (!isNaN(valor)) {
-    await db.collection("usuarios").doc(uid).update({ [campoDb]: firebase.firestore.FieldValue.increment(valor) });
-    
-    let nomeCarteira = tipoSaldo === 'servicos' ? "Serviços" : "Digital";
-    notifyUser(uid, "💸 Ajuste de Saldo", `Admin alterou seu saldo (${nomeCarteira}) em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
-    
-    exibirPopup("Saldo alterado com sucesso!");
-    abrirModalGerenciarUsuario(uid);
-  } else {
-      exibirPopup("Valor inválido.");
-  }
+    await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
+    notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
+    exibirPopup("Saldo alterado!");
+    fecharModalAtual();
+  } else exibirPopup("Valor inválido.");
 }
 
 async function adminToggleVip(uid, conceder) {
@@ -10599,23 +10463,16 @@ async function gerenciarBalao(key, element) {
     const b = BALOES[key];
     const statusAcesso = verificarAcessoBalao(key);
     
+    // Se já tem (seja permanente, pro ou roleta), equipa direto
     if (statusAcesso.acesso) {
-        selecionarMolduraVisualmente(element);
+        selecionarMolduraVisualmente(element); // Reusa a função visual das molduras
         try {
-            exibirAguarde("Aplicando...");
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ balaoSelecionado: key });
-            
-            // Atualiza localmente
-            perfil.balaoSelecionado = key;
-            
-            fecharTodosOsModais(); // Fecha o aguarde
-            // Não precisa reload. Na próxima vez que abrir o chat, já estará novo.
-        } catch (e) { 
-            fecharTodosOsModais();
-            exibirPopup("Erro ao salvar."); 
-        }
+        } catch (e) { exibirPopup("Erro ao salvar."); }
         return;
     }
+
+    // Se não tem, compra
     executarCompraBalao(key, b);
 }
 
@@ -11798,7 +11655,8 @@ async function responderConfirmacaoEntrega(pedidoId, aceito) {
                 let taxaAplicada = TAXA; // Default fee
                 if (isProAtivo(vendedorData) && vendedorData.proTier && PRECOS_PRO[vendedorData.proTier]) {
                     taxaAplicada = PRECOS_PRO[vendedorData.proTier].taxa;
-                    console.log(`Taxa PRO ${vendedorData.proTier} aplicada: ${taxaAplicada * 100}%`);
+                    console.log(`Taxa PRO ${
+vendedorData.proTier} aplicada: ${taxaAplicada * 100}%`);
                 } else {
                     console.log(`Taxa padrão aplicada: ${taxaAplicada * 100}%`);
                 }
@@ -13768,12 +13626,8 @@ async function gerenciarBalao(key, element) {
         try {
             exibirAguarde("Aplicando...");
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ balaoSelecionado: key });
-            
-            // Atualiza localmente
-            perfil.balaoSelecionado = key;
-            
-            fecharTodosOsModais(); // Fecha o aguarde
-            // Não precisa reload. Na próxima vez que abrir o chat, já estará novo.
+            fecharTodosOsModais(); // Fecha Aguarde
+            location.reload(); // <--- ATUALIZAÇÃO INSTANTÂNEA
         } catch (e) { 
             fecharTodosOsModais();
             exibirPopup("Erro ao salvar."); 
@@ -13812,35 +13666,13 @@ async function gerenciarMoldura(key, element) {
     const m = MOLDURAS[key];
     const statusAcesso = verificarAcessoMoldura(key);
     
-    // SE JÁ TEM ACESSO (Equipar)
-    if (statusAcesso.acesso) {
+    if (statusAcesso.tipo === 'permanente') {
         selecionarMolduraVisualmente(element);
-        exibirAguarde("Aplicando...");
-        
         try {
-            // 1. Salva no Banco
+            exibirAguarde("Aplicando...");
             await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
-            
-            // 2. Atualiza visualmente NA HORA (Sem reload)
-            // Atualiza variável global perfil
-            perfil.molduraSelecionada = key; 
-            
-            // Atualiza a foto no modal de perfil (feedback imediato)
-            const fotoAtual = perfil.fotoPerfil || 'https://via.placeholder.com/100';
-            const previewContainer = document.getElementById('perfilFotoPreview').parentElement;
-            
-            // Recria o HTML da prévia da foto com a nova moldura
-            previewContainer.innerHTML = `
-                <div class="avatar-wrapper popup-size ${key}" style="margin:0;">
-                    <div class="coroa-topo"></div>
-                    <img id="perfilFotoPreview" src="${fotoAtual}" class="perfil-foto-grande" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                </div>
-                <label for="perfilFotoInput" style="position: absolute; bottom: 0; right: 0; background: var(--cor-destaque); color: #000; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40;">📷</label>
-            `;
-            
-            fecharTodosOsModais(); // Fecha o "Aguarde"
-            // Não precisa reload, o usuário já viu que mudou.
-            
+            fecharTodosOsModais();
+            location.reload(); // <--- ATUALIZAÇÃO INSTANTÂNEA
         } catch (e) {
             fecharTodosOsModais();
             exibirPopup("Erro", "Falha ao salvar moldura.");
@@ -13848,11 +13680,30 @@ async function gerenciarMoldura(key, element) {
         return;
     }
 
-    // Se não tem acesso, chama a compra (lógica antiga)
     if (statusAcesso.tipo === 'temporario' || statusAcesso.tipo === 'temporario_roleta') {
-        // ... (Lógica do popup de confirmação mantida, mas no Sim/Não use a lógica acima sem reload)
-        // Para simplificar e não travar, vamos direto para a compra ou equipar se for item grátis temporário
-        executarCompraMoldura(key, m);
+        const modal = document.getElementById('modalConfirmacaoGenerica');
+        document.getElementById('confirmacaoGenericaTitulo').textContent = "Item Liberado!";
+        document.getElementById('confirmacaoGenericaMensagem').textContent = `Você tem acesso a este item.\n\nDeseja equipar agora ou comprar definitivo?`;
+        
+        const btnNao = document.getElementById('btnConfirmacaoGenericaNao');
+        const btnSim = document.getElementById('btnConfirmacaoGenericaSim');
+        
+        btnNao.textContent = "Equipar (Grátis)";
+        btnNao.style.backgroundColor = "#00c6ff";
+        btnNao.onclick = async () => {
+            exibirAguarde("Aplicando...");
+            await db.collection('usuarios').doc(auth.currentUser.uid).update({ molduraSelecionada: key });
+            fecharTodosOsModais();
+            location.reload(); // <--- ATUALIZAÇÃO INSTANTÂNEA
+        };
+
+        btnSim.textContent = `Comprar (R$ ${m.preco})`;
+        btnSim.style.backgroundColor = "#4CAF50";
+        btnSim.onclick = () => {
+            executarCompraMoldura(key, m); 
+        };
+
+        abrirModal('modalConfirmacaoGenerica');
         return;
     }
 
@@ -13944,68 +13795,6 @@ function iniciarRelogiosPerfil() {
     // Roda imediatamente e depois a cada 1s
     atualizar();
     intervaloRelogiosPerfil = setInterval(atualizar, 1000);
-}
-
-function abrirModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        // Z-Index incremental para garantir que o novo fique por cima
-        const baseZIndex = 2000;
-        const incremento = modalStack.length * 10;
-        modal.style.zIndex = baseZIndex + incremento;
-
-        modal.style.display = 'flex';
-        // Pequeno delay para animação CSS
-        setTimeout(() => modal.classList.add('show'), 10);
-        
-        // Adiciona à pilha se não estiver no topo
-        if (modalStack[modalStack.length - 1] !== modal) {
-            modalStack.push(modal);
-        }
-    }
-}
-
-function fecharModalAtual(force = false) {
-    // Se não houver modais, não faz nada
-    if (modalStack.length === 0) return;
-
-    const modalParaFechar = modalStack.pop(); // Tira do topo da pilha
-    
-    // Remove classe visual
-    modalParaFechar.classList.remove('show');
-    
-    // Espera animação e esconde
-    setTimeout(() => {
-        modalParaFechar.style.display = 'none';
-    }, 300);
-
-    // Se for o popup de aguarde, reseta contadores
-    if (modalParaFechar.id === 'popupAguarde') {
-        aguardeClickCount = 0;
-        if (aguardeTimeoutId) clearTimeout(aguardeTimeoutId);
-    }
-}
-
-function fecharModal(event) {
-    // Fecha se clicar no fundo escuro ou no botão de fechar específico
-    if (event && (event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id'))) {
-        // Impede fechar o modal de "Novo Agendamento" clicando fora
-        if (event.target.id === 'modalNovoAgendamento') return;
-        
-        fecharModalAtual();
-    }
-}
-
-function fecharTodosOsModais() {
-    while (modalStack.length > 0) {
-        fecharModalAtual(true);
-    }
-    // Garantia extra
-    document.querySelectorAll('.modal').forEach(m => {
-        m.classList.remove('show');
-        m.style.display = 'none';
-    });
-    modalStack = [];
 }
 
 function renderizarSelecaoConquistas() {
