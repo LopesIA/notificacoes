@@ -1850,16 +1850,6 @@ body {
 /* ============================================================ */
 
 /* --- ESTRUTURA BASE --- */
-.avatar-wrapper {
-    position: relative;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-    vertical-align: middle;
-    overflow: visible !important; /* Permite asas para fora */
-}
-
 /* Foto do Usuário (Chat e Geral) */
 .chat-user-photo {
     position: relative;
@@ -1894,19 +1884,6 @@ body {
     position: absolute;
     bottom: 0; left: 0; width: 100%; height: 100%;
     clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
-}
-
-/* 2. TAMANHO POPUP (Grande - 120px) */
-.avatar-wrapper.popup-size {
-    width: 120px; height: 120px;
-    margin: 15px auto 20px auto; 
-}
-.avatar-wrapper.popup-size .perfil-foto-grande {
-    width: 100%; height: 100%;
-    border-radius: 50%; padding: 3px;
-}
-.avatar-wrapper.popup-size .coroa-topo {
-    width: 40px; height: 26px; top: -30px;
 }
 
 /* 3. TAMANHO LOJA (Médio - 60px) */
@@ -2048,120 +2025,6 @@ body {
 }
 .molduras-scroll-container::-webkit-scrollbar-track {
     background: #333;
-}
-
-/* --- CORREÇÃO: Wrapper da Moldura no CHAT (Pequeno e Alinhado) --- */
-.avatar-wrapper.chat-size {
-    width: 32px; 
-    height: 32px;
-    margin-right: 15px; /* Aumentei a margem para a asa não bater no nome */
-    margin-left: 8px;   /* Espaço na esquerda para a asa */
-    vertical-align: middle; 
-    display: inline-flex; 
-    position: relative;
-    justify-content: center;
-    align-items: center;
-    overflow: visible !important; /* IMPORTANTE: Permite que a asa saia da caixinha */
-}
-
-.avatar-wrapper.chat-size .chat-user-photo {
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 50%;
-    padding: 1px;
-    margin: 0;
-    display: block;
-    position: relative;
-    z-index: 10; /* Foto acima da asa */
-}
-
-.avatar-wrapper.chat-size .coroa-topo {
-    width: 16px; 
-    height: 10px; 
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 15; /* Coroa acima da foto */
-}
-
-/* Garante que as asas (::before) apareçam */
-.avatar-wrapper.chat-size::before {
-    display: block !important;
-    z-index: 0; /* Asa atrás da foto */
-}
-
-/* Removemos aura giratória pesada no chat pequeno para não poluir,
-   mas mantemos o brilho da borda definido nas classes .ouro, .diamante etc */
-.avatar-wrapper.chat-size::after, 
-.avatar-wrapper.chat-size::before {
-    display: none; 
-}
-
-/* --- CORREÇÃO: Wrapper da Moldura no POPUP (Grande) --- */
-.avatar-wrapper.popup-size {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 15px auto;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.avatar-wrapper.popup-size .perfil-foto-grande {
-    width: 100%;
-    height: 100%;
-    padding: 3px;
-    border-radius: 50%;
-    display: block;
-}
-
-.avatar-wrapper.popup-size .coroa-topo {
-    width: 50px;
-    height: 30px;
-    top: -35px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-/* --- MOLDURAS ADMIN (BASEADA NA DIAMANTE) --- */
-
-/* 1. SUPREME BLACK (PRETA) */
-.avatar-wrapper.admin_black .chat-user-photo, 
-.avatar-wrapper.admin_black .perfil-foto-grande,
-.avatar-wrapper.admin_black .avatar-frame-admin-black {
-    background: transparent; 
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.9), inset 0 0 10px rgba(50, 50, 50, 0.8); 
-}
-.avatar-wrapper.admin_black .coroa-topo::after {
-    background: linear-gradient(to bottom, #444, #000); /* Coroa Preta */
-}
-/* Asas Pretas/Sombrias */
-.avatar-wrapper.admin_black::before {
-    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
-    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 20%, rgba(20,20,20,1) 50%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0) 100%);
-    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
-    animation: asa-sombria-flutuar 3s ease-in-out infinite;
-}
-
-/* 2. SUPREME RED (VERMELHA) */
-.avatar-wrapper.admin_red .chat-user-photo, 
-.avatar-wrapper.admin_red .perfil-foto-grande,
-.avatar-wrapper.admin_red .avatar-frame-admin-red {
-    background: transparent; 
-    border: 1px solid rgba(255, 0, 0, 0.3);
-    box-shadow: 0 0 15px rgba(231, 76, 60, 0.9), inset 0 0 10px rgba(192, 57, 43, 0.5); 
-}
-.avatar-wrapper.admin_red .coroa-topo::after {
-    background: linear-gradient(to bottom, #ff6b6b, #c0392b); /* Coroa Vermelha */
-}
-/* Asas de Fogo */
-.avatar-wrapper.admin_red::before {
-    content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;
-    background: linear-gradient(90deg, rgba(231,76,60,0) 0%, rgba(231,76,60,0.8) 20%, rgba(192,57,43,1) 50%, rgba(231,76,60,0.8) 80%, rgba(231,76,60,0) 100%);
-    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
-    animation: asa-fogo-flutuar 3s ease-in-out infinite;
 }
 
 /* Animações Específicas e Ajustes de Tamanho */
@@ -2539,21 +2402,6 @@ body {
     display: block;
 }
 
-/* --- CORREÇÃO VISUAL: ASAS NO CHAT --- */
-/* Garante que a asa (::before) apareça na lista de mensagens */
-.chat-message .avatar-wrapper.chat-size::before {
-    content: '';
-    display: block !important;
-    position: absolute;
-    z-index: 0; /* Atrás da foto */
-    /* Força tamanho visível no chat pequeno */
-    width: 54px !important;
-    height: 22px !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-}
-
 /* --- CORREÇÃO VISUAL: BRILHO NA ASA E COROA PRETA --- */
 /* Cria um contorno branco brilhante em volta da asa preta para contraste */
 .avatar-wrapper.admin_black::before {
@@ -2601,106 +2449,155 @@ body {
     opacity: 1;
 }
 
-/* --- CORREÇÃO FINAL: VISUAL CHAT E PERFIL --- */
+/* ============================================================
+   CORREÇÃO VISUAL DEFINITIVA: MOLDURAS, ASAS E CHAT
+   (Substitui blocos anteriores de avatar)
+   ============================================================ */
 
-/* 1. Wrapper no Chat (Pequeno) */
-.avatar-wrapper.chat-size {
-    width: 32px !important;
-    height: 32px !important;
-    margin-right: 8px;
+/* Garante que a mensagem do chat não corte a asa */
+.chat-message {
+    overflow: visible !important; 
+}
+
+/* --- WRAPPER BASE --- */
+.avatar-wrapper {
     position: relative;
     display: inline-flex;
     justify-content: center;
     align-items: center;
+    z-index: 1;
     vertical-align: middle;
-    overflow: visible !important; /* Permite que a asa saia pra fora */
+    overflow: visible !important; /* Permite asas para fora */
 }
 
-/* Foto no Chat */
+/* --- TAMANHO 1: NO CHAT (Pequeno) --- */
+.avatar-wrapper.chat-size {
+    width: 35px !important;  /* Levemente maior para acomodar a asa */
+    height: 35px !important;
+    margin-right: 12px !important; /* Espaço para a asa não bater no texto */
+    margin-left: 5px;
+}
+
 .avatar-wrapper.chat-size .chat-user-photo {
     width: 100% !important;
     height: 100% !important;
     border-radius: 50%;
     position: relative;
     z-index: 10; /* Foto na frente */
-    margin: 0 !important;
     border: 1px solid rgba(255,255,255,0.2);
+    object-fit: cover;
 }
 
 /* Coroa no Chat */
 .avatar-wrapper.chat-size .coroa-topo {
-    width: 16px !important;
-    height: 10px !important;
-    top: -10px !important;
+    width: 18px !important;
+    height: 12px !important;
+    top: -12px !important;
     left: 50%;
     transform: translateX(-50%);
     position: absolute;
     z-index: 15;
 }
 
-/* Asas no Chat (Ajuste Fino) */
+/* Asa no Chat */
 .avatar-wrapper.chat-size::before {
     content: '';
     display: block !important;
     position: absolute;
-    width: 60px !important; /* Asa larga */
-    height: 24px !important;
+    width: 65px !important; /* Largura da asa pequena */
+    height: 26px !important;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 0; /* Atrás da foto */
     pointer-events: none;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
-/* 2. Wrapper no Popup de Perfil (Grande) */
+/* --- TAMANHO 2: NO POPUP (Grande) --- */
 .avatar-wrapper.popup-size {
-    width: 120px; height: 120px;
+    width: 120px; 
+    height: 120px;
     margin: 20px auto;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: visible !important;
 }
 .avatar-wrapper.popup-size .perfil-foto-grande {
     width: 100%; height: 100%;
     border-radius: 50%;
     position: relative;
     z-index: 10;
-    border: 3px solid rgba(255,255,255,0.1);
+    border: 3px solid rgba(255,255,255,0.2);
+    object-fit: cover;
 }
 .avatar-wrapper.popup-size .coroa-topo {
     width: 50px; height: 30px;
     top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
     position: absolute;
     z-index: 15;
 }
 .avatar-wrapper.popup-size::before {
-    width: 280px; height: 120px; /* Asa bem grande no popup */
+    width: 280px; height: 120px;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     z-index: 0;
 }
 
-/* --- 3. CORREÇÃO ESPECÍFICA: BRILHO NA ASA E COROA PRETA --- */
+/* --- ESTILOS DAS MOLDURAS (CORES E ASAS) --- */
 
-/* Brilho Branco ao redor da Asa Preta (Chat e Popup) */
+/* 1. Coroa Base */
+.coroa-topo::after {
+    content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+    clip-path: polygon(5% 100%, 0% 30%, 25% 50%, 50% 0%, 75% 50%, 100% 30%, 95% 100%);
+}
+
+/* 2. BRONZE, PRATA, OURO (Sem asas, apenas borda e coroa) */
+.avatar-wrapper.bronze .chat-user-photo, .avatar-wrapper.bronze .perfil-foto-grande { box-shadow: 0 0 0 2px #cd7f32; }
+.avatar-wrapper.bronze .coroa-topo::after { background: linear-gradient(to bottom, #ffcc80, #cd7f32); }
+
+.avatar-wrapper.prata .chat-user-photo, .avatar-wrapper.prata .perfil-foto-grande { box-shadow: 0 0 0 2px #c0c0c0; }
+.avatar-wrapper.prata .coroa-topo::after { background: linear-gradient(to bottom, #fff, #999); }
+
+.avatar-wrapper.ouro .chat-user-photo, .avatar-wrapper.ouro .perfil-foto-grande { box-shadow: 0 0 0 2px #ffd700; animation: gold-pulse 2s infinite; }
+.avatar-wrapper.ouro .coroa-topo::after { background: linear-gradient(to bottom, #fff7cc, #ffd700); }
+
+/* 3. DIAMANTE (Asa Azul) */
+.avatar-wrapper.diamante .chat-user-photo, .avatar-wrapper.diamante .perfil-foto-grande { border: 2px solid #00c6ff; }
+.avatar-wrapper.diamante .coroa-topo::after { background: linear-gradient(to bottom, #e0ffff, #00c6ff); }
+.avatar-wrapper.diamante::before {
+    content: '';
+    background: linear-gradient(90deg, rgba(0,198,255,0) 0%, rgba(0,198,255,0.8) 20%, rgba(0,198,255,1) 50%, rgba(0,198,255,0.8) 80%, rgba(0,198,255,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+}
+
+/* 4. ADMIN BLACK (Asa Preta + Brilho Branco) */
+.avatar-wrapper.admin_black .chat-user-photo, 
+.avatar-wrapper.admin_black .perfil-foto-grande { 
+    border: 2px solid #fff; 
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+.avatar-wrapper.admin_black .coroa-topo::after { 
+    background: #000; 
+    filter: drop-shadow(0 0 2px #fff); /* Brilho na coroa */
+}
 .avatar-wrapper.admin_black::before {
-    /* Sombra branca sólida (outline) + Sombra difusa */
-    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) !important;
+    content: '';
+    background: #000; /* Asa preta sólida */
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
+    /* O TRUQUE DO BRILHO BRANCO EM VOLTA DO PRETO: */
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) !important;
     opacity: 1 !important;
 }
 
-/* Brilho Branco na Coroa Preta */
-.avatar-wrapper.admin_black .coroa-topo {
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) !important;
-}
-
-/* Borda brilhante na foto preta */
-.avatar-wrapper.admin_black .chat-user-photo,
-.avatar-wrapper.admin_black .perfil-foto-grande {
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+/* 5. ADMIN RED (Asa Vermelha) */
+.avatar-wrapper.admin_red .chat-user-photo, .avatar-wrapper.admin_red .perfil-foto-grande { border: 2px solid #ff0000; }
+.avatar-wrapper.admin_red .coroa-topo::after { background: linear-gradient(to bottom, #ff6b6b, #c0392b); }
+.avatar-wrapper.admin_red::before {
+    content: '';
+    background: linear-gradient(90deg, rgba(255,0,0,0) 0%, rgba(255,0,0,0.8) 20%, rgba(255,0,0,1) 50%, rgba(255,0,0,0.8) 80%, rgba(255,0,0,0) 100%);
+    clip-path: polygon(0% 10%, 20% 30%, 5% 50%, 35% 55%, 50% 50%, 65% 55%, 95% 50%, 80% 30%, 100% 10%, 60% 40%, 50% 20%, 40% 40%);
 }
   </style>
 </head>
