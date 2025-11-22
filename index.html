@@ -9077,7 +9077,7 @@ async function abrirModalGerenciarUsuario(uid) {
                 <p><strong>💰 Gerenciar Financeiro:</strong></p>
                 
                 <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:10px;">
-                    <p style="margin:0 0 5px 0;">🇧🇷 Saldo Serviços: <strong>R$ ${(u.saldo || 0).toFixed(2)}</strong></p>
+                    <p style="margin:0 0 5px 0;">💶 Saldo Serviços: <strong>R$ ${(u.saldo || 0).toFixed(2)}</strong></p>
                     <div style="display:flex; gap:5px;">
                         <input id="adminModificarSaldo" type="number" placeholder="+/- Valor" style="margin:0;">
                         <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
@@ -9085,7 +9085,7 @@ async function abrirModalGerenciarUsuario(uid) {
                 </div>
 
                 <div style="background:rgba(0, 198, 255, 0.1); padding:10px; border-radius:8px; border:1px solid rgba(0, 198, 255, 0.3);">
-                    <p style="margin:0 0 5px 0; color:#00c6ff;">💎 Saldo Digital: <strong>C$ ${(u.saldoDigital || 0).toFixed(2)}</strong></p>
+                    <p style="margin:0 0 5px 0; color:#00c6ff;">💎 Saldo Digital: <strong>R$ ${(u.saldoDigital || 0).toFixed(2)}</strong></p>
                     <div style="display:flex; gap:5px;">
                         <input id="adminModificarSaldoDigital" type="number" placeholder="+/- Moedas" style="margin:0;">
                         <button onclick="adminModificarSaldoDigital('${uid}')" style="width:auto; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff);">Aplicar</button>
