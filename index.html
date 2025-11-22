@@ -13537,6 +13537,7 @@ function verificarAcessoMoldura(key) {
 
 function renderizarMolduras() {
     const container = document.getElementById('listaMolduras');
+    // Define a classe para garantir a rolagem horizontal correta
     container.className = 'molduras-scroll-container'; 
     container.innerHTML = '';
     
@@ -13548,7 +13549,6 @@ function renderizarMolduras() {
         if (m.adminOnly && perfil.tipo !== 'admin') {
             return;
         }
-        // ---------------------------
 
         const selecionada = perfil.molduraSelecionada === key;
         const statusAcesso = verificarAcessoMoldura(key); 
@@ -13563,13 +13563,25 @@ function renderizarMolduras() {
             const texto = m.adminOnly ? 'Exclusivo Admin' : 'Adquirido';
             rodapeHtml = `<span style="font-size:10px; color:#4CAF50; margin-top:2px;">${texto}</span>`;
             estiloBorda = selecionada ? '' : 'border-color: #4CAF50;'; 
-        } else if (statusAcesso.tipo === 'temporario') {
+        } 
+        else if (statusAcesso.tipo === 'temporario') {
+            // Acesso via plano PRO
             rodapeHtml = `
                 <span style="font-size:9px; color:#00c6ff; font-weight:bold; margin-top:2px;">Liberado PRO</span>
                 <span style="font-size:9px; color:#ff9800; opacity:0.7;">(Comprar: R$${m.preco})</span>
             `;
             estiloBorda = selecionada ? '' : 'border-color: #00c6ff;';
-        } else {
+        } 
+        // --- AQUI ESTÁ A ADIÇÃO PARA A ROLETA ---
+        else if (statusAcesso.tipo === 'temporario_roleta') {
+            // Calcula horas restantes
+            const horasRestantes = Math.ceil((statusAcesso.validade - new Date()) / (1000 * 60 * 60));
+            rodapeHtml = `<span style="font-size:9px; color:#e57373; font-weight:bold; margin-top:2px;">Prêmio: ${horasRestantes}h</span>`;
+            estiloBorda = 'border-color: #e57373;';
+        } 
+        // ---------------------------------------
+        else {
+            // Não tem acesso, mostra o preço
             rodapeHtml = `<span style="font-size:10px; color:#ff9800; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px; margin-top:2px;">R$${m.preco}</span>`;
             estiloBorda = 'opacity: 0.7;';
         }
