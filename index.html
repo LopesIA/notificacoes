@@ -13385,7 +13385,7 @@ async function girarRoleta() {
     btnGirar.disabled = true; 
     btnGirar.textContent = "Girando...";
 
-    // TABELA DE PRÊMIOS (20 ITENS - VISUAL SINCRONIZADO)
+    // TABELA DE PRÊMIOS
     const arrayPremios = [
         { tipo: 'ponto', valor: 1 },           // 0
         { tipo: 'moldura', key: 'bronze', nome: 'Bronze' }, // 1
@@ -13437,6 +13437,17 @@ async function girarRoleta() {
     }
 
     setTimeout(async () => {
+        // --- NOVO: DISPARAR CONFETES ---
+        if (typeof confetti === 'function') {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                zIndex: 9999 // Garante que fique acima dos modais
+            });
+        }
+        // -------------------------------
+
         let updates = { ultimoGiroRoleta: hoje };
         updates.girosRealizadosHoje = isNovoDia ? 1 : firebase.firestore.FieldValue.increment(1);
         
@@ -13451,28 +13462,20 @@ async function girarRoleta() {
             tituloPopup = "🎁 Item Temporário!";
             const tipoItem = premioGanho.tipo === 'moldura' ? 'Moldura' : 'Estilo de Chat';
             
-            // --- LÓGICA DE ACUMULAR TEMPO (MOLDURA/BALÃO) ---
-            let baseDate = new Date(); // Começa com agora
+            let baseDate = new Date(); 
             const chaveObjeto = premioGanho.tipo === 'moldura' ? `moldura_${premioKey}` : `balao_${premioKey}`;
             
-            // Verifica se já existe um prêmio desse tipo ativo
             if (perfil.premiosTemporarios && perfil.premiosTemporarios[chaveObjeto]) {
                 let existingDate = perfil.premiosTemporarios[chaveObjeto];
-                // Converte Timestamp do Firebase para Date se necessário
                 if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
-                
-                // Se a data existente for no futuro, usamos ela como base (ACUMULA)
                 if (existingDate > new Date()) {
                     baseDate = existingDate;
                 }
             }
 
-            // Adiciona 24 horas ao tempo base (seja ele agora ou o futuro acumulado)
             baseDate.setHours(baseDate.getHours() + 24);
-            
             corpoPopup = `Sorte Grande! Você ganhou **${tipoItem} ${msgPremio}** por +24 horas! (Acumulado)`;
             
-            // Salva no Firestore
             if (premioGanho.tipo === 'moldura') {
                 updates[`premiosTemporarios.moldura_${premioKey}`] = firebase.firestore.Timestamp.fromDate(baseDate);
             }
@@ -13484,17 +13487,14 @@ async function girarRoleta() {
             tituloPopup = "🎁 CAIXA MISTERIOSA!";
             
             if (perfil.tipo !== 'cliente') {
-                // --- PRÊMIO PROFISSIONAL: BOOST ---
                 let baseDate = new Date();
                 if (perfil.boostExpiracao) {
                     let existingDate = perfil.boostExpiracao;
                     if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
-                    // Se já tem boost ativo, acumula em cima dele
                     if (existingDate > new Date()) {
                         baseDate = existingDate;
                     }
                 }
-                // Soma +24 horas
                 baseDate.setHours(baseDate.getHours() + 24);
                 
                 updates.boostExpiracao = firebase.firestore.Timestamp.fromDate(baseDate);
@@ -13502,20 +13502,14 @@ async function girarRoleta() {
                 corpoPopup = "Você ganhou +24 horas de Perfil Turbinado (Acumulado)!";
                 
             } else {
-                // --- PRÊMIO CLIENTE: VIP ---
                 let baseDate = new Date();
-                
-                // Verifica se já é VIP (com data de expiração)
                 if (perfil.vip && perfil.vipExpirationDate) {
                     let existingDate = perfil.vipExpirationDate;
                     if (existingDate && typeof existingDate.toDate === 'function') existingDate = existingDate.toDate();
-                    // Se já é VIP e não expirou, acumula
                     if (existingDate > new Date()) {
                         baseDate = existingDate;
                     }
                 }
-                
-                // Soma +5 dias
                 baseDate.setDate(baseDate.getDate() + 5);
                 
                 updates.vip = true; 
@@ -13528,10 +13522,9 @@ async function girarRoleta() {
             await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
             
             exibirPopupBloqueante(tituloPopup, corpoPopup, () => {
-                // Busca dados novos para atualizar a UI (roleta e listas desbloqueadas)
                 db.collection('usuarios').doc(auth.currentUser.uid).get().then(doc => {
                     perfil = doc.data();
-                    abrirModalPerfil(); // Recarrega o modal para mostrar os itens liberados
+                    abrirModalPerfil(); 
                 });
             });
 
