@@ -3955,6 +3955,8 @@ onclick="fecharModal(event)">Fechar</button></div></div>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js"></script> 
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-storage-compat.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script> 
+
 <script>
 // Firebase e variáveis globais
 const firebaseConfig = {
@@ -11094,7 +11096,7 @@ async function adminAdicionarGiros(uid) {
     const qtde = parseInt(inputGiros.value);
 
     if (isNaN(qtde) || qtde <= 0) {
-        return exibirPopup("Valor inválido", "Digite uma quantidade válida de giros (ex: 1, 5, 10).");
+        return exibirPopup("Valor inválido", "Digite uma quantidade válida de giros.");
     }
 
     if (!confirm(`Deseja adicionar ${qtde} giros extras para este usuário hoje?`)) return;
@@ -11102,18 +11104,15 @@ async function adminAdicionarGiros(uid) {
     exibirAguarde("Adicionando giros...");
 
     try {
-        // A lógica é: Se 'girosRealizadosHoje' ficar negativo, o cálculo (Total - Realizados) aumenta.
-        // Ex: Limite 1. Usou 1. Resta 0. 
-        // Admin dá 5. 'girosRealizadosHoje' vira 1 - 5 = -4.
-        // Novo Restante: 1 - (-4) = 5. Funciona perfeitamente.
-        
         await db.collection('usuarios').doc(uid).update({
-            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde)
+            girosRealizadosHoje: firebase.firestore.FieldValue.increment(-qtde),
+            // Atualiza a data para garantir que o front entenda que é "hoje" e use o valor
+            ultimoGiroRoleta: new Date().toDateString() 
         });
 
         fecharTodosOsModais();
-        exibirPopup("Sucesso", `${qtde} giros adicionados ao usuário!`);
-        abrirModalGerenciarUsuario(uid); // Reabre para atualizar
+        exibirPopup("Sucesso", `${qtde} giros adicionados!`);
+        abrirModalGerenciarUsuario(uid); 
     } catch (e) {
         fecharTodosOsModais();
         exibirPopup("Erro", "Não foi possível adicionar giros: " + e.message);
@@ -13308,19 +13307,27 @@ function abrirModalPerfil() {
     abrirModal('modalMeuPerfil');
 }
 
-// Função auxiliar para atualizar o texto do botão
 function atualizarBotaoRoleta() {
     const btnGirar = document.getElementById('btnGirarRoleta');
-    if (!btnGirar) return;
+    if (!btnGirar || !perfil) return;
 
     const hoje = new Date().toDateString();
     let girosTotais = 1; 
     if (isProAtivo(perfil) && perfil.proTier && PRECOS_PRO[perfil.proTier]) {
         girosTotais = PRECOS_PRO[perfil.proTier].giros;
     }
+    
     const isNovoDia = perfil.ultimoGiroRoleta !== hoje;
-    const girosUsadosHoje = isNovoDia ? 0 : (perfil.girosRealizadosHoje || 0);
-    let girosRestantes = Math.max(0, girosTotais - girosUsadosHoje);
+    let girosRealizados = perfil.girosRealizadosHoje || 0;
+
+    // CORREÇÃO: Se é um novo dia, mas os giros são negativos (extras do admin),
+    // mantemos o valor negativo (crédito). Só zeramos se for positivo (uso).
+    if (isNovoDia && girosRealizados > 0) {
+        girosRealizados = 0;
+    }
+
+    // Cálculo: Total (ex: 1) - Realizados (ex: -999) = 1000 disponíveis
+    let girosRestantes = Math.max(0, girosTotais - girosRealizados);
 
     btnGirar.textContent = `🎲 GIRAR (${girosRestantes} Restantes)`;
     
@@ -13751,14 +13758,17 @@ function iniciarRelogiosPerfil() {
     // Limpa anterior se existir
     if (intervaloRelogiosPerfil) clearInterval(intervaloRelogiosPerfil);
 
-    // Define a função de atualização
     const atualizar = () => {
         const elementos = document.querySelectorAll('.contador-tempo-real');
         if (elementos.length === 0) return;
 
         elementos.forEach(el => {
-            const timestamp = parseInt(el.dataset.expire);
-            if (!timestamp) return;
+            // CORREÇÃO: Garante que é um número
+            const timestamp = parseInt(el.getAttribute('data-expire'));
+            if (!timestamp || isNaN(timestamp)) {
+                el.textContent = "Erro Data";
+                return;
+            }
             
             const dataFutura = new Date(timestamp);
             const texto = formatarTempoRestante(dataFutura);
