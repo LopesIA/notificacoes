@@ -2070,12 +2070,14 @@ body {
 .avatar-wrapper.chat-size {
     width: 32px; 
     height: 32px;
-    margin-right: 8px;
-    vertical-align: middle; /* Alinha com o texto */
-    display: inline-flex; /* Fundamental para não quebrar linha */
+    margin-right: 15px; /* Aumentei a margem para a asa não bater no nome */
+    margin-left: 8px;   /* Espaço na esquerda para a asa */
+    vertical-align: middle; 
+    display: inline-flex; 
     position: relative;
     justify-content: center;
     align-items: center;
+    overflow: visible !important; /* IMPORTANTE: Permite que a asa saia da caixinha */
 }
 
 .avatar-wrapper.chat-size .chat-user-photo {
@@ -2083,24 +2085,27 @@ body {
     height: 100% !important;
     border-radius: 50%;
     padding: 1px;
-    margin: 0; /* Remove margens antigas */
+    margin: 0;
     display: block;
+    position: relative;
+    z-index: 10; /* Foto acima da asa */
 }
 
 .avatar-wrapper.chat-size .coroa-topo {
-    width: 16px; /* Coroa menor */
+    width: 16px; 
     height: 10px; 
     top: -10px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 15; /* Coroa acima da foto */
 }
 
-/* Removemos aura giratória pesada no chat pequeno para não poluir,
-   mas mantemos o brilho da borda definido nas classes .ouro, .diamante etc */
-.avatar-wrapper.chat-size::after, 
+/* Garante que as asas (::before) apareçam */
 .avatar-wrapper.chat-size::before {
-    display: none; 
+    display: block !important;
+    z-index: 0; /* Asa atrás da foto */
 }
+
 
 /* --- CORREÇÃO: Wrapper da Moldura no POPUP (Grande) --- */
 .avatar-wrapper.popup-size {
@@ -2293,7 +2298,7 @@ body {
 }
 /* Garante limpeza */
 .chat-message.bubble-bronze::before, 
-.chat-message.bubble-bronze::after { display: none !important; }
+.chat-message.bubble-bronze::after { !important; }
 
 
 /* ============================================================
@@ -2308,7 +2313,7 @@ body {
     color: #ffffff !important; /* Texto Branco Puro */
 }
 .chat-message.bubble-prata::before, 
-.chat-message.bubble-prata::after { display: none !important; }
+.chat-message.bubble-prata::after { !important; }
 
 
 /* ============================================================
@@ -2325,7 +2330,7 @@ body {
     animation: shine-gold 4s linear infinite; /* Brilho passando */
 }
 .chat-message.bubble-ouro::before, 
-.chat-message.bubble-ouro::after { display: none !important; }
+.chat-message.bubble-ouro::after { !important; }
 
 
 /* ============================================================
@@ -2443,6 +2448,7 @@ body {
     /* Drop-shadow branco intenso e nítido ao redor da asa preta */
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)) !important;
 }
+
   </style>
 </head>
 <body>
@@ -6826,10 +6832,11 @@ async function createMessageDiv(msg, docId) {
 
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
                     const classeMoldura = MOLDURAS[remetenteData.molduraSelecionada].classe;
+                    // CORREÇÃO AQUI: Adicionada a classe da moldura (ex: 'diamante') na div wrapper
                     avatarHtml = `
-                    <div class="avatar-wrapper chat-size" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; display: inline-flex; position: relative; vertical-align: middle; margin-right: 8px;">
-                        <img src="${fotoUrl}" class="chat-user-photo ${classeMoldura}" style="width:32px; height:32px; border-radius:50%; padding:2px;">
-                        <div class="coroa-topo" style="position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:10px;"></div>
+                    <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
+                        <div class="coroa-topo"></div>
+                        <img src="${fotoUrl}" class="chat-user-photo ${classeMoldura}">
                     </div>`;
                 } else {
                     avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
