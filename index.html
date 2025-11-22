@@ -8787,6 +8787,7 @@ async function verDetalhesSolicitacao(id) {
     if(s.tipo === 'saque') {
       detalhes += `Chave: ${s.chavePixTipo} - ${s.chavePix}\nAprovar? (Ação irreversível - faça APÓS a transferência PIX)`;
     } else if (s.tipo === 'deposito') {
+       const destinoTexto = s.subTipo === 'saldoServicos' ? 'SALDO DE SERVIÇOS (Cortes)' : 'SALDO DIGITAL (Loja/VIP)';
       detalhes += `Nome Completo: ${s.dadosDeposito.nomeCompleto}\nCPF: ${s.dadosDeposito.cpf}\nTelefone: ${s.dadosDeposito.telefone}\n\nAprovar este depósito? (O valor será adicionado ao saldo do usuário)`;
     } else if (s.tipo === "liberacao_loja") {
         detalhes += `\nAprovar liberação da loja para ${s.usuarioNome}?`;
@@ -8799,7 +8800,8 @@ async function verDetalhesSolicitacao(id) {
     const confirmar = confirm(detalhes);
     if (confirmar) {
       if (s.tipo === "saque") aprovarSaque(id, s.usuarioUid, s.valor);
-      else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor);
+      // CORREÇÃO AQUI: Passando s.subTipo
+      else if (s.tipo === "deposito") aprovarDeposito(id, s.usuarioUid, s.valor, s.subTipo); 
       else if (s.tipo === "liberacao_loja") aprovarLiberacaoLoja(id, s.usuarioUid);
     } else if (confirm("Deseja recusar a solicitação?")) {
       recusarSolicitacao(id, s.usuarioUid, s.tipo);
@@ -8820,35 +8822,47 @@ function aprovarSaque(id, uid, valor) {
   }).catch(e => exibirPopup("Erro: " + e.message));
 }
 
-function aprovarDeposito(id, uid, valor) {
-  db.runTransaction(async t => {
-    const userRef = db.collection("usuarios").doc(uid);
-    const userDoc = await t.get(userRef);
-    if (!userDoc.exists) throw new Error("Usuário não encontrado!");
-    
-    const userData = userDoc.data();
-    const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
-    const pontosGanhos = Math.floor(valor / 10) * pontosPorDezReais;
-    
-    const updates = { saldo: firebase.firestore.FieldValue.increment(valor) };
-    if (pontosGanhos > 0) {
-        updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
-    }
+async function aprovarDeposito(id, uid, valor, subTipo) {
+  exibirAguarde("Aprovando...");
+  try {
+      await db.runTransaction(async t => {
+        const userRef = db.collection("usuarios").doc(uid);
+        const userDoc = await t.get(userRef);
+        if (!userDoc.exists) throw new Error("Usuário não encontrado!");
+        
+        const userData = userDoc.data();
+        
+        // Define qual campo atualizar
+        let updates = {};
+        
+        if (subTipo === 'saldoServicos') {
+            // Depósito para SERVIÇOS (Sem pontos de fidelidade, geralmente)
+            updates.saldoServicos = firebase.firestore.FieldValue.increment(valor);
+        } else {
+            // Depósito DIGITAL (Ganha pontos)
+            updates.saldo = firebase.firestore.FieldValue.increment(valor);
+            
+            const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
+            const pontosGanhos = Math.floor(valor / 10) * pontosPorDezReais;
+            if (pontosGanhos > 0) {
+                updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
+            }
+        }
 
-    t.update(userRef, updates);
-    t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
-    return pontosGanhos;
+        t.update(userRef, updates);
+        t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
+      });
 
-  }).then((pontosGanhos) => {
-    exibirPopup("Depósito aprovado e saldo adicionado!");
-    let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`;
-    if (pontosGanhos > 0) {
-        notificationBody += ` Você ganhou ${pontosGanhos} pontos de fidelidade!`;
-    }
-    notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
-  }).catch(e => {
-    exibirPopup("Erro ao aprovar depósito: " + e.message);
-  });
+      fecharTodosOsModais();
+      exibirPopup("Depósito aprovado e saldo adicionado na carteira correta!");
+      
+      let msgDestino = subTipo === 'saldoServicos' ? "Carteira de Serviços" : "Carteira Digital";
+      notifyUser(uid, "💰 Depósito Aprovado!", `Seu depósito de R$ ${valor.toFixed(2)} foi adicionado em: ${msgDestino}.`, { link: '#carteira' });
+
+  } catch(e) {
+      fecharTodosOsModais();
+      exibirPopup("Erro ao aprovar depósito: " + e.message);
+  }
 }
 
 function recusarSolicitacao(id, uid, tipo) {
@@ -9012,14 +9026,25 @@ async function abrirModalGerenciarUsuario(uid) {
                 ${moldurasHtml}
             </div>
 
+            Gerenciar Saldo" e SUBSTITUA aquele trecho (<div class="popup-section">... até <hr>) por este novo bloco que tem os dois saldos:
+
+JavaScript
+
             <div class="popup-section">
-                <p><strong>Gerenciar Saldo, VIP, PRO e Pontos:</strong></p>
+                <p><strong>Gerenciar Saldos:</strong></p>
                 
-                <p><strong>Saldo Atual:</strong> R$ ${(u.saldo || 0).toFixed(2)}</p>
+                <p>💎 Digital (Loja/VIP): <strong>R$ ${(u.saldo || 0).toFixed(2)}</strong></p>
                 <div style="display:flex; gap:5px; margin-bottom: 10px;">
-                    <input id="adminModificarSaldo" type="number" placeholder="Valor (+ ou -)" style="margin:0;">
-                    <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Aplicar</button>
+                    <input id="adminModificarSaldoDigital" type="number" placeholder="+ ou -" style="margin:0;">
+                    <button onclick="adminModificarSaldo('${uid}', 'digital')" style="width:auto;">Aplicar</button>
                 </div>
+
+                <p>💇 Serviços (Cortes): <strong>R$ ${(u.saldoServicos || 0).toFixed(2)}</strong></p>
+                <div style="display:flex; gap:5px; margin-bottom: 10px;">
+                    <input id="adminModificarSaldoServicos" type="number" placeholder="+ ou -" style="margin:0;">
+                    <button onclick="adminModificarSaldo('${uid}', 'servicos')" style="width:auto;">Aplicar</button>
+                </div>
+                
                 <hr style="border-color: var(--cor-borda); margin: 10px 0;">
                 
                 <p><strong>Roleta Diária:</strong></p>
@@ -9260,14 +9285,25 @@ async function adminMudarTipo(uid) {
   exibirPopup("Tipo alterado!");
   fecharModalAtual();
 }
-async function adminModificarSaldo(uid) {
-  const valor = parseFloat(document.getElementById('adminModificarSaldo').value);
+
+async function adminModificarSaldo(uid, tipoSaldo) {
+  let inputId = tipoSaldo === 'servicos' ? 'adminModificarSaldoServicos' : 'adminModificarSaldoDigital';
+  let campoDb = tipoSaldo === 'servicos' ? 'saldoServicos' : 'saldo';
+  
+  const valor = parseFloat(document.getElementById(inputId).value);
+  
   if (!isNaN(valor)) {
-    await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
-    notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
-    exibirPopup("Saldo alterado!");
-    fecharModalAtual();
-  } else exibirPopup("Valor inválido.");
+    await db.collection("usuarios").doc(uid).update({ [campoDb]: firebase.firestore.FieldValue.increment(valor) });
+    
+    let nomeCarteira = tipoSaldo === 'servicos' ? "Serviços" : "Digital";
+    notifyUser(uid, "💸 Ajuste de Saldo", `Admin alterou seu saldo (${nomeCarteira}) em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
+    
+    exibirPopup("Saldo alterado com sucesso!");
+    // Reabre o modal para atualizar os valores na tela
+    abrirModalGerenciarUsuario(uid);
+  } else {
+      exibirPopup("Valor inválido.");
+  }
 }
 
 async function adminToggleVip(uid, conceder) {
@@ -13911,128 +13947,71 @@ function iniciarRelogiosPerfil() {
     intervaloRelogiosPerfil = setInterval(atualizar, 1000);
 }
 
-// --- SISTEMA DE ROTEAMENTO (ANTI-TRAVAMENTO) ---
+// --- SISTEMA DE JANELAS ESTÁVEL (SEM TRAVAMENTOS) ---
 
-const rotasApp = {
-    '#carteira': 'modalCarteira',
-    '#historico': 'modalHistoricoCliente',
-    '#vip': 'modalVip',
-    '#fidelidade': 'modalFidelidade',
-    '#conquistas': 'modalConquistas',
-    '#blog': 'modalBlog',
-    '#configuracoes': 'modalConfiguracoes',
-    '#loja': 'lojaView',
-    '#agendamentos': 'modalAgendamentosBarbeiro',
-    '#servicos': 'modalServicosBarbeiro',
-    '#agenda': 'modalAgendaBarbeiro',
-    '#clientes': 'modalClientesBarbeiro',
-    '#promocoes': 'modalPromocoesBarbeiro',
-    '#desempenho': 'modalDashboardBarbeiro',
-    '#avaliacoes': 'modalAvaliacoes',
-    '#portfolio': 'modalPortfolioBarbeiro',
-    '#denuncia': 'modalDenuncia',
-    '#perfil': 'modalMeuPerfil',
-    '#solicitacoes': 'modalSolicitacoes',
-    '#usuarios': 'modalUsuarios',
-    '#entregas': 'modalEntregasVendedor',
-    '#minhascompras': 'modalMinhasCompras',
-    '#gerenciarloja': 'modalGerenciarLoja'
-};
-
-// Flag para impedir loops infinitos
-let isClosingProgrammatically = false;
+let modalStack = []; // Pilha para saber a ordem de abertura
 
 function abrirModal(modalId) {
-    const rota = Object.keys(rotasApp).find(key => rotasApp[key] === modalId);
-    if (rota) {
-        // Se tem rota, usa a URL
-        if (window.location.hash !== rota) {
-            window.location.hash = rota;
-        } else {
-            exibirModalVisualmente(modalId); // Já está na rota, força exibição
-        }
-    } else {
-        // Modais sem rota (alertas, confirms) abrem direto
-        exibirModalVisualmente(modalId);
-    }
-}
-
-function exibirModalVisualmente(modalId) {
-    const novoModal = document.getElementById(modalId);
-    if (novoModal && !novoModal.classList.contains('show')) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        // Z-Index incremental para garantir que o novo fique por cima
         const baseZIndex = 2000;
-        const incremento = document.querySelectorAll('.modal.show').length * 10;
-        novoModal.style.zIndex = baseZIndex + incremento;
-        novoModal.style.display = 'flex';
-        setTimeout(() => {
-            novoModal.classList.add('show');
-            if (!modalStack.includes(novoModal)) {
-                modalStack.push(novoModal);
-            }
-        }, 10);
-    }
-}
+        const incremento = modalStack.length * 10;
+        modal.style.zIndex = baseZIndex + incremento;
 
-function fecharModalAtual(forcePopupAguarde = false) {
-    // Pega o modal do topo
-    const modalTopo = modalStack[modalStack.length - 1];
-    
-    // Se for modal sem rota (ex: Aguarde, Confirmação) fecha visualmente direto
-    if (forcePopupAguarde || (modalTopo && !Object.values(rotasApp).includes(modalTopo.id))) {
-        fecharModalVisualmente();
-        return;
-    }
-
-    // Se for modal COM rota, volta o histórico
-    if (window.location.hash) {
-        window.history.back(); 
-    } else {
-        fecharModalVisualmente();
-    }
-}
-
-function fecharModalVisualmente() {
-    if (modalStack.length > 0) {
-        const modalParaFechar = modalStack.pop();
-        modalParaFechar.classList.remove('show');
-        setTimeout(() => {
-            modalParaFechar.style.display = 'none';
-        }, 300);
-    }
-}
-
-// OUVINTE DE URL (BOTÃO VOLTAR)
-window.addEventListener('hashchange', () => {
-    const hash = window.location.hash;
-    
-    if (!hash) {
-        // URL limpa: Fecha modais de rota
-        modalStack.forEach(modal => {
-            if (Object.values(rotasApp).includes(modal.id)) {
-                modal.classList.remove('show');
-                setTimeout(() => modal.style.display = 'none', 300);
-            }
-        });
-        modalStack = modalStack.filter(modal => !Object.values(rotasApp).includes(modal.id));
-        return;
-    }
-
-    if (rotasApp[hash]) {
-        if (rotasApp[hash].includes('View')) {
-            mostrar(rotasApp[hash]);
-            if(hash === '#loja') carregarProdutos();
-        } else {
-            exibirModalVisualmente(rotasApp[hash]);
+        modal.style.display = 'flex';
+        // Pequeno delay para animação CSS (se houver)
+        setTimeout(() => modal.classList.add('show'), 10);
+        
+        // Adiciona à pilha se não estiver no topo
+        if (modalStack[modalStack.length - 1] !== modal) {
+            modalStack.push(modal);
         }
     }
-});
+}
 
-// Ao carregar (Deep Link)
-window.addEventListener('load', () => {
-    if (window.location.hash && rotasApp[window.location.hash]) {
-        setTimeout(() => window.dispatchEvent(new Event('hashchange')), 500);
+function fecharModalAtual(force = false) {
+    // Se não houver modais, não faz nada
+    if (modalStack.length === 0) return;
+
+    const modalParaFechar = modalStack.pop(); // Tira do topo da pilha
+    
+    // Remove classe visual
+    modalParaFechar.classList.remove('show');
+    
+    // Espera animação e esconde
+    setTimeout(() => {
+        modalParaFechar.style.display = 'none';
+    }, 300);
+
+    // Se for o popup de aguarde, reseta contadores
+    if (modalParaFechar.id === 'popupAguarde') {
+        aguardeClickCount = 0;
+        if (aguardeTimeoutId) clearTimeout(aguardeTimeoutId);
     }
-});
+}
+
+function fecharModal(event) {
+    // Fecha se clicar no fundo escuro ou no botão de fechar específico
+    if (event && (event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id'))) {
+        // Impede fechar o modal de "Novo Agendamento" clicando fora
+        if (event.target.id === 'modalNovoAgendamento') return;
+        
+        fecharModalAtual();
+    }
+}
+
+function fecharTodosOsModais() {
+    while (modalStack.length > 0) {
+        fecharModalAtual(true);
+    }
+    // Garantia extra para modais críticos
+    document.querySelectorAll('.modal').forEach(m => {
+        m.classList.remove('show');
+        m.style.display = 'none';
+    });
+    modalStack = [];
+}
 
 function renderizarSelecaoConquistas() {
     const container = document.getElementById('listaSelecaoConquistas');
