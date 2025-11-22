@@ -2600,6 +2600,108 @@ body {
     display: block;
     opacity: 1;
 }
+
+/* --- CORREÇÃO FINAL: VISUAL CHAT E PERFIL --- */
+
+/* 1. Wrapper no Chat (Pequeno) */
+.avatar-wrapper.chat-size {
+    width: 32px !important;
+    height: 32px !important;
+    margin-right: 8px;
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    vertical-align: middle;
+    overflow: visible !important; /* Permite que a asa saia pra fora */
+}
+
+/* Foto no Chat */
+.avatar-wrapper.chat-size .chat-user-photo {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50%;
+    position: relative;
+    z-index: 10; /* Foto na frente */
+    margin: 0 !important;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Coroa no Chat */
+.avatar-wrapper.chat-size .coroa-topo {
+    width: 16px !important;
+    height: 10px !important;
+    top: -10px !important;
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+    z-index: 15;
+}
+
+/* Asas no Chat (Ajuste Fino) */
+.avatar-wrapper.chat-size::before {
+    content: '';
+    display: block !important;
+    position: absolute;
+    width: 60px !important; /* Asa larga */
+    height: 24px !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0; /* Atrás da foto */
+    pointer-events: none;
+}
+
+/* 2. Wrapper no Popup de Perfil (Grande) */
+.avatar-wrapper.popup-size {
+    width: 120px; height: 120px;
+    margin: 20px auto;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible !important;
+}
+.avatar-wrapper.popup-size .perfil-foto-grande {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    position: relative;
+    z-index: 10;
+    border: 3px solid rgba(255,255,255,0.1);
+}
+.avatar-wrapper.popup-size .coroa-topo {
+    width: 50px; height: 30px;
+    top: -35px;
+    position: absolute;
+    z-index: 15;
+}
+.avatar-wrapper.popup-size::before {
+    width: 280px; height: 120px; /* Asa bem grande no popup */
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+/* --- 3. CORREÇÃO ESPECÍFICA: BRILHO NA ASA E COROA PRETA --- */
+
+/* Brilho Branco ao redor da Asa Preta (Chat e Popup) */
+.avatar-wrapper.admin_black::before {
+    /* Sombra branca sólida (outline) + Sombra difusa */
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) !important;
+    opacity: 1 !important;
+}
+
+/* Brilho Branco na Coroa Preta */
+.avatar-wrapper.admin_black .coroa-topo {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) !important;
+}
+
+/* Borda brilhante na foto preta */
+.avatar-wrapper.admin_black .chat-user-photo,
+.avatar-wrapper.admin_black .perfil-foto-grande {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
   </style>
 </head>
 <body>
@@ -6301,12 +6403,18 @@ function confirmarAgendamento() {
         return;
     }
 
-    // Verifica se é VIP
+    // LÓGICA FINANCEIRA CORRIGIDA:
+    // 1. Valor Original: É o valor do serviço (que já pode ter promoção aplicada da lista).
+    //    Se o serviço custa 50 e tem promo 10% (45), 'servico.valor' aqui já é 45.
+    const valorOriginal = servico.valor; 
+
+    // 2. Verifica VIP: Se o cliente for VIP, ele paga 10% a menos.
     const isVip = isVipAtivo(perfil);
-    const valorOriginal = servico.valor; // Valor cheio do serviço
-    // Se for VIP, cliente paga 10% a menos. Se não, paga cheio.
+    
+    // 3. Valor Final do Cliente: O que sai da carteira dele.
     const valorFinalCliente = isVip ? valorOriginal * 0.9 : valorOriginal;
     
+    // Verifica saldo do cliente com o valor que ELE paga
     if (perfil.saldo < valorFinalCliente) {
         fecharModalAtual();
         exibirPopup("💸 Saldo insuficiente.", "Por favor, deposite mais dinheiro em sua carteira.", 'aviso', () => {
@@ -6326,9 +6434,12 @@ function confirmarAgendamento() {
         const agendamentoData = {
             clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
             barbeiroUid, barbeiroNome, servico: servico.nome, 
-            valor: valorFinalCliente, // O que o cliente pagou
-            valorOriginal: valorOriginal, // IMPORTANTE: Valor base para pagar o profissional
-            descontoVipAplicado: isVip,   // Flag para controle
+            
+            // SALVA OS DOIS VALORES
+            valor: valorFinalCliente,        // Quanto o cliente pagou (para extrato dele)
+            valorOriginal: valorOriginal,    // Base de cálculo para o profissional
+            descontoVipAplicado: isVip,
+            
             status: horario === 'imediato' ? 'imediato' : 'pendente',
             ts: firebase.firestore.FieldValue.serverTimestamp(),
             avaliado: false, lembreteEnviado: false,
@@ -7180,18 +7291,22 @@ async function createMessageDiv(msg, docId) {
     } else {
         try {
             let remetenteData;
+            // Usa dados locais se for o próprio usuário para feedback instantâneo
             if (isCurrentUser) {
                 remetenteData = perfil; 
             } else {
+                // Busca cache ou banco
                 const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
                 if (remetenteDoc.exists) remetenteData = remetenteDoc.data();
             }
 
             if(remetenteData) {
+                // 1. Balão
                 if (remetenteData.balaoSelecionado && BALOES[remetenteData.balaoSelecionado]) {
                     balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
                 }
 
+                // 2. Estilo do Nome
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
                 } else if (remetenteData.tipo !== "cliente") { 
@@ -7202,6 +7317,7 @@ async function createMessageDiv(msg, docId) {
                     iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
                 }
 
+                // 3. Conquistas
                 let conquistasHtml = "";
                 if (remetenteData.conquistasSelecionadas) {
                     const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
@@ -7210,19 +7326,21 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
+                // 4. Foto com Moldura (Estrutura Fixa para o CSS funcionar)
                 const fotoUrl = remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
-                // --- CORREÇÃO: Usa sempre avatar-wrapper se tiver moldura ---
+                // Verifica se tem moldura válida
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
-                    const classeMoldura = MOLDURAS[remetenteData.molduraSelecionada].classe;
-                    // Adicionado 'chat-size' e a classe da moldura para ativar os estilos CSS
+                    const m = MOLDURAS[remetenteData.molduraSelecionada];
+                    // Cria a estrutura wrapper. As classes 'chat-size' e o nome da moldura (ex: 'admin_black') ativam o CSS.
                     avatarHtml = `
                     <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
                         <div class="coroa-topo"></div>
-                        <img src="${fotoUrl}" class="chat-user-photo ${classeMoldura}">
+                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}">
                     </div>`;
                 } else {
+                    // Imagem simples sem wrapper complexo
                     avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
                 }
 
@@ -7253,10 +7371,9 @@ async function createMessageDiv(msg, docId) {
     return messageDiv;
 }
 
-// --- ALTERAÇÃO 4: VISUALIZAÇÃO DE PERFIL NO CHAT (COM MOLDURAS) ---
 async function abrirPerfilUsuarioChat(uid) {
-    // Se clicar no próprio nome, usa o perfil local pra ser mais rápido
     let u = null;
+    // Tenta pegar do cache local se for o próprio usuário ou se já tivermos carregado
     if (auth.currentUser && uid === auth.currentUser.uid) {
         u = perfil;
     } else {
@@ -7267,7 +7384,7 @@ async function abrirPerfilUsuarioChat(uid) {
     
     const modalContent = document.querySelector('#modalVisualizarPerfilChat .perfil-visualizacao-content');
     
-    // Limpeza do HTML anterior
+    // Remove elementos antigos para evitar duplicação
     const elementsToRemove = modalContent.querySelectorAll('.avatar-wrapper, #visuPerfilFoto, #adminActionsChatPopup');
     elementsToRemove.forEach(el => el.remove());
 
@@ -7276,26 +7393,25 @@ async function abrirPerfilUsuarioChat(uid) {
     const fotoUrl = u.fotoPerfil || 'https://via.placeholder.com/120';
     let htmlFoto = '';
 
-    // Lógica para exibir a moldura correta
+    // Lógica da Moldura no Popup
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
         const m = MOLDURAS[u.molduraSelecionada];
-        // Insere a estrutura completa para suportar asas e coroa
+        // Usa a classe 'popup-size' para o CSS de tamanho grande
         htmlFoto = `
         <div class="avatar-wrapper popup-size ${u.molduraSelecionada}">
             <div class="coroa-topo"></div>
             <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}">
         </div>`;
     } else {
-        // Foto simples
         htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 10px auto; display: block;">`;
     }
     
-    // Insere o HTML da foto antes do Nome
+    // Insere a foto
     nomeEl.insertAdjacentHTML('beforebegin', htmlFoto);
     
     nomeEl.textContent = u.nome;
     
-    // Tipo de Usuário
+    // Define tipo e cor
     let tipoTexto = "Usuário";
     let corTipo = "#ccc";
     if (u.tipo === 'admin') { tipoTexto = "🧠 Administrador"; corTipo = "#e74c3c"; }
@@ -7316,7 +7432,7 @@ async function abrirPerfilUsuarioChat(uid) {
         });
     }
     
-    // Botões Admin (Visíveis apenas para você, admin)
+    // Botões Admin
     if (perfil.tipo === 'admin') {
         const divBtns = document.createElement('div');
         divBtns.id = 'adminActionsChatPopup';
@@ -8243,54 +8359,56 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 
         if (agData.status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
 
-        // --- LÓGICA FINANCEIRA CORRIGIDA ---
-        // 1. Identifica o Valor Base: Se salvamos o valorOriginal, usamos ele. Se não (agendamento antigo), tentamos calcular.
-        // Se não tiver valorOriginal, assumimos que o valor pago é o base (fallback).
-        let valorBaseParaProfissional = agData.valorOriginal || agData.valor;
-
-        // Fallback: Se não tem valorOriginal salvo, mas sabemos que o cliente é VIP, pode ser que 'valor' já esteja com desconto.
-        // Mas para evitar erros em agendamentos antigos, confiaremos no 'valorOriginal' salvo na função confirmarAgendamento acima.
+        // --- CÁLCULO DE REPASSE (AQUI ESTÁ A CORREÇÃO) ---
         
-        // 2. Identifica a Taxa do Profissional
-        let taxaAplicada = TAXA; // Padrão 20%
+        // 1. Pega o Valor Base (O valor do serviço sem desconto VIP)
+        // Se for agendamento antigo sem esse campo, usa o valor pago como fallback.
+        let valorBase = agData.valorOriginal || agData.valor;
+
+        // 2. Define a Taxa do Profissional
+        let taxaAplicada = TAXA; // Padrão (20%)
         if (isProAtivo(barbeiroData) && barbeiroData.proTier && PRECOS_PRO[barbeiroData.proTier]) {
             taxaAplicada = PRECOS_PRO[barbeiroData.proTier].taxa;
         }
 
-        // 3. Cálculo Final
-        // O profissional recebe: Valor Cheio do Serviço - Taxa da Plataforma.
-        // Se o cliente pagou menos (VIP), a diferença já ficou no sistema (Admin cobriu implicitamente ao não descontar do valor base).
-        const valorLiquido = valorBaseParaProfissional * (1 - taxaAplicada); 
+        // 3. Calcula o Líquido do Profissional
+        // O profissional recebe sobre o Valor Base. O desconto VIP não afeta ele.
+        const valorLiquido = valorBase * (1 - taxaAplicada); 
 
-        // Atualiza Barbeiro
+        // Log para debug (opcional, pode remover depois)
+        console.log(`Conclusão: Base R$${valorBase}, PagoCliente R$${agData.valor}, Taxa ${(taxaAplicada*100)}%, Líquido R$${valorLiquido}`);
+
+        // --- ATUALIZAÇÕES ---
+
+        // Atualiza saldo do Profissional
         t.update(barbeiroRef, { 
             saldo: firebase.firestore.FieldValue.increment(valorLiquido), 
             cortesSemana: firebase.firestore.FieldValue.increment(1), 
             clientesAtendidos: firebase.firestore.FieldValue.increment(1) 
         });
         
-        // Atualiza Status
+        // Marca como concluído
         t.update(agendamentoRef, { 
             status: "concluido", 
             avisoAvaliacaoEnviado: false
         });
 
-        // Extrato Financeiro
+        // Registro Financeiro (Para regra de 20 dias e auditoria)
         const registroRef = db.collection("extrato_financeiro").doc();
         t.set(registroRef, {
             usuarioUid: auth.currentUser.uid,
             tipo: "entrada_servico",
-            valorBruto: valorBaseParaProfissional, // Mostra o valor cheio no extrato
-            valorPagoPeloCliente: agData.valor,    // O que realmente entrou de dinheiro
-            valorLiquido: valorLiquido,            // O que o barbeiro recebeu
+            valorBruto: valorBase,         // Valor "cheio" do serviço
+            valorPagoPeloCliente: agData.valor, // O que entrou de fato
+            valorLiquido: valorLiquido,    // O que o barbeiro recebeu
             taxaAplicada: taxaAplicada,
-            diferencaVipCoberta: (valorBaseParaProfissional - agData.valor), // Log para controle
+            subsidioAdminVip: (valorBase - agData.valor), // Quanto o admin "pagou" pelo desconto VIP
             dataEvento: firebase.firestore.FieldValue.serverTimestamp(),
             origem: `Serviço: ${agData.servico}`,
             agendamentoId: agendamentoId
         });
         
-        // Atualiza Cliente
+        // Atualiza contador do cliente
         t.update(clienteRef, { 
             cortesRealizados: firebase.firestore.FieldValue.increment(1) 
         });
@@ -9218,9 +9336,8 @@ function fecharDenuncia(id) {
   db.collection("denuncias").doc(id).update({ status: "fechada" }).then(() => exibirPopup("Denúncia fechada!"));
 }
 
-// SUBSTITUA A FUNÇÃO abrirModalGerenciarUsuario INTEIRA POR ESTA:
 async function abrirModalGerenciarUsuario(uid) {
-    exibirAguarde("Carregando dados do usuário...");
+    exibirAguarde("Carregando dados completos...");
     try {
         const response = await fetch(`${BACKEND_API_URL}/admin/get-user-details`, {
             method: 'POST',
@@ -9234,24 +9351,49 @@ async function abrirModalGerenciarUsuario(uid) {
         }
         const { auth: userRecord, firestore: u } = await response.json();
 
-        // Lógica de Molduras (Mantida)
+        // --- GERAÇÃO DA LISTA DE DADOS BRUTOS ---
+        let dadosBrutosHtml = '<div style="background:#222; padding:10px; border-radius:8px; font-size:11px; text-align:left; max-height:150px; overflow-y:auto; border:1px solid #444;">';
+        
+        // Ordena as chaves para ficar organizado
+        Object.keys(u).sort().forEach(key => {
+            // Ignora campos muito grandes ou irrelevantes para visualização rápida
+            if (key === 'fcmTokens' || key === 'listaServicos' || key === 'portfolio' || key === 'conquistas') return;
+            
+            let valor = u[key];
+            // Formata datas
+            if (valor && typeof valor === 'object' && (valor._seconds || valor.seconds)) {
+                valor = new Date((valor._seconds || valor.seconds) * 1000).toLocaleString('pt-BR');
+            }
+            // Formata objetos JSON
+            if (typeof valor === 'object') {
+                valor = JSON.stringify(valor);
+            }
+            
+            dadosBrutosHtml += `<p style="margin:2px 0; border-bottom:1px dashed #333; padding-bottom:2px;"><strong>${key}:</strong> <span style="color:#ddd;">${valor}</span></p>`;
+        });
+        dadosBrutosHtml += '</div>';
+        // ----------------------------------------
+
+        // HTML das Molduras (Mantido)
         let moldurasHtml = '';
         const moldurasAdquiridas = u.moldurasAdquiridas || [];
-        const molduraEquipada = u.molduraSelecionada;
-        
         Object.keys(MOLDURAS).forEach(key => {
             const m = MOLDURAS[key];
-            if (moldurasAdquiridas.includes(key) || u.proAtivo) { // Simplificado para visualização
-                moldurasHtml += `<div style="font-size:12px; margin-bottom:2px;">• ${m.nome} <button onclick="adminRemoverMoldura('${uid}', '${key}', true)" style="padding:2px 5px; font-size:10px; background:#c0392b;">Remover</button></div>`;
+            if (moldurasAdquiridas.includes(key)) {
+                moldurasHtml += `<div style="font-size:12px; margin-bottom:2px;">• ${m.nome} <button onclick="adminRemoverMoldura('${uid}', '${key}', true)" style="padding:2px 5px; font-size:10px; background:#c0392b;">X</button></div>`;
             }
         });
-        if (moldurasHtml === '') moldurasHtml = '<p style="font-size:12px; opacity:0.7;">Sem molduras.</p>';
 
         const container = document.getElementById('adminGerenciarConteudo');
         container.innerHTML = `
             <h4 style="word-break: break-all;">${u.nome} (${u.tipo})</h4>
             <p style="font-size: 11px; opacity: 0.7;">UID: ${uid}</p>
             
+            <div class="popup-section">
+                <p><strong>📋 Dados Completos do Usuário:</strong></p>
+                ${dadosBrutosHtml}
+            </div>
+
             <div class="popup-section">
                 <p><strong>💰 Financeiro:</strong></p>
                 <div style="display:flex; gap:5px; margin-bottom:5px;">
@@ -9290,34 +9432,24 @@ async function abrirModalGerenciarUsuario(uid) {
 
             <div class="popup-section">
                 <p><strong>💎 Status VIP / PRO:</strong></p>
-                
-                <div style="margin-bottom:10px; padding-bottom:5px; border-bottom:1px dashed #444;">
+                <div style="margin-bottom:10px;">
                     <span style="margin-right:10px;">VIP: ${isVipAtivo(u) ? '✅' : '❌'}</span>
-                    ${isVipAtivo(u) 
-                        ? `<button onclick="adminToggleVip('${uid}', false)" style="padding:4px 8px; font-size:12px; background:#c0392b;">Remover</button>` 
-                        : `<button onclick="adminToggleVip('${uid}', true)" style="padding:4px 8px; font-size:12px;">Dar VIP</button>`
-                    }
+                    <button onclick="adminToggleVip('${uid}', ${!isVipAtivo(u)})" style="padding:4px 8px; font-size:12px;">${isVipAtivo(u) ? 'Remover' : 'Dar VIP'}</button>
                 </div>
-
                 <div style="display:flex; gap:5px; align-items:center;">
                     <span>PRO: ${isProAtivo(u) ? `✅ (${u.proTier})` : '❌'}</span>
                     ${isProAtivo(u) 
                         ? `<button onclick="adminTogglePro('${uid}', false)" style="padding:4px 8px; font-size:12px; background:#c0392b; margin-left:auto;">Remover</button>`
-                        : `
-                        <select id="adminConcederProTier" style="margin:0; width:80px; padding:4px; font-size:12px;">
-                            <option value="tier1">Bronze</option>
-                            <option value="tier2">Prata</option>
-                            <option value="tier3">Ouro</option>
-                            <option value="tier4">Diamante</option>
-                        </select>
-                        <button onclick="adminTogglePro('${uid}', true)" style="padding:4px 8px; font-size:12px; background:#00c6ff; color:black;">Dar PRO</button>
-                        `
+                        : `<select id="adminConcederProTier" style="margin:0; width:80px; padding:4px; font-size:12px;">
+                            <option value="tier1">Bronze</option><option value="tier2">Prata</option><option value="tier3">Ouro</option><option value="tier4">Diamante</option>
+                           </select>
+                           <button onclick="adminTogglePro('${uid}', true)" style="padding:4px 8px; font-size:12px; background:#00c6ff; color:black;">Dar PRO</button>`
                     }
                 </div>
             </div>
 
             <div class="popup-section">
-                <p><strong>⚙️ Outros:</strong></p>
+                <p><strong>⚙️ Ações de Conta:</strong></p>
                 <button onclick="adminToggleLoja('${uid}', ${!u.lojaLiberada})">${u.lojaLiberada ? 'Bloquear Loja' : 'Liberar Loja'}</button>
                 <button onclick="adminToggleUserStatus('${uid}', ${!userRecord.disabled})" style="margin-top:5px; background:${userRecord.disabled ? '#2ecc71' : '#e74c3c'};">${userRecord.disabled ? 'Reativar Conta' : 'Banir/Desativar'}</button>
             </div>
