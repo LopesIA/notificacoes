@@ -5621,8 +5621,8 @@ async function abrirModalCarteira() {
         <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; border: 1px solid #444; margin-bottom: 15px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="text-align:left;">
-                    <span style="font-size:14px; display:block;">🇧🇷 Saldo (Serviços)</span>
-                    <span style="font-size:11px; color:#aaa;">Para pagar/receber cortes</span>
+                    <span style="font-size:14px; display:block;">Saldo Virtual NV</span>
+                    <span style="font-size:11px; color:#aaa;">SOMENTE PARA SERVIÇOS</span>
                 </div>
                 <span style="font-size:20px; font-weight:bold; color:#fff;">R$ ${saldoServicos.toFixed(2)}</span>
             </div>
@@ -5636,9 +5636,9 @@ async function abrirModalCarteira() {
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="text-align:left;">
                     <span style="font-size:14px; color: #00c6ff; display:block;">💎 Saldo Digital</span>
-                    <span style="font-size:11px; color:#aaa;">Para VIP e Itens do App</span>
+                    <span style="font-size:11px; color:#aaa;">PARA: PRODUTOS, VIPS, PERFIL</span>
                 </div>
-                <span style="font-size:20px; font-weight:bold; color:#00c6ff;">C$ ${saldoDigital.toFixed(2)}</span>
+                <span style="font-size:20px; font-weight:bold; color:#00c6ff;">R$ ${saldoDigital.toFixed(2)}</span>
             </div>
 
             <button onclick="iniciarCompraMoedas()" style="width:100%; margin-top:15px; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff); font-weight:bold;">💎 Comprar Moedas</button>
