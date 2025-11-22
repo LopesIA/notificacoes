@@ -2834,6 +2834,122 @@ body {
     20% { transform: translateX(100%) rotate(45deg); }
     100% { transform: translateX(100%) rotate(45deg); } /* Pausa longa entre brilhos */
 }
+
+/* --- BALÕES DE CHAT ESTILIZADOS E CORRIGIDOS --- */
+
+/* Base para balões customizados */
+.chat-message.custom-bubble {
+    position: relative;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    z-index: 1;
+    /* Garante leitura perfeita: Sombra preta atrás da letra */
+    text-shadow: 1px 1px 2px #000000; 
+    font-weight: 500;
+}
+
+/* NÍVEL 2: PRATA (Fosco, Metálico e Elegante - SEM ANIMAÇÃO) */
+.chat-message.bubble-prata {
+    border: 1px solid #a0a0a0;
+    background: linear-gradient(145deg, #555, #2a2a2a);
+    box-shadow: 0 0 5px rgba(192, 192, 192, 0.1);
+    color: #ffffff !important; 
+}
+
+/* NÍVEL 3: OURO (Valioso - COM BRILHO NO FUNDO) */
+.chat-message.bubble-ouro {
+    border: 1px solid #ffd700;
+    /* Gradiente dourado que se move no fundo */
+    background: linear-gradient(110deg, #3d3005 20%, #8a6e0a 40%, #fff8db 50%, #8a6e0a 60%, #3d3005 80%);
+    background-size: 200% 100%;
+    color: #fff !important;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    animation: gold-shimmer 4s linear infinite; /* Brilho passando */
+}
+
+/* NÍVEL 4: DIAMANTE (Movimento LENTO e SUAVE) */
+.chat-message.bubble-diamante {
+    background: #0c0c0c; 
+    color: #e0ffff !important; 
+    border: none; 
+    overflow: visible !important; 
+    margin-top: 12px !important;
+}
+.chat-message.bubble-diamante::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #00c6ff, #0072ff, #000, #000, #00c6ff);
+    background-size: 300% 300%;
+    /* AQUI: Aumentado para 12s para ficar bem lento */
+    animation: border-travel 12s linear infinite; 
+    opacity: 0.8;
+}
+.chat-message.bubble-diamante::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+/* ADMIN BLACK (Movimento LENTO) */
+.chat-message.bubble-admin-black {
+    background: #0a0a0a !important;
+    color: #ffffff !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-black::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #ffffff, #333, #000, #000, #ffffff);
+    background-size: 300% 300%;
+    /* AQUI: Aumentado para 12s */
+    animation: border-travel 12s linear infinite; 
+}
+.chat-message.bubble-admin-black::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: grayscale(100%);
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+/* ADMIN RED (Movimento LENTO) */
+.chat-message.bubble-admin-red {
+    background: #1a0000 !important; 
+    color: #ffe0e0 !important; 
+    border: none;
+    overflow: visible !important;
+    margin-top: 12px !important;
+}
+.chat-message.bubble-admin-red::before {
+    content: ''; position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 14px; z-index: -1;
+    background: linear-gradient(60deg, #ff0000, #ff4500, #2c0000, #2c0000, #ff0000);
+    background-size: 300% 300%;
+    /* AQUI: Aumentado para 10s */
+    animation: border-travel 10s linear infinite; 
+}
+.chat-message.bubble-admin-red::after {
+    content: '👑'; position: absolute; top: -14px; right: -5px; font-size: 14px;
+    filter: sepia(100%) saturate(1000%) hue-rotate(-50deg);
+    animation: float-crown 4s ease-in-out infinite;
+}
+
+/* ANIMAÇÕES SUAVES */
+@keyframes border-travel {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes float-crown {
+    0%, 100% { transform: translateY(0) rotate(5deg); }
+    50% { transform: translateY(-3px) rotate(-5deg); }
+}
+@keyframes gold-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
   </style>
 </head>
 <body>
@@ -4551,25 +4667,24 @@ function toggleOnboardOption(element) {
     }
 }
 
-
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
-    // Limpa qualquer botão antigo se houver e define o loading
-    lista.innerHTML = "<p style='text-align:center; margin-top:20px;'>⏳ Carregando os profissionais mais próximos de você...</p>";
+    // Feedback imediato de carregamento
+    lista.innerHTML = "<p style='text-align:center; margin-top:20px; opacity:0.7;'>⏳ Buscando os profissionais mais próximos de você...</p>";
 
-    // Tenta obter localização se não tiver
-    if (!localizacaoCliente) { await obterLocalizacaoAtual().catch(() => {}); }
+    // Tenta obter localização em paralelo (sem travar se falhar rápido)
+    if (!localizacaoCliente) { 
+        try { await obterLocalizacaoAtual(); } catch(e) {} 
+    }
     
-    // Limpa listener anterior para não duplicar
     if (barbeirosListener) barbeirosListener(); 
     
-    let tipoParaBuscar = 'barbeiro'; // Fallback padrão
+    let tipoParaBuscar = 'barbeiro'; 
 
     if (isGuest) {
         tipoParaBuscar = localStorage.getItem('onboard_tipo_uso') || 'barbeiro';
         if (tipoParaBuscar === 'cliente' || tipoParaBuscar === 'profissional') tipoParaBuscar = 'barbeiro';
-    } 
-    else {
+    } else {
         tipoParaBuscar = perfil.interesse_principal || perfil.tipo || 'barbeiro';
     }
 
@@ -4599,11 +4714,10 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             } else {
                 b.distancia = Infinity;
             }
-            
             barbeiros.push(b);
         });
 
-        // ORDENAÇÃO
+        // ORDENAÇÃO INTELIGENTE
         barbeiros.sort((a, b) => {
             if (a.isFavorito && !b.isFavorito) return -1;
             if (!a.isFavorito && b.isFavorito) return 1;
@@ -4623,9 +4737,9 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             return a.distancia - b.distancia;
         });
         
-        // --- OTIMIZAÇÃO DE RENDERIZAÇÃO ---
-        // Criamos uma variável gigante para guardar todo o HTML
-        let htmlBuffer = ""; 
+        // --- OTIMIZAÇÃO DE PERFORMANCE (BUFFER) ---
+        // Acumula todo o HTML em uma string gigante antes de jogar na tela
+        let htmlBuffer = "";
         
         barbeiros.forEach(b => {
             const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
@@ -4651,7 +4765,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             }
             
             let promocoesHtml = (b.promocoes && b.promocoes.length > 0) ? `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>` : '';
-            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
+            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;" loading="lazy">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
             const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
             const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
             const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
@@ -4662,7 +4776,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
             const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
             const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
 
-            // Acumula na variável em vez de escrever no DOM repetidamente
+            // Adiciona ao buffer em vez de desenhar na tela
             htmlBuffer += `
               <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
                   ${boostIcon} ${favoriteBtn} ${shareBtn}
@@ -4678,7 +4792,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
               </div>`;
         });
 
-        // Escreve no DOM uma única vez (Muito mais rápido!)
+        // INJEÇÃO ÚNICA (Muito mais rápido)
         lista.innerHTML = htmlBuffer;
     });
 }
