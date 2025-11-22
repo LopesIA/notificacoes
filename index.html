@@ -5551,7 +5551,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     }
 });
 
-// SUBSTITUA A FUNÇÃO abrirModalCarteira INTEIRA POR ESTA:
+// SUBSTITUA A FUNÇÃO abrirModalCarteira POR ESTA VERSÃO CORRIGIDA:
 async function abrirModalCarteira() {
     abrirModal('modalCarteira');
     const container = document.querySelector("#modalCarteira .modal-content");
@@ -5563,10 +5563,13 @@ async function abrirModalCarteira() {
     const saldoServicos = perfil.saldo || 0; // R$ Real (Físico)
     const saldoDigital = perfil.saldoDigital || 0; // Coins (Digital)
     
-    // Verifica se é profissional (Barbeiro, Manicure, etc - exceto Admin e Cliente)
-    const isProfissional = perfil.tipo !== 'cliente' && perfil.tipo !== 'admin';
-    let htmlSaqueArea = '';
+    // 2. Define EXPLICITAMENTE quem sofre a regra de 20 dias
+    // Se não estiver nesta lista, é tratado como usuário normal (Saque liberado do total)
+    const tiposProfissionais = ['barbeiro', 'manicure_pedicure', 'designer_cilios', 'profissional'];
+    const isProfissional = tiposProfissionais.includes(perfil.tipo);
     
+    let htmlSaqueArea = '';
+
     if (isProfissional) {
         // --- LÓGICA PARA PROFISSIONAIS (COM REGRA DE 20 DIAS) ---
         try {
@@ -5605,12 +5608,13 @@ async function abrirModalCarteira() {
             `;
         } catch (e) {
             console.error("Erro ao calcular saldo bloqueado:", e);
-            htmlSaqueArea = `<p style="color:red; font-size:12px;">Erro ao calcular retenção.</p>`;
+            // Se der erro no cálculo, mostra o botão de saque normal para não travar o usuário
+            htmlSaqueArea = `<button onclick="iniciarSaque()" style="width:100%; margin-top:15px; border: 1px solid #aaa; background: transparent; color: #fff;">📤 Sacar</button>`;
         }
     } else {
-        // --- LÓGICA PARA ADMIN E CLIENTES (SEM REGRA DE 20 DIAS) ---
-        // Agora aparece para todos (Clientes podem querer sacar reembolso, Admin para teste)
-         htmlSaqueArea = `<button onclick="iniciarSaque()" style="width:100%; margin-top:10px; border: 1px solid #aaa; background: transparent; color: #fff;">📤 Sacar</button>`;
+        // --- LÓGICA PARA TODOS OS OUTROS (ADMIN, CLIENTE, ETC) ---
+        // Mostra botão de saque normal, sem cálculo de bloqueio
+         htmlSaqueArea = `<button onclick="iniciarSaque()" style="width:100%; margin-top:15px; border: 1px solid #aaa; background: transparent; color: #fff;">📤 Sacar</button>`;
     }
 
     // 3. Renderiza o HTML final
