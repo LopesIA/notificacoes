@@ -2538,6 +2538,68 @@ body {
     opacity: 1;
     display: block;
 }
+
+/* --- CORREÇÃO VISUAL: ASAS NO CHAT --- */
+/* Garante que a asa (::before) apareça na lista de mensagens */
+.chat-message .avatar-wrapper.chat-size::before {
+    content: '';
+    display: block !important;
+    position: absolute;
+    z-index: 0; /* Atrás da foto */
+    /* Força tamanho visível no chat pequeno */
+    width: 54px !important;
+    height: 22px !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+/* --- CORREÇÃO VISUAL: BRILHO NA ASA E COROA PRETA --- */
+/* Cria um contorno branco brilhante em volta da asa preta para contraste */
+.avatar-wrapper.admin_black::before {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)) !important;
+}
+/* Brilho na coroa preta */
+.avatar-wrapper.admin_black .coroa-topo {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) !important;
+}
+
+/* --- CORREÇÃO VISUAL: RANKING CENTRALIZADO --- */
+.avatar-wrapper.ranking-size {
+    width: 50px; 
+    height: 50px;
+    margin-right: 10px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+.avatar-wrapper.ranking-size .ranking-foto {
+    width: 100% !important; 
+    height: 100% !important;
+    border-radius: 50%;
+    z-index: 10;
+    position: relative;
+}
+/* Centraliza a coroa no ranking */
+.avatar-wrapper.ranking-size .coroa-topo {
+    width: 20px; height: 12px;
+    top: -14px; 
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+    z-index: 15;
+}
+/* Centraliza a asa no ranking */
+.avatar-wrapper.ranking-size::before {
+    width: 90px; height: 35px; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    display: block;
+    opacity: 1;
+}
   </style>
 </head>
 <body>
@@ -6239,9 +6301,13 @@ function confirmarAgendamento() {
         return;
     }
 
-    const preco = isVipAtivo(perfil) ? servico.valor * 0.9 : servico.valor;
+    // Verifica se é VIP
+    const isVip = isVipAtivo(perfil);
+    const valorOriginal = servico.valor; // Valor cheio do serviço
+    // Se for VIP, cliente paga 10% a menos. Se não, paga cheio.
+    const valorFinalCliente = isVip ? valorOriginal * 0.9 : valorOriginal;
     
-    if (perfil.saldo < preco) {
+    if (perfil.saldo < valorFinalCliente) {
         fecharModalAtual();
         exibirPopup("💸 Saldo insuficiente.", "Por favor, deposite mais dinheiro em sua carteira.", 'aviso', () => {
             abrirModal('modalCarteira');
@@ -6252,31 +6318,29 @@ function confirmarAgendamento() {
     const horarioTexto = horario === 'imediato' ? 'uma Vaga Imediata' : `o horário das ${horario}`;
     let detalhes = `Profissional: ${barbeiroNome}\nServiço: ${servico.nome}\n`;
     if (servico.duracao) detalhes += `Duração Estimada: ${servico.duracao} minutos\n`;
-    detalhes += `Horário: ${horarioTexto}\nValor: R$ ${preco.toFixed(2)}${isVipAtivo(perfil) ? ' (Desconto VIP de 10% aplicado)' : ''}`;
+    detalhes += `Horário: ${horarioTexto}\nValor: R$ ${valorFinalCliente.toFixed(2)}${isVip ? ' (Desconto VIP de 10% aplicado)' : ''}`;
 
-    // Usa o novo popup de confirmação
     exibirConfirmacao("Confirmar Agendamento?", detalhes, () => {
-        // Esta função de callback só executa se o usuário clicar "Sim"
         exibirAguarde("Agendando...");
     
         const agendamentoData = {
             clienteUid: auth.currentUser.uid, clienteNome: perfil.nome, clienteTelefone: perfil.telefone, 
-            barbeiroUid, barbeiroNome, servico: servico.nome, valor: preco,
+            barbeiroUid, barbeiroNome, servico: servico.nome, 
+            valor: valorFinalCliente, // O que o cliente pagou
+            valorOriginal: valorOriginal, // IMPORTANTE: Valor base para pagar o profissional
+            descontoVipAplicado: isVip,   // Flag para controle
             status: horario === 'imediato' ? 'imediato' : 'pendente',
             ts: firebase.firestore.FieldValue.serverTimestamp(),
             avaliado: false, lembreteEnviado: false,
-            clienteNotificado: false, // <-- REQUERIDO PARA O POPUP DO CLIENTE
-            lembreteConcluirEnviado: false, // <-- REQUERIDO PARA O LEMBRETE DO PROFISSIONAL
+            clienteNotificado: false, 
+            lembreteConcluirEnviado: false,
             avisoAvaliacaoEnviado: false
         };
         if (horario !== 'imediato') agendamentoData.horario = horario;
 
         db.collection("agendamentos").add(agendamentoData).then(() => {
             const tipoAviso = horario === 'imediato' ? 'vaga imediata' : `agendamento para as ${horario}`;
-            
-            // ATENÇÃO: Aviso para o barbeiro ainda é necessário para o popup persistente
             criarAviso(barbeiroUid, `🔔 Novo pedido de ${tipoAviso} de ${perfil.nome} para ${servico.nome}.`, 'novo-agendamento', agendamentoData);
-            
             notifyUser(barbeiroUid, "🔔 Novo Agendamento Recebido!", `${perfil.nome} quer agendar "${servico.nome}".`, { link: '#agendamentos' });
             
             fecharTodosOsModais();
@@ -7097,7 +7161,6 @@ async function createMessageDiv(msg, docId) {
     const messageDiv = document.createElement('div');
     const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     
-    // Classes padrão
     let classesDiv = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
 
     if (docId) {
@@ -7112,31 +7175,23 @@ async function createMessageDiv(msg, docId) {
     let nomeSpanHtml = ''; 
     let balaoCustomClass = '';
 
-    // LÓGICA DE BOT
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
         nomeSpanHtml = `<span style="color: red; font-weight:bold;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
     } else {
         try {
             let remetenteData;
-            
-            // ATUALIZAÇÃO CRÍTICA: Sempre busca dados frescos se for o usuário atual para pegar a troca de balão imediata
             if (isCurrentUser) {
-                // Recarrega o perfil global se necessário ou usa o atual (que já deve ter sido atualizado pelo listener do perfil)
                 remetenteData = perfil; 
             } else {
-                // Para outros usuários, busca no banco
                 const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
                 if (remetenteDoc.exists) remetenteData = remetenteDoc.data();
             }
 
             if(remetenteData) {
-                // --- 1. APLICA O BALÃO SELECIONADO (CORREÇÃO) ---
                 if (remetenteData.balaoSelecionado && BALOES[remetenteData.balaoSelecionado]) {
-                    // Adiciona a classe CSS do balão (ex: bubble-ouro)
                     balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
                 }
 
-                // --- 2. DEFINE ESTILO DO NOME ---
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
                 } else if (remetenteData.tipo !== "cliente") { 
@@ -7147,7 +7202,6 @@ async function createMessageDiv(msg, docId) {
                     iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
                 }
 
-                // --- 3. CONQUISTAS ---
                 let conquistasHtml = "";
                 if (remetenteData.conquistasSelecionadas) {
                     const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
@@ -7156,13 +7210,13 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
-                // --- 4. FOTO E MOLDURA ---
                 const fotoUrl = remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
+                // --- CORREÇÃO: Usa sempre avatar-wrapper se tiver moldura ---
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
                     const classeMoldura = MOLDURAS[remetenteData.molduraSelecionada].classe;
-                    // CORREÇÃO AQUI: Adicionada a classe da moldura (ex: 'diamante') na div wrapper
+                    // Adicionado 'chat-size' e a classe da moldura para ativar os estilos CSS
                     avatarHtml = `
                     <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
                         <div class="coroa-topo"></div>
@@ -7185,7 +7239,6 @@ async function createMessageDiv(msg, docId) {
         }
     }
 
-    // Aplica as classes finais (Garante que classes antigas não interfiram)
     messageDiv.className = classesDiv + balaoCustomClass;
 
     messageDiv.innerHTML = `
@@ -8171,7 +8224,6 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
   });
 }
 
-// --- ALTERAÇÃO 3: CORREÇÃO FINANCEIRA (Taxa Dinâmica na Conclusão) ---
 async function concluirAgendamento(agendamentoId, clienteUid) {
   exibirAguarde("Concluindo...");
   
@@ -8181,7 +8233,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     const clienteRef = db.collection("usuarios").doc(clienteUid);
 
     const resultData = await db.runTransaction(async t => {
-        // Lê os dados necessários dentro da transação para garantir consistência
         const [agendamentoDoc, barbeiroDoc] = await Promise.all([
             t.get(agendamentoRef),
             t.get(barbeiroRef)
@@ -8192,45 +8243,54 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
 
         if (agData.status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
 
-        // --- LÓGICA DE TAXA DINÂMICA CORRIGIDA ---
-        let taxaAplicada = TAXA; // Padrão 20% (definido na constante global)
+        // --- LÓGICA FINANCEIRA CORRIGIDA ---
+        // 1. Identifica o Valor Base: Se salvamos o valorOriginal, usamos ele. Se não (agendamento antigo), tentamos calcular.
+        // Se não tiver valorOriginal, assumimos que o valor pago é o base (fallback).
+        let valorBaseParaProfissional = agData.valorOriginal || agData.valor;
+
+        // Fallback: Se não tem valorOriginal salvo, mas sabemos que o cliente é VIP, pode ser que 'valor' já esteja com desconto.
+        // Mas para evitar erros em agendamentos antigos, confiaremos no 'valorOriginal' salvo na função confirmarAgendamento acima.
         
-        // Se o barbeiro for PRO, pegamos a taxa do tier dele
+        // 2. Identifica a Taxa do Profissional
+        let taxaAplicada = TAXA; // Padrão 20%
         if (isProAtivo(barbeiroData) && barbeiroData.proTier && PRECOS_PRO[barbeiroData.proTier]) {
             taxaAplicada = PRECOS_PRO[barbeiroData.proTier].taxa;
         }
-        
-        // Cálculo: Valor que o cliente pagou (já com desconto se houve promo) * (1 - taxa)
-        // Exemplo: Cliente pagou 45. Taxa Tier 4 é 0. 45 * 1 = 45. Barbeiro recebe 45.
-        const valorLiquido = agData.valor * (1 - taxaAplicada); 
 
-        // 1. Atualiza contadores e SALDO GERAL do barbeiro
+        // 3. Cálculo Final
+        // O profissional recebe: Valor Cheio do Serviço - Taxa da Plataforma.
+        // Se o cliente pagou menos (VIP), a diferença já ficou no sistema (Admin cobriu implicitamente ao não descontar do valor base).
+        const valorLiquido = valorBaseParaProfissional * (1 - taxaAplicada); 
+
+        // Atualiza Barbeiro
         t.update(barbeiroRef, { 
             saldo: firebase.firestore.FieldValue.increment(valorLiquido), 
             cortesSemana: firebase.firestore.FieldValue.increment(1), 
             clientesAtendidos: firebase.firestore.FieldValue.increment(1) 
         });
         
-        // 2. Marca agendamento como concluído
+        // Atualiza Status
         t.update(agendamentoRef, { 
             status: "concluido", 
             avisoAvaliacaoEnviado: false
         });
 
-        // 3. Cria registro financeiro
+        // Extrato Financeiro
         const registroRef = db.collection("extrato_financeiro").doc();
         t.set(registroRef, {
             usuarioUid: auth.currentUser.uid,
             tipo: "entrada_servico",
-            valorBruto: agData.valor,
-            valorLiquido: valorLiquido,
-            taxaAplicada: taxaAplicada, // Salva qual taxa foi usada para auditoria
+            valorBruto: valorBaseParaProfissional, // Mostra o valor cheio no extrato
+            valorPagoPeloCliente: agData.valor,    // O que realmente entrou de dinheiro
+            valorLiquido: valorLiquido,            // O que o barbeiro recebeu
+            taxaAplicada: taxaAplicada,
+            diferencaVipCoberta: (valorBaseParaProfissional - agData.valor), // Log para controle
             dataEvento: firebase.firestore.FieldValue.serverTimestamp(),
             origem: `Serviço: ${agData.servico}`,
             agendamentoId: agendamentoId
         });
         
-        // 4. Atualiza contador do cliente
+        // Atualiza Cliente
         t.update(clienteRef, { 
             cortesRealizados: firebase.firestore.FieldValue.increment(1) 
         });
@@ -8238,7 +8298,6 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
         return agData.clienteTelefone;
     });
 
-    // Verifica conquistas e avisa no WhatsApp
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
@@ -8249,7 +8308,7 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     }
 
     fecharTodosOsModais();
-    exibirPopup("Sucesso", "Serviço concluído e saldo liberado (conforme regra de 20 dias).");
+    exibirPopup("Sucesso", "Serviço concluído!");
     
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído.`, { link: '#historico' });
     
