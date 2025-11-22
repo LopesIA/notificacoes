@@ -2730,6 +2730,27 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
+<div id="modalPacotesMoedasTWA" class="modal" onclick="fecharModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3 style="color: #00c6ff;">💎 Loja de Moedas</h3>
+    <p style="font-size:12px; color:#aaa;">Compra segura via Google Play para itens digitais (VIP, Boost, etc).</p>
+    
+    <div class="metodos-grid" style="margin-top: 15px;">
+        <button onclick="comprarComPlayStore('moedas_10', 10.00)" style="background: #222; border: 1px solid #00c6ff; color: #fff;">
+            10 Moedas - R$ 10,00
+        </button>
+        <button onclick="comprarComPlayStore('moedas_50', 50.00)" style="background: #222; border: 1px solid #00c6ff; color: #fff;">
+            50 Moedas - R$ 50,00
+        </button>
+        <button onclick="comprarComPlayStore('moedas_100', 100.00)" style="background: #222; border: 1px solid #00c6ff; color: #fff;">
+            100 Moedas - R$ 100,00
+        </button>
+    </div>
+    <p style="font-size:10px; margin-top:10px; opacity:0.6; text-align: center;">1 Moeda (C$) = R$ 1,00 em poder de compra digital.</p>
+    <button data-modal-id="modalPacotesMoedasTWA" onclick="fecharModal(event)">❌ Fechar</button>
+  </div>
+</div>
+
 <div id="modalDepositoFormulario" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3>📝 Informações para Depósito</h3>
@@ -3986,20 +4007,25 @@ const messaging = firebase.messaging();
 // ADICIONE ESTAS LINHAS ABAIXO (Linha ~2241)
 let isTwa = false; // Variável global para o ambiente
 
-/**
- * Verifica se o app está rodando como TWA (da Play Store)
- * procurando por ?source=twa na URL.
- */
+// --- CONFIGURAÇÕES GERAIS E FINANCEIRAS ---
+const PIX_CODE_RAW = "00020126770014BR.GOV.BCB.PIX0136ac099e3b-e63e-402f-9d3e-6e20828470b90215Nova Versão APP5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510ERLNMtaT5r63040E73";
+
+// Variável global para controlar o tipo de depósito atual (serviço ou digital)
+let tipoDepositoAtual = 'servico'; 
+
+// Função para detectar se está no App (TWA) ou Navegador
 function detectarAmbiente() {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('source') === 'twa') {
+    // Verifica parâmetro URL ou se o referer vem de um app android
+    if (urlParams.get('source') === 'twa' || document.referrer.includes('android-app')) {
         isTwa = true;
-        console.log("Ambiente detectado: TWA (Play Store)");
+        console.log("Ambiente detectado: TWA (Google Play)");
     } else {
         isTwa = false;
         console.log("Ambiente detectado: Web (Navegador)");
     }
 }
+detectarAmbiente();
 
 // Chama a função para definir a variável 'isTwa' na inicialização
 detectarAmbiente(); 
@@ -5525,6 +5551,180 @@ window.addEventListener('beforeinstallprompt', (e) => {
     }
 });
 
+async function abrirModalCarteira() {
+    abrirModal('modalCarteira');
+    const container = document.querySelector("#modalCarteira .modal-content");
+    
+    // Feedback de carregamento
+    container.innerHTML = '<h3>💰 Minha Carteira</h3><p>Carregando saldos...</p>';
+
+    // 1. Pega dados atuais
+    const saldoServicos = perfil.saldo || 0; // Saldo para Saque/Serviços (R$)
+    const saldoDigital = perfil.saldoDigital || 0; // Saldo para VIP/Boost (Moedas)
+    const isProfissional = perfil.tipo !== 'cliente' && perfil.tipo !== 'admin';
+
+    let htmlProfissional = '';
+    
+    // 2. LÓGICA DOS 20 DIAS (Apenas para Profissionais)
+    if (isProfissional) {
+        try {
+            // Data limite: Hoje menos 20 dias
+            const vinteDiasAtras = new Date();
+            vinteDiasAtras.setDate(vinteDiasAtras.getDate() - 20);
+            
+            // Busca lançamentos recentes que ainda não liberaram
+            // Nota: Isso exige que a função 'concluirAgendamento' crie o registro em 'extrato_financeiro'
+            const ganhosBloqueadosSnap = await db.collection('extrato_financeiro')
+                .where('usuarioUid', '==', auth.currentUser.uid)
+                .where('tipo', '==', 'entrada_servico')
+                .where('dataEvento', '>', firebase.firestore.Timestamp.fromDate(vinteDiasAtras))
+                .get();
+
+            let valorBloqueado = 0;
+            ganhosBloqueadosSnap.forEach(doc => {
+                valorBloqueado += (doc.data().valorLiquido || 0);
+            });
+
+            // O disponível é o Total menos o Bloqueado
+            let disponivelSaque = saldoServicos - valorBloqueado;
+            // Proteção contra negativos ou erros de arredondamento
+            if (disponivelSaque < 0) disponivelSaque = 0;
+            if (disponivelSaque > saldoServicos) disponivelSaque = saldoServicos;
+
+            htmlProfissional = `
+                <div style="background: #222; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #f1c40f; text-align: left;">
+                    <p style="font-size:12px; color:#aaa; margin-bottom:5px;">📅 Regra de Liberação (20 dias)</p>
+                    <div style="display:flex; justify-content:space-between; font-size: 13px;">
+                        <span>⏳ Bloqueado:</span>
+                        <span style="color: #e74c3c;">R$ ${valorBloqueado.toFixed(2)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px; border-top:1px solid #444; padding-top:5px; font-size: 14px;">
+                        <span>✅ Disponível:</span>
+                        <span style="color: #2ecc71;">R$ ${disponivelSaque.toFixed(2)}</span>
+                    </div>
+                    <button onclick="iniciarSaque()" ${disponivelSaque <= 0 ? 'disabled' : ''} style="width:100%; margin-top:10px; background:#27ae60; opacity: ${disponivelSaque <= 0 ? '0.5' : '1'};">📤 Solicitar Saque</button>
+                </div>
+            `;
+        } catch (e) {
+            console.error("Erro ao calcular saldo bloqueado:", e);
+            htmlProfissional = `<p style="color:red; font-size:12px;">Erro ao calcular retenção.</p>`;
+        }
+    } else if (perfil.tipo === 'admin') {
+         htmlProfissional = `<button onclick="iniciarSaque()" style="width:100%; margin-top:10px;">📤 Sacar (Admin)</button>`;
+    }
+
+    // 3. Renderiza o HTML final
+    container.innerHTML = `
+        <h3>💰 Minha Carteira</h3>
+        
+        <div style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a); padding: 15px; border-radius: 12px; border: 1px solid #444; margin-bottom: 15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:14px;">💵 Saldo (Serviços)</span>
+                <span style="font-size:18px; font-weight:bold; color:#fff;">R$ ${saldoServicos.toFixed(2)}</span>
+            </div>
+            <p style="font-size:11px; color:#aaa; margin-top:5px; text-align:left;">Exclusivo para pagar profissionais e receber pagamentos de cortes.</p>
+            ${perfil.tipo === 'cliente' ? `<button onclick="iniciarDepositoServico()" style="width:100%; margin-top:10px; background:var(--cor-botoes); border:1px solid #555;">📥 Adicionar R$ (PIX/Cartão)</button>` : ''}
+            ${htmlProfissional}
+        </div>
+
+        <div style="background: linear-gradient(135deg, #1a2530, #000); padding: 15px; border-radius: 12px; border: 1px solid var(--cor-destaque-azul);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:14px; color: #00c6ff;">💎 Saldo Digital</span>
+                <span style="font-size:18px; font-weight:bold; color:#00c6ff;">C$ ${saldoDigital.toFixed(2)}</span>
+            </div>
+            <p style="font-size:11px; color:#aaa; margin-top:5px; text-align:left;">Use para comprar VIP, Boost, Molduras e Itens do App.</p>
+            <button onclick="iniciarCompraMoedas()" style="width:100%; margin-top:10px; background: linear-gradient(45deg, var(--cor-destaque-azul), #0072ff);">💎 Comprar Moedas</button>
+        </div>
+
+        <button data-modal-id="modalCarteira" onclick="fecharModal(event)" style="margin-top: 20px; background:#555;">❌ Fechar</button>
+    `;
+}
+
+// --- FUNÇÕES FINANCEIRAS (HÍBRIDAS) ---
+
+// 1. Depósito de SERVIÇO (Sempre Externo - PIX/Kiwify)
+function iniciarDepositoServico() {
+    tipoDepositoAtual = 'servico'; // Define flag global
+    
+    // Abre o formulário padrão (que você já tem)
+    abrirModal('modalDepositoFormulario');
+    
+    // Ajusta título e validação
+    const modal = document.getElementById('modalDepositoFormulario');
+    modal.querySelector('h3').textContent = "💵 Depósito para Serviços";
+    modal.querySelector('p').textContent = "Este saldo serve APENAS para pagar profissionais.";
+
+    // Validação dos inputs (igual ao original)
+    const inputs = ['depositoPrimeiroNome', 'depositoSegundoNome', 'depositoCpf', 'depositoTelefone'];
+    const btn = document.getElementById('btnContinuarDeposito');
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.oninput = () => {
+                const allFilled = inputs.every(i => document.getElementById(i).value.trim() !== '');
+                btn.disabled = !allFilled;
+            };
+        }
+    });
+}
+
+// 2. Compra de MOEDAS DIGITAIS (Híbrido: Google Play no App, PIX na Web)
+function iniciarCompraMoedas() {
+    tipoDepositoAtual = 'digital'; // Define flag global
+    
+    if (isTwa) {
+        // SE FOR APP (PLAY STORE): Abre modal obrigatório do Google
+        abrirModal('modalPacotesMoedasTWA');
+    } else {
+        // SE FOR WEB: Permite usar PIX (mais barato pra você)
+        abrirModal('modalDepositoFormulario');
+        
+        // Ajusta visual para parecer compra de moedas
+        const modal = document.getElementById('modalDepositoFormulario');
+        modal.querySelector('h3').textContent = "💎 Comprar Moedas (Web)";
+        modal.querySelector('p').textContent = "Adicione saldo digital para comprar VIP e itens.";
+    }
+}
+
+// 3. Atualização da função de criar solicitação para diferenciar os tipos
+async function criarSolicitacaoDeposito() {
+    const primeiroNome = document.getElementById('depositoPrimeiroNome').value.trim();
+    const segundoNome = document.getElementById('depositoSegundoNome').value.trim();
+    const cpf = document.getElementById('depositoCpf').value.trim();
+    const telefone = document.getElementById('depositoTelefone').value.trim();
+    const valor = parseFloat(document.getElementById('depositoValor').value);
+
+    if (!primeiroNome || !segundoNome || !cpf || !telefone || isNaN(valor) || valor <= 0) {
+        return exibirPopup("Por favor, preencha todos os campos corretamente.");
+    }
+
+    const nomeCompleto = `${primeiroNome} ${segundoNome}`;
+    const tipoSaldoDesc = tipoDepositoAtual === 'digital' ? 'Moedas Digitais' : 'Saldo de Serviços';
+
+    try {
+        await db.collection("solicitacoes").add({
+            tipo: "deposito",
+            subtipo: tipoDepositoAtual, // 'servico' ou 'digital'
+            usuarioUid: auth.currentUser.uid,
+            usuarioNome: perfil.nome,
+            dadosDeposito: { nomeCompleto, cpf, telefone },
+            valor: valor,
+            status: "pendente",
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        fecharTodosOsModais();      
+        notifyAdmins("📥 Novo Pedido de Depósito!", `${perfil.nome} quer depositar R$${valor.toFixed(2)} em ${tipoSaldoDesc}.`, { link: '#solicitacoes' });
+        
+        // Abre o modal de pagamento (PIX/Cartão)
+        abrirModal('modalDeposito');
+
+    } catch (error) {
+        console.error("Erro ao criar solicitação:", error);
+        exibirPopup("Erro ao processar solicitação.");
+    }
+}
+
 async function checkLembretesConclusao(uid) {
     if (!perfil || perfil.tipo === 'cliente') return; // Só para profissionais
 
@@ -6286,56 +6486,53 @@ async function comprarComPlayStore(sku, precoEstimado) {
 
 // 1. SUBSTITUA A SUA FUNÇÃO 'assinarVip' ANTIGA POR ESTA COMPLETA
 function assinarVip() {
-    // 1. Lógica da Play Store (permanece igual)
+    // Se estiver no app, usa a API da Google (compra direta do plano)
     if (playStoreService) {
         comprarComPlayStore(SKUS.VIP, PRECO_VIP);
         return;
     }
 
-    // 2. Lógica da Carteira (Fallback)
-    
-    // Verificação de saldo (melhorada com o popup de callback, igual fizemos no PRO)
-    if (perfil.saldo < PRECO_VIP) {
-        exibirPopup("Saldo insuficiente", "Saldo insuficiente para assinar o VIP. Por favor, deposite fundos na sua carteira.", "aviso", () => {
-            abrirModal('modalCarteira');
+    // Se estiver na Web ou se o Google Play falhar, usa o Saldo Digital
+    const saldoDigital = perfil.saldoDigital || 0;
+
+    if (saldoDigital < PRECO_VIP) {
+        exibirPopup("Moedas Insuficientes", "Você precisa de mais Saldo Digital para assinar o VIP.", "aviso", () => {
+            iniciarCompraMoedas(); // Leva para o depósito específico de moedas
         });
         return;
     }
 
-    // --- ESTA É A MUDANÇA: Trocando o 'confirm' pelo 'exibirConfirmacao' ---
     const titulo = `Confirmar Assinatura VIP`;
-    const mensagem = `Deseja assinar o plano VIP por R$ ${PRECO_VIP.toFixed(2)} (válido por 6 meses)? O valor será descontado do seu saldo da carteira.`;
+    const mensagem = `Deseja assinar o VIP por C$ ${PRECO_VIP.toFixed(2)}? Será descontado do seu Saldo Digital.`;
     
     exibirConfirmacao(titulo, mensagem, () => {
-        // O código abaixo (que antes vinha depois do 'confirm') só executa se o usuário clicar "Sim"
-        
         exibirAguarde("Ativando VIP...");
         db.runTransaction(async t => {
             const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
             const financeiroRef = db.collection("config").doc("financeiro");
             const clienteDoc = await t.get(clienteRef);
-            if (isVipAtivo(clienteDoc.data())) throw "Você já é um membro VIP ativo.";
+            
+            if (isVipAtivo(clienteDoc.data())) throw "Você já é VIP.";
+            if ((clienteDoc.data().saldoDigital || 0) < PRECO_VIP) throw "Saldo digital insuficiente.";
 
             const expiracao = new Date();
-            expiracao.setDate(expiracao.getDate() + 30); // 1 mês // Válido por 30 dias
+            expiracao.setDate(expiracao.getDate() + 30);
 
             t.update(clienteRef, {
-                saldo: firebase.firestore.FieldValue.increment(-PRECO_VIP),
+                saldoDigital: firebase.firestore.FieldValue.increment(-PRECO_VIP), // Desconta do DIGITAL
                 vip: true,
                 vipExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
             });
             t.set(financeiroRef, { arrecadadoVip: firebase.firestore.FieldValue.increment(PRECO_VIP) }, { merge: true });
         }).then(() => {
             fecharTodosOsModais();
-            exibirPopup("Sucesso!", "Parabéns! Você agora é um membro VIP!", "sucesso");
-            notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite seus benefícios exclusivos por 6 meses!");
-            fecharModalAtual(); // Fecha o modal 'modalVip'
+            exibirPopup("Sucesso!", "Agora você é VIP!", "sucesso");
+            notifyUser(auth.currentUser.uid, "👑 Bem-vindo ao VIP!", "Aproveite!");
         }).catch(e => {
             fecharTodosOsModais();
-            exibirPopup("Erro ao assinar VIP", e.message, "erro");
+            exibirPopup("Erro ao assinar VIP", e.message || e, "erro");
         });
     });
-    // --- FIM DA MUDANÇA ---
 }
 
 // SUBSTITUA a função 'assinarPro' inteira por esta:
@@ -7844,66 +8041,63 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
     const clienteRef = db.collection("usuarios").doc(clienteUid);
 
-    // 1. Executa a transação no banco e RETORNA o telefone do cliente
     const clienteTelefone = await db.runTransaction(async t => {
         const agendamentoDoc = await t.get(agendamentoRef);
         const agData = agendamentoDoc.data();
 
         if (agData.status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
 
-        // Atualiza contadores do profissional
+        const valorLiquido = agData.valor * (1 - TAXA); // Desconta os 20%
+
+        // 1. Atualiza contadores e SALDO GERAL do barbeiro
+        // (O saldo sobe na hora, mas o modal da carteira calcula o bloqueio visualmente)
         t.update(barbeiroRef, { 
+            saldo: firebase.firestore.FieldValue.increment(valorLiquido), 
             cortesSemana: firebase.firestore.FieldValue.increment(1), 
             clientesAtendidos: firebase.firestore.FieldValue.increment(1) 
         });
         
-        // Marca agendamento como concluído
+        // 2. Marca agendamento como concluído
         t.update(agendamentoRef, { 
             status: "concluido", 
-            avisoAvaliacaoEnviado: false // Reseta para garantir que o popup de avaliação apareça pro cliente
+            avisoAvaliacaoEnviado: false
+        });
+
+        // 3. [CRUCIAL] Cria registro financeiro para a regra de 20 dias
+        const registroRef = db.collection("extrato_financeiro").doc();
+        t.set(registroRef, {
+            usuarioUid: auth.currentUser.uid,
+            tipo: "entrada_servico",
+            valorBruto: agData.valor,
+            valorLiquido: valorLiquido,
+            dataEvento: firebase.firestore.FieldValue.serverTimestamp(),
+            origem: `Serviço: ${agData.servico}`,
+            agendamentoId: agendamentoId
         });
         
-        // Atualiza contador do cliente
+        // 4. Atualiza contador do cliente
         t.update(clienteRef, { 
             cortesRealizados: firebase.firestore.FieldValue.increment(1) 
         });
 
-        return agData.clienteTelefone; // Retorna o telefone para usar fora da transação
+        return agData.clienteTelefone;
     });
 
-    // 2. Verifica conquistas (sem travar o fluxo visual)
+    // Verifica conquistas e avisa no WhatsApp
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    // 3. REDIRECIONA PARA O WHATSAPP (Ação Solicitada)
     if (clienteTelefone) {
         const phoneNum = clienteTelefone.replace(/\D/g, '');
-        const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação, assim você ganha pontos pra ter desconto nos proximos agendamentos, agradeço! :D");
+        const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação! :D");
         window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
     }
 
     fecharTodosOsModais();
-    exibirPopup("Sucesso", "Serviço concluído! WhatsApp aberto para aviso.");
-
-    // 4. Notificações e Lógica de Bônus (Mantido do original)
-    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído. Deixe sua avaliação e ganhe pontos!`, { link: '#historico' });
+    exibirPopup("Sucesso", "Serviço concluído! O valor estará disponível para saque em 20 dias.");
     
-    const clienteDoc = await clienteRef.get();
-    const clienteData = clienteDoc.data();
+    notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído.`, { link: '#historico' });
     
-    if (clienteData.bonusIndicacaoPendente) {
-        await clienteRef.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO), bonusIndicacaoPendente: false });
-        notifyUser(clienteUid, "🏆 Bônus de Indicação!", `Você ganhou ${BONUS_INDICACAO} pontos de fidelidade!`);
-        
-        const query = await db.collection("usuarios").where("email", "==", clienteData.indicadoPorEmail).limit(1).get();
-        if (!query.empty) {
-            const indicadorDoc = query.docs[0];
-            await indicadorDoc.ref.update({ pontosFidelidade: firebase.firestore.FieldValue.increment(BONUS_INDICACAO) });
-            notifyUser(indicadorDoc.id, "🏆 Bônus por Indicar!", `Você ganhou ${BONUS_INDICACAO} pontos porque ${clienteData.nome} finalizou o serviço!`);
-        }
-    }
-
-    // Recarrega a página após 4 segundos para atualizar as listas
     setTimeout(() => location.reload(), 4000);
 
   } catch(e) {
@@ -8719,33 +8913,46 @@ function aprovarSaque(id, uid, valor) {
 }
 
 function aprovarDeposito(id, uid, valor) {
-  db.runTransaction(async t => {
-    const userRef = db.collection("usuarios").doc(uid);
-    const userDoc = await t.get(userRef);
-    if (!userDoc.exists) throw new Error("Usuário não encontrado!");
-    
-    const userData = userDoc.data();
-    const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
-    const pontosGanhos = Math.floor(valor / 10) * pontosPorDezReais;
-    
-    const updates = { saldo: firebase.firestore.FieldValue.increment(valor) };
-    if (pontosGanhos > 0) {
-        updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
-    }
+  // Primeiro buscamos a solicitação para saber o subtipo (serviço ou digital)
+  db.collection("solicitacoes").doc(id).get().then(snap => {
+      if (!snap.exists) throw new Error("Solicitação sumiu.");
+      const solicitacao = snap.data();
+      const tipoSaldo = solicitacao.subtipo || 'servico'; // Padrão para antigo é serviço
 
-    t.update(userRef, updates);
-    t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
-    return pontosGanhos;
+      db.runTransaction(async t => {
+        const userRef = db.collection("usuarios").doc(uid);
+        const userDoc = await t.get(userRef);
+        if (!userDoc.exists) throw new Error("Usuário não encontrado!");
+        
+        const userData = userDoc.data();
+        const pontosPorDezReais = isVipAtivo(userData) ? 2 : 1;
+        const pontosGanhos = Math.floor(valor / 10) * pontosPorDezReais;
+        
+        // Define qual campo atualizar
+        const updates = {};
+        if (tipoSaldo === 'digital') {
+            updates.saldoDigital = firebase.firestore.FieldValue.increment(valor);
+        } else {
+            updates.saldo = firebase.firestore.FieldValue.increment(valor);
+        }
 
-  }).then((pontosGanhos) => {
-    exibirPopup("Depósito aprovado e saldo adicionado!");
-    let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} foi aprovado.`;
-    if (pontosGanhos > 0) {
-        notificationBody += ` Você ganhou ${pontosGanhos} pontos de fidelidade!`;
-    }
-    notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
-  }).catch(e => {
-    exibirPopup("Erro ao aprovar depósito: " + e.message);
+        if (pontosGanhos > 0) {
+            updates.pontosFidelidade = firebase.firestore.FieldValue.increment(pontosGanhos);
+        }
+
+        t.update(userRef, updates);
+        t.update(db.collection("solicitacoes").doc(id), { status: "aprovado" });
+        return { pontosGanhos, tipoSaldo };
+
+      }).then((res) => {
+        exibirPopup("Depósito aprovado!");
+        let tipoTexto = res.tipoSaldo === 'digital' ? 'Moedas Digitais' : 'Saldo de Serviços';
+        let notificationBody = `Seu depósito de R$ ${valor.toFixed(2)} em ${tipoTexto} foi aprovado.`;
+        
+        notifyUser(uid, "💰 Depósito Aprovado!", notificationBody, { link: '#carteira' });
+      }).catch(e => {
+        exibirPopup("Erro ao aprovar depósito: " + e.message);
+      });
   });
 }
 
