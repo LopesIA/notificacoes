@@ -2495,6 +2495,49 @@ body {
     padding: 5px 10px;
     border-radius: 20px;
 }
+
+/* --- ALTERAÇÃO 4: BRILHO PARA MOLDURAS SUPREME BLACK (Para ver no fundo escuro) --- */
+.avatar-wrapper.admin_black .coroa-topo {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+}
+/* Adiciona contorno branco suave na asa preta */
+.avatar-wrapper.admin_black::before {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 5px rgba(0, 0, 0, 1)) !important;
+}
+
+/* --- ALTERAÇÃO 2: TAMANHO DO AVATAR NO RANKING --- */
+.avatar-wrapper.ranking-size {
+    width: 45px; height: 45px;
+    margin-right: 10px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Não deixa esmagar */
+}
+.avatar-wrapper.ranking-size .ranking-foto {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    padding: 1px;
+    z-index: 10;
+    position: relative;
+}
+.avatar-wrapper.ranking-size .coroa-topo {
+    width: 20px; height: 12px;
+    top: -12px; /* Posição da coroa no ranking */
+    position: absolute;
+    z-index: 15;
+    left: 50%; transform: translateX(-50%);
+}
+/* Asas no Ranking (Tamanho ajustado) */
+.avatar-wrapper.ranking-size::before {
+    width: 80px; height: 30px; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    opacity: 1;
+    display: block;
+}
   </style>
 </head>
 <body>
@@ -7157,36 +7200,40 @@ async function createMessageDiv(msg, docId) {
     return messageDiv;
 }
 
+// --- ALTERAÇÃO 4: VISUALIZAÇÃO DE PERFIL NO CHAT (COM MOLDURAS) ---
 async function abrirPerfilUsuarioChat(uid) {
-    const doc = await db.collection('usuarios').doc(uid).get();
-    if(!doc.exists) return;
-    const u = doc.data();
+    // Se clicar no próprio nome, usa o perfil local pra ser mais rápido
+    let u = null;
+    if (auth.currentUser && uid === auth.currentUser.uid) {
+        u = perfil;
+    } else {
+        const doc = await db.collection('usuarios').doc(uid).get();
+        if(!doc.exists) return;
+        u = doc.data();
+    }
     
-    // Limpa e prepara o container da foto
-    // Precisamos substituir a tag <img> simples por uma div wrapper se houver moldura
-    // O jeito mais seguro é injetar HTML novo na área da foto
     const modalContent = document.querySelector('#modalVisualizarPerfilChat .perfil-visualizacao-content');
     
-    // Remove foto antiga se existir para recriar
-    const fotoAntiga = document.getElementById('visuPerfilFoto');
-    const wrapperAntigo = modalContent.querySelector('.avatar-wrapper');
-    if (fotoAntiga) fotoAntiga.remove();
-    if (wrapperAntigo) wrapperAntigo.remove();
+    // Limpeza do HTML anterior
+    const elementsToRemove = modalContent.querySelectorAll('.avatar-wrapper, #visuPerfilFoto, #adminActionsChatPopup');
+    elementsToRemove.forEach(el => el.remove());
 
-    const nomeEl = document.getElementById('visuPerfilNome'); // Referência para inserir antes
+    const nomeEl = document.getElementById('visuPerfilNome'); 
     
     const fotoUrl = u.fotoPerfil || 'https://via.placeholder.com/120';
     let htmlFoto = '';
 
+    // Lógica para exibir a moldura correta
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
-        // Com Moldura (Grande - popup-size)
+        const m = MOLDURAS[u.molduraSelecionada];
+        // Insere a estrutura completa para suportar asas e coroa
         htmlFoto = `
         <div class="avatar-wrapper popup-size ${u.molduraSelecionada}">
             <div class="coroa-topo"></div>
-            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande">
+            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}">
         </div>`;
     } else {
-        // Sem Moldura
+        // Foto simples
         htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 10px auto; display: block;">`;
     }
     
@@ -7216,10 +7263,7 @@ async function abrirPerfilUsuarioChat(uid) {
         });
     }
     
-    // Botões Admin
-    const oldAdminBtns = document.getElementById('adminActionsChatPopup');
-    if(oldAdminBtns) oldAdminBtns.remove();
-
+    // Botões Admin (Visíveis apenas para você, admin)
     if (perfil.tipo === 'admin') {
         const divBtns = document.createElement('div');
         divBtns.id = 'adminActionsChatPopup';
@@ -8127,6 +8171,7 @@ async function cancelarAgendamentoManualmente(agendamentoId, clienteUid, valor) 
   });
 }
 
+// --- ALTERAÇÃO 3: CORREÇÃO FINANCEIRA (Taxa Dinâmica na Conclusão) ---
 async function concluirAgendamento(agendamentoId, clienteUid) {
   exibirAguarde("Concluindo...");
   
@@ -8135,16 +8180,31 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     const barbeiroRef = db.collection("usuarios").doc(auth.currentUser.uid);
     const clienteRef = db.collection("usuarios").doc(clienteUid);
 
-    const clienteTelefone = await db.runTransaction(async t => {
-        const agendamentoDoc = await t.get(agendamentoRef);
+    const resultData = await db.runTransaction(async t => {
+        // Lê os dados necessários dentro da transação para garantir consistência
+        const [agendamentoDoc, barbeiroDoc] = await Promise.all([
+            t.get(agendamentoRef),
+            t.get(barbeiroRef)
+        ]);
+
         const agData = agendamentoDoc.data();
+        const barbeiroData = barbeiroDoc.data();
 
         if (agData.status !== "conclusão pendente") throw "Este agendamento não pode ser concluído.";
 
-        const valorLiquido = agData.valor * (1 - TAXA); // Desconta os 20%
+        // --- LÓGICA DE TAXA DINÂMICA CORRIGIDA ---
+        let taxaAplicada = TAXA; // Padrão 20% (definido na constante global)
+        
+        // Se o barbeiro for PRO, pegamos a taxa do tier dele
+        if (isProAtivo(barbeiroData) && barbeiroData.proTier && PRECOS_PRO[barbeiroData.proTier]) {
+            taxaAplicada = PRECOS_PRO[barbeiroData.proTier].taxa;
+        }
+        
+        // Cálculo: Valor que o cliente pagou (já com desconto se houve promo) * (1 - taxa)
+        // Exemplo: Cliente pagou 45. Taxa Tier 4 é 0. 45 * 1 = 45. Barbeiro recebe 45.
+        const valorLiquido = agData.valor * (1 - taxaAplicada); 
 
         // 1. Atualiza contadores e SALDO GERAL do barbeiro
-        // (O saldo sobe na hora, mas o modal da carteira calcula o bloqueio visualmente)
         t.update(barbeiroRef, { 
             saldo: firebase.firestore.FieldValue.increment(valorLiquido), 
             cortesSemana: firebase.firestore.FieldValue.increment(1), 
@@ -8157,13 +8217,14 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
             avisoAvaliacaoEnviado: false
         });
 
-        // 3. [CRUCIAL] Cria registro financeiro para a regra de 20 dias
+        // 3. Cria registro financeiro
         const registroRef = db.collection("extrato_financeiro").doc();
         t.set(registroRef, {
             usuarioUid: auth.currentUser.uid,
             tipo: "entrada_servico",
             valorBruto: agData.valor,
             valorLiquido: valorLiquido,
+            taxaAplicada: taxaAplicada, // Salva qual taxa foi usada para auditoria
             dataEvento: firebase.firestore.FieldValue.serverTimestamp(),
             origem: `Serviço: ${agData.servico}`,
             agendamentoId: agendamentoId
@@ -8181,14 +8242,14 @@ async function concluirAgendamento(agendamentoId, clienteUid) {
     await verificarConquistas(clienteUid);
     await verificarConquistasBarbeiro(auth.currentUser.uid);
 
-    if (clienteTelefone) {
-        const phoneNum = clienteTelefone.replace(/\D/g, '');
+    if (resultData) {
+        const phoneNum = resultData.replace(/\D/g, '');
         const msg = encodeURIComponent("Acabei de concluir o agendamento no aplicativo, você pode ir em historico e deixar sua avaliação! :D");
         window.open(`https://wa.me/55${phoneNum}?text=${msg}`, '_blank');
     }
 
     fecharTodosOsModais();
-    exibirPopup("Sucesso", "Serviço concluído! O valor estará disponível para saque em 20 dias.");
+    exibirPopup("Sucesso", "Serviço concluído e saldo liberado (conforme regra de 20 dias).");
     
     notifyUser(clienteUid, "⭐ Avalie sua Experiência!", `O serviço com ${perfil.nome} foi concluído.`, { link: '#historico' });
     
@@ -10060,6 +10121,7 @@ function abrirModalConquistasBarbeiro() {
     }
 }
 
+// --- ALTERAÇÃO 2: RANKING COM MOLDURAS VISUAIS ---
 async function abrirModalRankingUnificado() {
     abrirModal('modalRankingUnificado');
     const container = document.getElementById('listaRankingUnificado');
@@ -10070,7 +10132,6 @@ async function abrirModalRankingUnificado() {
         </div>`;
     
     try {
-        // Busca clientes e profissionais (Limitando a 30 de cada para não pesar)
         const [clientesSnap, profissionaisSnap] = await Promise.all([
             db.collection('usuarios').where('tipo', '==', 'cliente').orderBy('cortesRealizados', 'desc').limit(30).get(),
             db.collection('usuarios').where('tipo', 'in', ['barbeiro', 'manicure_pedicure', 'designer_cilios']).orderBy('clientesAtendidos', 'desc').limit(30).get()
@@ -10078,33 +10139,24 @@ async function abrirModalRankingUnificado() {
         
         let ranking = [];
         
-        // Processa Clientes
-        clientesSnap.forEach(doc => {
+        // Helper para extrair dados
+        const processarUser = (doc, tipoUser) => {
             const d = doc.data();
-            ranking.push({ 
+            return { 
                 uid: doc.id,
                 nome: d.nome, 
-                foto: d.fotoPerfil || 'https://via.placeholder.com/50',
-                contagem: d.cortesRealizados || 0, 
-                tipo: 'cliente',
-                conquistas: d.conquistas || []
-            });
-        });
+                foto: d.logo_url || d.fotoPerfil || 'https://via.placeholder.com/50',
+                contagem: tipoUser === 'cliente' ? (d.cortesRealizados || 0) : (d.clientesAtendidos || 0), 
+                tipo: tipoUser,
+                conquistas: d.conquistas || [],
+                moldura: d.molduraSelecionada // Pega a moldura
+            };
+        };
 
-        // Processa Profissionais
-        profissionaisSnap.forEach(doc => {
-            const d = doc.data();
-            ranking.push({ 
-                uid: doc.id,
-                nome: d.nome, 
-                foto: d.logo_url || d.fotoPerfil || 'https://via.placeholder.com/50', // Logo ou foto
-                contagem: d.clientesAtendidos || 0, 
-                tipo: 'profissional',
-                conquistas: d.conquistas || []
-            });
-        });
+        clientesSnap.forEach(doc => ranking.push(processarUser(doc, 'cliente')));
+        profissionaisSnap.forEach(doc => ranking.push(processarUser(doc, 'profissional')));
 
-        // Ordena geral
+        // Ordena
         ranking.sort((a, b) => b.contagem - a.contagem);
         
         container.innerHTML = "";
@@ -10115,14 +10167,26 @@ async function abrirModalRankingUnificado() {
         }
 
         ranking.slice(0, 50).forEach((item, i) => {
-            // Pega a melhor conquista para exibir ao lado do nome (opcional)
             let medalhaHtml = obterIconeMaiorConquista(item.conquistas, item.tipo);
             const tipoEmoji = item.tipo === 'cliente' ? '🙋' : '💈';
+            
+            // Montagem do Avatar (Com ou sem moldura)
+            let avatarHtml = '';
+            if (item.moldura && MOLDURAS[item.moldura]) {
+                const m = MOLDURAS[item.moldura];
+                avatarHtml = `
+                <div class="avatar-wrapper ranking-size ${item.moldura}">
+                    <div class="coroa-topo"></div>
+                    <img src="${item.foto}" class="ranking-foto ${m.classe}">
+                </div>`;
+            } else {
+                avatarHtml = `<img src="${item.foto}" class="ranking-foto" style="width:45px;height:45px;border-radius:50%;border:2px solid #444;margin-right:10px;">`;
+            }
             
             container.innerHTML += `
                 <div class="ranking-novo-item" onclick="abrirPerfilUsuarioChat('${item.uid}')">
                     <div class="ranking-posicao">#${i + 1}</div>
-                    <img src="${item.foto}" class="ranking-foto" onerror="this.src='https://via.placeholder.com/50'">
+                    ${avatarHtml}
                     <div class="ranking-info">
                         <span class="ranking-nome" style="color: ${item.tipo === 'profissional' ? 'var(--cor-destaque)' : '#fff'}">
                             ${item.nome} ${tipoEmoji}
@@ -10138,7 +10202,6 @@ async function abrirModalRankingUnificado() {
         console.error(e);
     }
 }
-
 
 function obterIconeMaiorConquista(conquistas, tipo) {
     if (!conquistas || conquistas.length === 0) return '';
