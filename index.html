@@ -4366,47 +4366,50 @@ const storage = firebase.storage();
 
 const messaging = firebase.messaging();
 
-// --- CONTROLE DO BOTÃO VOLTAR (ANDROID/NAVEGADOR) ---
-let ignoreNextPopstate = false; // Variável de controle para evitar conflitos
-
-// --- CONTROLE DO BOTÃO VOLTAR (SAÍDA DUPLA + MODAIS) ---
+// --- CONTROLE AVANÇADO DO BOTÃO VOLTAR ---
 let ignoreNextPopstate = false; 
-let backPressTime = 0; // Variável para controlar o tempo do último clique
+let backPressTime = 0; 
+
+// Garante a armadilha do histórico ao carregar
+function armarHistorico() {
+    // Empurra um estado atual para criar uma camada de histórico
+    window.history.pushState({ page: "home" }, "", window.location.href);
+}
 
 window.addEventListener('popstate', (event) => {
-    // 1. Se a flag estiver ativa (fechamento manual), ignora
+    // 1. Se for fechamento manual de modal via JS, ignora
     if (ignoreNextPopstate) {
         ignoreNextPopstate = false;
         return;
     }
 
-    // 2. Se tem modal aberto, fecha o modal e PARA (não sai do app)
+    // 2. Se tem modal aberto, fecha o modal e FICA no app
     if (modalStack.length > 0) {
-        // Passa 'true' para indicar que veio do histórico (não volta history.back de novo)
-        fecharModalAtual(false, true); 
+        // O usuário apertou voltar com modal aberto
+        // Precisamos impedir o recuo do histórico real, então empurramos de volta
+        window.history.pushState({ page: "modal_open" }, "", window.location.href);
+        fecharModalAtual(false, true); // Fecha o modal visualmente
         return;
     }
 
-    // 3. Lógica de Duplo Clique para Sair (Apenas se não houver modais)
+    // 3. Lógica de Sair (Tela Principal)
     const now = new Date().getTime();
     
-    // Se o clique for dentro de 2 segundos do último clique
+    // Se o clique for rápido (menos de 2s do anterior), deixa sair
     if (now - backPressTime < 2000) {
-        // Permite a ação padrão do navegador (Sair/Voltar histórico real)
-        // Nenhuma ação necessária aqui, o navegador fará o 'back' final
+        // Deixa o evento acontecer (o app vai fechar/minimizar)
         return; 
     } else {
-        // É o primeiro clique: Bloqueia a saída
+        // Primeiro clique: Bloqueia a saída
         backPressTime = now;
         
-        // Recoloca o estado atual no histórico para impedir que o navegador saia
-        window.history.pushState(null, "", window.location.href);
+        // REARMA A ARMADILHA: Empurra o estado de volta para não sair
+        window.history.pushState({ page: "home" }, "", window.location.href);
         
-        // Mostra o aviso visual (Toast)
+        // Mostra o aviso
         mostrarToastSair();
     }
-});
-// ----------------------------------------------------- 
+}); 
 
 // ADICIONE ESTAS LINHAS ABAIXO (Linha ~2241)
 let isTwa = false; // Variável global para o ambiente
@@ -5170,6 +5173,7 @@ function switchView(view) {
 }
 
 function renderCurrentView() {
+    armarHistorico();
     setupViewSwitcher();
     if (adminBalanceListener) {
         adminBalanceListener();
@@ -5586,6 +5590,7 @@ auth.onAuthStateChanged(async user => {
 
   // --- Se chegou aqui, o usuário está logado ---
   console.log("Usuário logado:", user.uid);
+  armarHistorico();
   setupPlayStoreBilling();
   solicitarPermissaoNotificacao();
   obterLocalizacaoAtual();
@@ -7134,104 +7139,99 @@ function assinarVip() {
     });
 }
 
-// SUBSTITUA a função 'assinarPro' inteira por esta:
-
+// SUBSTITUA a função 'assinarPro' inteira por esta CORRIGIDA (Saldo Digital):
 function assinarPro(tier) {
     const plano = PRECOS_PRO[tier];
-    if (!plano) {
-        return exibirPopup("Plano PRO inválido selecionado.");
-    }
-    const sku = `pro_${tier}`; // Ex: pro_tier1, pro_tier2
+    if (!plano) return exibirPopup("Plano inválido.");
+    const sku = `pro_${tier}`;
 
-    // 1. Lógica da Play Store (já estava correta)
     if (playStoreService) {
-        // A Play Store tem seu próprio popup de confirmação, então chamamos direto.
         comprarComPlayStore(sku, plano.preco);
         return;
     }
 
-    // 2. Lógica da Carteira (Fallback)
-    if (perfil.saldo < plano.preco) {
-        exibirPopup("Saldo insuficiente", "Saldo insuficiente para assinar este plano PRO. Por favor, deposite fundos na sua carteira.", "aviso", () => {
-            abrirModal('modalCarteira');
+    // CORREÇÃO: Verifica Saldo Digital
+    const saldoDigital = perfil.saldoDigital || 0;
+
+    if (saldoDigital < plano.preco) {
+        exibirPopup("Moedas Insuficientes", "Saldo digital insuficiente para assinar este plano PRO.", "aviso", () => {
+            iniciarCompraMoedas();
         });
         return;
     }
     
-    // --- ESTA É A MUDANÇA: Usando o novo popup de confirmação ---
     const titulo = `Confirmar Assinatura PRO`;
-    const mensagem = `Deseja assinar o plano PRO (Tier ${tier.replace('tier', '')}) por R$ ${plano.preco.toFixed(2)} (válido por 30 dias)? O valor será descontado do seu saldo da carteira.`;
+    const mensagem = `Deseja assinar o plano PRO ${plano.nome} por ${plano.preco.toFixed(2)} Moedas?`;
     
     exibirConfirmacao(titulo, mensagem, () => {
-        // O código abaixo só executa se o usuário clicar "Sim"
         exibirAguarde("Ativando PRO...");
-
         db.runTransaction(async t => {
             const proRef = db.collection("usuarios").doc(auth.currentUser.uid);
             const financeiroRef = db.collection("config").doc("financeiro");
             const proDoc = await t.get(proRef);
 
-            if (isProAtivo(proDoc.data())) {
-                throw "Você já é um membro PRO ativo.";
-            }
+            if (isProAtivo(proDoc.data())) throw "Você já é um membro PRO ativo.";
 
             const expiracao = new Date();
-            expiracao.setDate(expiracao.getDate() + 30); // Adiciona 30 dias
+            expiracao.setDate(expiracao.getDate() + 30);
 
             t.update(proRef, {
-                saldo: firebase.firestore.FieldValue.increment(-plano.preco),
+                saldoDigital: firebase.firestore.FieldValue.increment(-plano.preco), // CORREÇÃO: Desconta do Digital
                 proAtivo: true,
-                proTier: tier, // Salva o nível do plano
+                proTier: tier,
                 proExpirationDate: firebase.firestore.Timestamp.fromDate(expiracao)
             });
-
             t.set(financeiroRef, { arrecadadoPro: firebase.firestore.FieldValue.increment(plano.preco) }, { merge: true });
 
         }).then(() => {
             fecharTodosOsModais();
-            exibirPopup("Sucesso!", "Parabéns! Você agora é um Profissional PRO!", "sucesso");
-            notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite seus benefícios exclusivos por 30 dias!");
-            fecharModalAtual(); // Fecha o modal 'modalVipPro'
+            exibirPopup("Sucesso!", "Você agora é PRO!", "sucesso");
+            notifyUser(auth.currentUser.uid, "🌟 Bem-vindo ao PRO!", "Aproveite!");
+            fecharModalAtual();
         }).catch(e => {
             fecharTodosOsModais();
             exibirPopup("Erro ao assinar PRO", e.message, "erro");
         });
     });
-    // --- FIM DA MUDANÇA ---
 }
 
-// 3. SUBSTITUA A SUA FUNÇÃO 'confirmarTurbinar' ANTIGA POR ESTA COMPLETA
 function confirmarTurbinar() {
     if (playStoreService) {
         comprarComPlayStore(SKUS.TURBINAR, PRECO_TURBINAR);
         return;
     }
 
-    if (perfil.saldo < PRECO_TURBINAR) {
-        return exibirPopup(`Saldo insuficiente. Você precisa de R$ ${PRECO_TURBINAR.toFixed(2)}.`);
+    // CORREÇÃO: Verifica Saldo Digital
+    const saldoDigital = perfil.saldoDigital || 0;
+
+    if (saldoDigital < PRECO_TURBINAR) {
+        return exibirPopup("Moedas Insuficientes", `Você precisa de ${PRECO_TURBINAR.toFixed(2)} em Moedas Digitais.`, "aviso", () => {
+            iniciarCompraMoedas();
+        });
     }
+    
     if (perfil.ultimoBoostComprado) {
         const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000);
         if (perfil.ultimoBoostComprado.toDate() > vinteQuatroHorasAtras) {
             return exibirPopup("Você só pode turbinar o perfil uma vez a cada 24 horas.");
         }
     }
-    if (confirm(`Confirmar o boost de 24h por R$ ${PRECO_TURBINAR.toFixed(2)}? O valor será descontado do seu saldo.`)) {
+
+    const titulo = "Turbinar Perfil (24h)";
+    const msg = `Confirmar o boost por ${PRECO_TURBINAR.toFixed(2)} Moedas?`;
+
+    exibirConfirmacao(titulo, msg, () => {
         const expiracao = new Date(Date.now() + 24 * 60 * 60 * 1000);
         db.collection('usuarios').doc(auth.currentUser.uid).update({
-            saldo: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR),
+            saldoDigital: firebase.firestore.FieldValue.increment(-PRECO_TURBINAR), // CORREÇÃO: Desconta do Digital
             boostExpiracao: firebase.firestore.Timestamp.fromDate(expiracao),
             ultimoBoostComprado: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             exibirPopup('Perfil turbinado com sucesso! Você está no topo da lista por 24 horas.');
             fecharModalAtual();
         }).catch(e => exibirPopup('Erro ao turbinar perfil: ' + e.message));
-    }
+    });
 }
-
-/**
- * Verifica se a assinatura PRO do profissional está ativa.
- */
 
 function isVipAtivo(perfilUsuario) {
     // Se não tiver a flag vip ou a data, retorna falso
@@ -11604,23 +11604,29 @@ async function gerenciarBalao(key, element) {
 }
 
 // 4. Compra de Balão
+// Função CORRIGIDA para usar Saldo Digital no Balão
 function executarCompraBalao(key, b) {
-    if (perfil.saldo < b.preco) {
-        return exibirPopup("Saldo insuficiente", "Deposite fundos para comprar este estilo.", "aviso", () => abrirModal('modalCarteira'));
+    const saldoDigital = perfil.saldoDigital || 0;
+
+    // CORREÇÃO: Verifica Saldo Digital
+    if (saldoDigital < b.preco) {
+        return exibirPopup("Moedas Insuficientes", "Você precisa de mais Saldo Digital (Moedas) para comprar este item.", "aviso", () => {
+            iniciarCompraMoedas();
+        });
     }
     
     exibirConfirmacao(
-        "Comprar Estilo de Chat?", 
-        `Deseja adquirir "${b.nome}" VITALÍCIO por R$ ${b.preco.toFixed(2)}?`, 
+        "Comprar Estilo?", 
+        `Deseja adquirir "${b.nome}" VITALÍCIO por ${b.preco.toFixed(2)} Moedas?`, 
         () => {
             exibirAguarde("Comprando...");
             db.collection('usuarios').doc(auth.currentUser.uid).update({
-                saldo: firebase.firestore.FieldValue.increment(-b.preco),
+                saldoDigital: firebase.firestore.FieldValue.increment(-b.preco), // CORREÇÃO: Desconta do Digital
                 baloesAdquiridos: firebase.firestore.FieldValue.arrayUnion(key),
                 balaoSelecionado: key
             }).then(() => {
                 fecharTodosOsModais();
-                exibirPopup("Sucesso!", "Estilo de chat adquirido!", "sucesso", () => abrirModalPerfil());
+                exibirPopup("Sucesso!", "Item adquirido!", "sucesso", () => abrirModalPerfil());
             }).catch(e => {
                 fecharTodosOsModais();
                 exibirPopup("Erro na compra: " + e.message);
@@ -15064,29 +15070,29 @@ async function gerenciarMoldura(key, element) {
     executarCompraMoldura(key, m);
 }
 
+// Função CORRIGIDA para usar Saldo Digital na Moldura
 function executarCompraMoldura(key, m) {
-    if (perfil.saldo < m.preco) {
-        // Adicionei um callback aqui também para facilitar o depósito
-        return exibirPopup("Saldo insuficiente", "Você não tem saldo suficiente para comprar esta moldura.", "aviso", () => {
-            abrirModal('modalCarteira');
+    const saldoDigital = perfil.saldoDigital || 0;
+
+    // CORREÇÃO: Verifica Saldo Digital
+    if (saldoDigital < m.preco) {
+        return exibirPopup("Moedas Insuficientes", "Você precisa de mais Saldo Digital (Moedas) para comprar este item.", "aviso", () => {
+            iniciarCompraMoedas(); // Leva para compra de moedas
         });
     }
     
     exibirConfirmacao(
         "Comprar Moldura?", 
-        `Deseja adquirir a moldura "${m.nome}" VITALÍCIA por R$ ${m.preco.toFixed(2)}?`, 
+        `Deseja adquirir a moldura "${m.nome}" VITALÍCIA por ${m.preco.toFixed(2)} Moedas?`, 
         () => {
             exibirAguarde("Comprando...");
             db.collection('usuarios').doc(auth.currentUser.uid).update({
-                saldo: firebase.firestore.FieldValue.increment(-m.preco),
+                saldoDigital: firebase.firestore.FieldValue.increment(-m.preco), // CORREÇÃO: Desconta do Digital
                 moldurasAdquiridas: firebase.firestore.FieldValue.arrayUnion(key),
-                molduraSelecionada: key // Já seleciona automaticamente ao comprar
+                molduraSelecionada: key
             }).then(() => {
                 fecharTodosOsModais();
-                exibirPopup("Sucesso!", "Compra realizada! Moldura vitalícia adquirida.", "sucesso", () => {
-                    // Reabre o perfil para mostrar a moldura equipada
-                    abrirModalPerfil();
-                });
+                exibirPopup("Sucesso!", "Compra realizada!", "sucesso", () => abrirModalPerfil());
             }).catch(e => {
                 fecharTodosOsModais();
                 exibirPopup("Erro na compra: " + e.message);
