@@ -2702,6 +2702,71 @@ body {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
     border: 1px solid rgba(255, 255, 255, 0.5) !important;
 }
+
+/* --- ESTILOS DO NOVO POPUP DE PERFIL COMPLETO --- */
+.perfil-section-title {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    margin: 15px 0 5px 0;
+    text-align: left;
+    border-bottom: 1px solid #333;
+    padding-bottom: 2px;
+}
+
+.inventory-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 5px 0;
+    /* Esconde barra de rolagem mas permite scroll */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+}
+.inventory-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.inventory-item-small {
+    flex: 0 0 auto;
+    width: 50px;
+    height: 50px;
+    background: #222;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #444;
+    position: relative;
+}
+
+.inventory-item-small.equipped {
+    border-color: var(--cor-destaque);
+    box-shadow: 0 0 5px var(--cor-destaque);
+}
+
+/* Preview pequeno de moldura */
+.mini-frame-preview {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background-color: #000;
+}
+
+/* Preview pequeno de balão */
+.mini-bubble-preview {
+    width: 40px; height: 30px;
+    font-size: 8px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px;
+}
+
+.member-since {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: -5px;
+    margin-bottom: 10px;
+    display: block;
+}
   </style>
 </head>
 <body>
@@ -5272,7 +5337,6 @@ function criarConta() {
   const nome = document.getElementById("nomeExibido").value.trim();
   const indicadorEmail = document.getElementById("indicador").value.trim();
   
-  // Campos de localização (podem vir vazios agora)
   const estadoInput = document.getElementById("estado").value.trim(); 
   const cidadeInput = document.getElementById("cidade").value.trim(); 
   const estado = formatarNomeProprio(estadoInput) || "Não Informado"; 
@@ -5282,8 +5346,6 @@ function criarConta() {
 
   if (senha !== senhaConfirm) { fecharTodosOsModais(); return exibirPopup("As senhas não coincidem."); }
   if (!telefone || telefone.length < 10 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD."); }
-  
-  // REMOVIDA A OBRIGATORIEDADE DE ESTADO/CIDADE
   if (!email || !senha || !nome) { fecharTodosOsModais(); return exibirPopup("Preencha email, senha e nome."); }
 
   const isProfissional = tipo !== 'cliente';
@@ -5303,10 +5365,8 @@ function criarConta() {
         email, nome, tipo: tipoFinal, telefone,
         estado: estadoFinal, cidade: cidadeFinal,
         saldo: 0, reputacao: 100, cortesSemana: 0, disponivel: "nao", 
-        // Se tiver coordenadas, salva. Se não, null.
         latitude: cadastroCoords ? cadastroCoords.latitude : null,
         longitude: cadastroCoords ? cadastroCoords.longitude : null,
-        // ... (restante dos dados padrão) ...
         listaServicos: [], promocoes: [], portfolio: [], chatAtivo: true, vip: false, lojaLiberada: false,
         rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
         codigosResgatados: [], indicadoPorEmail: indicadorEmail || null, bonusIndicacaoPendente: !!indicadorEmail,
@@ -5314,7 +5374,8 @@ function criarConta() {
         ultimoBoostComprado: null, interesse_principal: interesseFinal,
         onboarding_profissional_concluido: tipoFinal === 'cliente', 
         precisaConfiguracaoInicial: tipoFinal !== 'cliente', 
-        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp() // <--- LINHA NOVA: SALVA A DATA DE CRIAÇÃO
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
@@ -7431,7 +7492,7 @@ async function createMessageDiv(msg, docId) {
 
 async function abrirPerfilUsuarioChat(uid) {
     let u = null;
-    // Tenta pegar do cache local se for o próprio usuário ou se já tivermos carregado
+    // Tenta pegar do cache local se for o próprio usuário
     if (auth.currentUser && uid === auth.currentUser.uid) {
         u = perfil;
     } else {
@@ -7442,80 +7503,135 @@ async function abrirPerfilUsuarioChat(uid) {
     
     const modalContent = document.querySelector('#modalVisualizarPerfilChat .perfil-visualizacao-content');
     
-    // Remove elementos antigos para evitar duplicação
-    const elementsToRemove = modalContent.querySelectorAll('.avatar-wrapper, #visuPerfilFoto, #adminActionsChatPopup');
-    elementsToRemove.forEach(el => el.remove());
+    // Limpa conteúdo antigo
+    modalContent.innerHTML = '';
 
-    const nomeEl = document.getElementById('visuPerfilNome'); 
-    
+    // --- 1. FOTO E MOLDURA (Topo) ---
     const fotoUrl = u.fotoPerfil || 'https://via.placeholder.com/120';
     let htmlFoto = '';
 
-    // Lógica da Moldura no Popup
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
         const m = MOLDURAS[u.molduraSelecionada];
-        // Usa a classe 'popup-size' para o CSS de tamanho grande
         htmlFoto = `
-        <div class="avatar-wrapper popup-size ${u.molduraSelecionada}">
+        <div class="avatar-wrapper popup-size ${u.molduraSelecionada}" style="margin: 0 auto 15px auto;">
             <div class="coroa-topo"></div>
             <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}">
         </div>`;
     } else {
-        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 10px auto; display: block;">`;
+        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block;">`;
     }
-    
-    // Insere a foto
-    nomeEl.insertAdjacentHTML('beforebegin', htmlFoto);
-    
-    nomeEl.textContent = u.nome;
-    
-    // Define tipo e cor
+    modalContent.innerHTML += htmlFoto;
+
+    // --- 2. NOME E TIPO ---
     let tipoTexto = "Usuário";
     let corTipo = "#ccc";
+    let badges = "";
+
     if (u.tipo === 'admin') { tipoTexto = "🧠 Administrador"; corTipo = "#e74c3c"; }
-    else if (u.tipo === 'cliente') { tipoTexto = "🙋 Cliente"; corTipo = "#fff"; }
-    else { tipoTexto = "💈 Profissional"; corTipo = "var(--cor-destaque)"; }
-    
-    const tipoEl = document.getElementById('visuPerfilTipo');
-    tipoEl.textContent = tipoTexto;
-    tipoEl.style.color = corTipo;
-    
-    // Conquistas
-    const container = document.getElementById('visuPerfilConquistas');
-    container.innerHTML = '';
-    if (u.conquistasSelecionadas) {
-        const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
-        u.conquistasSelecionadas.forEach(cId => {
-            if(todasDefs[cId]) container.innerHTML += `<span title="${todasDefs[cId].nome}">${todasDefs[cId].icone}</span>`;
-        });
+    else if (u.tipo === 'cliente') { 
+        tipoTexto = "🙋 Cliente"; corTipo = "#fff"; 
+        if(isVipAtivo(u)) badges += " 💎 VIP";
     }
-    
-    // Botões Admin
-    if (perfil.tipo === 'admin') {
-        const divBtns = document.createElement('div');
-        divBtns.id = 'adminActionsChatPopup';
-        divBtns.style.display = 'flex';
-        divBtns.style.gap = '10px';
-        divBtns.style.marginTop = '15px';
-        divBtns.style.justifyContent = 'center';
+    else { 
+        tipoTexto = "💈 Profissional"; corTipo = "var(--cor-destaque)"; 
+        if(isProAtivo(u)) badges += ` 🌟 PRO ${u.proTier ? u.proTier.replace('tier', '') : ''}`;
+    }
 
-        if(u.telefone) {
-            const btnWpp = document.createElement('button');
-            btnWpp.innerHTML = '💬 WhatsApp';
-            btnWpp.style.backgroundColor = '#25D366';
-            btnWpp.onclick = () => abrirWhatsApp(u.telefone);
-            divBtns.appendChild(btnWpp);
+    modalContent.innerHTML += `
+        <h3 id="visuPerfilNome" style="margin: 5px 0; color: var(--cor-destaque);">${u.nome} ${badges}</h3>
+        <p id="visuPerfilTipo" style="font-size: 12px; opacity: 0.8; color: ${corTipo}; margin:0;">${tipoTexto}</p>
+    `;
+
+    // --- 3. DATA DE MEMBRO (Se existir) ---
+    if (u.criadoEm) {
+        let dataMembro;
+        if (u.criadoEm.toDate) dataMembro = u.criadoEm.toDate();
+        else if (u.criadoEm.seconds) dataMembro = new Date(u.criadoEm.seconds * 1000);
+        
+        if (dataMembro) {
+            const dataStr = dataMembro.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            modalContent.innerHTML += `<span class="member-since">Membro desde ${dataStr}</span>`;
         }
-
-        const btnGerenciar = document.createElement('button');
-        btnGerenciar.innerHTML = '⚙️ Gerenciar';
-        btnGerenciar.onclick = () => {
-            fecharModalAtual();
-            abrirModalGerenciarUsuario(uid);
-        };
-        divBtns.appendChild(btnGerenciar);
-        container.parentNode.appendChild(divBtns);
     }
+
+    // --- 4. CONQUISTAS (Inventário) ---
+    const conquistas = u.conquistas || [];
+    if (conquistas.length > 0) {
+        let htmlConquistas = '<div class="perfil-section-title">🏅 Conquistas Desbloqueadas</div><div class="inventory-scroll-container">';
+        const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
+        
+        conquistas.forEach(cId => {
+            if(todasDefs[cId]) {
+                htmlConquistas += `
+                <div class="inventory-item-small" title="${todasDefs[cId].nome}">
+                    <span style="font-size:24px;">${todasDefs[cId].icone}</span>
+                </div>`;
+            }
+        });
+        htmlConquistas += '</div>';
+        modalContent.innerHTML += htmlConquistas;
+    }
+
+    // --- 5. MOLDURAS (Inventário) ---
+    const molduras = u.moldurasAdquiridas || [];
+    // Adiciona molduras especiais (Admin) se for admin
+    if(u.tipo === 'admin') {
+        if(!molduras.includes('admin_black')) molduras.push('admin_black');
+        if(!molduras.includes('admin_red')) molduras.push('admin_red');
+    }
+
+    if (molduras.length > 0) {
+        let htmlMolduras = '<div class="perfil-section-title">🖼️ Coleção de Molduras</div><div class="inventory-scroll-container">';
+        molduras.forEach(mId => {
+            if (MOLDURAS[mId]) {
+                const isEquipped = u.molduraSelecionada === mId ? 'equipped' : '';
+                htmlMolduras += `
+                <div class="inventory-item-small ${isEquipped}" title="${MOLDURAS[mId].nome}">
+                    <div class="mini-frame-preview ${MOLDURAS[mId].classe}" style="transform: scale(0.8);"></div>
+                </div>`;
+            }
+        });
+        htmlMolduras += '</div>';
+        modalContent.innerHTML += htmlMolduras;
+    }
+
+    // --- 6. BALÕES (Inventário) ---
+    const baloes = u.baloesAdquiridos || [];
+    // Adiciona balões especiais (Admin) se for admin
+    if(u.tipo === 'admin') {
+        if(!baloes.includes('admin_black')) baloes.push('admin_black');
+        if(!baloes.includes('admin_red')) baloes.push('admin_red');
+    }
+
+    if (baloes.length > 0) {
+        let htmlBaloes = '<div class="perfil-section-title">💬 Estilos de Chat</div><div class="inventory-scroll-container">';
+        baloes.forEach(bId => {
+            if (BALOES[bId]) {
+                const isEquipped = u.balaoSelecionado === bId ? 'equipped' : '';
+                htmlBaloes += `
+                <div class="inventory-item-small ${isEquipped}" title="${BALOES[bId].nome}">
+                    <div class="mini-bubble-preview chat-message ${BALOES[bId].classe} custom-bubble" style="margin:0; width:30px; height:20px;">Abc</div>
+                </div>`;
+            }
+        });
+        htmlBaloes += '</div>';
+        modalContent.innerHTML += htmlBaloes;
+    }
+
+    // --- 7. BOTÕES DE AÇÃO ---
+    let btnsHtml = '<div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">';
+    btnsHtml += `<button onclick="fecharModalAtual()" style="background:#555;">Fechar</button>`;
+    
+    // Botões Extras para Admin
+    if (perfil && perfil.tipo === 'admin' && uid !== auth.currentUser.uid) {
+        if(u.telefone) {
+            btnsHtml += `<button onclick="abrirWhatsApp('${u.telefone}')" style="background-color:#25D366;">💬 WhatsApp</button>`;
+        }
+        btnsHtml += `<button onclick="fecharModalAtual(); abrirModalGerenciarUsuario('${uid}')">⚙️ Gerenciar</button>`;
+    }
+    btnsHtml += '</div>';
+    
+    modalContent.innerHTML += btnsHtml;
     
     abrirModal('modalVisualizarPerfilChat');
 }
