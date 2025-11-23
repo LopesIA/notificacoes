@@ -7468,8 +7468,8 @@ async function createMessageDiv(msg, docId) {
                 }
 
                 // 4. Foto com Moldura (CORRIGIDO PARA ACEITAR LOGOMARCA)
-                // Tenta fotoPerfil, se não tiver, tenta logo_url, se não tiver, usa placeholder
-                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
+                // Tenta logo_url primeiro se tiver, depois fotoPerfil, depois placeholder
+                const fotoUrl = remetenteData.logo_url || remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
                 // Verifica se tem moldura válida
@@ -7530,7 +7530,8 @@ async function abrirPerfilUsuarioChat(uid) {
     modalContent.innerHTML = '';
 
     // --- 1. FOTO E MOLDURA (Topo) ---
-    const fotoUrl = u.fotoPerfil || 'https://via.placeholder.com/120';
+    // CORREÇÃO AQUI: Verifica logo_url PRIMEIRO se for profissional, ou como fallback
+    const fotoUrl = u.logo_url || u.fotoPerfil || 'https://via.placeholder.com/120';
     let htmlFoto = '';
 
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
@@ -7556,6 +7557,7 @@ async function abrirPerfilUsuarioChat(uid) {
         if(isVipAtivo(u)) badges += " 💎 VIP";
     }
     else { 
+        // Profissionais (Barbeiro, Manicure, etc)
         tipoTexto = "💈 Profissional"; corTipo = "var(--cor-destaque)"; 
         if(isProAtivo(u)) badges += ` 🌟 PRO ${u.proTier ? u.proTier.replace('tier', '') : ''}`;
     }
@@ -7597,7 +7599,6 @@ async function abrirPerfilUsuarioChat(uid) {
 
     // --- 5. MOLDURAS (Inventário) ---
     const molduras = u.moldurasAdquiridas || [];
-    // Adiciona molduras especiais (Admin) se for admin
     if(u.tipo === 'admin') {
         if(!molduras.includes('admin_black')) molduras.push('admin_black');
         if(!molduras.includes('admin_red')) molduras.push('admin_red');
@@ -7620,7 +7621,6 @@ async function abrirPerfilUsuarioChat(uid) {
 
     // --- 6. BALÕES (Inventário) ---
     const baloes = u.baloesAdquiridos || [];
-    // Adiciona balões especiais (Admin) se for admin
     if(u.tipo === 'admin') {
         if(!baloes.includes('admin_black')) baloes.push('admin_black');
         if(!baloes.includes('admin_red')) baloes.push('admin_red');
@@ -12690,31 +12690,67 @@ function iniciarVerificacaoDePendencias(uid) {
 async function verificarPendencias(uid) {
     if (!uid || !perfil) return;
 
+    // 1. Pendências do Profissional (Agendamentos)
     if (perfil.tipo !== 'cliente') {
         const agendamentosSnap = await db.collection('agendamentos').where('barbeiroUid', '==', uid).where('status', '==', 'pendente').get();
         const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
         if (!agendamentosSnap.empty) {
             btnAgendamentos?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⏰ Agendamento Pendente', `Você tem ${agendamentosSnap.size} novo(s) agendamento(s) para aprovar.`, { link: '#agendamentos' });
+            // Notificação visual sutil, não popup invasivo repetitivo aqui
         } else {
             btnAgendamentos?.classList.remove('notificacao-pulsante');
         }
     }
 
+    // 2. Pendências do Cliente (Avaliação e Confirmação de Entrega)
     if (perfil.tipo === 'cliente') {
+        // A. Avaliações Pendentes
         const avaliacoesSnap = await db.collection('agendamentos').where('clienteUid', '==', uid).where('status', '==', 'concluido').where('avaliado', '==', false).get();
         const btnHistorico = document.getElementById('btnHistoricoCliente');
         if (!avaliacoesSnap.empty) {
             btnHistorico?.classList.add('notificacao-pulsante');
-            notifyUser(uid, '⭐ Avaliação Pendente', `Você tem ${avaliacoesSnap.size} serviço(s) para avaliar e ganhar pontos!`, { link: '#historico' });
         } else {
             btnHistorico?.classList.remove('notificacao-pulsante');
         }
+
+        // B. Confirmação de Entrega (Popup a cada 1 hora)
+        const comprasPendentesSnap = await db.collection('loja_pedidos')
+            .where('clienteUid', '==', uid)
+            .where('status', '==', 'entregue_pendente_confirmacao')
+            .get();
+
+        if (!comprasPendentesSnap.empty) {
+            const btnCompras = document.getElementById('btnMinhasCompras');
+            btnCompras?.classList.add('notificacao-pulsante');
+
+            // Lógica de 1 Hora
+            const agora = Date.now();
+            const ultimoAviso = localStorage.getItem('ultimoAvisoEntrega_' + uid);
+            const UMA_HORA = 60 * 60 * 1000; // 3600000 ms
+
+            if (!ultimoAviso || (agora - parseInt(ultimoAviso)) > UMA_HORA) {
+                const pedido = comprasPendentesSnap.docs[0].data();
+                const docId = comprasPendentesSnap.docs[0].id;
+                
+                // Abre o modal
+                abrirModalConfirmacaoComprador({
+                    id: docId,
+                    vendedorUid: pedido.vendedorUid,
+                    valor: pedido.valor,
+                    produtoNome: pedido.produtoNome
+                });
+                
+                // Atualiza o timestamp
+                localStorage.setItem('ultimoAvisoEntrega_' + uid, agora.toString());
+                console.log("Lembrete de entrega exibido para o cliente.");
+            }
+        }
     }
 
+    // 3. Pendências de Saque (Geral)
     const saqueSnap = await db.collection("solicitacoes").where("usuarioUid", "==", uid).where("status", "==", "pendente").where("tipo", "==", "saque").get();
     if (!saqueSnap.empty) {
-        notifyUser(uid, "⏳ Saque em Análise", "Sua solicitação de saque ainda está pendente de aprovação.", { link: '#carteira' });
+        // Apenas atualiza UI se necessário
     }
 }
 
