@@ -13888,12 +13888,7 @@ function setupConfiguracoes() {
                 
                 fecharTodosOsModais();
                 exibirPopup("Sucesso", "Seu interesse foi atualizado! O app será recarregado para exibir os novos profissionais.", "sucesso");
-                
-                // FORÇA O RELOAD PARA APLICAR A NOVA LISTA DE CARDS
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-
+                           
             } catch (error) {
                 fecharTodosOsModais();
                 exibirPopup("Erro", "Não foi possível alterar o interesse: " + error.message);
