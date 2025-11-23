@@ -4162,17 +4162,21 @@ onclick="fecharModal(event)">Fechar</button></div></div>
   </div>
 </div>
 
-<!-- Modal para Confirmar Exclusão de Conta (Substitui o prompt) -->
 <div id="modalConfirmarSenhaExclusao" class="modal" onclick="fecharModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <h3>🗑️ Excluir Conta</h3>
-    <p style="color: #e74c3c; font-weight: bold;">Atenção: Esta ação é irreversível!</p>
-    <p>Para confirmar a exclusão da sua conta, digite sua senha atual:</p>
+    <h3>🗑️ Excluir Conta Permanentemente</h3>
+    <p style="color: #e74c3c; font-weight: bold;">Esta ação apagará todos os seus dados!</p>
+    
+    <p style="font-size: 13px; margin-bottom: 5px; text-align: left;">1. Confirme seu E-mail:</p>
+    <input id="exclusaoEmailInput" type="email" placeholder="Digite seu e-mail cadastrado">
+
+    <p style="font-size: 13px; margin-bottom: 5px; text-align: left;">2. Confirme sua Senha:</p>
     <div class="show-password-container">
       <input id="exclusaoSenhaInput" type="password" placeholder="🔑 Sua Senha">
       <span class="show-password-toggle" onclick="togglePasswordVisibility('exclusaoSenhaInput', this)">👁️</span>
     </div>
-    <button onclick="deletarConta()" style="background-color: #c0392b; margin-top: 15px;">Confirmar Exclusão Permanente</button>
+
+    <button onclick="deletarConta()" style="background-color: #c0392b; margin-top: 15px; border: 1px solid #e74c3c;">Confirmar Exclusão</button>
     <button data-modal-id="modalConfirmarSenhaExclusao" onclick="fecharModal(event)">❌ Cancelar</button>
   </div>
 </div>
@@ -5362,6 +5366,31 @@ function criarConta() {
 
   auth.createUserWithEmailAndPassword(email, senha)
     .then(async cred => {
+      let pontosIniciais = 0;
+
+      // --- LÓGICA DE INDICAÇÃO (PREMIA OS DOIS) ---
+      if (indicadorEmail) {
+          try {
+              const snapshotIndicador = await db.collection("usuarios").where("email", "==", indicadorEmail).limit(1).get();
+              if (!snapshotIndicador.empty) {
+                  const docIndicador = snapshotIndicador.docs[0];
+                  // Premia quem indicou
+                  await docIndicador.ref.update({
+                      pontosFidelidade: firebase.firestore.FieldValue.increment(50)
+                  });
+                  // Premia o novo usuário
+                  pontosIniciais = 50;
+                  
+                  // Notifica quem indicou
+                  criarAviso(docIndicador.id, `🎉 Parabéns! Sua indicação (${nome}) se cadastrou. Você ganhou 50 pontos!`, 'premio');
+                  console.log("Indicação processada com sucesso.");
+              }
+          } catch (err) {
+              console.warn("Erro ao processar indicação:", err);
+          }
+      }
+      // ---------------------------------------------
+
       const data = {
         email, nome, tipo: tipoFinal, telefone,
         estado: estadoFinal, cidade: cidadeFinal,
@@ -5369,18 +5398,23 @@ function criarConta() {
         latitude: cadastroCoords ? cadastroCoords.latitude : null,
         longitude: cadastroCoords ? cadastroCoords.longitude : null,
         listaServicos: [], promocoes: [], portfolio: [], chatAtivo: true, vip: false, lojaLiberada: false,
-        rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, pontosFidelidade: 0,
-        codigosResgatados: [], indicadoPorEmail: indicadorEmail || null, bonusIndicacaoPendente: !!indicadorEmail,
+        rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, 
+        pontosFidelidade: pontosIniciais, // Já começa com 50 se foi indicado
+        codigosResgatados: [], indicadoPorEmail: indicadorEmail || null, bonusIndicacaoPendente: false, // Pendência resolvida na criação
         fcmTokens: [], cortesRealizados: 0, conquistas: [], clientesAtendidos: 0, somaAvaliacoes: 0, numAvaliacoes: 0,
         ultimoBoostComprado: null, interesse_principal: interesseFinal,
         onboarding_profissional_concluido: tipoFinal === 'cliente', 
         precisaConfiguracaoInicial: tipoFinal !== 'cliente', 
         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-        criadoEm: firebase.firestore.FieldValue.serverTimestamp() // <--- LINHA NOVA: SALVA A DATA DE CRIAÇÃO
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
       };
       await db.collection("usuarios").doc(cred.user.uid).set(data);
       notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
+      
       fecharTodosOsModais();
+      if (pontosIniciais > 0) {
+          exibirPopup("Conta Criada!", "🎉 Você já começou com 50 Pontos de Fidelidade por ter sido indicado!");
+      }
     })
     .catch(e => {
         fecharTodosOsModais();
@@ -9206,6 +9240,51 @@ function carregarAdmin() {
         if (btn) btn.classList.toggle('notificacao-pulsante', !snap.empty);
     });
 
+    // --- NOVO: Listener para Contas Excluídas (Popup do Admin) ---
+    db.collection("avisos")
+        .where("destinatario", "==", "admin")
+        .where("tipo", "==", "conta_excluida_admin")
+        .where("lido", "==", false)
+        .onSnapshot(snap => {
+            snap.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const aviso = change.doc.data();
+                    
+                    // Prepara mensagem do WhatsApp
+                    const msgWpp = encodeURIComponent(`Olá ${aviso.usuarioNome}, vi que você excluiu sua conta do aplicativo Nova Versão. Há algo que eu possa fazer para melhorar sua experiência ou ajudar a resolver algum problema?`);
+                    const phoneNum = aviso.usuarioTelefone ? aviso.usuarioTelefone.replace(/\D/g, '') : null;
+                    
+                    // Callback do botão OK (Abre WhatsApp e marca aviso como lido)
+                    const acaoAdmin = () => {
+                        if (phoneNum) {
+                            window.open(`https://wa.me/55${phoneNum}?text=${msgWpp}`, '_blank');
+                        } else {
+                            exibirPopup("Sem Telefone", "O usuário não tinha telefone cadastrado.");
+                        }
+                        // Marca como lido para não aparecer de novo
+                        db.collection("avisos").doc(change.doc.id).update({ lido: true });
+                    };
+
+                    // Exibe Popup Bloqueante
+                    let textoPopup = `O usuário <b>${aviso.usuarioNome}</b> excluiu a conta.`;
+                    if(!phoneNum) textoPopup += `<br>(Usuário sem telefone cadastrado)`;
+                    
+                    exibirPopupBloqueante(
+                        "🗑️ Conta Excluída!", 
+                        textoPopup + "<br><br>Clique abaixo para entrar em contato e tentar recuperar o usuário.", 
+                        acaoAdmin
+                    );
+                    
+                    // Altera o texto do botão do popup bloqueante dinamicamente
+                    setTimeout(() => {
+                        const btn = document.getElementById('btnOkBloqueante');
+                        if(btn) btn.textContent = phoneNum ? "💬 Chamar no WhatsApp" : "Ok, Entendi";
+                    }, 100);
+                }
+            });
+        });
+    // ------------------------------------------------------------
+
     // Listener para usuários online (somente admin)
     const countElement = document.getElementById('onlineUserCount');
     if (onlineUsersListener) onlineUsersListener(); // Cancela listener anterior
@@ -9218,7 +9297,7 @@ function carregarAdmin() {
             const count = snap.size;
             if (countElement) {
                 // Atualiza o texto do botão
-                countElement.textContent = `🏆 ${count} Online`; // <-- MUDANÇA AQUI
+                countElement.textContent = `🏆 ${count} Online`; 
                 countElement.classList.toggle('hidden', !(perfil && perfil.tipo === 'admin' && userView.currentType === 'admin'));
             }
 
@@ -9232,9 +9311,7 @@ function carregarAdmin() {
                 }
                 snap.forEach(doc => {
                     const u = doc.data();
-                    // Adiciona o item clicável
-                    // Alterado para chamar adminAbrirInfoChat passando o ID do documento (doc.id)
-lista.innerHTML += `<div class="selectable-item" onclick="adminAbrirInfoChat('${doc.id}')" title="Ver opções para ${u.nome}">${u.nome}</div>`;
+                    lista.innerHTML += `<div class="selectable-item" onclick="adminAbrirInfoChat('${doc.id}')" title="Ver opções para ${u.nome}">${u.nome}</div>`;
                 });
             }
 
@@ -9844,7 +9921,8 @@ function prepararDeletarConta() {
   exibirConfirmacao("Excluir Conta?", "Esta ação é irreversível. Todos os seus dados, saldo, agendamentos e histórico serão apagados permanentemente. Deseja continuar?", (confirmacao1) => {
       // Pede a segunda confirmação
       exibirConfirmacao("Confirmação Final", "Esta é sua última chance. Todos os seus dados serão perdidos. Confirma a exclusão permanente da sua conta?", async (confirmacao2) => {
-          // Se chegou aqui, abre o modal de senha
+          // Se chegou aqui, abre o modal de senha/email
+          document.getElementById('exclusaoEmailInput').value = ''; // Limpa email
           document.getElementById('exclusaoSenhaInput').value = ''; // Limpa senha
           abrirModal('modalConfirmarSenhaExclusao');
       });
@@ -9852,30 +9930,49 @@ function prepararDeletarConta() {
 }
 
 async function deletarConta() {
+  const emailDigitado = document.getElementById('exclusaoEmailInput').value.trim();
   const password = document.getElementById('exclusaoSenhaInput').value;
-  if (!password) {
-      return exibirPopup("Senha necessária.", "Digite sua senha para confirmar.");
+  const user = auth.currentUser;
+
+  if (!emailDigitado || !password) {
+      return exibirPopup("Dados incompletos.", "Por favor, digite seu e-mail e senha para confirmar.");
   }
 
-  fecharModalAtual(); // Fecha o modal de senha
-  exibirAguarde("Reautenticando e excluindo sua conta...");
+  if (emailDigitado !== user.email) {
+      return exibirPopup("E-mail incorreto.", "O e-mail digitado não corresponde à conta logada.");
+  }
 
-  const user = auth.currentUser;
+  fecharModalAtual(); // Fecha o modal
+  exibirAguarde("Processando exclusão...");
+
   const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
 
   try {
-      // 1. Reautenticar
+      // 1. Reautenticar (Necessário para deletar)
       await user.reauthenticateWithCredential(credential);
 
-      // 2. Deletar dados do Firestore
+      // 2. NOTIFICAR O ADMIN (Antes de apagar os dados)
+      // Salva um aviso especial para o Admin saber quem saiu e poder contatar
+      await db.collection('avisos').add({
+          tipo: 'conta_excluida_admin', // Tipo específico para o admin pegar
+          usuarioNome: perfil.nome,
+          usuarioTelefone: perfil.telefone,
+          usuarioEmail: user.email,
+          motivo: "Exclusão pelo próprio usuário",
+          destinatario: 'admin', // Flag para o listener do admin
+          lido: false,
+          ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // 3. Deletar dados do Firestore
       await db.collection('usuarios').doc(user.uid).delete();
       
-      // 3. Deletar usuário do Auth
+      // 4. Deletar usuário do Auth
       await user.delete();
 
       fecharTodosOsModais();
       exibirPopup("Conta Excluída", "Sua conta foi excluída com sucesso. Sentiremos sua falta.", 'sucesso', () => {
-          location.reload(); // Recarrega a página após o usuário clicar em OK
+          location.reload(); // Recarrega a página para deslogar visualmente
       });
       
   } catch (error) {
