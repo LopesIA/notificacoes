@@ -5718,7 +5718,20 @@ if (!isInitialLoad) {
                 .where("vendedorUid", "==", user.uid)
                 .where("vendedorNotificado", "==", false)
                 .onSnapshot(snapshot => {
-                    // (lógica popup nova venda existente)
+                    snapshot.docChanges().forEach(change => {
+                        // Verifica se é um pedido NOVO (added)
+                        if (change.type === 'added') {
+                            // Exibe o popup visual na tela
+                            abrirModal('modalVendaRealizada');
+                            
+                            // Toca um som de notificação (opcional)
+                            // const audio = new Audio('/som_venda.mp3'); audio.play().catch(()=>{});
+
+                            // IMPORTANTE: Marca como notificado no banco para que o popup
+                            // não abra novamente se a página for recarregada.
+                            db.collection("loja_pedidos").doc(change.doc.id).update({ vendedorNotificado: true });
+                        }
+                    });
                 });
         }
 
@@ -7454,14 +7467,15 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
-                // 4. Foto com Moldura (Estrutura Fixa para o CSS funcionar)
-                const fotoUrl = remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
+                // 4. Foto com Moldura (CORRIGIDO PARA ACEITAR LOGOMARCA)
+                // Tenta fotoPerfil, se não tiver, tenta logo_url, se não tiver, usa placeholder
+                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
                 // Verifica se tem moldura válida
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
                     const m = MOLDURAS[remetenteData.molduraSelecionada];
-                    // Cria a estrutura wrapper. As classes 'chat-size' e o nome da moldura (ex: 'admin_black') ativam o CSS.
+                    // Cria a estrutura wrapper.
                     avatarHtml = `
                     <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
                         <div class="coroa-topo"></div>
@@ -12218,8 +12232,14 @@ async function salvarProdutoVendedor() {
     const modal = document.getElementById('modalAddEditProduto');
     const nome = modal.querySelector('#produtoNome').value.trim();
     const preco = parseFloat(modal.querySelector('#produtoPreco').value);
-    const descontoInput = modal.querySelector('#produtoDesconto').value;
-    const desconto = descontoInput ? parseInt(descontoInput) : null;
+    
+    // --- CORREÇÃO: Tratamento robusto do Desconto Opcional ---
+    const descontoInput = modal.querySelector('#produtoDesconto').value.trim();
+    let desconto = null;
+    if (descontoInput !== "") {
+        desconto = parseInt(descontoInput);
+    }
+
     const descricao = modal.querySelector('#produtoDescricao').value.trim();
     const tamanhosSelecionados = Array.from(modal.querySelectorAll('input[name="tamanhos"]:checked')).map(cb => cb.value);
     const fileInput = modal.querySelector('#produtoFiles');
@@ -12232,6 +12252,8 @@ async function salvarProdutoVendedor() {
     if (!nome || isNaN(preco) || preco <= 0 || !descricao || tamanhosSelecionados.length === 0) {
         return exibirPopup('Preencha todos os campos obrigatórios (*): Nome, Preço, Descrição e pelo menos um Tamanho.');
     }
+    
+    // Validação do desconto corrigida: Só reclama se for número inválido
     if (desconto !== null && (isNaN(desconto) || desconto < 1 || desconto > 99)) {
         return exibirPopup('O desconto deve ser um número entre 1 e 99 (ou deixe em branco).');
     }
@@ -12314,6 +12336,7 @@ async function salvarProdutoVendedor() {
         const productData = {
             nome,
             preco,
+            // Salva null ou deleta o campo se não houver desconto
             desconto: desconto !== null ? desconto : firebase.firestore.FieldValue.delete(),
             descricao,
             tamanhos: tamanhosSelecionados,
@@ -12322,7 +12345,7 @@ async function salvarProdutoVendedor() {
             vendedorUid: auth.currentUser.uid,
             vendedorNome: perfil.nome,
             isOficial: perfil.tipo === 'admin',
-            isPremium: isPremium // SALVA O STATUS PREMIUM
+            isPremium: isPremium
         };
 
         if (produtoEmEdicaoId) {
