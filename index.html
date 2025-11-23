@@ -4404,7 +4404,6 @@ const BALOES = {
 
 let fcmSetupDone = false;
 let isSending = false;
-let chatUserCache = {}; // Cache para guardar dados de usuários e carregar fotos instantaneamente
 let perfil = null;
 let agendamentoListener = null;
 let currentModal = null;
@@ -7410,198 +7409,254 @@ async function enviarMensagem() {
  }
 
 async function createMessageDiv(msg, docId) {
-    const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
-    let classesDiv = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
-    
-    // Container Principal
+    let remetenteNome = msg.remetenteNome || "Desconhecido";
+    let classeCSS = "", iconeBase = "";
     const messageDiv = document.createElement('div');
-    messageDiv.className = classesDiv;
-    if (docId) messageDiv.dataset.docId = docId;
-
-    // --- LÓGICA DE DADOS DO USUÁRIO (COM CACHE) ---
-    let u = null;
+    const isCurrentUser = auth.currentUser && msg.remetenteUid === auth.currentUser.uid;
     
-    // 1. Tenta pegar do cache global primeiro (Rápido)
-    if (chatUserCache[msg.remetenteUid]) {
-        u = chatUserCache[msg.remetenteUid];
-    } 
-    // 2. Se for o próprio usuário, usa o perfil local
-    else if (isCurrentUser && perfil) {
-        u = perfil;
-        chatUserCache[msg.remetenteUid] = perfil; // Salva no cache
-    } 
-    // 3. Se não tiver, busca no banco e salva no cache
-    else if (msg.remetenteUid && msg.remetenteUid !== 'bot-uid' && msg.remetenteUid !== 'ai-suporte-uid') {
-        try {
-            const doc = await db.collection("usuarios").doc(msg.remetenteUid).get();
-            if (doc.exists) {
-                u = doc.data();
-                chatUserCache[msg.remetenteUid] = u; // Salva no cache para a próxima msg
-            }
-        } catch (e) { console.log("Erro cache user chat", e); }
+    let classesDiv = `chat-message ${isCurrentUser ? "chat-sent" : "chat-received"}`;
+
+    if (docId) {
+        messageDiv.dataset.docId = docId;
+        if (perfil && perfil.tipo === 'admin' && msg.tipo !== 'bot' && msg.tipo !== 'ai_suporte') {
+            messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto);
+            messageDiv.title = 'Admin: Clique para deletar esta mensagem';
+            messageDiv.classList.add('admin-deletable');
+        }
     }
 
-    // --- RENDERIZAÇÃO ---
-    
-    // Caso Bot
+    let nomeSpanHtml = ''; 
+    let balaoCustomClass = '';
+
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
-        messageDiv.innerHTML = `
-            <div style="font-weight:bold; color:red; margin-bottom:2px;">
-                ${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}
-            </div>
-            <div>${msg.texto}</div>
-            <div style="font-size:10px; opacity:0.6; text-align:right;">${msg.ts ? new Date(msg.ts.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</div>
-        `;
-        return messageDiv;
-    }
+        nomeSpanHtml = `<span style="color: red; font-weight:bold;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
+    } else {
+        try {
+            let remetenteData;
+            // Usa dados locais se for o próprio usuário para feedback instantâneo
+            if (isCurrentUser) {
+                remetenteData = perfil; 
+            } else {
+                // Busca cache ou banco
+                const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
+                if (remetenteDoc.exists) remetenteData = remetenteDoc.data();
+            }
 
-    // Dados padrão se falhar a busca
-    const nomeExibicao = u ? u.nome : (msg.remetenteNome || "Usuário");
-    // LÓGICA CRÍTICA DA FOTO: Logomarca ou Foto de Perfil
-    const fotoUrl = u ? (u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/32') : 'https://via.placeholder.com/32';
-    
-    // Estilos e Badges
-    let classeNome = "cliente-chat";
-    let icone = "";
-    let molduraHtml = "";
-    let balaoClass = "";
+            if(remetenteData) {
+                // 1. Balão
+                if (remetenteData.balaoSelecionado && BALOES[remetenteData.balaoSelecionado]) {
+                    balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
+                }
 
-    if (u) {
-        // Classe do Nome
-        if (u.tipo === 'admin') { classeNome = "admin-chat-red"; icone = "🧠"; }
-        else if (u.tipo !== 'cliente') { classeNome = "barbeiro-chat"; icone = isProAtivo(u) ? "🌟" : "💈"; }
-        else { if (isVipAtivo(u)) { icone = "👑"; } }
+                // 2. Estilo do Nome e Ícone
+                if (remetenteData.tipo === "admin") {
+                    classeCSS = `admin-chat-red`; iconeBase = `🧠`;
+                } else if (remetenteData.tipo !== "cliente") { 
+                    classeCSS = `barbeiro-chat`;
+                    iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`;
+                } else { 
+                    classeCSS = `cliente-chat`;
+                    iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
+                }
 
-        // Balão
-        if (u.balaoSelecionado && BALOES[u.balaoSelecionado]) {
-            balaoClass = ' ' + BALOES[u.balaoSelecionado].classe + ' custom-bubble';
-            messageDiv.className += balaoClass;
+                // 3. Conquistas
+                let conquistasHtml = "";
+                if (remetenteData.conquistasSelecionadas) {
+                    const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
+                    remetenteData.conquistasSelecionadas.forEach(cId => {
+                        if(todasDefs[cId]) conquistasHtml += `<span style="margin-right:2px;">${todasDefs[cId].icone}</span>`;
+                    });
+                }
+
+                // 4. FOTO COM PRIORIDADE CORRETA
+                // Prioridade: 1. Foto Pessoal (fotoPerfil) -> 2. Logomarca (logo_url) -> 3. Placeholder
+                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
+                let avatarHtml = '';
+
+                // Verifica se tem moldura válida
+                if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
+                    const m = MOLDURAS[remetenteData.molduraSelecionada];
+                    // Cria a estrutura wrapper.
+                    avatarHtml = `
+                    <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
+                        <div class="coroa-topo"></div>
+                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}">
+                    </div>`;
+                } else {
+                    // Imagem simples sem wrapper complexo
+                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
+                }
+
+                const nomeClicavel = `<span class="${classeCSS}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; text-decoration: underline; font-weight: bold; vertical-align: middle;">${remetenteData.nome}</span>`;
+                
+                nomeSpanHtml = `${avatarHtml} ${nomeClicavel} <span style="vertical-align: middle; margin-left:5px;">${conquistasHtml} ${iconeBase}</span>`;
+
+            } else {
+                 nomeSpanHtml = `<span class="cliente-chat">👻 Usuário Excluído</span>`;
+            }
+        } catch (error) {
+             console.log(error);
+             nomeSpanHtml = `<span class="cliente-chat">${remetenteNome}</span>`;
         }
-
-        // Moldura
-        if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
-            const m = MOLDURAS[u.molduraSelecionada];
-            // Wrapper da moldura (clicável)
-            molduraHtml = `
-                <div class="avatar-wrapper chat-size ${u.molduraSelecionada}" 
-                     style="cursor:pointer; margin-right:8px;" 
-                     onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">
-                    <div class="coroa-topo"></div>
-                    <img src="${fotoUrl}" class="chat-user-photo ${m.classe}" style="width:100%; height:100%;">
-                </div>`;
-        }
     }
 
-    // Se não tiver moldura, usa imagem padrão redonda
-    if (!molduraHtml) {
-        molduraHtml = `<img src="${fotoUrl}" 
-            style="width:32px; height:32px; border-radius:50%; margin-right:8px; border:1px solid #444; object-fit:cover; cursor:pointer;" 
-            onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
-    }
+    messageDiv.className = classesDiv + balaoCustomClass;
 
-    // Conquistas
-    let conquistasHtml = "";
-    if (u && u.conquistasSelecionadas) {
-        const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
-        u.conquistasSelecionadas.forEach(cId => {
-            if(todasDefs[cId]) conquistasHtml += `<span style="font-size:12px; margin-right:2px;">${todasDefs[cId].icone}</span>`;
-        });
-    }
-
-    // Botão de Deletar (EXCLUSIVO ADMIN)
-    let adminDeleteBtn = "";
-    if (perfil && perfil.tipo === 'admin') {
-        adminDeleteBtn = `
-            <span onclick="event.stopPropagation(); adminDeletarMensagemChat('${docId}', '${msg.texto.replace(/'/g, "\\'")}')" 
-                  style="cursor:pointer; margin-left:10px; font-size:14px;" title="Deletar Mensagem">
-                  🗑️
-            </span>`;
-    }
-
-    const hora = msg.ts ? new Date(msg.ts.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-
-    // Montagem do HTML Interno
     messageDiv.innerHTML = `
-        <div style="display:flex; align-items:center; margin-bottom:4px;">
-            ${molduraHtml}
-            <span class="${classeNome}" 
-                  style="cursor:pointer; font-weight:bold; text-decoration:underline;"
-                  onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">
-                  ${nomeExibicao}
-            </span>
-            <span style="margin-left:5px;">${icone} ${conquistasHtml}</span>
-        </div>
-        <div style="padding-left: 4px; word-break: break-word; line-height:1.4;">
-            ${msg.texto}
-        </div>
-        <div style="text-align:right; margin-top:4px;">
-            <small style="opacity:0.6; font-size:10px;">${hora}</small>
-            ${adminDeleteBtn}
-        </div>
+        <div style="display:flex; align-items:center; margin-bottom:4px;">${nomeSpanHtml}</div>
+        <div style="padding-left: 5px; word-break: break-word; line-height: 1.4;">${msg.texto}</div>
     `;
-
+    
+    if (msg.ts && msg.ts.toDate) {
+        const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em; float:right; margin-top:5px; margin-left: 10px;">${timeString}</small>`;
+    }
     return messageDiv;
 }
 
 async function abrirPerfilUsuarioChat(uid) {
-    exibirAguarde("Carregando perfil...");
-    
     let u = null;
-    // Tenta cache primeiro
-    if (chatUserCache[uid]) {
-        u = chatUserCache[uid];
+    // Tenta pegar do cache local se for o próprio usuário
+    if (auth.currentUser && uid === auth.currentUser.uid) {
+        u = perfil;
     } else {
-        try {
-            const doc = await db.collection('usuarios').doc(uid).get();
-            if(doc.exists) {
-                u = doc.data();
-                chatUserCache[uid] = u; // Atualiza cache
-            }
-        } catch(e) { console.log(e); }
+        const doc = await db.collection('usuarios').doc(uid).get();
+        if(!doc.exists) return;
+        u = doc.data();
     }
     
-    fecharTodosOsModais(); // Fecha o aguarde
-
-    if (!u) return exibirPopup("Erro", "Perfil não encontrado.");
-
     const modalContent = document.querySelector('#modalVisualizarPerfilChat .perfil-visualizacao-content');
+    
+    // Limpa conteúdo antigo
     modalContent.innerHTML = '';
 
-    // 1. FOTO (Prioridade: Foto Perfil > Logo > Placeholder)
+    // --- 1. FOTO E MOLDURA (Topo) ---
+    // CORREÇÃO DE PRIORIDADE: 1. Foto Perfil -> 2. Logo -> 3. Placeholder
     const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120';
-    
     let htmlFoto = '';
+
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
         const m = MOLDURAS[u.molduraSelecionada];
         htmlFoto = `
-        <div class="avatar-wrapper popup-size ${u.molduraSelecionada}">
+        <div class="avatar-wrapper popup-size ${u.molduraSelecionada}" style="margin: 0 auto 15px auto;">
             <div class="coroa-topo"></div>
-            <img src="${fotoUrl}" class="perfil-foto-grande ${m.classe}" style="background:#000;">
+            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}">
         </div>`;
     } else {
-        htmlFoto = `<img src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; display:block; margin:0 auto 15px auto; object-fit:cover;">`;
+        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block;">`;
+    }
+    modalContent.innerHTML += htmlFoto;
+
+    // --- 2. NOME E TIPO ---
+    let tipoTexto = "Usuário";
+    let corTipo = "#ccc";
+    let badges = "";
+
+    if (u.tipo === 'admin') { tipoTexto = "🧠 Administrador"; corTipo = "#e74c3c"; }
+    else if (u.tipo === 'cliente') { 
+        tipoTexto = "🙋 Cliente"; corTipo = "#fff"; 
+        if(isVipAtivo(u)) badges += " 💎 VIP";
+    }
+    else { 
+        // Profissionais (Barbeiro, Manicure, etc)
+        tipoTexto = "💈 Profissional"; corTipo = "var(--cor-destaque)"; 
+        if(isProAtivo(u)) badges += ` 🌟 PRO ${u.proTier ? u.proTier.replace('tier', '') : ''}`;
     }
 
-    // 2. TEXTOS
-    let tipoTexto = u.tipo === 'admin' ? "🧠 Admin" : (u.tipo === 'cliente' ? "🙋 Cliente" : "💈 Profissional");
-    let badges = "";
-    if (isVipAtivo(u)) badges += " 💎 VIP";
-    if (isProAtivo(u)) badges += " 🌟 PRO";
-
-    // 3. RENDERIZA
-    modalContent.innerHTML = `
-        ${htmlFoto}
-        <h3 style="margin:5px 0; color:var(--cor-destaque);">${u.nome} ${badges}</h3>
-        <p style="font-size:12px; color:#ccc;">${tipoTexto}</p>
-        
-        ${(u.tipo !== 'cliente' && u.tipo !== 'admin') ? `<p style="font-size:11px; opacity:0.7;">${u.cidade || ''} - ${u.estado || ''}</p>` : ''}
-        
-        <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
-            <button onclick="fecharModalAtual()" style="background:#555;">Fechar</button>
-            ${(perfil.tipo === 'admin') ? `<button onclick="fecharModalAtual(); abrirModalGerenciarUsuario('${uid}')">⚙️ Gerenciar</button>` : ''}
-        </div>
+    modalContent.innerHTML += `
+        <h3 id="visuPerfilNome" style="margin: 5px 0; color: var(--cor-destaque);">${u.nome} ${badges}</h3>
+        <p id="visuPerfilTipo" style="font-size: 12px; opacity: 0.8; color: ${corTipo}; margin:0;">${tipoTexto}</p>
     `;
 
+    // --- 3. DATA DE MEMBRO (Se existir) ---
+    if (u.criadoEm) {
+        let dataMembro;
+        if (u.criadoEm.toDate) dataMembro = u.criadoEm.toDate();
+        else if (u.criadoEm.seconds) dataMembro = new Date(u.criadoEm.seconds * 1000);
+        
+        if (dataMembro) {
+            const dataStr = dataMembro.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            modalContent.innerHTML += `<span class="member-since">Membro desde ${dataStr}</span>`;
+        }
+    }
+
+    // --- 4. CONQUISTAS (Inventário) ---
+    const conquistas = u.conquistas || [];
+    if (conquistas.length > 0) {
+        let htmlConquistas = '<div class="perfil-section-title">🏅 Conquistas Desbloqueadas</div><div class="inventory-scroll-container">';
+        const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
+        
+        conquistas.forEach(cId => {
+            if(todasDefs[cId]) {
+                htmlConquistas += `
+                <div class="inventory-item-small" title="${todasDefs[cId].nome}">
+                    <span style="font-size:24px;">${todasDefs[cId].icone}</span>
+                </div>`;
+            }
+        });
+        htmlConquistas += '</div>';
+        modalContent.innerHTML += htmlConquistas;
+    }
+
+    // --- 5. MOLDURAS (Inventário) ---
+    const molduras = u.moldurasAdquiridas || [];
+    if(u.tipo === 'admin') {
+        if(!molduras.includes('admin_black')) molduras.push('admin_black');
+        if(!molduras.includes('admin_red')) molduras.push('admin_red');
+    }
+
+    if (molduras.length > 0) {
+        let htmlMolduras = '<div class="perfil-section-title">🖼️ Coleção de Molduras</div><div class="inventory-scroll-container">';
+        molduras.forEach(mId => {
+            if (MOLDURAS[mId]) {
+                const isEquipped = u.molduraSelecionada === mId ? 'equipped' : '';
+                htmlMolduras += `
+                <div class="inventory-item-small ${isEquipped}" title="${MOLDURAS[mId].nome}">
+                    <div class="mini-frame-preview ${MOLDURAS[mId].classe}" style="transform: scale(0.8);"></div>
+                </div>`;
+            }
+        });
+        htmlMolduras += '</div>';
+        modalContent.innerHTML += htmlMolduras;
+    }
+
+    // --- 6. BALÕES (Inventário) ---
+    const baloes = u.baloesAdquiridos || [];
+    if(u.tipo === 'admin') {
+        if(!baloes.includes('admin_black')) baloes.push('admin_black');
+        if(!baloes.includes('admin_red')) baloes.push('admin_red');
+    }
+
+    if (baloes.length > 0) {
+        let htmlBaloes = '<div class="perfil-section-title">💬 Estilos de Chat</div><div class="inventory-scroll-container">';
+        baloes.forEach(bId => {
+            if (BALOES[bId]) {
+                const isEquipped = u.balaoSelecionado === bId ? 'equipped' : '';
+                htmlBaloes += `
+                <div class="inventory-item-small ${isEquipped}" title="${BALOES[bId].nome}">
+                    <div class="mini-bubble-preview chat-message ${BALOES[bId].classe} custom-bubble" style="margin:0; width:30px; height:20px;">Abc</div>
+                </div>`;
+            }
+        });
+        htmlBaloes += '</div>';
+        modalContent.innerHTML += htmlBaloes;
+    }
+
+    // --- 7. BOTÕES DE AÇÃO ---
+    let btnsHtml = '<div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">';
+    btnsHtml += `<button onclick="fecharModalAtual()" style="background:#555;">Fechar</button>`;
+    
+    // Botões Extras para Admin
+    if (perfil && perfil.tipo === 'admin' && uid !== auth.currentUser.uid) {
+        if(u.telefone) {
+            btnsHtml += `<button onclick="abrirWhatsApp('${u.telefone}')" style="background-color:#25D366;">💬 WhatsApp</button>`;
+        }
+        btnsHtml += `<button onclick="fecharModalAtual(); abrirModalGerenciarUsuario('${uid}')">⚙️ Gerenciar</button>`;
+    }
+    btnsHtml += '</div>';
+    
+    modalContent.innerHTML += btnsHtml;
+    
     abrirModal('modalVisualizarPerfilChat');
 }
 
