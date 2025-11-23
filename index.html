@@ -7443,25 +7443,26 @@ async function createMessageDiv(msg, docId) {
             }
 
             if(remetenteData) {
-                // 1. Balão
+                // 1. Balão (Com verificação de segurança para não quebrar se o balão não existir na lista)
                 if (remetenteData.balaoSelecionado && BALOES[remetenteData.balaoSelecionado]) {
                     balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
                 }
 
-                // 2. Estilo do Nome e Ícone
+                // 2. Estilo do Nome e Ícone (CORREÇÃO: Lógica do Profissional)
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
-                } else if (remetenteData.tipo !== "cliente") { 
-                    classeCSS = `barbeiro-chat`;
-                    iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`;
-                } else { 
+                } else if (remetenteData.tipo === "cliente") { 
                     classeCSS = `cliente-chat`;
                     iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
+                } else { 
+                    // QUALQUER OUTRO TIPO É PROFISSIONAL (Barbeiro, Manicure, etc)
+                    classeCSS = `barbeiro-chat`;
+                    iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`;
                 }
 
-                // 3. Conquistas
+                // 3. Conquistas (Com segurança)
                 let conquistasHtml = "";
-                if (remetenteData.conquistasSelecionadas) {
+                if (remetenteData.conquistasSelecionadas && Array.isArray(remetenteData.conquistasSelecionadas)) {
                     const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
                     remetenteData.conquistasSelecionadas.forEach(cId => {
                         if(todasDefs[cId]) conquistasHtml += `<span style="margin-right:2px;">${todasDefs[cId].icone}</span>`;
@@ -7469,24 +7470,25 @@ async function createMessageDiv(msg, docId) {
                 }
 
                 // 4. FOTO COM PRIORIDADE CORRETA
-                // Prioridade: 1. Foto Pessoal (fotoPerfil) -> 2. Logomarca (logo_url) -> 3. Placeholder
+                // Prioridade: 1. Foto Pessoal (Enviada no Perfil) -> 2. Logomarca (Profissional) -> 3. Placeholder
                 const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
-                // Verifica se tem moldura válida
+                // Verifica se tem moldura válida e existente
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
                     const m = MOLDURAS[remetenteData.molduraSelecionada];
-                    // Cria a estrutura wrapper.
+                    // Cria a estrutura wrapper com moldura
                     avatarHtml = `
                     <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
                         <div class="coroa-topo"></div>
-                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}">
+                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}" onerror="this.src='https://via.placeholder.com/30'">
                     </div>`;
                 } else {
                     // Imagem simples sem wrapper complexo
-                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
+                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" onerror="this.src='https://via.placeholder.com/30'">`;
                 }
 
+                // Nome Clicável
                 const nomeClicavel = `<span class="${classeCSS}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; text-decoration: underline; font-weight: bold; vertical-align: middle;">${remetenteData.nome}</span>`;
                 
                 nomeSpanHtml = `${avatarHtml} ${nomeClicavel} <span style="vertical-align: middle; margin-left:5px;">${conquistasHtml} ${iconeBase}</span>`;
@@ -7495,8 +7497,9 @@ async function createMessageDiv(msg, docId) {
                  nomeSpanHtml = `<span class="cliente-chat">👻 Usuário Excluído</span>`;
             }
         } catch (error) {
-             console.log(error);
-             nomeSpanHtml = `<span class="cliente-chat">${remetenteNome}</span>`;
+             console.error("Erro ao renderizar mensagem:", error);
+             // Fallback seguro que mantém o clique funcionando mesmo se der erro visual
+             nomeSpanHtml = `<span class="barbeiro-chat" style="cursor:pointer; text-decoration:underline;" onclick="abrirPerfilUsuarioChat('${msg.remetenteUid}')">${remetenteNome}</span>`;
         }
     }
 
@@ -7531,19 +7534,20 @@ async function abrirPerfilUsuarioChat(uid) {
     modalContent.innerHTML = '';
 
     // --- 1. FOTO E MOLDURA (Topo) ---
-    // CORREÇÃO DE PRIORIDADE: 1. Foto Perfil -> 2. Logo -> 3. Placeholder
+    // PRIORIDADE CORRIGIDA: 1. Foto Perfil (Editada) -> 2. Logomarca (Profissional) -> 3. Placeholder
     const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120';
     let htmlFoto = '';
 
+    // Verifica se existe moldura e se ela é válida na lista de MOLDURAS
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
         const m = MOLDURAS[u.molduraSelecionada];
         htmlFoto = `
         <div class="avatar-wrapper popup-size ${u.molduraSelecionada}" style="margin: 0 auto 15px auto;">
             <div class="coroa-topo"></div>
-            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}">
+            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}" onerror="this.src='https://via.placeholder.com/120'">
         </div>`;
     } else {
-        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block;">`;
+        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block; object-fit: cover;" onerror="this.src='https://via.placeholder.com/120'">`;
     }
     modalContent.innerHTML += htmlFoto;
 
@@ -7552,14 +7556,20 @@ async function abrirPerfilUsuarioChat(uid) {
     let corTipo = "#ccc";
     let badges = "";
 
-    if (u.tipo === 'admin') { tipoTexto = "🧠 Administrador"; corTipo = "#e74c3c"; }
-    else if (u.tipo === 'cliente') { 
+    if (u.tipo === 'admin') { 
+        tipoTexto = "🧠 Administrador"; corTipo = "#e74c3c"; 
+    } else if (u.tipo === 'cliente') { 
         tipoTexto = "🙋 Cliente"; corTipo = "#fff"; 
         if(isVipAtivo(u)) badges += " 💎 VIP";
-    }
-    else { 
+    } else { 
         // Profissionais (Barbeiro, Manicure, etc)
-        tipoTexto = "💈 Profissional"; corTipo = "var(--cor-destaque)"; 
+        // Exibe o tipo formatado corretamente
+        let nomeProfissao = "Profissional";
+        if(u.tipo === 'barbeiro') nomeProfissao = "Barbeiro(a)";
+        if(u.tipo === 'manicure_pedicure') nomeProfissao = "Manicure/Pedicure";
+        if(u.tipo === 'designer_cilios') nomeProfissao = "Designer de Cílios";
+
+        tipoTexto = `💈 ${nomeProfissao}`; corTipo = "var(--cor-destaque)"; 
         if(isProAtivo(u)) badges += ` 🌟 PRO ${u.proTier ? u.proTier.replace('tier', '') : ''}`;
     }
 
