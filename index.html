@@ -6316,6 +6316,17 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         const barbeiroDoc = await db.collection("usuarios").doc(barbeiroUid).get();
         if (!barbeiroDoc.exists) throw new Error("Profissional não encontrado.");
         const b = barbeiroDoc.data();
+        
+        // --- PROTEÇÃO: Helper seguro para datas (Igual ao da lista) ---
+        const getSafeDate = (val) => {
+            if (!val) return null;
+            if (typeof val.toDate === 'function') return val.toDate(); // Timestamp do Firebase
+            if (val instanceof Date) return val; // Objeto Date nativo
+            if (val.seconds) return new Date(val.seconds * 1000); // Timestamp serializado (Objeto simples)
+            return new Date(val); // Tenta converter String ISO
+        };
+        // -----------------------------------------------------------
+
         agendamentoState.barbeiroUid = barbeiroUid;
         agendamentoState.barbeiroNome = b.nome;
         agendamentoState.barbeiroLat = b.latitude;
@@ -6335,10 +6346,13 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
 
         const servicosList = document.getElementById("barbeiroPerfilServicosList");
         servicosList.innerHTML = "";
+        
         if (b.listaServicos?.length > 0) {
+            // Filtra promoções usando a data segura
             const promocoesAtivas = (b.promocoes || []).filter(p => {
                 if (!p.validade) return true;
-                return new Date(p.validade.seconds * 1000) > new Date();
+                const dataValidade = getSafeDate(p.validade);
+                return dataValidade > new Date();
             });
 
             b.listaServicos.forEach(s => {
@@ -6372,21 +6386,27 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
             servicosList.innerHTML = "<p>Nenhum serviço cadastrado.</p>";
         }
 
-        // --- INÍCIO DA MODIFICAÇÃO ---
+        // --- CORREÇÃO DO ERRO "toDate is not a function" AQUI ---
         const horariosList = document.getElementById("barbeiroPerfilHorariosList");
         horariosList.innerHTML = "";
         
         const agora = new Date();
-        const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim &&
-                            agora >= b.ausenciaInicio.toDate() && 
-                            agora <= b.ausenciaFim.toDate();
+        
+        // Converte as datas de forma segura antes de usar
+        const inicioAusencia = getSafeDate(b.ausenciaInicio);
+        const fimAusencia = getSafeDate(b.ausenciaFim);
+
+        const estaAusente = b.ausente && inicioAusencia && fimAusencia &&
+                            agora >= inicioAusencia && 
+                            agora <= fimAusencia;
         
         let hasOptions = false;
 
         if (estaAusente) {
-            const dataFimAusencia = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
+            // Usa a data segura convertida para string
+            const dataFimAusencia = fimAusencia.toLocaleDateString('pt-BR');
             horariosList.innerHTML = `<p style="color: var(--cor-destaque-rosa); text-align: center; font-weight: bold;">🏖️ Profissional ausente até ${dataFimAusencia}. O agendamento está indisponível.</p>`;
-            hasOptions = false; // Garante que o botão de agendar ficará desabilitado
+            hasOptions = false; 
         } else {
             // Lógica original de horários
             if (b.vagaImediata) {
@@ -6406,7 +6426,7 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
                 horariosList.innerHTML = "<p>Nenhuma opção de agendamento disponível no momento.</p>";
             }
         }
-        // --- FIM DA MODIFICAÇÃO ---
+        // ---------------------------------------------------------
 
         const btnPortfolio = document.getElementById('btnAcessarPortfolio');
         if (b.portfolio && b.portfolio.length > 0) {
@@ -6429,7 +6449,8 @@ async function abrirBarbeiroPerfil(barbeiroUid, isGuest = false) {
         abrirModal('modalBarbeiroPerfil');
     } catch (error) {
         console.error("Erro ao abrir perfil do barbeiro:", error);
-        exibirPopup("Ocorreu um erro ao carregar as informações do profissional.");
+        // Mostra o erro real no popup para ajudar a debugar se persistir
+        exibirPopup("Erro", "Detalhe do erro: " + error.message);
     }
 }
 
