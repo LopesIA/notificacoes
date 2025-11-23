@@ -4833,16 +4833,35 @@ function abrirModal(modalId) {
 }
 
 function fecharModal(event) {
-    // Permite fechar clicando no fundo (classe .modal) ou em um botão com data-modal-id
-    if (event && event.target.classList.contains('modal') || event.target.getAttribute('data-modal-id')) {
+    let modalElement = null;
+    
+    // Identifica o modal clicado (clique no fundo)
+    if (event.target.classList.contains('modal')) {
+        modalElement = event.target;
+    } 
+    // Identifica o modal pelo ID do botão de cancelamento
+    else if (event.target.dataset.modalId) {
+        modalElement = document.getElementById(event.target.dataset.modalId);
+    } 
+    // Identifica o modal se o clique foi no ícone ou span dentro do botão
+    else if (event.target.closest('.modal-content button[data-modal-id]')) {
+        modalElement = document.getElementById(event.target.closest('.modal-content button[data-modal-id]').dataset.modalId);
+    }
+
+    // Se identificamos um modal E a pilha de modais não está vazia, 
+    // chamamos a função principal de fechamento.
+    if (modalElement && modalStack.length > 0) {
         
-        // Impede o fechamento do modal de novo agendamento
-        if (event.target.id === 'modalNovoAgendamento') {
-            console.log("Fechamento do modal de agendamento bloqueado.");
-            return;
-        }
+        // CORREÇÃO: Força o uso da função fecharModalAtual()
+        // Esta função se encarrega de verificar qual modal está no topo, fechá-lo
+        // e, o mais importante, limpar o estado do histórico com history.back().
+        fecharModalAtual(); 
         
-        fecharModalAtual();
+    } else if (modalElement) {
+        // Lógica de fechamento manual (apenas se a pilha estiver vazia, para o caso de
+        // modais que não foram abertos via abrirModal, como o popupAguarde, se ele fosse clicável)
+        modalElement.classList.remove('show');
+        setTimeout(() => modalElement.style.display = 'none', 300);
     }
 }
 
