@@ -2767,6 +2767,32 @@ body {
     margin-bottom: 10px;
     display: block;
 }
+
+/* Estilo para o Toast de aviso de saída */
+.toast-notification {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 50px;
+    padding: 16px;
+    position: fixed;
+    z-index: 10000; /* Acima de tudo */
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.3s, bottom 0.3s;
+}
+
+.toast-notification.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px; /* Leve animação para cima */
+}
   </style>
 </head>
 <body>
@@ -4300,6 +4326,9 @@ onclick="fecharModal(event)">Fechar</button></div></div>
         <button id="btnOkBloqueante" style="width: 100%; padding: 12px; background: var(--cor-destaque); color: var(--cor-fundo); font-weight: bold;">OK</button>
     </div>
 </div>
+
+<div id="toastNotification" class="toast-notification">Pressione voltar novamente para sair</div>
+
 <footer class="app-footer">
   <div id="appVersion"></div>
 </footer>
@@ -4340,18 +4369,41 @@ const messaging = firebase.messaging();
 // --- CONTROLE DO BOTÃO VOLTAR (ANDROID/NAVEGADOR) ---
 let ignoreNextPopstate = false; // Variável de controle para evitar conflitos
 
+// --- CONTROLE DO BOTÃO VOLTAR (SAÍDA DUPLA + MODAIS) ---
+let ignoreNextPopstate = false; 
+let backPressTime = 0; // Variável para controlar o tempo do último clique
+
 window.addEventListener('popstate', (event) => {
-    // Se a flag estiver ativa, significa que fechamos o modal pelo 'X'
-    // e removemos o histórico manualmente, então ignoramos este evento.
+    // 1. Se a flag estiver ativa (fechamento manual), ignora
     if (ignoreNextPopstate) {
         ignoreNextPopstate = false;
         return;
     }
 
-    // Se o usuário apertou voltar e tem modal aberto, fecha o último
+    // 2. Se tem modal aberto, fecha o modal e PARA (não sai do app)
     if (modalStack.length > 0) {
-        // Passa 'true' no segundo parâmetro para indicar que veio do histórico
+        // Passa 'true' para indicar que veio do histórico (não volta history.back de novo)
         fecharModalAtual(false, true); 
+        return;
+    }
+
+    // 3. Lógica de Duplo Clique para Sair (Apenas se não houver modais)
+    const now = new Date().getTime();
+    
+    // Se o clique for dentro de 2 segundos do último clique
+    if (now - backPressTime < 2000) {
+        // Permite a ação padrão do navegador (Sair/Voltar histórico real)
+        // Nenhuma ação necessária aqui, o navegador fará o 'back' final
+        return; 
+    } else {
+        // É o primeiro clique: Bloqueia a saída
+        backPressTime = now;
+        
+        // Recoloca o estado atual no histórico para impedir que o navegador saia
+        window.history.pushState(null, "", window.location.href);
+        
+        // Mostra o aviso visual (Toast)
+        mostrarToastSair();
     }
 });
 // ----------------------------------------------------- 
@@ -9648,6 +9700,19 @@ function recusarSolicitacao(id, uid, tipo) {
       exibirPopup("Solicitação recusada.");
       notifyUser(uid, `❌ Solicitação Recusada`, `Sua solicitação de ${tipo} foi recusada.`);
     }).catch(e => exibirPopup("Erro: " + e.message));
+}
+
+// Função para exibir o Toast de saída
+function mostrarToastSair() {
+    const toast = document.getElementById("toastNotification");
+    if (!toast) return;
+    
+    toast.className = "toast-notification show";
+    
+    // Esconde após 2 segundos
+    setTimeout(function(){ 
+        toast.className = toast.className.replace("show", ""); 
+    }, 2000);
 }
 
 function abrirModalUsuarios() {
