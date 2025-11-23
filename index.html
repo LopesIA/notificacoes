@@ -8275,8 +8275,7 @@ async function aprovarAgendamento(agendamentoId, clienteUid, valor, horario = nu
       fecharTodosOsModais();
       // MENSAGEM ATUALIZADA
       exibirPopup("Agendamento Aprovado!", "O valor foi retido do cliente. O saldo será liberado na sua carteira assim que você clicar em 'CONCLUIR' após o serviço.");
-      
-      setTimeout(() => location.reload(), 300000); 
+       
 
   }).catch(e => {
       fecharTodosOsModais();
