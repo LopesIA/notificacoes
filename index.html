@@ -7443,24 +7443,24 @@ async function createMessageDiv(msg, docId) {
             }
 
             if(remetenteData) {
-                // 1. Balão (Com verificação de segurança para não quebrar se o balão não existir na lista)
+                // 1. Balão
                 if (remetenteData.balaoSelecionado && BALOES[remetenteData.balaoSelecionado]) {
                     balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
                 }
 
-                // 2. Estilo do Nome e Ícone (CORREÇÃO: Lógica do Profissional)
+                // 2. Estilo do Nome e Ícone
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
                 } else if (remetenteData.tipo === "cliente") { 
                     classeCSS = `cliente-chat`;
                     iconeBase = isVipAtivo(remetenteData) ? `👑` : `👤`;
                 } else { 
-                    // QUALQUER OUTRO TIPO É PROFISSIONAL (Barbeiro, Manicure, etc)
+                    // Profissional
                     classeCSS = `barbeiro-chat`;
                     iconeBase = isProAtivo(remetenteData) ? `🌟` : `💼`;
                 }
 
-                // 3. Conquistas (Com segurança)
+                // 3. Conquistas
                 let conquistasHtml = "";
                 if (remetenteData.conquistasSelecionadas && Array.isArray(remetenteData.conquistasSelecionadas)) {
                     const todasDefs = { ...conquistasDefinidas.cliente, ...conquistasDefinidas.profissional };
@@ -7469,23 +7469,22 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
-                // 4. FOTO COM PRIORIDADE CORRETA
-                // Prioridade: 1. Foto Pessoal (Enviada no Perfil) -> 2. Logomarca (Profissional) -> 3. Placeholder
-                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
+                // 4. FOTO COM PRIORIDADE CORRETA (Atualizado para usar /icone.png)
+                // Prioridade: 1. Foto Pessoal -> 2. Logomarca -> 3. Ícone do App
+                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || '/icone.png';
                 let avatarHtml = '';
 
-                // Verifica se tem moldura válida e existente
+                // Verifica se tem moldura
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
                     const m = MOLDURAS[remetenteData.molduraSelecionada];
-                    // Cria a estrutura wrapper com moldura
                     avatarHtml = `
                     <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
                         <div class="coroa-topo"></div>
-                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}" onerror="this.src='https://via.placeholder.com/30'">
+                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}" onerror="this.src='/icone.png'">
                     </div>`;
                 } else {
-                    // Imagem simples sem wrapper complexo
-                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" onerror="this.src='https://via.placeholder.com/30'">`;
+                    // Imagem simples
+                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" onerror="this.src='/icone.png'">`;
                 }
 
                 // Nome Clicável
@@ -7498,7 +7497,6 @@ async function createMessageDiv(msg, docId) {
             }
         } catch (error) {
              console.error("Erro ao renderizar mensagem:", error);
-             // Fallback seguro que mantém o clique funcionando mesmo se der erro visual
              nomeSpanHtml = `<span class="barbeiro-chat" style="cursor:pointer; text-decoration:underline;" onclick="abrirPerfilUsuarioChat('${msg.remetenteUid}')">${remetenteNome}</span>`;
         }
     }
@@ -7534,20 +7532,19 @@ async function abrirPerfilUsuarioChat(uid) {
     modalContent.innerHTML = '';
 
     // --- 1. FOTO E MOLDURA (Topo) ---
-    // PRIORIDADE CORRIGIDA: 1. Foto Perfil (Editada) -> 2. Logomarca (Profissional) -> 3. Placeholder
-    const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120';
+    // PRIORIDADE ATUALIZADA: 1. Foto Perfil -> 2. Logo -> 3. Ícone do App
+    const fotoUrl = u.fotoPerfil || u.logo_url || '/icone.png';
     let htmlFoto = '';
 
-    // Verifica se existe moldura e se ela é válida na lista de MOLDURAS
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
         const m = MOLDURAS[u.molduraSelecionada];
         htmlFoto = `
         <div class="avatar-wrapper popup-size ${u.molduraSelecionada}" style="margin: 0 auto 15px auto;">
             <div class="coroa-topo"></div>
-            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}" onerror="this.src='https://via.placeholder.com/120'">
+            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}" onerror="this.src='/icone.png'">
         </div>`;
     } else {
-        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block; object-fit: cover;" onerror="this.src='https://via.placeholder.com/120'">`;
+        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block; object-fit: cover;" onerror="this.src='/icone.png'">`;
     }
     modalContent.innerHTML += htmlFoto;
 
@@ -7562,8 +7559,7 @@ async function abrirPerfilUsuarioChat(uid) {
         tipoTexto = "🙋 Cliente"; corTipo = "#fff"; 
         if(isVipAtivo(u)) badges += " 💎 VIP";
     } else { 
-        // Profissionais (Barbeiro, Manicure, etc)
-        // Exibe o tipo formatado corretamente
+        // Formatação bonita para profissionais
         let nomeProfissao = "Profissional";
         if(u.tipo === 'barbeiro') nomeProfissao = "Barbeiro(a)";
         if(u.tipo === 'manicure_pedicure') nomeProfissao = "Manicure/Pedicure";
