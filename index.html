@@ -4167,17 +4167,17 @@ onclick="fecharModal(event)">Fechar</button></div></div>
     <h3>🗑️ Excluir Conta Permanentemente</h3>
     <p style="color: #e74c3c; font-weight: bold;">Esta ação apagará todos os seus dados!</p>
     
-    <p style="font-size: 13px; margin-bottom: 5px; text-align: left;">1. Confirme seu E-mail:</p>
+    <label style="display:block; text-align:left; margin-top:10px; font-size:13px;">1. Confirme seu E-mail:</label>
     <input id="exclusaoEmailInput" type="email" placeholder="Digite seu e-mail cadastrado">
 
-    <p style="font-size: 13px; margin-bottom: 5px; text-align: left;">2. Confirme sua Senha:</p>
+    <label style="display:block; text-align:left; margin-top:10px; font-size:13px;">2. Confirme sua Senha:</label>
     <div class="show-password-container">
       <input id="exclusaoSenhaInput" type="password" placeholder="🔑 Sua Senha">
       <span class="show-password-toggle" onclick="togglePasswordVisibility('exclusaoSenhaInput', this)">👁️</span>
     </div>
 
-    <button onclick="deletarConta()" style="background-color: #c0392b; margin-top: 15px; border: 1px solid #e74c3c;">Confirmar Exclusão</button>
-    <button data-modal-id="modalConfirmarSenhaExclusao" onclick="fecharModal(event)">❌ Cancelar</button>
+    <button onclick="deletarConta()" style="background-color: #c0392b; margin-top: 15px; border: 1px solid #e74c3c; width: 100%;">Confirmar Exclusão</button>
+    <button data-modal-id="modalConfirmarSenhaExclusao" onclick="fecharModal(event)" style="margin-top: 10px;">❌ Cancelar</button>
   </div>
 </div>
 
@@ -5334,6 +5334,8 @@ async function enviarSolicitacaoRecuperacaoSenha() {
 
 function criarConta() {
   exibirAguarde("Criando sua conta...");
+  
+  // 1. Coleta os dados
   const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha-cadastro").value;
   const senhaConfirm = document.getElementById("senha-confirm").value;
@@ -5347,8 +5349,9 @@ function criarConta() {
   const estado = formatarNomeProprio(estadoInput) || "Não Informado"; 
   const cidade = formatarNomeProprio(cidadeInput) || "Não Informado"; 
   
-  let rua, numero;
+  let rua = null, numero = null;
 
+  // 2. Validações
   if (senha !== senhaConfirm) { fecharTodosOsModais(); return exibirPopup("As senhas não coincidem."); }
   if (!telefone || telefone.length < 10 || !/^\d+$/.test(telefone)) { fecharTodosOsModais(); return exibirPopup("Por favor, insira um telefone válido com DDD."); }
   if (!email || !senha || !nome) { fecharTodosOsModais(); return exibirPopup("Preencha email, senha e nome."); }
@@ -5364,33 +5367,12 @@ function criarConta() {
   const tipoFinal = email === ADMIN_EMAIL ? "admin" : tipo;
   const interesseFinal = (tipoFinal !== 'cliente' && tipoFinal !== 'admin') ? tipoFinal : (onboardingState.interesse_principal || 'barbeiro');
 
+  // 3. Criação no Authentication
   auth.createUserWithEmailAndPassword(email, senha)
     .then(async cred => {
-      let pontosIniciais = 0;
+      const uid = cred.user.uid;
 
-      // --- LÓGICA DE INDICAÇÃO (PREMIA OS DOIS) ---
-      if (indicadorEmail) {
-          try {
-              const snapshotIndicador = await db.collection("usuarios").where("email", "==", indicadorEmail).limit(1).get();
-              if (!snapshotIndicador.empty) {
-                  const docIndicador = snapshotIndicador.docs[0];
-                  // Premia quem indicou
-                  await docIndicador.ref.update({
-                      pontosFidelidade: firebase.firestore.FieldValue.increment(50)
-                  });
-                  // Premia o novo usuário
-                  pontosIniciais = 50;
-                  
-                  // Notifica quem indicou
-                  criarAviso(docIndicador.id, `🎉 Parabéns! Sua indicação (${nome}) se cadastrou. Você ganhou 50 pontos!`, 'premio');
-                  console.log("Indicação processada com sucesso.");
-              }
-          } catch (err) {
-              console.warn("Erro ao processar indicação:", err);
-          }
-      }
-      // ---------------------------------------------
-
+      // 4. Objeto de dados INICIAL (Salva com 0 pontos primeiro para garantir)
       const data = {
         email, nome, tipo: tipoFinal, telefone,
         estado: estadoFinal, cidade: cidadeFinal,
@@ -5399,8 +5381,8 @@ function criarConta() {
         longitude: cadastroCoords ? cadastroCoords.longitude : null,
         listaServicos: [], promocoes: [], portfolio: [], chatAtivo: true, vip: false, lojaLiberada: false,
         rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, 
-        pontosFidelidade: pontosIniciais, // Já começa com 50 se foi indicado
-        codigosResgatados: [], indicadoPorEmail: indicadorEmail || null, bonusIndicacaoPendente: false, // Pendência resolvida na criação
+        pontosFidelidade: 0, // Começa com 0, se a indicação for válida, atualiza depois
+        codigosResgatados: [], indicadoPorEmail: indicadorEmail || null, bonusIndicacaoPendente: false,
         fcmTokens: [], cortesRealizados: 0, conquistas: [], clientesAtendidos: 0, somaAvaliacoes: 0, numAvaliacoes: 0,
         ultimoBoostComprado: null, interesse_principal: interesseFinal,
         onboarding_profissional_concluido: tipoFinal === 'cliente', 
@@ -5408,13 +5390,45 @@ function criarConta() {
         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
       };
-      await db.collection("usuarios").doc(cred.user.uid).set(data);
-      notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
-      
-      fecharTodosOsModais();
-      if (pontosIniciais > 0) {
-          exibirPopup("Conta Criada!", "🎉 Você já começou com 50 Pontos de Fidelidade por ter sido indicado!");
+
+      // 5. Salva no Firestore (GARANTIA DE CRIAÇÃO)
+      await db.collection("usuarios").doc(uid).set(data);
+
+      // 6. Processa a Indicação (Separado para não travar a criação)
+      if (indicadorEmail && indicadorEmail.toLowerCase() !== email.toLowerCase()) {
+          try {
+              const snapshotIndicador = await db.collection("usuarios").where("email", "==", indicadorEmail).limit(1).get();
+              if (!snapshotIndicador.empty) {
+                  const docIndicador = snapshotIndicador.docs[0];
+                  const indicadorUid = docIndicador.id;
+
+                  const batch = db.batch();
+                  
+                  // Premia quem indicou (+50 pontos)
+                  const indicadorRef = db.collection("usuarios").doc(indicadorUid);
+                  batch.update(indicadorRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(50) });
+
+                  // Premia o novo usuário (+50 pontos)
+                  const novoUsuarioRef = db.collection("usuarios").doc(uid);
+                  batch.update(novoUsuarioRef, { pontosFidelidade: firebase.firestore.FieldValue.increment(50) });
+
+                  await batch.commit();
+                  
+                  // Notifica quem indicou
+                  criarAviso(indicadorUid, `🎉 Parabéns! Sua indicação (${nome}) se cadastrou. Você ganhou 50 pontos!`, 'premio');
+                  console.log("Indicação processada com sucesso.");
+                  
+                  // Aviso visual para o novo usuário
+                  setTimeout(() => exibirPopup("🎁 Bônus de Indicação!", "Você e quem te indicou ganharam 50 Pontos de Fidelidade!"), 1000);
+              }
+          } catch (err) {
+              console.warn("Erro ao processar indicação (mas a conta foi criada):", err);
+          }
       }
+
+      notifyAdmins("🆕 Novo Cadastro!", `O usuário ${nome} (${tipoFinal}) acabou de se registrar.`);
+      fecharTodosOsModais();
+      
     })
     .catch(e => {
         fecharTodosOsModais();
@@ -9914,18 +9928,19 @@ async function adminModificarSaldoDigital(uid) {
 }
 
 function prepararDeletarConta() {
-  // Fecha o modal de config
+  // Fecha o modal de configurações onde o botão está
   fecharModalAtual();
   
-  // Pede a primeira confirmação
-  exibirConfirmacao("Excluir Conta?", "Esta ação é irreversível. Todos os seus dados, saldo, agendamentos e histórico serão apagados permanentemente. Deseja continuar?", (confirmacao1) => {
-      // Pede a segunda confirmação
-      exibirConfirmacao("Confirmação Final", "Esta é sua última chance. Todos os seus dados serão perdidos. Confirma a exclusão permanente da sua conta?", async (confirmacao2) => {
-          // Se chegou aqui, abre o modal de senha/email
-          document.getElementById('exclusaoEmailInput').value = ''; // Limpa email
-          document.getElementById('exclusaoSenhaInput').value = ''; // Limpa senha
-          abrirModal('modalConfirmarSenhaExclusao');
-      });
+  // Pede confirmação inicial
+  exibirConfirmacao("⚠️ Excluir Conta?", "Esta ação é irreversível. Todos os seus dados serão apagados permanentemente. Deseja continuar?", () => {
+      // Se o usuário disser SIM, abre o modal de senha/email
+      const emailInput = document.getElementById('exclusaoEmailInput');
+      const senhaInput = document.getElementById('exclusaoSenhaInput');
+      
+      if(emailInput) emailInput.value = '';
+      if(senhaInput) senhaInput.value = '';
+      
+      abrirModal('modalConfirmarSenhaExclusao');
   });
 }
 
@@ -9934,32 +9949,34 @@ async function deletarConta() {
   const password = document.getElementById('exclusaoSenhaInput').value;
   const user = auth.currentUser;
 
+  if (!user) return;
+
   if (!emailDigitado || !password) {
       return exibirPopup("Dados incompletos.", "Por favor, digite seu e-mail e senha para confirmar.");
   }
 
-  if (emailDigitado !== user.email) {
+  if (emailDigitado.toLowerCase() !== user.email.toLowerCase()) {
       return exibirPopup("E-mail incorreto.", "O e-mail digitado não corresponde à conta logada.");
   }
 
-  fecharModalAtual(); // Fecha o modal
-  exibirAguarde("Processando exclusão...");
-
-  const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+  // Fecha o modal para mostrar o aguarde
+  fecharModal('modalConfirmarSenhaExclusao');
+  exibirAguarde("Excluindo sua conta...");
 
   try {
-      // 1. Reautenticar (Necessário para deletar)
+      // 1. Reautenticar (Obrigatório pelo Firebase para operações sensíveis)
+      const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
       await user.reauthenticateWithCredential(credential);
 
       // 2. NOTIFICAR O ADMIN (Antes de apagar os dados)
-      // Salva um aviso especial para o Admin saber quem saiu e poder contatar
+      // Salva um aviso especial para o Admin saber quem saiu
       await db.collection('avisos').add({
-          tipo: 'conta_excluida_admin', // Tipo específico para o admin pegar
-          usuarioNome: perfil.nome,
-          usuarioTelefone: perfil.telefone,
+          tipo: 'conta_excluida_admin',
+          usuarioNome: perfil.nome || 'Usuário',
+          usuarioTelefone: perfil.telefone || '',
           usuarioEmail: user.email,
           motivo: "Exclusão pelo próprio usuário",
-          destinatario: 'admin', // Flag para o listener do admin
+          destinatario: 'admin',
           lido: false,
           ts: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -9967,19 +9984,21 @@ async function deletarConta() {
       // 3. Deletar dados do Firestore
       await db.collection('usuarios').doc(user.uid).delete();
       
-      // 4. Deletar usuário do Auth
+      // 4. Deletar usuário do Authentication
       await user.delete();
 
       fecharTodosOsModais();
-      exibirPopup("Conta Excluída", "Sua conta foi excluída com sucesso. Sentiremos sua falta.", 'sucesso', () => {
-          location.reload(); // Recarrega a página para deslogar visualmente
-      });
+      alert("Sua conta foi excluída com sucesso.");
+      location.reload(); // Reinicia o app
       
   } catch (error) {
       fecharTodosOsModais();
       if (error.code === 'auth/wrong-password') {
           exibirPopup("Senha Incorreta", "A senha digitada está incorreta. A exclusão foi cancelada.", 'erro');
+          // Reabre o modal para tentar de novo
+          setTimeout(() => abrirModal('modalConfirmarSenhaExclusao'), 1500);
       } else {
+          console.error(error);
           exibirPopup("Erro", "Ocorreu um erro ao excluir sua conta: " + error.message, 'erro');
       }
   }
