@@ -7448,7 +7448,7 @@ async function createMessageDiv(msg, docId) {
                     balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
                 }
 
-                // 2. Estilo do Nome
+                // 2. Estilo do Nome e Ícone
                 if (remetenteData.tipo === "admin") {
                     classeCSS = `admin-chat-red`; iconeBase = `🧠`;
                 } else if (remetenteData.tipo !== "cliente") { 
@@ -7468,8 +7468,8 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
-                // 4. Foto com Moldura (CORRIGIDO: Prioridade para FOTO PERFIL)
-                // A ordem agora é: Foto Perfil (Edição) -> Logo (Logomarca) -> Placeholder
+                // 4. FOTO COM PRIORIDADE CORRETA
+                // Prioridade: 1. Foto Pessoal (fotoPerfil) -> 2. Logomarca (logo_url) -> 3. Placeholder
                 const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
@@ -7484,7 +7484,7 @@ async function createMessageDiv(msg, docId) {
                     </div>`;
                 } else {
                     // Imagem simples sem wrapper complexo
-                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
+                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
                 }
 
                 const nomeClicavel = `<span class="${classeCSS}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; text-decoration: underline; font-weight: bold; vertical-align: middle;">${remetenteData.nome}</span>`;
@@ -7531,7 +7531,7 @@ async function abrirPerfilUsuarioChat(uid) {
     modalContent.innerHTML = '';
 
     // --- 1. FOTO E MOLDURA (Topo) ---
-    // CORREÇÃO: Prioridade para fotoPerfil (Edição de Perfil), depois logo_url
+    // CORREÇÃO DE PRIORIDADE: 1. Foto Perfil -> 2. Logo -> 3. Placeholder
     const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120';
     let htmlFoto = '';
 
@@ -12702,7 +12702,7 @@ async function verificarPendencias(uid) {
         }
     }
 
-    // 2. Pendências do Cliente (Avaliação e Confirmação de Entrega)
+    // 2. Pendências do Cliente (Avaliação e Entrega)
     if (perfil.tipo === 'cliente') {
         // A. Avaliações Pendentes
         const avaliacoesSnap = await db.collection('agendamentos').where('clienteUid', '==', uid).where('status', '==', 'concluido').where('avaliado', '==', false).get();
@@ -12713,32 +12713,32 @@ async function verificarPendencias(uid) {
             btnHistorico?.classList.remove('notificacao-pulsante');
         }
 
-        // B. Confirmação de Entrega (Lógica Atualizada: Sempre ao iniciar o app)
+        // B. Confirmação de Entrega (A Caminho ou Pendente de Confirmação)
+        // Verifica pedidos que estão "enviado" (A caminho) OU "entregue_pendente_confirmacao"
         const comprasPendentesSnap = await db.collection('loja_pedidos')
             .where('clienteUid', '==', uid)
-            .where('status', '==', 'entregue_pendente_confirmacao')
+            .where('status', 'in', ['enviado', 'entregue_pendente_confirmacao'])
             .get();
 
         if (!comprasPendentesSnap.empty) {
             const btnCompras = document.getElementById('btnMinhasCompras');
             btnCompras?.classList.add('notificacao-pulsante');
 
-            // Se ainda não avisou nesta sessão (reinício do app), avisa agora!
+            // EXIBE O POPUP APENAS UMA VEZ POR SESSÃO (RELOAD)
             if (!avisoEntregaRealizadoSessao) {
                 const pedido = comprasPendentesSnap.docs[0].data();
                 const docId = comprasPendentesSnap.docs[0].id;
                 
-                // Abre o modal
-                abrirModalConfirmacaoComprador({
+                // Chama a nova função específica para esse aviso
+                abrirPopupEntregaCaminho({
                     id: docId,
                     vendedorUid: pedido.vendedorUid,
                     valor: pedido.valor,
-                    produtoNome: pedido.produtoNome
+                    produtoNome: pedido.produtoNome,
+                    status: pedido.status
                 });
                 
-                // Marca que já avisou nesta sessão para não ficar abrindo a cada minuto
-                avisoEntregaRealizadoSessao = true;
-                console.log("Lembrete de entrega exibido (Sessão atual).");
+                avisoEntregaRealizadoSessao = true; // Marca como exibido para não repetir a cada minuto
             }
         }
     }
@@ -12748,6 +12748,47 @@ async function verificarPendencias(uid) {
     if (!saqueSnap.empty) {
         // Apenas atualiza UI se necessário
     }
+}
+
+function abrirPopupEntregaCaminho(pedidoObj) {
+    const modal = document.getElementById('modalConfirmacaoComprador');
+    
+    let titulo = "🚚 Entrega a Caminho!";
+    let mensagem = `O produto "${pedidoObj.produtoNome}" está marcado como enviado.\n\nVocê já recebeu a encomenda?`;
+    
+    if (pedidoObj.status === 'entregue_pendente_confirmacao') {
+        titulo = "📦 Entrega Realizada?";
+        mensagem = `O vendedor informou que "${pedidoObj.produtoNome}" foi entregue.\n\nConfirma o recebimento para liberar o pagamento?`;
+    }
+
+    document.getElementById('confirmacaoCompradorTitulo').textContent = titulo;
+    document.getElementById('confirmacaoCompradorTexto').innerText = mensagem;
+
+    // Botão: Ainda não recebi (Apenas fecha)
+    const btnNao = document.getElementById('btnRecusarEntrega');
+    btnNao.textContent = "Ainda não recebi";
+    btnNao.style.background = "#555"; // Cinza neutro
+    btnNao.onclick = () => {
+        fecharModalAtual();
+        // Não faz nada no banco, apenas fecha o aviso
+    };
+
+    // Botão: Confirmar (Finaliza)
+    const btnSim = document.getElementById('btnAceitarEntrega');
+    btnSim.textContent = "✅ Sim, Recebi!";
+    btnSim.style.background = "#27ae60"; // Verde
+    
+    // Remove listeners antigos clonando
+    const novoSim = btnSim.cloneNode(true);
+    const novoNao = btnNao.cloneNode(true);
+    btnSim.parentNode.replaceChild(novoSim, btnSim);
+    btnNao.parentNode.replaceChild(novoNao, btnNao);
+
+    // Reatribui os onclicks
+    novoNao.onclick = () => fecharModalAtual();
+    novoSim.onclick = () => responderConfirmacaoEntrega(pedidoObj.id, true);
+    
+    abrirModal('modalConfirmacaoComprador');
 }
 
 // SUBSTITUA A FUNÇÃO 'verificarPendenciasEssenciaisProfissional' INTEIRA EM index.html
