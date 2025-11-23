@@ -4335,7 +4335,26 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   });
 const storage = firebase.storage();
 
-const messaging = firebase.messaging(); 
+const messaging = firebase.messaging();
+
+// --- CONTROLE DO BOTÃO VOLTAR (ANDROID/NAVEGADOR) ---
+let ignoreNextPopstate = false; // Variável de controle para evitar conflitos
+
+window.addEventListener('popstate', (event) => {
+    // Se a flag estiver ativa, significa que fechamos o modal pelo 'X'
+    // e removemos o histórico manualmente, então ignoramos este evento.
+    if (ignoreNextPopstate) {
+        ignoreNextPopstate = false;
+        return;
+    }
+
+    // Se o usuário apertou voltar e tem modal aberto, fecha o último
+    if (modalStack.length > 0) {
+        // Passa 'true' no segundo parâmetro para indicar que veio do histórico
+        fecharModalAtual(false, true); 
+    }
+});
+// ----------------------------------------------------- 
 
 // ADICIONE ESTAS LINHAS ABAIXO (Linha ~2241)
 let isTwa = false; // Variável global para o ambiente
@@ -4797,23 +4816,18 @@ function abrirModal(modalId) {
     // Verifica se o modal existe e se já não está aberto
     if (novoModal && !novoModal.classList.contains('show')) {
         
-        // --- NOVA LÓGICA DE EMPILHAMENTO (STACKING) ---
-        // 1. Definimos uma base alta (2000) para ficar acima de botões fixos como o do Chat
         const baseZIndex = 2000;
-        
-        // 2. Calculamos o incremento: Se já tem 1 modal aberto, soma +10. Se tem 2, +20.
-        // Isso garante que o novo SEMPRE tenha um número maior que o anterior.
         const incremento = modalStack.length * 10;
         
-        // 3. Aplica o novo Z-Index diretamente no elemento
         novoModal.style.zIndex = baseZIndex + incremento;
-
-        // --- FIM DA LÓGICA NOVA ---
 
         novoModal.style.display = 'flex';
         setTimeout(() => {
             novoModal.classList.add('show');
-            modalStack.push(novoModal); // Adiciona à pilha para controle do botão voltar/fechar
+            modalStack.push(novoModal); // Adiciona à pilha
+            
+            // --- MUDANÇA AQUI: Adiciona estado no histórico para o botão voltar funcionar ---
+            window.history.pushState({ modalOpen: true, modalId: modalId }, "");
         }, 10);
     }
 }
@@ -4832,7 +4846,7 @@ function fecharModal(event) {
     }
 }
 
-function fecharModalAtual(forcePopupAguarde = false) {
+function fecharModalAtual(forcePopupAguarde = false, fromHistory = false) {
     if (forcePopupAguarde) {
         const popup = document.getElementById('popupAguarde');
         popup.classList.remove('show');
@@ -4851,6 +4865,14 @@ function fecharModalAtual(forcePopupAguarde = false) {
         setTimeout(() => {
             modalParaFechar.style.display = 'none';
         }, 300);
+
+        // --- MUDANÇA AQUI: Sincronia com o botão voltar ---
+        // Se o fechamento NÃO veio do botão voltar (veio do clique no X ou botão fechar),
+        // precisamos voltar o histórico manualmente para não quebrar a navegação.
+        if (!fromHistory) {
+            ignoreNextPopstate = true; // Avisa o listener para ignorar o evento gerado abaixo
+            window.history.back();
+        }
     }
 }
 
