@@ -5502,6 +5502,11 @@ auth.onAuthStateChanged(async user => {
     // Atualiza o perfil global *APÓS* a verificação do timestamp, *ANTES* da verificação de tipo
     perfil = perfilAtual; // Atualiza o perfil global *AGORA*
 
+if (!isInitialLoad) {
+        // Verifica periodicamente ou quando o perfil muda (ex: data de expiração chega)
+        verificarLimpezaItensExpirados(perfil);
+    }
+
     // Verifica a mudança de tipo
     if (!isInitialLoad && previousTipo !== null && currentTipo !== previousTipo) {
         console.log(`Tipo de conta alterado de "${previousTipo}" para "${currentTipo}". Recarregando em 3 segundos...`);
@@ -6808,10 +6813,12 @@ function abrirModalVip() {
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
                     <h4>Seus Benefícios Atuais:</h4>
                     <ul>
-                        <li>Desconto de 10% em todos os serviços.</li>
-                        <li>O dobro de pontos de fidelidade.</li>
-                        <li>Símbolo de prestígio 👑 no chat global.</li>
-                        <li><strong>🎰 4 Giros Diários na Roleta!</strong></li> </ul>
+                        <li>✂️ <strong>10% OFF</strong> em todos os serviços.</li>
+                        <li>🛍️ <strong>Taxa Reduzida na Loja (5%)</strong> para vendas.</li>
+                        <li>🏆 <strong>Dobro de Pontos</strong> de fidelidade.</li>
+                        <li>💬 Símbolo de prestígio 👑 no chat.</li>
+                        <li>🎰 <strong>4 Giros Diários</strong> na Roleta!</li> 
+                    </ul>
                 </div>
             </div>
         `;
@@ -6819,15 +6826,17 @@ function abrirModalVip() {
         container.innerHTML = `
             <div style="padding: 20px; border-radius: 15px; text-align: center;">
                 <h3 style="color: var(--cor-destaque);">💎 Torne-se um Membro VIP!</h3>
-                <p>Eleve sua experiência mensalmente.</p>
+                <p>Eleve sua experiência como Cliente.</p>
                 <p style="font-size: 24px; font-weight: bold; margin: 15px 0;">Adesão: R$ ${PRECO_VIP.toFixed(2)} / mês</p>
                 <div class="vantagens" style="text-align: left; margin-top: 20px;">
-                    <h4>Vantagens Exclusivas para Clientes VIP:</h4>
+                    <h4>Vantagens Exclusivas:</h4>
                     <ul>
-                        <li><strong>10% de Desconto</strong> em todos os serviços.</li>
-                        <li><strong>Dobro de Pontos</strong> de fidelidade.</li>
-                        <li><strong>Status de Prestígio</strong> com um ícone 👑 no chat.</li>
-                        <li><strong>🎰 4 Giros Diários</strong> na Roleta!</li> </ul>
+                        <li>✂️ <strong>10% de Desconto</strong> em serviços.</li>
+                        <li>🛍️ <strong>Taxa de Venda de Apenas 5%</strong> na Loja (Normal é 10%).</li>
+                        <li>🏆 <strong>Dobro de Pontos</strong> de fidelidade.</li>
+                        <li>👑 <strong>Ícone VIP</strong> no chat global.</li>
+                        <li>🎰 <strong>4 Giros Diários</strong> na Roleta!</li> 
+                    </ul>
                 </div>
                 <button onclick="assinarVip()" style="margin-top: 15px;">💎 Assinar Agora</button>
             </div>
@@ -10027,7 +10036,6 @@ function abrirModalVipPro() {
     const proAtivo = isProAtivo(perfil);
 
     if (proAtivo) {
-        // ... (código para quem já é PRO mantém-se quase igual, só atualize se quiser mostrar o que ele tem)
         let dataFormatada = "Indefinido";
         if (perfil.proExpirationDate) {
              try {
@@ -10037,24 +10045,35 @@ function abrirModalVipPro() {
                  dataFormatada = dateObj.toLocaleDateString('pt-BR');
              } catch (e) { console.log(e); }
         }
-        let taxaAtual = (TAXA * 100); let girosAtuais = 1; let nomeTier = "";
+        let taxaServico = (TAXA * 100); 
+        let taxaLoja = 20;
+        let girosAtuais = 1; 
+        let nomeTier = "";
+        
         if (perfil.proTier && PRECOS_PRO[perfil.proTier]) {
-            taxaAtual = PRECOS_PRO[perfil.proTier].taxa * 100;
+            taxaServico = PRECOS_PRO[perfil.proTier].taxa * 100;
+            // A taxa da loja é a mesma da taxa de serviço na sua regra (15, 10, 5, 0)
+            taxaLoja = taxaServico; 
             girosAtuais = PRECOS_PRO[perfil.proTier].giros;
             nomeTier = PRECOS_PRO[perfil.proTier].nome;
         }
+        
         container.innerHTML = `
             <div class="pro-glow" style="padding: 20px; border-radius: 15px; text-align: center; background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);">
                 <h3 style="color: #00c6ff; text-shadow: 0 0 10px #00c6ff;">🌟 Você é PRO ${nomeTier.toUpperCase()}!</h3>
                 <p style="color:white;">Sua assinatura é válida até: <strong>${dataFormatada}</strong></p>
-                <div style="display:flex; justify-content:space-around; margin-top:20px;">
-                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
-                        <p style="font-size:24px;">📉 ${taxaAtual.toFixed(0)}%</p>
-                        <p style="font-size:12px; color:#aaa;">Taxa de Serviço</p>
+                <div style="display:flex; justify-content:space-around; margin-top:20px; text-align:center;">
+                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; flex:1; margin:0 5px;">
+                        <p style="font-size:20px;">📉 ${taxaServico.toFixed(0)}%</p>
+                        <p style="font-size:10px; color:#aaa;">Taxa Serviço</p>
                     </div>
-                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
-                        <p style="font-size:24px;">🎲 ${girosAtuais}</p>
-                        <p style="font-size:12px; color:#aaa;">Giros Diários</p>
+                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; flex:1; margin:0 5px;">
+                        <p style="font-size:20px;">🛍️ ${taxaLoja.toFixed(0)}%</p>
+                        <p style="font-size:10px; color:#aaa;">Taxa Loja</p>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; flex:1; margin:0 5px;">
+                        <p style="font-size:20px;">🎲 ${girosAtuais}</p>
+                        <p style="font-size:10px; color:#aaa;">Giros/Dia</p>
                     </div>
                 </div>
                 <p style="margin-top:10px; font-size:13px; color:#fff;">Você também tem acesso liberado às Molduras e Balões de Chat do seu nível!</p>
@@ -10063,12 +10082,12 @@ function abrirModalVipPro() {
     } else {
         let htmlPlanos = '';
         
-        // BENEFÍCIOS ATUALIZADOS COM OS BALÕES
+        // BENEFÍCIOS ATUALIZADOS COM TAXAS DA LOJA
         const beneficios = {
-            'tier1': ['📉 Taxa: <strong>15%</strong>', '🎲 <strong>2 Giros</strong>/dia', '🥉 Moldura + Chat Bronze'],
-            'tier2': ['📉 Taxa: <strong>10%</strong>', '🎲 <strong>3 Giros</strong>/dia', '🥈 Moldura + Chat Prata'],
-            'tier3': ['📉 Taxa: <strong>5%</strong>', '🎲 <strong>4 Giros</strong>/dia', '🥇 Moldura + Chat Ouro'],
-            'tier4': ['🚫 <strong>TAXA ZERO (0%)</strong>', '🎲 <strong>5 Giros</strong>/dia', '💎 Moldura + Chat Diamante']
+            'tier1': ['📉 Taxa Serviço: <strong>15%</strong>', '🛍️ Taxa Loja: <strong>15%</strong>', '🎲 <strong>2 Giros</strong>/dia', '🥉 Visual Bronze'],
+            'tier2': ['📉 Taxa Serviço: <strong>10%</strong>', '🛍️ Taxa Loja: <strong>10%</strong>', '🎲 <strong>3 Giros</strong>/dia', '🥈 Visual Prata'],
+            'tier3': ['📉 Taxa Serviço: <strong>5%</strong>', '🛍️ Taxa Loja: <strong>5%</strong>', '🎲 <strong>4 Giros</strong>/dia', '🥇 Visual Ouro'],
+            'tier4': ['🚫 <strong>TAXA ZERO (0%)</strong>', '🛍️ <strong>TAXA LOJA ZERO</strong>', '🎲 <strong>5 Giros</strong>/dia', '💎 Visual Diamante']
         };
 
         const cores = { 'tier1': '#cd7f32', 'tier2': '#c0c0c0', 'tier3': '#ffd700', 'tier4': '#00c6ff' };
@@ -10087,15 +10106,14 @@ function abrirModalVipPro() {
                 <ul style="text-align:left; font-size: 14px; color: #ddd; padding-left: 20px; margin: 10px 0;">
                     ${listaBeneficios}
                 </ul>
-                <p style="font-size:11px; color:${cor}; margin:0 0 10px 0;">*Libera todos os itens dos níveis anteriores!</p>
                 <button style="background: ${cor}; width: 100%; color:black; font-weight:bold; border:none; padding: 10px; pointer-events: none;">QUERO SER ${plano.nome.toUpperCase()}</button>
             </div>`;
         });
 
         container.innerHTML = `
             <div style="text-align: center;">
-                <h3 style="background: -webkit-linear-gradient(#00c6ff, #0072ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: 800;">🚀 SEJA UM PROFISSIONAL PRO</h3>
-                <p style="font-size:14px; opacity:0.8; margin-bottom: 20px;">Taxas menores, visual exclusivo e mais chances na roleta!</p>
+                <h3 style="background: -webkit-linear-gradient(#00c6ff, #0072ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: 800;">🚀 PLANOS PROFISSIONAIS</h3>
+                <p style="font-size:14px; opacity:0.8; margin-bottom: 20px;">Reduza taxas de serviço e de vendas na loja!</p>
                 <div style="max-height: 60vh; overflow-y: auto; padding: 5px;">
                     ${htmlPlanos}
                 </div>
@@ -11896,37 +11914,33 @@ function iniciarCompra(produto) {
 async function confirmarCompraLoja(dadosEntrega) {
     exibirAguarde("Processando seu pedido...");
     const produto = produtoParaCompra;
+    // Preço final que o cliente paga
     const precoFinal = produto.desconto ? produto.preco * (1 - produto.desconto / 100) : produto.preco;
 
-    // --- MODIFICATION START ---
-    // Check balance first
     if (perfil.saldo < precoFinal) {
-        fecharTodosOsModais(); // Close "Aguarde..." and the form modal
-        exibirPopup('Saldo insuficiente. Por favor, deposite fundos na sua carteira.'); // Show popup
-        abrirModal('modalCarteira'); // <<<--- ADDED: Open wallet modal
-        return; // Stop the purchase process
+        fecharTodosOsModais();
+        exibirPopup('Saldo insuficiente. Por favor, deposite fundos na sua carteira.', null, "aviso", () => {
+            abrirModalCarteira();
+        });
+        return; 
     }
-    // --- MODIFICATION END ---
 
     try {
-        // Transaction only debits buyer now
         await db.runTransaction(async t => {
             const clienteRef = db.collection("usuarios").doc(auth.currentUser.uid);
             const produtoRef = db.collection("loja_produtos").doc(produto.id);
 
-            // --- MODIFICATION START ---
-            // Only debit the client at this stage
+            // 1. Debita o cliente (Dinheiro fica retido no sistema)
             t.update(clienteRef, { saldo: firebase.firestore.FieldValue.increment(-precoFinal) });
-            // Seller and Admin balance updates REMOVED from here
-            // --- MODIFICATION END ---
-
+            
+            // 2. Incrementa contagem de vendas
             t.update(produtoRef, { vendasRealizadas: firebase.firestore.FieldValue.increment(1) });
 
-            // Create the order document
+            // 3. Cria o pedido com status 'pendente' (Aguardando envio)
             t.set(db.collection("loja_pedidos").doc(), {
                 produtoId: produto.id,
                 produtoNome: produto.nome,
-                valor: precoFinal, // Store the final price paid
+                valor: precoFinal, // Valor total pago
                 tamanho: produto.tamanhoSelecionado,
                 clienteUid: auth.currentUser.uid,
                 clienteNome: perfil.nome,
@@ -11936,18 +11950,20 @@ async function confirmarCompraLoja(dadosEntrega) {
                 email: dadosEntrega.email,
                 cep: dadosEntrega.cep,
                 vendedorUid: produto.vendedorUid,
-                vendedorNotificado: false, // For the initial sale notification popup
-                status: "pendente", // Initial status: waiting for seller to deliver
+                vendedorNotificado: false, // Gatilho para popup do vendedor
+                status: "pendente", // Status inicial: Vendedor precisa enviar
                 avaliado: false,
                 ts: firebase.firestore.FieldValue.serverTimestamp()
             });
         });
 
         fecharTodosOsModais();
-        exibirPopup("Pedido realizado com sucesso!");
-        notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Sua compra de "${produto.nome}" foi realizada.`, { link: '#minhascompras' });
-        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu um(a) "${produto.nome}" para ${perfil.nome}. Verifique suas entregas.`, { link: '#entregas' });
-        // No longer closing specific modals, fecharTodosOsModais handles it.
+        exibirPopup("Pedido realizado!", "O valor foi retido e será liberado ao vendedor após você confirmar o recebimento.");
+        
+        // Notificação para o comprador
+        notifyUser(auth.currentUser.uid, '📦 Pedido Confirmado!', `Você comprou "${produto.nome}". Aguarde o envio.`, { link: '#minhascompras' });
+        // Notificação para o vendedor
+        notifyUser(produto.vendedorUid, '🎉 Nova Venda!', `Você vendeu "${produto.nome}"! Acesse 'Entregas' para enviar.`, { link: '#entregas' });
 
     } catch (e) {
         fecharTodosOsModais();
@@ -12370,36 +12386,39 @@ async function abrirEntregasVendedor() {
 
     if (pedidosVendedorListener) pedidosVendedorListener();
 
-    // --- MODIFICATION: Query now includes 'entregue_pendente_confirmacao' ---
     pedidosVendedorListener = db.collection('loja_pedidos')
       .where('vendedorUid', '==', auth.currentUser.uid)
-      .where('status', 'in', ['pendente', 'entregue_pendente_confirmacao', 'disputa']) // Added confirmation status
-      .orderBy('ts', 'desc') // Order by most recent
+      // Trazemos status relevantes para o vendedor
+      .where('status', 'in', ['pendente', 'enviado', 'entregue_pendente_confirmacao', 'disputa']) 
+      .orderBy('ts', 'desc')
       .onSnapshot(snap => {
         if(snap.empty) {
-            container.innerHTML = '<p>Nenhuma entrega pendente ou aguardando confirmação.</p>';
+            container.innerHTML = '<p>Nenhuma entrega ativa.</p>';
             return;
         }
         container.innerHTML = '';
         snap.forEach(doc => {
             const pedido = doc.data();
             let statusHtml = '';
-            let acaoHtml = ''; // Clear action html
+            let acaoHtml = '';
 
-             // --- MODIFICATION: Status logic updated ---
+            // Lógica de Status e Botões do Vendedor
             if (pedido.status === 'pendente') {
-                statusHtml = '<p style="color: #f1c40f;">Status: Aguardando Envio/Entrega</p>';
-                acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Marcar como Entregue</button>`;
-            } else if (pedido.status === 'entregue_pendente_confirmacao') {
-                statusHtml = '<p style="color: #3498db;">Status: Aguardando Confirmação do Cliente</p>';
-                // Add button to notify/remind the client
-                acaoHtml = `<button onclick="notificarCompradorEntrega('${doc.id}', '${pedido.clienteUid}')" style="background-color: #3498db;">Notificar Cliente (Lembrete)</button>`;
-            } else if (pedido.status === 'disputa') {
-                statusHtml = '<p style="color: #e74c3c;">Status: Cliente Negou Recebimento.</p>';
-                // Allow seller to mark again
-                acaoHtml = `<button onclick="marcarComoEntregue('${doc.id}', '${pedido.clienteUid}')">Tentar Marcar Entregue Novamente</button>`;
+                statusHtml = '<p style="color: #f1c40f;">📦 Status: Aguardando Envio</p>';
+                acaoHtml = `<button onclick="marcarProdutoEnviado('${doc.id}', '${pedido.clienteUid}')" style="background: #3498db;">🚚 Marcar Produto Enviado</button>`;
+            } 
+            else if (pedido.status === 'enviado') {
+                statusHtml = '<p style="color: #3498db;">🚚 Status: A Caminho (Aguardando Cliente)</p>';
+                acaoHtml = `<button onclick="enviarLembreteConfirmacao('${doc.id}', '${pedido.clienteUid}')" style="background: #555; font-size: 12px;">🔔 Enviar Lembrete ao Cliente</button>`;
             }
-            // --- MODIFICATION END ---
+            else if (pedido.status === 'entregue_pendente_confirmacao') {
+                statusHtml = '<p style="color: #9b59b6;">⏳ Status: Cliente Confirmando Recebimento...</p>';
+                acaoHtml = `<button disabled style="opacity: 0.7; cursor: not-allowed;">Aguardando Cliente</button>`;
+            } 
+            else if (pedido.status === 'disputa') {
+                statusHtml = '<p style="color: #e74c3c;">🚨 Status: Problema Reportado pelo Cliente</p>';
+                acaoHtml = `<button onclick="window.open('https://wa.me/${pedido.telefone.replace(/\\D/g,'')}', '_blank')">💬 Contatar Cliente</button>`;
+            }
 
             container.innerHTML += `
                 <div class="card">
@@ -12412,6 +12431,31 @@ async function abrirEntregasVendedor() {
                 </div>`;
         });
     });
+}
+
+async function marcarProdutoEnviado(pedidoId, clienteUid) {
+    if (!confirm("Confirmar que o produto foi enviado? O status mudará para 'A Caminho'.")) return;
+    
+    exibirAguarde("Atualizando status...");
+    try {
+        await db.collection('loja_pedidos').doc(pedidoId).update({ status: 'enviado' });
+        fecharTodosOsModais(); // Fecha o aguarde
+        
+        // Notifica o comprador
+        notifyUser(clienteUid, '🚚 Produto a Caminho!', 'O vendedor despachou seu produto. Quando chegar, confirme no app.', { link: '#minhascompras' });
+        
+        exibirPopup("Status Atualizado", "O cliente foi notificado que o produto está a caminho.");
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro: " + e.message);
+    }
+}
+
+function enviarLembreteConfirmacao(pedidoId, clienteUid) {
+    if(confirm("Enviar lembrete para o cliente confirmar o recebimento? Use apenas se o produto já deveria ter chegado.")) {
+        notifyUser(clienteUid, '🔔 Confirme a Entrega', 'Se você já recebeu seu produto, por favor confirme no app para liberar o vendedor.', { link: '#minhascompras' });
+        exibirPopup("Lembrete enviado!");
+    }
 }
 
 function notificarCompradorEntrega(pedidoId, clienteUid) {
@@ -12446,16 +12490,28 @@ async function abrirMinhasCompras() {
     container.innerHTML = '';
     snap.forEach(doc => {
         const compra = doc.data();
-        let statusTexto = 'Status desconhecido';
+        let statusTexto = 'Processando';
         let acaoBotao = '';
 
+        // Lógica de Status do Comprador
         switch(compra.status) {
-            case 'pendente': statusTexto = 'Aguardando entrega'; break;
-            case 'entregue_pendente_confirmacao': statusTexto = 'Confirme o recebimento!'; break;
-            case 'confirmado_pelo_cliente': statusTexto = 'Entrega confirmada'; break;
-            case 'disputa': statusTexto = 'Entrega recusada'; break;
+            case 'pendente': 
+                statusTexto = '⏳ Aguardando envio do vendedor'; 
+                break;
+            case 'enviado': 
+                statusTexto = '🚚 A Caminho'; 
+                acaoBotao = `<button onclick="abrirModalConfirmacaoComprador({id: '${doc.id}', vendedorUid: '${compra.vendedorUid}', valor: ${compra.valor}, produtoNome: '${compra.produtoNome}'})" style="background: #2ecc71; animation: pulse-green 2s infinite;">🎁 Recebi a Entrega</button>`;
+                break;
+            case 'entregue_pendente_confirmacao': // Caso legado ou redundante
+            case 'confirmado_pelo_cliente': 
+                statusTexto = '✅ Entrega Confirmada'; 
+                break;
+            case 'disputa': 
+                statusTexto = '🚨 Em disputa/Recusado'; 
+                break;
         }
         
+        // Botão de Avaliação
         if (compra.status === 'confirmado_pelo_cliente' && !compra.avaliado) {
             acaoBotao = `<button onclick="abrirModalAvaliacaoProduto('${doc.id}', '${compra.produtoId}', '${compra.produtoNome}')">⭐ Avaliar Produto</button>`;
         } else if (compra.status === 'confirmado_pelo_cliente' && compra.avaliado) {
@@ -12465,90 +12521,122 @@ async function abrirMinhasCompras() {
         container.innerHTML += `
             <div class="card">
                 <b>${compra.produtoNome}</b>
-                <p>Status: ${statusTexto}</p>
+                <p>Status: <b>${statusTexto}</b></p>
                 <div style="margin-top: 10px;">${acaoBotao}</div>
             </div>
         `;
     });
 }
 
-function abrirModalConfirmacaoComprador(pedido) {
+function abrirModalConfirmacaoComprador(pedidoObj) {
+    // pedidoObj contém: id, vendedorUid, valor, produtoNome (passados no HTML)
     const modal = document.getElementById('modalConfirmacaoComprador');
-    if(modal.classList.contains('show')) return; 
+    
+    document.getElementById('confirmacaoCompradorTitulo').textContent = "Recebeu o produto?";
+    document.getElementById('confirmacaoCompradorTexto').textContent = `Confirme se você recebeu "${pedidoObj.produtoNome}". Isso liberará o pagamento ao vendedor.`;
 
-    document.getElementById('btnAceitarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, true);
-    document.getElementById('btnRecusarEntrega').onclick = () => responderConfirmacaoEntrega(pedido.id, false);
+    // Remove listeners antigos clonando
+    const btnSim = document.getElementById('btnAceitarEntrega');
+    const btnNao = document.getElementById('btnRecusarEntrega');
+    
+    const novoSim = btnSim.cloneNode(true);
+    const novoNao = btnNao.cloneNode(true);
+    
+    btnSim.parentNode.replaceChild(novoSim, btnSim);
+    btnNao.parentNode.replaceChild(novoNao, btnNao);
+
+    // Como responderConfirmacaoEntrega busca do banco pelo ID, só precisamos passar o ID e o booleano
+    novoSim.onclick = () => responderConfirmacaoEntrega(pedidoObj.id, true);
+    novoNao.onclick = () => responderConfirmacaoEntrega(pedidoObj.id, false);
+    
     abrirModal('modalConfirmacaoComprador');
 }
 
 async function responderConfirmacaoEntrega(pedidoId, aceito) {
-    const novoStatus = aceito ? 'confirmado_pelo_cliente' : 'disputa';
+    // Nota: Esta função é chamada pelo modal de confirmação (modalConfirmacaoComprador)
+    // Precisamos garantir que 'vendedorUid', 'valor', etc., sejam passados corretamente.
+    // Vou buscar do banco para garantir segurança das taxas.
+
     try {
         const pedidoRef = db.collection('loja_pedidos').doc(pedidoId);
         const pedidoDoc = await pedidoRef.get();
         if (!pedidoDoc.exists) throw new Error("Pedido não encontrado.");
 
-        const { vendedorUid, valor, produtoNome } = pedidoDoc.data(); // Get value and sellerUid from order
+        const { vendedorUid, valor, produtoNome } = pedidoDoc.data();
 
-        // --- MODIFICATION START ---
         if (aceito) {
-            exibirAguarde("Confirmando recebimento e liberando pagamento..."); // Show wait popup for transaction
+            exibirAguarde("Liberando pagamento ao vendedor...");
 
-            // Transaction to release funds to seller and admin
             await db.runTransaction(async t => {
                 const vendedorRef = db.collection("usuarios").doc(vendedorUid);
                 const adminSnap = await db.collection("usuarios").where("tipo", "==", "admin").limit(1).get();
-                if (adminSnap.empty) throw new Error("Conta de administrador não encontrada para taxas.");
+                if (adminSnap.empty) throw new Error("Conta admin não encontrada.");
                 const adminRef = db.collection("usuarios").doc(adminSnap.docs[0].id);
                 const financeiroRef = db.collection("config").doc("financeiro");
 
-                // Get seller profile to check PRO status and calculate correct fee
                 const vendedorDoc = await t.get(vendedorRef);
                 if (!vendedorDoc.exists) throw new Error("Vendedor não encontrado.");
                 const vendedorData = vendedorDoc.data();
 
-                let taxaAplicada = TAXA; // Default fee
-                if (isProAtivo(vendedorData) && vendedorData.proTier && PRECOS_PRO[vendedorData.proTier]) {
-                    taxaAplicada = PRECOS_PRO[vendedorData.proTier].taxa;
-                    console.log(`Taxa PRO ${vendedorData.proTier} aplicada: ${taxaAplicada * 100}%`);
-                } else {
-                    console.log(`Taxa padrão aplicada: ${taxaAplicada * 100}%`);
+                // === LÓGICA DE TAXAS (SOLICITAÇÃO 2) ===
+                let taxaAplicada = 0.20; // Padrão Profissional (20%)
+
+                if (vendedorData.tipo === 'cliente') {
+                    // Taxas para Cliente
+                    if (isVipAtivo(vendedorData)) {
+                        taxaAplicada = 0.05; // Cliente VIP (5%)
+                    } else {
+                        taxaAplicada = 0.10; // Cliente Normal (10%)
+                    }
+                } else if (vendedorData.tipo !== 'admin') {
+                    // Taxas para Profissionais (Baseado no Tier PRO)
+                    if (isProAtivo(vendedorData) && vendedorData.proTier) {
+                        switch(vendedorData.proTier) {
+                            case 'tier1': taxaAplicada = 0.15; break; // Bronze
+                            case 'tier2': taxaAplicada = 0.10; break; // Prata
+                            case 'tier3': taxaAplicada = 0.05; break; // Ouro
+                            case 'tier4': taxaAplicada = 0.00; break; // Diamante
+                            default: taxaAplicada = 0.20; // Fallback
+                        }
+                    }
                 }
+                // Admins não pagam taxa (ou pagam para si mesmos)
 
-                const valorVendedor = valor * (1 - taxaAplicada);
                 const valorAdmin = valor * taxaAplicada;
+                const valorVendedor = valor - valorAdmin;
 
-                // Update balances
+                // Atualiza Saldos
                 t.update(vendedorRef, { saldo: firebase.firestore.FieldValue.increment(valorVendedor) });
                 t.update(adminRef, { saldo: firebase.firestore.FieldValue.increment(valorAdmin) });
-
-                // Update financial stats
+                
+                // Estatísticas
                 t.set(financeiroRef, { arrecadadoTaxas: firebase.firestore.FieldValue.increment(valorAdmin) }, { merge: true });
 
-                // Update order status within the same transaction
-                t.update(pedidoRef, { status: novoStatus });
+                // Finaliza Pedido
+                t.update(pedidoRef, { status: 'confirmado_pelo_cliente' });
             });
 
-            fecharTodosOsModais(); // Close wait popup
-
-            // Notify seller about payment
-            notifyUser(vendedorUid, '💰 Pagamento Recebido!', `O comprador confirmou o recebimento de "${produtoNome}"! O valor (menos taxas) foi adicionado ao seu saldo.`);
+            fecharTodosOsModais(); // Fecha aguarde e modal confirmação
+            
+            // Notifica Vendedor
+            notifyUser(vendedorUid, '💰 Dinheiro Liberado!', `O comprador confirmou o recebimento de "${produtoNome}". O valor da venda já está no seu saldo.`);
+            exibirPopup('Sucesso!', 'Recebimento confirmado. Agora você pode avaliar o produto.');
+            
+            abrirMinhasCompras(); // Atualiza a lista
 
         } else {
-            // Just update status if denied, no transaction needed
-            await pedidoRef.update({ status: novoStatus });
-            notifyUser(vendedorUid, '❌ Entrega Recusada', `O comprador recusou o recebimento de "${produtoNome}". Verifique a entrega e entre em contato.`, { link: '#entregas' });
+            // Se recusar
+            await pedidoRef.update({ status: 'disputa' });
+            notifyUser(vendedorUid, '🚨 Entrega Contestada', `O comprador sinalizou um problema na entrega de "${produtoNome}". Entre em contato.`, { link: '#entregas' });
+            fecharModalAtual();
+            exibirPopup('Aviso', 'O vendedor foi notificado sobre o problema.');
+            abrirMinhasCompras();
         }
-        // --- MODIFICATION END ---
-
-        exibirPopup('Resposta enviada com sucesso!');
-        fecharModalAtual(); // Close confirmation modal
-        abrirMinhasCompras(); // Refresh buyer's purchase list
 
     } catch (e) {
-        fecharTodosOsModais(); // Ensure wait popup closes on error
-        exibirPopup('Erro ao enviar resposta: ' + e.message);
-        console.error("Error in responderConfirmacaoEntrega:", e);
+        fecharTodosOsModais();
+        exibirPopup('Erro: ' + e.message);
+        console.error(e);
     }
 }
 
@@ -12918,6 +13006,88 @@ function renderOnboardingTela2() {
         <button onclick="renderOnboardingTela3()" style="margin-top:20px;" id="btnOnboardingNext2" disabled>Próximo</button>
       </div>
     `;
+}
+
+// --- NOVA FUNÇÃO: LIMPEZA DE ITENS EXPIRADOS ---
+async function verificarLimpezaItensExpirados(usuario) {
+    if (!usuario) return;
+    
+    let updates = {};
+    let mudou = false;
+    const agora = new Date();
+
+    // 1. Verifica Moldura Selecionada
+    if (usuario.molduraSelecionada) {
+        const m = MOLDURAS[usuario.molduraSelecionada];
+        // Se não é item permanente (comprado/admin)
+        if (m && !m.adminOnly && (!usuario.moldurasAdquiridas || !usuario.moldurasAdquiridas.includes(usuario.molduraSelecionada))) {
+            let temAcesso = false;
+            
+            // Checa se é prêmio temporário válido
+            if (usuario.premiosTemporarios && usuario.premiosTemporarios[`moldura_${usuario.molduraSelecionada}`]) {
+                const validade = usuario.premiosTemporarios[`moldura_${usuario.molduraSelecionada}`].toDate();
+                if (validade > agora) temAcesso = true;
+            }
+            
+            // Checa se é benefício PRO válido
+            if (isProAtivo(usuario)) {
+                const tier = usuario.proTier;
+                const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
+                const moldurasOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
+                // Se o tier atual cobre a moldura
+                if (niveis.indexOf(tier) >= moldurasOrdem.indexOf(usuario.molduraSelecionada)) {
+                    temAcesso = true;
+                }
+            }
+
+            // Se não tem acesso por nenhuma via, remove a seleção
+            if (!temAcesso) {
+                updates.molduraSelecionada = firebase.firestore.FieldValue.delete();
+                mudou = true;
+                console.log("Moldura expirada removida.");
+            }
+        }
+    }
+
+    // 2. Verifica Balão Selecionado
+    if (usuario.balaoSelecionado) {
+        const b = BALOES[usuario.balaoSelecionado];
+        if (b && !b.adminOnly && (!usuario.baloesAdquiridos || !usuario.baloesAdquiridos.includes(usuario.balaoSelecionado))) {
+            let temAcesso = false;
+
+            // Checa prêmio temporário
+            if (usuario.premiosTemporarios && usuario.premiosTemporarios[`balao_${usuario.balaoSelecionado}`]) {
+                const validade = usuario.premiosTemporarios[`balao_${usuario.balaoSelecionado}`].toDate();
+                if (validade > agora) temAcesso = true;
+            }
+
+            // Checa PRO
+            if (isProAtivo(usuario)) {
+                const tier = usuario.proTier;
+                const niveis = ['tier1', 'tier2', 'tier3', 'tier4'];
+                const baloesOrdem = ['bronze', 'prata', 'ouro', 'diamante'];
+                if (niveis.indexOf(tier) >= baloesOrdem.indexOf(usuario.balaoSelecionado)) {
+                    temAcesso = true;
+                }
+            }
+
+            if (!temAcesso) {
+                updates.balaoSelecionado = firebase.firestore.FieldValue.delete();
+                mudou = true;
+                console.log("Balão expirado removido.");
+            }
+        }
+    }
+
+    // Executa a atualização se necessário
+    if (mudou) {
+        try {
+            await db.collection('usuarios').doc(auth.currentUser.uid).update(updates);
+            exibirPopup("Itens Expirados", "Alguns itens visuais expiraram (Fim do PRO ou Prêmio Roleta) e foram removidos do seu perfil.", "aviso");
+        } catch (e) {
+            console.error("Erro ao limpar itens expirados:", e);
+        }
+    }
 }
 
 function selecionarInteresse(interesse) {
