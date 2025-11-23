@@ -4335,6 +4335,7 @@ const messaging = firebase.messaging();
 
 // ADICIONE ESTAS LINHAS ABAIXO (Linha ~2241)
 let isTwa = false; // Variável global para o ambiente
+let avisoEntregaRealizadoSessao = false; // Controle para o popup de entrega
 
 // --- CONFIGURAÇÕES GERAIS E FINANCEIRAS ---
 const PIX_CODE_RAW = "00020126770014BR.GOV.BCB.PIX0136ac099e3b-e63e-402f-9d3e-6e20828470b90215Nova Versão APP5204000053039865802BR5920Josiel Lopes Azeredo6009SAO PAULO62140510ERLNMtaT5r63040E73";
@@ -7467,9 +7468,9 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
-                // 4. Foto com Moldura (CORRIGIDO PARA ACEITAR LOGOMARCA)
-                // Tenta logo_url primeiro se tiver, depois fotoPerfil, depois placeholder
-                const fotoUrl = remetenteData.logo_url || remetenteData.fotoPerfil || 'https://via.placeholder.com/30';
+                // 4. Foto com Moldura (CORRIGIDO: Prioridade para FOTO PERFIL)
+                // A ordem agora é: Foto Perfil (Edição) -> Logo (Logomarca) -> Placeholder
+                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
                 let avatarHtml = '';
 
                 // Verifica se tem moldura válida
@@ -7530,8 +7531,8 @@ async function abrirPerfilUsuarioChat(uid) {
     modalContent.innerHTML = '';
 
     // --- 1. FOTO E MOLDURA (Topo) ---
-    // CORREÇÃO AQUI: Verifica logo_url PRIMEIRO se for profissional, ou como fallback
-    const fotoUrl = u.logo_url || u.fotoPerfil || 'https://via.placeholder.com/120';
+    // CORREÇÃO: Prioridade para fotoPerfil (Edição de Perfil), depois logo_url
+    const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120';
     let htmlFoto = '';
 
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
@@ -12696,7 +12697,6 @@ async function verificarPendencias(uid) {
         const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
         if (!agendamentosSnap.empty) {
             btnAgendamentos?.classList.add('notificacao-pulsante');
-            // Notificação visual sutil, não popup invasivo repetitivo aqui
         } else {
             btnAgendamentos?.classList.remove('notificacao-pulsante');
         }
@@ -12713,7 +12713,7 @@ async function verificarPendencias(uid) {
             btnHistorico?.classList.remove('notificacao-pulsante');
         }
 
-        // B. Confirmação de Entrega (Popup a cada 1 hora)
+        // B. Confirmação de Entrega (Lógica Atualizada: Sempre ao iniciar o app)
         const comprasPendentesSnap = await db.collection('loja_pedidos')
             .where('clienteUid', '==', uid)
             .where('status', '==', 'entregue_pendente_confirmacao')
@@ -12723,12 +12723,8 @@ async function verificarPendencias(uid) {
             const btnCompras = document.getElementById('btnMinhasCompras');
             btnCompras?.classList.add('notificacao-pulsante');
 
-            // Lógica de 1 Hora
-            const agora = Date.now();
-            const ultimoAviso = localStorage.getItem('ultimoAvisoEntrega_' + uid);
-            const UMA_HORA = 60 * 60 * 1000; // 3600000 ms
-
-            if (!ultimoAviso || (agora - parseInt(ultimoAviso)) > UMA_HORA) {
+            // Se ainda não avisou nesta sessão (reinício do app), avisa agora!
+            if (!avisoEntregaRealizadoSessao) {
                 const pedido = comprasPendentesSnap.docs[0].data();
                 const docId = comprasPendentesSnap.docs[0].id;
                 
@@ -12740,9 +12736,9 @@ async function verificarPendencias(uid) {
                     produtoNome: pedido.produtoNome
                 });
                 
-                // Atualiza o timestamp
-                localStorage.setItem('ultimoAvisoEntrega_' + uid, agora.toString());
-                console.log("Lembrete de entrega exibido para o cliente.");
+                // Marca que já avisou nesta sessão para não ficar abrindo a cada minuto
+                avisoEntregaRealizadoSessao = true;
+                console.log("Lembrete de entrega exibido (Sessão atual).");
             }
         }
     }
