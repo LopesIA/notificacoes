@@ -4452,7 +4452,7 @@ let searchInterval = null; // Variável global para controlar o intervalo
 async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
     const lista = document.getElementById(containerId);
     
-    // --- LÓGICA DE MENSAGENS ANIMADAS (Alteração 6) ---
+    // --- LÓGICA DE MENSAGENS ANIMADAS (MANTIDA) ---
     const mensagensBusca = [
         "🔍 Localizando profissionais próximos...",
         "⭐ Verificando reputação...",
@@ -4467,6 +4467,7 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
 
     // Função interna para atualizar o texto
     const atualizarTextoBusca = () => {
+        if(!document.getElementById(containerId)) return; // Segurança se mudou de tela
         lista.innerHTML = `
             <div style='text-align:center; margin-top:40px; opacity:0.8;'>
                 <div class="spinner" style="margin: 0 auto 15px auto;"></div>
@@ -4516,30 +4517,49 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         let barbeiros = [];
         const favoritos = (perfil && perfil.favoritos) ? perfil.favoritos : [];
 
-        snap.forEach(doc => {
-            const b = doc.data();
-            b.uid = doc.id;
-            b.isFavorito = favoritos.includes(b.uid);
+        // --- PROTEÇÃO: Helper seguro para datas ---
+        // Evita o erro "toDate is not a function" se o dado estiver corrompido
+        const getSafeDate = (val) => {
+            if (!val) return null;
+            if (typeof val.toDate === 'function') return val.toDate(); // Timestamp Firebase
+            if (val instanceof Date) return val; // Objeto Date nativo
+            if (val.seconds) return new Date(val.seconds * 1000); // Timestamp serializado
+            return new Date(val); // Tenta string ISO como último recurso
+        };
 
-            if (localizacaoCliente && b.latitude && b.longitude) {
-                b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
-            } else {
-                b.distancia = Infinity;
+        snap.forEach(doc => {
+            try {
+                const b = doc.data();
+                b.uid = doc.id;
+                b.isFavorito = favoritos.includes(b.uid);
+
+                if (localizacaoCliente && b.latitude && b.longitude) {
+                    b.distancia = calcularDistancia(localizacaoCliente.latitude, localizacaoCliente.longitude, b.latitude, b.longitude);
+                } else {
+                    b.distancia = Infinity;
+                }
+                barbeiros.push(b);
+            } catch(err) {
+                console.warn("Erro ao processar dados brutos de um profissional (ignorado):", err);
             }
-            barbeiros.push(b);
         });
 
-        // ORDENAÇÃO
+        // ORDENAÇÃO SEGURA
         barbeiros.sort((a, b) => {
             if (a.isFavorito && !b.isFavorito) return -1;
             if (!a.isFavorito && b.isFavorito) return 1;
 
+            // Verifica disponibilidade
             const aDisp = a.vagaImediata || (a.usaAgendaManual && Object.values(a.agenda || {}).some(v => v === true));
             const bDisp = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
             if (aDisp !== bDisp) return aDisp ? -1 : 1;
 
-            const aBoost = a.boostExpiracao && a.boostExpiracao.toDate() > new Date();
-            const bBoost = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
+            // Usa getSafeDate para evitar erro no sort se boostExpiracao estiver corrompido
+            const dateA = getSafeDate(a.boostExpiracao);
+            const dateB = getSafeDate(b.boostExpiracao);
+            
+            const aBoost = dateA && dateA > new Date();
+            const bBoost = dateB && dateB > new Date();
             if (aBoost !== bBoost) return aBoost ? -1 : 1;
             
             const aPro = isProAtivo(a);
@@ -4552,53 +4572,70 @@ async function carregarBarbeirosPrincipal(containerId, isGuest = false) {
         let htmlBuffer = "";
         
         barbeiros.forEach(b => {
-            const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
-            const estrelas = Math.round(notaMedia / 2); 
-            const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
-            const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
+            // Try-catch individual: Se um card falhar, os outros ainda carregam
+            try { 
+                const notaMedia = (b.numAvaliacoes > 0) ? (b.somaAvaliacoes / b.numAvaliacoes) : 5;
+                const estrelas = Math.round(notaMedia / 2); 
+                const reputacaoEstrelas = '⭐'.repeat(Math.max(0, Math.min(5, estrelas)));
+                const reputacaoTexto = b.numAvaliacoes > 0 ? `${notaMedia.toFixed(1)}/10` : 'Novo';
 
-            let statusHtml = '';
-            const agora = new Date();
-            const estaAusente = b.ausente && b.ausenciaInicio && b.ausenciaFim && agora >= b.ausenciaInicio.toDate() && agora <= b.ausenciaFim.toDate();
-            const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
-            
-            if (estaAusente) {
-                const dataFim = b.ausenciaFim.toDate().toLocaleDateString('pt-BR');
-                statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente (Volta ${dataFim})</div>`;
-            } else if (!isDisponivel) {
-                 statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível</div>`;
-            } else if (b.vagaImediata) {
-                statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata</div>`;
-            } else if (b.usaAgendaManual) {
-                const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
-                statusHtml = horarios.length > 0 ? `<div class="card-status status-manual">📅 Horários Disponíveis</div>` : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
-            }
-            
-            let promocoesHtml = (b.promocoes && b.promocoes.length > 0) ? `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>` : '';
-            const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;" loading="lazy">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
-            const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade}</p>`;
-            const isBoosted = b.boostExpiracao && b.boostExpiracao.toDate() > new Date();
-            const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
-            
-            const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
-            const heartIcon = b.isFavorito ? '❤️' : '♡';
-            
-            const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
-            const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${b.nome}', '${b.uid}')">🔗</button>`;
+                let statusHtml = '';
+                const agora = new Date();
+                
+                // Tratamento seguro de datas para evitar crash
+                const inicioAusencia = getSafeDate(b.ausenciaInicio);
+                const fimAusencia = getSafeDate(b.ausenciaFim);
+                
+                // Verifica se as datas são válidas antes de comparar
+                const estaAusente = b.ausente && inicioAusencia && fimAusencia && agora >= inicioAusencia && agora <= fimAusencia;
+                const isDisponivel = b.vagaImediata || (b.usaAgendaManual && Object.values(b.agenda || {}).some(v => v === true));
+                
+                if (estaAusente) {
+                    const dataFim = fimAusencia.toLocaleDateString('pt-BR');
+                    statusHtml = `<div class="card-status status-indisponivel">🏖️ Ausente (Volta ${dataFim})</div>`;
+                } else if (!isDisponivel) {
+                     statusHtml = `<div class="card-status status-indisponivel">🔴 Indisponível</div>`;
+                } else if (b.vagaImediata) {
+                    statusHtml = `<div class="card-status status-imediato">⚡ Vaga Imediata</div>`;
+                } else if (b.usaAgendaManual) {
+                    const horarios = Object.keys(b.agenda || {}).filter(h => b.agenda[h] === true).sort();
+                    statusHtml = horarios.length > 0 ? `<div class="card-status status-manual">📅 Horários Disponíveis</div>` : `<div class="card-status status-indisponivel">📋 Sem horários hoje</div>`;
+                }
+                
+                let promocoesHtml = (b.promocoes && b.promocoes.length > 0) ? `<div class="promo-info">🎁 ${b.promocoes[0].nome} (${b.promocoes[0].desconto}% OFF)</div>` : '';
+                const logoHtml = b.logo_url ? `<img src="${b.logo_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;" loading="lazy">` : `<div style="width:60px;height:60px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">💈</div>`;
+                const distanciaTexto = b.distancia !== Infinity ? `<p>📍 ~${b.distancia.toFixed(1)} km</p>` : `<p>🏙️ ${b.cidade || 'Não Informado'}</p>`;
+                
+                const boostDate = getSafeDate(b.boostExpiracao);
+                const isBoosted = boostDate && boostDate > new Date();
+                const boostIcon = isBoosted ? '<span class="boost-icon">🚀</span>' : '';
+                
+                const heartColor = b.isFavorito ? 'var(--cor-destaque)' : 'white';
+                const heartIcon = b.isFavorito ? '❤️' : '♡';
+                
+                // Escapa aspas simples no nome para o onclick não quebrar
+                const safeNome = (b.nome || '').replace(/'/g, "\\'");
+                
+                const favoriteBtn = `<button class="card-action-btn card-favorite-btn" style="color:${heartColor}" onclick="event.stopPropagation(); ${isGuest ? "exibirPopup('Faça login', 'Crie uma conta para favoritar!'); mostrar('authView');" : `toggleFavorito('${b.uid}')`}">${heartIcon}</button>`;
+                const shareBtn = `<button class="card-action-btn card-share-btn" onclick="event.stopPropagation(); compartilharPerfil('${safeNome}', '${b.uid}')">🔗</button>`;
 
-            htmlBuffer += `
-              <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
-                  ${boostIcon} ${favoriteBtn} ${shareBtn}
-                  <div class="card-header">
-                      ${logoHtml}
-                      <div class="card-header-info">
-                          <h4 class="professional-name-card">${b.nome}</h4>
-                          ${distanciaTexto}
-                          <p class="card-reputacao-info">${reputacaoEstrelas} <span>(${reputacaoTexto})</span></p> 
+                htmlBuffer += `
+                  <div class="card barbeiro-card ${isBoosted ? 'boosted-card' : ''}" onclick="abrirBarbeiroPerfil('${b.uid}', ${isGuest})">
+                      ${boostIcon} ${favoriteBtn} ${shareBtn}
+                      <div class="card-header">
+                          ${logoHtml}
+                          <div class="card-header-info">
+                              <h4 class="professional-name-card">${b.nome || 'Profissional'}</h4>
+                              ${distanciaTexto}
+                              <p class="card-reputacao-info">${reputacaoEstrelas} <span>(${reputacaoTexto})</span></p> 
+                          </div>
                       </div>
-                  </div>
-                  ${statusHtml} ${promocoesHtml}
-              </div>`;
+                      ${statusHtml} ${promocoesHtml}
+                  </div>`;
+            } catch (errInner) {
+                console.error("Erro ao renderizar card de um barbeiro específico:", errInner);
+                // O loop continua para o próximo barbeiro, não travando a tela
+            }
         });
 
         lista.innerHTML = htmlBuffer;
