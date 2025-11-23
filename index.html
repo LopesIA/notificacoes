@@ -7419,31 +7419,42 @@ async function createMessageDiv(msg, docId) {
     if (docId) {
         messageDiv.dataset.docId = docId;
         if (perfil && perfil.tipo === 'admin' && msg.tipo !== 'bot' && msg.tipo !== 'ai_suporte') {
-            messageDiv.onclick = () => adminDeletarMensagemChat(docId, msg.texto);
-            messageDiv.title = 'Admin: Clique para deletar esta mensagem';
-            messageDiv.classList.add('admin-deletable');
+            // Adiciona funcionalidade de deletar para admin (apenas no corpo da mensagem para não conflitar com o perfil)
+            messageDiv.oncontextmenu = (e) => {
+                e.preventDefault();
+                adminDeletarMensagemChat(docId, msg.texto);
+            };
+            messageDiv.title = 'Admin: Segure ou clique com botão direito para opções';
         }
     }
 
-    let nomeSpanHtml = ''; 
+    let conteudoHtml = ''; 
     let balaoCustomClass = '';
 
     if (msg.tipo === "bot" || msg.tipo === "ai_suporte") {
-        nomeSpanHtml = `<span style="color: red; font-weight:bold;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>`;
+        // Mensagens de Bot
+        conteudoHtml = `
+            <div style="display:flex; align-items:center; margin-bottom:4px;">
+                <span style="color: red; font-weight:bold;">${msg.tipo === "ai_suporte" ? '🤖 Suporte AI' : '🤖 Nova Versão Bot'}</span>
+            </div>
+            <div style="padding-left: 5px;">${msg.texto}</div>
+        `;
     } else {
         try {
             let remetenteData;
-            // Usa dados locais se for o próprio usuário para feedback instantâneo
-            if (isCurrentUser) {
+            // Tenta usar dados locais se for o próprio usuário
+            if (isCurrentUser && perfil) {
                 remetenteData = perfil; 
             } else {
                 // Busca cache ou banco
+                // Nota: Se isso estiver lento, as fotos podem demorar a aparecer. 
+                // O ideal seria ter um cache local de usuários, mas vamos manter o get() por enquanto.
                 const remetenteDoc = await db.collection("usuarios").doc(msg.remetenteUid).get();
                 if (remetenteDoc.exists) remetenteData = remetenteDoc.data();
             }
 
-            if(remetenteData) {
-                // 1. Balão
+            if (remetenteData) {
+                // 1. Balão Personalizado
                 if (remetenteData.balaoSelecionado && BALOES[remetenteData.balaoSelecionado]) {
                     balaoCustomClass = ' ' + BALOES[remetenteData.balaoSelecionado].classe + ' custom-bubble';
                 }
@@ -7468,70 +7479,86 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
-                // 4. FOTO COM PRIORIDADE CORRIGIDA (Ajuste Solicitado)
-                // Prioridade: 1. Foto Pessoal (fotoPerfil) -> 2. Logomarca (logo_url) -> 3. Placeholder
+                // 4. FOTO E MOLDURA (Lógica Corrigida e Clicável)
+                // Prioridade: Foto Perfil > Logo > Placeholder
                 const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/32?text=Foto';
+                
                 let avatarHtml = '';
-
-                // Verifica se tem moldura válida
+                // Verifica moldura
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
                     const m = MOLDURAS[remetenteData.molduraSelecionada];
-                    // Cria a estrutura wrapper clicável
                     avatarHtml = `
-                    <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
+                    <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}">
                         <div class="coroa-topo"></div>
-                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}" style="cursor: pointer;">
+                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}" style="cursor: pointer;" onerror="this.src='https://via.placeholder.com/32'">
                     </div>`;
                 } else {
-                    // Imagem simples sem wrapper complexo (Clicável)
-                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
+                    // Sem moldura
+                    avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; border:1px solid #555; object-fit:cover; cursor: pointer;" onerror="this.src='https://via.placeholder.com/32'">`;
                 }
 
-                const nomeClicavel = `<span class="${classeCSS}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer; text-decoration: underline; font-weight: bold; vertical-align: middle;">${remetenteData.nome}</span>`;
-                
-                nomeSpanHtml = `${avatarHtml} ${nomeClicavel} <span style="vertical-align: middle; margin-left:5px;">${conquistasHtml} ${iconeBase}</span>`;
+                // Monta o cabeçalho clicável
+                // O 'onclick' está no container pai (headerDiv) para garantir o clique
+                conteudoHtml = `
+                    <div class="msg-header" style="display:flex; align-items:center; margin-bottom:4px; cursor: pointer; position: relative; z-index: 10;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">
+                        ${avatarHtml} 
+                        <span class="${classeCSS}" style="text-decoration: underline; font-weight: bold; margin-left: 5px;">${remetenteData.nome}</span>
+                        <span style="margin-left:5px;">${conquistasHtml} ${iconeBase}</span>
+                    </div>
+                    <div style="padding-left: 5px; word-break: break-word; line-height: 1.4;">${msg.texto}</div>
+                `;
 
             } else {
-                 nomeSpanHtml = `<span class="cliente-chat">👻 Usuário Excluído</span>`;
+                 conteudoHtml = `
+                    <div style="margin-bottom:4px;"><span class="cliente-chat">👻 Usuário Excluído</span></div>
+                    <div>${msg.texto}</div>
+                 `;
             }
         } catch (error) {
-             console.log(error);
-             nomeSpanHtml = `<span class="cliente-chat">${remetenteNome}</span>`;
+             console.log("Erro ao renderizar msg:", error);
+             conteudoHtml = `<div><span class="cliente-chat">${remetenteNome}</span>: ${msg.texto}</div>`;
         }
     }
 
     messageDiv.className = classesDiv + balaoCustomClass;
-
-    messageDiv.innerHTML = `
-        <div style="display:flex; align-items:center; margin-bottom:4px;">${nomeSpanHtml}</div>
-        <div style="padding-left: 5px; word-break: break-word; line-height: 1.4;">${msg.texto}</div>
-    `;
+    messageDiv.innerHTML = conteudoHtml;
     
     if (msg.ts && msg.ts.toDate) {
         const timeString = msg.ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         messageDiv.innerHTML += ` <small style="opacity: 0.6; font-size: 0.7em; float:right; margin-top:5px; margin-left: 10px;">${timeString}</small>`;
     }
+    
     return messageDiv;
 }
 
 async function abrirPerfilUsuarioChat(uid) {
     let u = null;
-    // Tenta pegar do cache local se for o próprio usuário
+    
+    // Tenta pegar do cache local (perfil) se for o próprio usuário logado
     if (auth.currentUser && uid === auth.currentUser.uid) {
         u = perfil;
     } else {
-        const doc = await db.collection('usuarios').doc(uid).get();
-        if(!doc.exists) return;
-        u = doc.data();
+        // Busca dados atualizados do usuário
+        exibirAguarde("Carregando perfil...");
+        try {
+            const doc = await db.collection('usuarios').doc(uid).get();
+            if (!doc.exists) {
+                fecharTodosOsModais();
+                return exibirPopup("Erro", "Usuário não encontrado.");
+            }
+            u = doc.data();
+            fecharTodosOsModais(); // Fecha o aguarde
+        } catch (e) {
+            fecharTodosOsModais();
+            return;
+        }
     }
     
     const modalContent = document.querySelector('#modalVisualizarPerfilChat .perfil-visualizacao-content');
-    
-    // Limpa conteúdo antigo
     modalContent.innerHTML = '';
 
-    // --- 1. FOTO E MOLDURA (Topo) ---
-    // CORREÇÃO DE PRIORIDADE: 1. Foto Perfil -> 2. Logo -> 3. Placeholder
+    // --- 1. FOTO E MOLDURA ---
+    // Lógica unificada: Foto Perfil > Logo > Placeholder
     const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120?text=Foto';
     let htmlFoto = '';
 
@@ -7540,10 +7567,10 @@ async function abrirPerfilUsuarioChat(uid) {
         htmlFoto = `
         <div class="avatar-wrapper popup-size ${u.molduraSelecionada}" style="margin: 0 auto 15px auto;">
             <div class="coroa-topo"></div>
-            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}">
+            <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}" onerror="this.src='https://via.placeholder.com/120'">
         </div>`;
     } else {
-        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block; object-fit: cover;">`;
+        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block; object-fit: cover;" onerror="this.src='https://via.placeholder.com/120'">`;
     }
     modalContent.innerHTML += htmlFoto;
 
@@ -7568,7 +7595,7 @@ async function abrirPerfilUsuarioChat(uid) {
         <p id="visuPerfilTipo" style="font-size: 12px; opacity: 0.8; color: ${corTipo}; margin:0;">${tipoTexto}</p>
     `;
 
-    // --- 3. DATA DE MEMBRO (Se existir) ---
+    // --- 3. DATA DE MEMBRO ---
     if (u.criadoEm) {
         let dataMembro;
         if (u.criadoEm.toDate) dataMembro = u.criadoEm.toDate();
@@ -7580,7 +7607,7 @@ async function abrirPerfilUsuarioChat(uid) {
         }
     }
 
-    // --- 4. CONQUISTAS (Inventário) ---
+    // --- 4. CONQUISTAS ---
     const conquistas = u.conquistas || [];
     if (conquistas.length > 0) {
         let htmlConquistas = '<div class="perfil-section-title">🏅 Conquistas Desbloqueadas</div><div class="inventory-scroll-container">';
@@ -7646,7 +7673,6 @@ async function abrirPerfilUsuarioChat(uid) {
     let btnsHtml = '<div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">';
     btnsHtml += `<button onclick="fecharModalAtual()" style="background:#555;">Fechar</button>`;
     
-    // Botões Extras para Admin
     if (perfil && perfil.tipo === 'admin' && uid !== auth.currentUser.uid) {
         if(u.telefone) {
             btnsHtml += `<button onclick="abrirWhatsApp('${u.telefone}')" style="background-color:#25D366;">💬 WhatsApp</button>`;
