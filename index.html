@@ -5372,7 +5372,7 @@ function criarConta() {
     .then(async cred => {
       const uid = cred.user.uid;
 
-      // 4. Objeto de dados INICIAL (Salva com 0 pontos primeiro para garantir)
+      // 4. Objeto de dados INICIAL
       const data = {
         email, nome, tipo: tipoFinal, telefone,
         estado: estadoFinal, cidade: cidadeFinal,
@@ -5381,7 +5381,7 @@ function criarConta() {
         longitude: cadastroCoords ? cadastroCoords.longitude : null,
         listaServicos: [], promocoes: [], portfolio: [], chatAtivo: true, vip: false, lojaLiberada: false,
         rua: rua || null, numero: numero || null, usaAgendaManual: false, agenda: {}, 
-        pontosFidelidade: 0, // Começa com 0, se a indicação for válida, atualiza depois
+        pontosFidelidade: 0, 
         codigosResgatados: [], indicadoPorEmail: indicadorEmail || null, bonusIndicacaoPendente: false,
         fcmTokens: [], cortesRealizados: 0, conquistas: [], clientesAtendidos: 0, somaAvaliacoes: 0, numAvaliacoes: 0,
         ultimoBoostComprado: null, interesse_principal: interesseFinal,
@@ -5391,10 +5391,10 @@ function criarConta() {
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      // 5. Salva no Firestore (GARANTIA DE CRIAÇÃO)
+      // 5. Salva no Firestore
       await db.collection("usuarios").doc(uid).set(data);
 
-      // 6. Processa a Indicação (Separado para não travar a criação)
+      // 6. Processa a Indicação
       if (indicadorEmail && indicadorEmail.toLowerCase() !== email.toLowerCase()) {
           try {
               const snapshotIndicador = await db.collection("usuarios").where("email", "==", indicadorEmail).limit(1).get();
@@ -5414,8 +5414,12 @@ function criarConta() {
 
                   await batch.commit();
                   
-                  // Notifica quem indicou
+                  // Aviso Interno (Sininho)
                   criarAviso(indicadorUid, `🎉 Parabéns! Sua indicação (${nome}) se cadastrou. Você ganhou 50 pontos!`, 'premio');
+                  
+                  // CORREÇÃO AQUI: Notificação Push para o indicador
+                  notifyUser(indicadorUid, "🎉 Pontos de Indicação!", `Você ganhou 50 pontos porque ${nome} criou uma conta com seu email!`, { link: '#fidelidade' });
+
                   console.log("Indicação processada com sucesso.");
                   
                   // Aviso visual para o novo usuário
@@ -9959,8 +9963,8 @@ async function deletarConta() {
       return exibirPopup("E-mail incorreto.", "O e-mail digitado não corresponde à conta logada.");
   }
 
-  // Fecha o modal para mostrar o aguarde
-  fecharModal('modalConfirmarSenhaExclusao');
+  // CORREÇÃO AQUI: Usa a função correta para fechar o modal atual
+  fecharModalAtual(); 
   exibirAguarde("Excluindo sua conta...");
 
   try {
@@ -9969,7 +9973,6 @@ async function deletarConta() {
       await user.reauthenticateWithCredential(credential);
 
       // 2. NOTIFICAR O ADMIN (Antes de apagar os dados)
-      // Salva um aviso especial para o Admin saber quem saiu
       await db.collection('avisos').add({
           tipo: 'conta_excluida_admin',
           usuarioNome: perfil.nome || 'Usuário',
@@ -9993,12 +9996,13 @@ async function deletarConta() {
       
   } catch (error) {
       fecharTodosOsModais();
+      console.error("Erro na exclusão:", error);
+      
       if (error.code === 'auth/wrong-password') {
           exibirPopup("Senha Incorreta", "A senha digitada está incorreta. A exclusão foi cancelada.", 'erro');
-          // Reabre o modal para tentar de novo
-          setTimeout(() => abrirModal('modalConfirmarSenhaExclusao'), 1500);
+          // Reabre o modal para tentar de novo após um breve delay
+          setTimeout(() => abrirModal('modalConfirmarSenhaExclusao'), 1000);
       } else {
-          console.error(error);
           exibirPopup("Erro", "Ocorreu um erro ao excluir sua conta: " + error.message, 'erro');
       }
   }
@@ -10710,7 +10714,6 @@ function abrirModalConquistasBarbeiro() {
     }
 }
 
-// --- ALTERAÇÃO 2: RANKING COM MOLDURAS VISUAIS ---
 async function abrirModalRankingUnificado() {
     abrirModal('modalRankingUnificado');
     const container = document.getElementById('listaRankingUnificado');
@@ -10731,14 +10734,18 @@ async function abrirModalRankingUnificado() {
         // Helper para extrair dados
         const processarUser = (doc, tipoUser) => {
             const d = doc.data();
+            // CORREÇÃO DA PRIORIDADE DA FOTO E FALLBACK PARA ÍCONE DO APP
+            // 1. Foto Perfil > 2. Logo > 3. Ícone do App (/icone.png)
+            const fotoFinal = d.fotoPerfil || d.logo_url || '/icone.png';
+
             return { 
                 uid: doc.id,
                 nome: d.nome, 
-                foto: d.logo_url || d.fotoPerfil || 'https://via.placeholder.com/50',
+                foto: fotoFinal,
                 contagem: tipoUser === 'cliente' ? (d.cortesRealizados || 0) : (d.clientesAtendidos || 0), 
                 tipo: tipoUser,
                 conquistas: d.conquistas || [],
-                moldura: d.molduraSelecionada // Pega a moldura
+                moldura: d.molduraSelecionada
             };
         };
 
@@ -10761,15 +10768,19 @@ async function abrirModalRankingUnificado() {
             
             // Montagem do Avatar (Com ou sem moldura)
             let avatarHtml = '';
+            
+            // Adiciona handler de erro para garantir que se a foto falhar, carregue o icone.png
+            const imgError = `onerror="this.src='/icone.png'"`;
+
             if (item.moldura && MOLDURAS[item.moldura]) {
                 const m = MOLDURAS[item.moldura];
                 avatarHtml = `
                 <div class="avatar-wrapper ranking-size ${item.moldura}">
                     <div class="coroa-topo"></div>
-                    <img src="${item.foto}" class="ranking-foto ${m.classe}">
+                    <img src="${item.foto}" class="ranking-foto ${m.classe}" ${imgError}>
                 </div>`;
             } else {
-                avatarHtml = `<img src="${item.foto}" class="ranking-foto" style="width:45px;height:45px;border-radius:50%;border:2px solid #444;margin-right:10px;">`;
+                avatarHtml = `<img src="${item.foto}" class="ranking-foto" style="width:45px;height:45px;border-radius:50%;border:2px solid #444;margin-right:10px;" ${imgError}>`;
             }
             
             container.innerHTML += `
