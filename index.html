@@ -9756,15 +9756,23 @@ function fecharDenuncia(id) {
 }
 
 // Função Principal: Abre o painel de ações (Dados Ocultos)
+// Função Principal: Abre o painel de ações (Dados Ocultos)
 async function abrirModalGerenciarUsuario(uid) {
     exibirAguarde("Carregando opções...");
     try {
-        // Busca apenas o básico para exibir o cabeçalho
+        // Busca dados atualizados do usuário
         const userDoc = await db.collection('usuarios').doc(uid).get();
         const u = userDoc.data();
 
         const container = document.getElementById('adminGerenciarConteudo');
         
+        // Formatações para exibição
+        const saldoReal = (u.saldo || 0).toFixed(2);
+        const saldoDigital = (u.saldoDigital || 0).toFixed(2);
+        const isVip = isVipAtivo(u);
+        const isPro = isProAtivo(u);
+        const proTier = u.proTier ? u.proTier.toUpperCase() : '';
+
         container.innerHTML = `
             <h4 style="word-break: break-all; text-align: center; margin-bottom: 5px;">${u.nome}</h4>
             <p style="font-size: 11px; opacity: 0.7; text-align: center;">UID: ${uid} | Tipo: ${u.tipo}</p>
@@ -9777,14 +9785,50 @@ async function abrirModalGerenciarUsuario(uid) {
             </div>
 
             <div class="popup-section">
-                <p><strong>💰 Financeiro:</strong></p>
-                <div style="display:flex; gap:5px; margin-bottom:5px;">
-                    <input id="adminModificarSaldo" type="number" placeholder="Saldo Real" style="margin:0;">
-                    <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Ok</button>
+                <h4>💰 Financeiro</h4>
+                
+                <div style="margin-bottom: 10px;">
+                    <p style="margin:0 0 5px 0;">Saldo Real (Serviços): <b style="color: #2ecc71;">R$ ${saldoReal}</b></p>
+                    <div style="display:flex; gap:5px;">
+                        <input id="adminSaldoRealInput" type="number" placeholder="+ Adicionar ou - Remover" style="margin:0;">
+                        <button onclick="adminModificarSaldo('${uid}')" style="width:auto;">Atualizar</button>
+                    </div>
                 </div>
-                <div style="display:flex; gap:5px;">
-                    <input id="adminModificarSaldoDigital" type="number" placeholder="Moedas Digitais" style="margin:0;">
-                    <button onclick="adminModificarSaldoDigital('${uid}')" style="width:auto; background: #0072ff;">Ok</button>
+
+                <div>
+                    <p style="margin:0 0 5px 0;">Saldo Digital (Moedas): <b style="color: #00c6ff;">${saldoDigital}</b></p>
+                    <div style="display:flex; gap:5px;">
+                        <input id="adminSaldoDigitalInput" type="number" placeholder="+ Adicionar ou - Remover" style="margin:0;">
+                        <button onclick="adminModificarSaldoDigital('${uid}')" style="width:auto; background: #0072ff;">Atualizar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="popup-section">
+                <h4>🌟 Status e Assinaturas</h4>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px;">
+                    <span>👑 VIP: <b style="color:${isVip ? '#f1c40f' : '#aaa'}">${isVip ? 'ATIVO' : 'INATIVO'}</b></span>
+                    <button onclick="adminToggleVip('${uid}', ${!isVip})" style="width:auto; font-size:12px; padding: 6px 12px; background:${isVip ? '#c0392b' : '#2ecc71'}">
+                        ${isVip ? 'Remover VIP' : 'Dar VIP'}
+                    </button>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px;">
+                    <div style="margin-bottom: 8px;">
+                        <span>💼 PRO: <b style="color:${isPro ? '#00c6ff' : '#aaa'}">${isPro ? 'ATIVO' : 'INATIVO'}</b> <span style="font-size:11px;">${proTier}</span></span>
+                    </div>
+                    
+                    <div style="display:flex; gap:5px; align-items: center;">
+                        <select id="adminProTierSelect" style="margin:0; padding:8px; flex-grow: 1; font-size:12px;">
+                            <option value="tier1" ${u.proTier === 'tier1' ? 'selected' : ''}>Bronze</option>
+                            <option value="tier2" ${u.proTier === 'tier2' ? 'selected' : ''}>Prata</option>
+                            <option value="tier3" ${u.proTier === 'tier3' ? 'selected' : ''}>Ouro</option>
+                            <option value="tier4" ${u.proTier === 'tier4' ? 'selected' : ''}>Diamante</option>
+                        </select>
+                        <button onclick="adminDefinirPro('${uid}')" style="width:auto; font-size:12px; background:#27ae60;">Definir/Alterar</button>
+                        ${isPro ? `<button onclick="adminTogglePro('${uid}', false)" style="width:auto; font-size:12px; background:#c0392b;">❌</button>` : ''}
+                    </div>
                 </div>
             </div>
 
@@ -10010,33 +10054,6 @@ async function adminSalvarNovoTipo(uid) {
     }
 }
 
-// NOVA FUNÇÃO: ADMIN MODIFICAR SALDO DIGITAL
-async function adminModificarSaldoDigital(uid) {
-  const valor = parseFloat(document.getElementById('adminModificarSaldoDigital').value);
-  if (!isNaN(valor) && valor !== 0) {
-    if (!confirm(`Confirma adicionar/remover R$ ${valor} do saldo DIGITAL deste usuário?`)) return;
-    
-    exibirAguarde("Atualizando saldo digital...");
-    try {
-        await db.collection("usuarios").doc(uid).update({ 
-            saldoDigital: firebase.firestore.FieldValue.increment(valor) 
-        });
-        
-        fecharTodosOsModais();
-        exibirPopup("Sucesso", "Saldo Digital atualizado!");
-        notifyUser(uid, "💎 Atualização de Saldo", `Um administrador alterou seu Saldo Digital em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
-        
-        // Reabre o modal para ver a mudança
-        abrirModalGerenciarUsuario(uid);
-    } catch(e) {
-        fecharTodosOsModais();
-        exibirPopup("Erro ao atualizar: " + e.message);
-    }
-  } else {
-      exibirPopup("Digite um valor válido diferente de zero.");
-  }
-}
-
 function prepararDeletarConta() {
   // Fecha o modal de configurações onde o botão está
   fecharModalAtual();
@@ -10218,14 +10235,128 @@ async function adminMudarTipo(uid) {
   exibirPopup("Tipo alterado!");
   fecharModalAtual();
 }
+// Função para Modificar Saldo Real (Adicionar ou Subtrair)
 async function adminModificarSaldo(uid) {
-  const valor = parseFloat(document.getElementById('adminModificarSaldo').value);
-  if (!isNaN(valor)) {
-    await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
-    notifyUser(uid, "💸 Nova Transação!", `Um admin alterou seu saldo em R$ ${valor.toFixed(2)}.`, { link: '#carteira' });
-    exibirPopup("Saldo alterado!");
-    fecharModalAtual();
-  } else exibirPopup("Valor inválido.");
+  const input = document.getElementById('adminModificarSaldo') || document.getElementById('adminSaldoRealInput'); // Compatibilidade com IDs
+  const valor = parseFloat(input.value);
+  
+  if (isNaN(valor) || valor === 0) return exibirPopup("Digite um valor válido (positivo para adicionar, negativo para remover).");
+
+  const acao = valor > 0 ? "adicionar" : "remover";
+  if(!confirm(`Tem certeza que deseja ${acao} R$ ${Math.abs(valor).toFixed(2)} do Saldo Real?`)) return;
+
+  exibirAguarde("Atualizando saldo...");
+  try {
+      await db.collection("usuarios").doc(uid).update({ saldo: firebase.firestore.FieldValue.increment(valor) });
+      
+      notifyUser(uid, "💸 Atualização de Saldo", `Seu saldo foi ajustado em R$ ${valor.toFixed(2)} pelo suporte.`, { link: '#carteira' });
+      
+      fecharTodosOsModais(); // Fecha aguarde
+      exibirPopup("Sucesso", "Saldo Real atualizado!");
+      abrirModalGerenciarUsuario(uid); // Reabre para ver a mudança
+  } catch(e) {
+      fecharTodosOsModais();
+      exibirPopup("Erro: " + e.message);
+  }
+}
+
+// Função para Modificar Saldo Digital (Adicionar ou Subtrair)
+async function adminModificarSaldoDigital(uid) {
+  const input = document.getElementById('adminModificarSaldoDigital') || document.getElementById('adminSaldoDigitalInput');
+  const valor = parseFloat(input.value);
+  
+  if (isNaN(valor) || valor === 0) return exibirPopup("Digite um valor válido.");
+
+  if(!confirm(`Tem certeza que deseja adicionar/remover ${valor} Moedas Digitais?`)) return;
+    
+  exibirAguarde("Atualizando moedas...");
+  try {
+      await db.collection("usuarios").doc(uid).update({ 
+          saldoDigital: firebase.firestore.FieldValue.increment(valor) 
+      });
+      
+      fecharTodosOsModais();
+      exibirPopup("Sucesso", "Saldo Digital atualizado!");
+      abrirModalGerenciarUsuario(uid);
+  } catch(e) {
+      fecharTodosOsModais();
+      exibirPopup("Erro: " + e.message);
+  }
+}
+
+// Função Wrapper para capturar o Tier selecionado no Select
+function adminDefinirPro(uid) {
+    const select = document.getElementById('adminProTierSelect');
+    if(!select) return;
+    const tier = select.value;
+    adminTogglePro(uid, true, tier);
+}
+
+// Função Principal do PRO (Atualizada para receber o Tier)
+async function adminTogglePro(uid, conceder, tierSelecionado = 'tier1') {
+    exibirAguarde(conceder ? "Concedendo PRO..." : "Removendo PRO...");
+    
+    try {
+        // 1. Busca dados atuais para verificar moldura temporária
+        const userDoc = await db.collection('usuarios').doc(uid).get();
+        if (!userDoc.exists) throw new Error("Usuário não encontrado.");
+        const u = userDoc.data();
+
+        let updates = {};
+        
+        if (conceder) {
+            const expiracao = new Date();
+            expiracao.setDate(expiracao.getDate() + 30); 
+            
+            updates = {
+                proAtivo: true,
+                proTier: tierSelecionado,
+                proExpirationDate: expiracao.toISOString() 
+            };
+        } else {
+            // Lógica de limpeza ao remover PRO
+            if (u.molduraSelecionada) {
+                const moldurasCompradas = u.moldurasAdquiridas || [];
+                // Se a moldura atual não for comprada (é temporária do PRO), remove
+                if (!moldurasCompradas.includes(u.molduraSelecionada)) {
+                    updates.molduraSelecionada = firebase.firestore.FieldValue.delete();
+                }
+            }
+            updates.proAtivo = false;
+            updates.proTier = null;
+            updates.proExpirationDate = null;
+        }
+        
+        // Chama Backend Seguro
+        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                adminUid: auth.currentUser.uid, 
+                targetUid: uid, 
+                updates: updates 
+            })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Erro no backend');
+
+        fecharTodosOsModais(); // Fecha aguarde
+        
+        if (conceder) {
+            notifyUser(uid, "🌟 PRO Ativado!", `Admin ativou seu plano ${tierSelecionado}.`);
+            exibirPopup("Sucesso!", `Plano PRO ${tierSelecionado} definido.`);
+        } else {
+            notifyUser(uid, "ℹ️ PRO Removido", "Seu plano PRO foi cancelado pelo admin.");
+            exibirPopup("Sucesso!", "Plano PRO removido.");
+        }
+        
+        abrirModalGerenciarUsuario(uid); // Atualiza a tela
+
+    } catch (error) {
+        fecharTodosOsModais();
+        exibirPopup("Erro", error.message);
+    }
 }
 
 async function adminToggleVip(uid, conceder) {
@@ -10392,86 +10523,6 @@ async function adminToggleLoja(uid, deveAtivar) {
     } catch (error) {
         fecharTodosOsModais();
         exibirPopup(`Erro ao ${acao} acesso: ${error.message}`);
-    }
-}
-
-// SUBSTITUA A FUNÇÃO 'adminTogglePro' POR ESTA:
-async function adminTogglePro(uid, conceder) {
-    exibirAguarde(conceder ? "Concedendo PRO..." : "Removendo PRO...");
-    
-    try {
-        // 1. Busca dados atuais do usuário para verificar a moldura
-        const userDoc = await db.collection('usuarios').doc(uid).get();
-        if (!userDoc.exists) throw new Error("Usuário não encontrado.");
-        const u = userDoc.data();
-
-        let updates = {};
-        
-        if (conceder) {
-            // SÓ tenta ler o select se estiver CONCEDENDO
-            const selectElement = document.getElementById('adminConcederProTier');
-            if (!selectElement) throw new Error("Erro na interface: Select não encontrado.");
-            
-            const tierSelecionado = selectElement.value;
-            const expiracao = new Date();
-            expiracao.setDate(expiracao.getDate() + 30); 
-            
-            updates = {
-                proAtivo: true,
-                proTier: tierSelecionado,
-                proExpirationDate: expiracao.toISOString() 
-            };
-        } else {
-            // --- LÓGICA DE REMOÇÃO INTELIGENTE DA MOLDURA ---
-            // Se o usuário estiver com uma moldura equipada
-            if (u.molduraSelecionada) {
-                const moldurasCompradas = u.moldurasAdquiridas || [];
-                // Se a moldura atual NÃO estiver na lista de compradas (ou seja, é temporária do PRO)
-                if (!moldurasCompradas.includes(u.molduraSelecionada)) {
-                    console.log("Removendo moldura temporária do usuário...");
-                    updates.molduraSelecionada = firebase.firestore.FieldValue.delete(); // Remove a seleção
-                }
-            }
-            // ------------------------------------------------
-
-            // Remove status PRO
-            updates.proAtivo = false;
-            updates.proTier = null;
-            updates.proExpirationDate = null;
-        }
-        
-        // Envia para o backend
-        const response = await fetch(`${BACKEND_API_URL}/admin/update-user-firestore`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                adminUid: auth.currentUser.uid, 
-                targetUid: uid, 
-                updates: updates 
-            })
-        });
-        
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Erro no backend');
-
-        fecharTodosOsModais(); // Fecha o aguarde
-        
-        // Callback para reabrir o modal
-        const reabrirModalAdmin = () => {
-            abrirModalGerenciarUsuario(uid);
-        };
-
-        if (conceder) {
-            notifyUser(uid, "🌟 PRO Ativado!", `Admin ativou seu plano ${updates.proTier}.`);
-            exibirPopup("Sucesso!", `Plano PRO ${updates.proTier} ativado.`, "sucesso", reabrirModalAdmin);
-        } else {
-            notifyUser(uid, "ℹ️ PRO Removido", "Seu plano PRO foi cancelado pelo admin.");
-            exibirPopup("Sucesso!", "Plano PRO removido (Moldura temporária retirada, se houver).", "sucesso", reabrirModalAdmin);
-        }
-
-    } catch (error) {
-        fecharTodosOsModais();
-        exibirPopup("Erro", error.message);
     }
 }
 
