@@ -7468,22 +7468,22 @@ async function createMessageDiv(msg, docId) {
                     });
                 }
 
-                // 4. FOTO COM PRIORIDADE CORRETA
+                // 4. FOTO COM PRIORIDADE CORRIGIDA (Ajuste Solicitado)
                 // Prioridade: 1. Foto Pessoal (fotoPerfil) -> 2. Logomarca (logo_url) -> 3. Placeholder
-                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/30';
+                const fotoUrl = remetenteData.fotoPerfil || remetenteData.logo_url || 'https://via.placeholder.com/32?text=Foto';
                 let avatarHtml = '';
 
                 // Verifica se tem moldura válida
                 if (remetenteData.molduraSelecionada && MOLDURAS[remetenteData.molduraSelecionada]) {
                     const m = MOLDURAS[remetenteData.molduraSelecionada];
-                    // Cria a estrutura wrapper.
+                    // Cria a estrutura wrapper clicável
                     avatarHtml = `
                     <div class="avatar-wrapper chat-size ${remetenteData.molduraSelecionada}" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')" style="cursor: pointer;">
                         <div class="coroa-topo"></div>
-                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}">
+                        <img src="${fotoUrl}" class="chat-user-photo ${m.classe}" style="cursor: pointer;">
                     </div>`;
                 } else {
-                    // Imagem simples sem wrapper complexo
+                    // Imagem simples sem wrapper complexo (Clicável)
                     avatarHtml = `<img src="${fotoUrl}" class="chat-user-photo" style="width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #555; display:inline-block; object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); abrirPerfilUsuarioChat('${msg.remetenteUid}')">`;
                 }
 
@@ -7532,7 +7532,7 @@ async function abrirPerfilUsuarioChat(uid) {
 
     // --- 1. FOTO E MOLDURA (Topo) ---
     // CORREÇÃO DE PRIORIDADE: 1. Foto Perfil -> 2. Logo -> 3. Placeholder
-    const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120';
+    const fotoUrl = u.fotoPerfil || u.logo_url || 'https://via.placeholder.com/120?text=Foto';
     let htmlFoto = '';
 
     if (u.molduraSelecionada && MOLDURAS[u.molduraSelecionada]) {
@@ -7543,7 +7543,7 @@ async function abrirPerfilUsuarioChat(uid) {
             <img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande ${m.classe}">
         </div>`;
     } else {
-        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block;">`;
+        htmlFoto = `<img id="visuPerfilFoto" src="${fotoUrl}" class="perfil-foto-grande" style="width:120px; height:120px; border-radius:50%; border:3px solid #333; margin: 0 auto 15px auto; display: block; object-fit: cover;">`;
     }
     modalContent.innerHTML += htmlFoto;
 
