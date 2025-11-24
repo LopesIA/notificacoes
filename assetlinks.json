@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "site.novaversao.twa",
+        "sha256_cert_fingerprints": ["90:59:01:AC:58:98:A4:7C:1E:B6:71:F5:6D:81:5B:B9:EA:CA:89:A7:A4:04:72:E2:DD:BB:2D:56:34:4D:CA:54"]
+      }
+    }]
