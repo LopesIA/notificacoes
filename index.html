@@ -2926,6 +2926,7 @@ body {
           <button onclick="abrirModalRankingUnificado()" style="width:45%">📊 Ranking</button>
           <button onclick="carregarListaBlog(); abrirModal('modalBlog')" style="width:45%">📰 Blog</button>
           <button id="btnGerenciarLojaBarbeiro" onclick="abrirGerenciarLoja()" class="hidden" style="width:45%">🏪 Gerenciar Loja</button>
+          <button id="btnMinhasComprasBarbeiro" onclick="abrirMinhasCompras()" style="width:45%">🛍️ Minhas Compras</button>
           <button onclick="abrirModalTurbinar()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque), #ffeb3b);">🚀 Turbinar Perfil (R$ 9,99)</button>
           
           <button id="btnVipPro" onclick="abrirModalVipPro()" style="width:92%; background: linear-gradient(45deg, var(--cor-destaque-azul), #00c6ff);">🌟 Seja PRO (R$ 29,99/mês)</button>
@@ -13019,14 +13020,42 @@ function iniciarVerificacaoDePendencias(uid) {
 async function verificarPendencias(uid) {
     if (!uid || !perfil) return;
 
-    // 1. Pendências do Profissional (Agendamentos)
+    // 1. Pendências do Profissional (Agendamentos e Compras)
     if (perfil.tipo !== 'cliente') {
+        // A. Agendamentos Pendentes
         const agendamentosSnap = await db.collection('agendamentos').where('barbeiroUid', '==', uid).where('status', '==', 'pendente').get();
         const btnAgendamentos = document.getElementById('btnAgendamentosBarbeiro');
         if (!agendamentosSnap.empty) {
             btnAgendamentos?.classList.add('notificacao-pulsante');
         } else {
             btnAgendamentos?.classList.remove('notificacao-pulsante');
+        }
+
+        // B. Confirmação de Entrega (MINHAS COMPRAS - NOVO PARA PROFISSIONAL)
+        const comprasPendentesBarbeiroSnap = await db.collection('loja_pedidos')
+            .where('clienteUid', '==', uid) // Profissional comprando (agindo como cliente)
+            .where('status', 'in', ['enviado', 'entregue_pendente_confirmacao'])
+            .get();
+
+        const btnComprasBarbeiro = document.getElementById('btnMinhasComprasBarbeiro');
+        if (!comprasPendentesBarbeiroSnap.empty) {
+            btnComprasBarbeiro?.classList.add('notificacao-pulsante');
+            
+            // Popup de aviso (Mesma lógica do cliente, executa uma vez por sessão)
+            if (!avisoEntregaRealizadoSessao) {
+                const pedido = comprasPendentesBarbeiroSnap.docs[0].data();
+                const docId = comprasPendentesBarbeiroSnap.docs[0].id;
+                abrirPopupEntregaCaminho({
+                    id: docId,
+                    vendedorUid: pedido.vendedorUid,
+                    valor: pedido.valor,
+                    produtoNome: pedido.produtoNome,
+                    status: pedido.status
+                });
+                avisoEntregaRealizadoSessao = true;
+            }
+        } else {
+            btnComprasBarbeiro?.classList.remove('notificacao-pulsante');
         }
     }
 
@@ -13042,7 +13071,6 @@ async function verificarPendencias(uid) {
         }
 
         // B. Confirmação de Entrega (A Caminho ou Pendente de Confirmação)
-        // Verifica pedidos que estão "enviado" (A caminho) OU "entregue_pendente_confirmacao"
         const comprasPendentesSnap = await db.collection('loja_pedidos')
             .where('clienteUid', '==', uid)
             .where('status', 'in', ['enviado', 'entregue_pendente_confirmacao'])
@@ -13057,7 +13085,6 @@ async function verificarPendencias(uid) {
                 const pedido = comprasPendentesSnap.docs[0].data();
                 const docId = comprasPendentesSnap.docs[0].id;
                 
-                // Chama a nova função específica para esse aviso
                 abrirPopupEntregaCaminho({
                     id: docId,
                     vendedorUid: pedido.vendedorUid,
@@ -13066,7 +13093,7 @@ async function verificarPendencias(uid) {
                     status: pedido.status
                 });
                 
-                avisoEntregaRealizadoSessao = true; // Marca como exibido para não repetir a cada minuto
+                avisoEntregaRealizadoSessao = true; 
             }
         }
     }
