@@ -12758,7 +12758,8 @@ async function abrirEntregasVendedor() {
             // Lógica de Status e Botões do Vendedor
             if (pedido.status === 'pendente') {
                 statusHtml = '<p style="color: #f1c40f;">📦 Status: Aguardando Envio</p>';
-                acaoHtml = `<button onclick="marcarProdutoEnviado('${doc.id}', '${pedido.clienteUid}')" style="background: #3498db;">🚚 Marcar Produto Enviado</button>`;
+                // ALTERAÇÃO AQUI: Adicionada a classe 'notificacao-pulsante' para sinalizar
+                acaoHtml = `<button onclick="marcarProdutoEnviado('${doc.id}', '${pedido.clienteUid}')" class="notificacao-pulsante" style="background: #3498db;">🚚 Marcar Produto Enviado</button>`;
             } 
             else if (pedido.status === 'enviado') {
                 statusHtml = '<p style="color: #3498db;">🚚 Status: A Caminho (Aguardando Cliente)</p>';
