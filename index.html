@@ -31929,10 +31929,17 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
     }
     const dataBusca = formatarDataIso(dataAtiva); 
 
-    // --- SYNC WITH AGENDAMENTO STATE ---
+    // --- SYNC WITH AGENDAMENTO STATE E BUSCA DE SERVIÇO (A CORREÇÃO ESTÁ AQUI!) ---
+    let servicoEscolhido = null;
+    if (typeof agendamentoState !== 'undefined') {
+        agendamentoState.data = dataBusca;
+        if (agendamentoState.servico) servicoEscolhido = agendamentoState.servico;
+    } 
+    if (!servicoEscolhido && window.servicoSelecionado) {
+        servicoEscolhido = window.servicoSelecionado;
+    }
+
     if (modoVisualizacao === 'cliente') {
-         if (typeof agendamentoState === 'undefined') window.agendamentoState = {};
-         agendamentoState.data = dataBusca;
          setTimeout(() => {
             if(typeof verificarEstadoBotaoAgendar === 'function') verificarEstadoBotaoAgendar();
          }, 500);
@@ -31941,7 +31948,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
     // ============================================================================
     // 🛑 REGRA DE OURO UX: O CLIENTE SÓ VÊ HORÁRIOS SE ESCOLHER O SERVIÇO ANTES
     // ============================================================================
-    if (modoVisualizacao === 'cliente' && (!window.agendamentoState || !window.agendamentoState.servico)) {
+    if (modoVisualizacao === 'cliente' && !servicoEscolhido) {
         container.innerHTML = `
             <div style="font-size:10px; color:#aaa; text-align:center; margin-bottom:5px;">Agenda de: <b>${dataBusca}</b></div>
             <div id="avisoSelecioneServico" style="text-align:center; padding:30px; margin: 10px 0; background: linear-gradient(145deg, #1a1a1a, #111); border-radius:12px; border:1px dashed #d4af37; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
@@ -31949,7 +31956,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                 <h3 style="color:#d4af37; margin:0 0 5px 0;">Escolha o Serviço</h3>
                 <p style="font-size:12px; margin:0; color:#aaa;">Selecione um serviço acima para o sistema analisar a agenda e mostrar os horários compatíveis com o tempo necessário.</p>
             </div>`;
-        return; // Pára toda a execução! Não consulta banco nem processa o Dominó.
+        return; // Pára toda a execução até o cliente clicar no serviço!
     }
 
     container.innerHTML = `
@@ -32073,23 +32080,20 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                 let listaCandidatos = new Set();
 
                 // ==========================================================
-                // ⏱️ A MATEMÁTICA DO ESPAÇO (-10 MIN)
+                // ⏱️ A MATEMÁTICA DO ESPAÇO (-10 MINUTOS DE PADDING)
                 // ==========================================================
-                let duracaoEfetivaSlot = 30; // Se não houver regra, o padrão é testar 30min
+                let duracaoEfetivaSlot = 30; 
 
-                // Se for a tela de agendamento (Cliente), calcula o desconto do tempo do serviço selecionado
-                if (modoVisualizacao === 'cliente' && window.agendamentoState && window.agendamentoState.servico) {
-                    const duracaoOriginal = parseInt(window.agendamentoState.servico.duracao) || 30;
+                if (modoVisualizacao === 'cliente' && servicoEscolhido) {
+                    const duracaoOriginal = parseInt(servicoEscolhido.duracao) || 30;
                     duracaoEfetivaSlot = duracaoOriginal - 10; 
-                    
-                    // Trava de segurança (Nunca deixa testar zero ou negativo)
                     if (duracaoEfetivaSlot <= 0) duracaoEfetivaSlot = 10; 
                 }
 
                 // LÓGICA DOMINÓ
                 if (!diaBloqueado) {
                     let cursor = inicioExpediente;
-                    const duracaoSaltoLoop = 30; // Os botões visuais (slots) continuam aparecendo de meia em meia hora (Ex: 09:00, 09:30)
+                    const duracaoSaltoLoop = 30; 
 
                     while (cursor < fimExpediente) {
                         // Pula o almoço
@@ -32116,7 +32120,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                         // Corta se passar do expediente
                         if ((cursor + duracaoSaltoLoop) > fimExpediente) break;
 
-                        // PROCURA O PRÓXIMO BURACO (Obstáculo)
+                        // PROCURA O PRÓXIMO BURACO
                         let proximoObstaculo = fimExpediente;
                         const proximoBloqueio = blocosBloqueados.find(b => b.inicio > cursor);
                         if (proximoBloqueio && proximoBloqueio.inicio < proximoObstaculo) {
@@ -32126,7 +32130,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                              proximoObstaculo = almocoIni;
                         }
 
-                        // 💡 A MÁGICA: O botão só vai aparecer se o "Próximo Obstáculo - Agora" for MAIOR ou IGUAL à "Duração Efetiva"
+                        // 💡 O BOTÃO SÓ APARECE SE O BURACO FOR MAIOR QUE O TEMPO DO SERVIÇO (-10min)
                         if ((proximoObstaculo - cursor) >= duracaoEfetivaSlot) {
                             listaCandidatos.add(minToTime(cursor));
                         }
@@ -32134,7 +32138,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                         cursor += duracaoSaltoLoop;
                     }
                     
-                    // Encaixes Perfeitos (Logo após um término "quebrado" como 09:40)
+                    // Encaixes Perfeitos
                     blocosBloqueados.forEach(b => {
                         const tempoFim = b.fim;
                         if((tempoFim + duracaoSaltoLoop) <= fimExpediente && !ocupados[minToTime(tempoFim)]) {
@@ -32144,7 +32148,6 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                                 if(proxBlk && proxBlk.inicio < proxObs) proxObs = proxBlk.inicio;
                                 if(almocoIni && tempoFim < almocoIni && almocoIni < proxObs) proxObs = almocoIni;
 
-                                // 💡 A MÁGICA TAMBÉM SE APLICA AQUI
                                 if ((proxObs - tempoFim) >= duracaoEfetivaSlot) {
                                     listaCandidatos.add(minToTime(tempoFim));
                                 }
@@ -32204,7 +32207,6 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                     }
 
                     // CARD LIVRE
-                    // Verifica se o slot livre está esmagado dentro de um outro atendimento
                     const horaAvaliadaMin = timeToMin(hora);
                     let estaEsmagado = false;
                     for (let bloco of blocosBloqueados) {
@@ -32215,7 +32217,6 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                     }
                     if (estaEsmagado) return; 
                     
-                    // Trava horário passado (Se for hoje, esconde o que já passou)
                     if (isHoje) {
                         const [h, m] = hora.split(':').map(Number);
                         if (h < horaAtual || (h === horaAtual && m <= minAtual)) return;
@@ -32238,7 +32239,11 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                 });
 
                 if (modoVisualizacao === 'equipe') html += '</div>';
-                if (html === '<div class="grid-horarios-mini"></div>' || html === '') html = '<div style="text-align:center; padding:20px; opacity:0.7;">Sem horários disponíveis para este tempo de serviço.</div>';
+                
+                // Se a lista de horários ficou vazia, mostra o aviso
+                if (html === '<div class="grid-horarios-mini"></div>' || html === '') {
+                    html = '<div style="text-align:center; padding:20px; opacity:0.7;">Sem horários disponíveis para o tempo deste serviço.</div>';
+                }
 
                 container.innerHTML = html;
 
