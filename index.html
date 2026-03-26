@@ -44982,121 +44982,162 @@ async function carregarListaRecorrencias() {
     }
 }
 
-// 3. Abre o Form de Criação (AGORA COM FORMULÁRIO MANUAL EMBUTIDO)
+// 3. Abre o Form de Criação (AGORA BUSCANDO A EQUIPE DIRETO DO BANCO)
 async function abrirNovaRecorrencia() {
-    let modal = document.getElementById('modalNovaRecorrencia');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'modalNovaRecorrencia';
-        modal.className = 'modal';
-        modal.style.zIndex = '100000';
-        document.body.appendChild(modal);
-    }
+    exibirAguarde("Carregando equipe e serviços...");
 
-    const servicosUser = perfil.listaServicos || perfil.servicos || [];
-    let optionsServico = servicosUser.map(s => `<option value="${s.nome}" data-valor="${s.valor}" data-duracao="${s.duracao || 30}">${s.nome} (R$ ${s.valor})</option>`).join('');
-    if(optionsServico === '') optionsServico = '<option value="">Sem serviços cadastrados</option>';
+    try {
+        // 1. Identifica quem é o dono do salão
+        const uidDono = perfil.isProprietario ? auth.currentUser.uid : (perfil.pertenceABarbearia?.uid || auth.currentUser.uid);
 
-    let optionsProf = `<option value="${auth.currentUser.uid}">Eu mesmo (${perfil.nome})</option>`;
-    if (perfil.equipe && perfil.equipe.length > 0) {
-        perfil.equipe.forEach(m => {
-            const mId = typeof m === 'string' ? m : m.uid;
-            const mNome = typeof m === 'string' ? 'Membro' : m.nome;
-            optionsProf += `<option value="${mId}">${mNome}</option>`;
+        // 2. Busca os dados do Dono no banco para pegar a equipe atualizada
+        const donoDoc = await db.collection('usuarios').doc(uidDono).get();
+        const donoData = donoDoc.data() || {};
+
+        let uidsEquipe = new Set();
+        uidsEquipe.add(uidDono); // Sempre inclui o dono na lista
+
+        // 3. Extrai os UIDs da equipe de forma segura (lendo o array do proprietário)
+        if (donoData.equipe && Array.isArray(donoData.equipe)) {
+            donoData.equipe.forEach(m => {
+                const id = typeof m === 'string' ? m : m.uid;
+                if (id) uidsEquipe.add(id);
+            });
+        }
+
+        // 4. Busca os nomes reais no banco para todos da equipe
+        let optionsProf = '';
+        const promessasBusca = Array.from(uidsEquipe).map(uid => db.collection('usuarios').doc(uid).get());
+        const docsProfissionais = await Promise.all(promessasBusca);
+
+        docsProfissionais.forEach(doc => {
+            if (doc.exists) {
+                const u = doc.data();
+                if (u.tipo !== 'cliente') { // Garante que não é um cliente infiltrado
+                    const ehEu = doc.id === auth.currentUser.uid;
+                    const label = ehEu ? `Eu mesmo (${u.nome})` : `💈 ${u.nome}`;
+                    optionsProf += `<option value="${doc.id}" ${ehEu ? 'selected' : ''}>${label}</option>`;
+                }
+            }
         });
-    }
 
-    const amanha = new Date();
-    amanha.setDate(amanha.getDate() + 1);
-    const dataPadrao = amanha.toISOString().split('T')[0];
+        // 5. Pega os serviços (Se for secretária, pega os serviços do dono)
+        let listaServicos = perfil.listaServicos || perfil.servicos || [];
+        if (!perfil.isProprietario && donoData.listaServicos) {
+            listaServicos = donoData.listaServicos;
+        }
 
-    modal.innerHTML = `
-        <div class="modal-content" style="background:#111; max-width: 400px; height: 90vh; overflow-y: auto; border: 1px solid #f39c12;">
-            <h3 style="color:#f39c12; margin-top:0;">✨ Nova Recorrência</h3>
-            <p style="font-size:11px; color:#aaa; margin-bottom:15px;">Configure de quanto em quanto tempo o cliente retorna.</p>
+        let optionsServico = listaServicos.map(s => `<option value="${s.nome}" data-valor="${s.valor}" data-duracao="${s.duracao || 30}">${s.nome} (R$ ${parseFloat(s.valor).toFixed(2)})</option>`).join('');
+        if(optionsServico === '') optionsServico = '<option value="">Sem serviços cadastrados</option>';
 
-            <div style="background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #333; margin-bottom:15px;">
-                <label style="font-size:11px; color:#f39c12; font-weight:bold;">1. BUSCAR CLIENTE (Histórico do Salão)</label>
-                <input type="text" id="recBuscaCliente" onkeyup="buscarClienteRecorrencia(this.value)" placeholder="Digite o nome..." style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:10px; border-radius:6px; margin-top:5px; margin-bottom:5px;">
-                
-                <div id="recResultadoBusca" style="display:none; background:#222; border:1px solid #444; border-radius:6px; max-height:120px; overflow-y:auto; margin-bottom:10px;"></div>
-                
-                <div id="recClienteManual" style="display:none; background:rgba(230, 126, 34, 0.1); border:1px solid #e67e22; padding:10px; border-radius:6px; margin-top:5px;">
-                    <p style="font-size:11px; color:#e67e22; margin:0 0 10px 0; font-weight:bold;">Cliente não encontrado. Preencha os campos abaixo manualmente:</p>
-                    <label style="font-size:10px; color:#aaa;">Nome do Cliente:</label>
-                    <input type="text" id="recNomeManual" style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:8px; border-radius:6px; margin-bottom:10px; box-sizing:border-box;">
+        // 6. Monta o Modal
+        let modal = document.getElementById('modalNovaRecorrencia');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modalNovaRecorrencia';
+            modal.className = 'modal';
+            modal.style.zIndex = '100000';
+            document.body.appendChild(modal);
+        }
+
+        const amanha = new Date();
+        amanha.setDate(amanha.getDate() + 1);
+        const dataPadrao = amanha.toISOString().split('T')[0];
+
+        modal.innerHTML = `
+            <div class="modal-content" style="background:#111; max-width: 400px; height: 90vh; overflow-y: auto; border: 1px solid #f39c12;">
+                <h3 style="color:#f39c12; margin-top:0;">✨ Nova Recorrência</h3>
+                <p style="font-size:11px; color:#aaa; margin-bottom:15px;">Configure de quanto em quanto tempo o cliente retorna.</p>
+
+                <div style="background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #333; margin-bottom:15px;">
+                    <label style="font-size:11px; color:#f39c12; font-weight:bold;">1. BUSCAR CLIENTE (Histórico do Salão)</label>
+                    <input type="text" id="recBuscaCliente" onkeyup="buscarClienteRecorrencia(this.value)" placeholder="Digite o nome..." style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:10px; border-radius:6px; margin-top:5px; margin-bottom:5px;">
                     
-                    <label style="font-size:10px; color:#aaa;">Telefone (WhatsApp):</label>
-                    <input type="tel" id="recTelManual" placeholder="(DD) 99999-9999" style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:8px; border-radius:6px; box-sizing:border-box;">
+                    <div id="recResultadoBusca" style="display:none; background:#222; border:1px solid #444; border-radius:6px; max-height:120px; overflow-y:auto; margin-bottom:10px;"></div>
                     
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <button onclick="cancelarClienteManualRec()" style="flex:1; background:#555; border:none; padding:8px; border-radius:6px; color:#fff; font-size:11px;">Voltar à Busca</button>
-                        <button onclick="confirmarClienteManualRec()" style="flex:1; background:#e67e22; border:none; padding:8px; border-radius:6px; color:#fff; font-size:11px; font-weight:bold;">Usar este cliente</button>
-                    </div>
-                </div>
-                <div id="recClienteSelecionado" style="display:none; background:rgba(46, 204, 113, 0.1); border:1px solid #2ecc71; padding:10px; border-radius:6px; margin-top:5px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong id="recNomeSel" style="color:#2ecc71; font-size:14px;"></strong><br>
-                            <span id="recTelSel" style="font-size:11px; color:#aaa;"></span>
+                    <div id="recClienteManual" style="display:none; background:rgba(230, 126, 34, 0.1); border:1px solid #e67e22; padding:10px; border-radius:6px; margin-top:5px;">
+                        <p style="font-size:11px; color:#e67e22; margin:0 0 10px 0; font-weight:bold;">Cliente não encontrado. Preencha os campos abaixo manualmente:</p>
+                        <label style="font-size:10px; color:#aaa;">Nome do Cliente:</label>
+                        <input type="text" id="recNomeManual" style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:8px; border-radius:6px; margin-bottom:10px; box-sizing:border-box;">
+                        
+                        <label style="font-size:10px; color:#aaa;">Telefone (WhatsApp):</label>
+                        <input type="tel" id="recTelManual" placeholder="(DD) 99999-9999" style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:8px; border-radius:6px; box-sizing:border-box;">
+                        
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button onclick="cancelarClienteManualRec()" style="flex:1; background:#555; border:none; padding:8px; border-radius:6px; color:#fff; font-size:11px;">Voltar à Busca</button>
+                            <button onclick="confirmarClienteManualRec()" style="flex:1; background:#e67e22; border:none; padding:8px; border-radius:6px; color:#fff; font-size:11px; font-weight:bold;">Usar este cliente</button>
                         </div>
-                        <button onclick="limparClienteRecorrencia()" style="background:none; border:none; color:#e74c3c; font-size:14px;">✕</button>
+                    </div>
+                    <div id="recClienteSelecionado" style="display:none; background:rgba(46, 204, 113, 0.1); border:1px solid #2ecc71; padding:10px; border-radius:6px; margin-top:5px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong id="recNomeSel" style="color:#2ecc71; font-size:14px;"></strong><br>
+                                <span id="recTelSel" style="font-size:11px; color:#aaa;"></span>
+                            </div>
+                            <button onclick="limparClienteRecorrencia()" style="background:none; border:none; color:#e74c3c; font-size:14px;">✕</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="recClienteUidHidden">
+                    <input type="hidden" id="recClienteTelefoneHidden">
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:11px; color:#aaa;">2. PROFISSIONAL</label>
+                    <select id="recProfissional" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px;">
+                        ${optionsProf}
+                    </select>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:11px; color:#aaa;">3. SERVIÇO</label>
+                    <select id="recServico" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px;">
+                        ${optionsServico}
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <div>
+                        <label style="font-size:11px; color:#aaa;">4. DATA DO 1º CORTE</label>
+                        <input type="date" id="recDataInicio" value="${dataPadrao}" onchange="preverDatasRecorrencia()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:11px; color:#aaa;">HORÁRIO FIXO</label>
+                        <input type="time" id="recHorario" value="10:00" onchange="preverDatasRecorrencia()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px; box-sizing:border-box;">
                     </div>
                 </div>
-                <input type="hidden" id="recClienteUidHidden">
-                <input type="hidden" id="recClienteTelefoneHidden">
-            </div>
 
-            <div style="margin-bottom:10px;">
-                <label style="font-size:11px; color:#aaa;">2. PROFISSIONAL</label>
-                <select id="recProfissional" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px;">
-                    ${optionsProf}
-                </select>
-            </div>
-
-            <div style="margin-bottom:10px;">
-                <label style="font-size:11px; color:#aaa;">3. SERVIÇO</label>
-                <select id="recServico" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px;">
-                    ${optionsServico}
-                </select>
-            </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                <div>
-                    <label style="font-size:11px; color:#aaa;">4. DATA DO 1º CORTE</label>
-                    <input type="date" id="recDataInicio" value="${dataPadrao}" onchange="preverDatasRecorrencia()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px; box-sizing:border-box;">
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:11px; color:#f39c12; font-weight:bold;">5. REPETIR A CADA (DIAS)</label>
+                    <select id="recIntervalo" onchange="preverDatasRecorrencia()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #f39c12; border-radius:6px; margin-top:3px;">
+                        <option value="7">7 dias (Semanal)</option>
+                        <option value="15" selected>15 dias (Quinzenal)</option>
+                        <option value="21">21 dias (A cada 3 semanas)</option>
+                        <option value="30">30 dias (Mensal)</option>
+                        <option value="45">45 dias</option>
+                    </select>
                 </div>
-                <div>
-                    <label style="font-size:11px; color:#aaa;">HORÁRIO FIXO</label>
-                    <input type="time" id="recHorario" value="10:00" onchange="preverDatasRecorrencia()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:6px; margin-top:3px; box-sizing:border-box;">
+
+                <div id="recPrevisaoContainer" style="background:#000; border:1px dashed #555; padding:10px; border-radius:6px; margin-bottom:20px; display:none;">
+                    <div style="font-size:10px; color:#aaa; margin-bottom:5px; text-transform:uppercase;">Previsão (Próximos 60 dias):</div>
+                    <div id="recPrevisaoLista" style="font-size:12px; color:#2ecc71; line-height:1.6;"></div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button onclick="document.getElementById('modalNovaRecorrencia').classList.remove('show'); setTimeout(()=>document.getElementById('modalNovaRecorrencia').style.display='none',300);" style="flex:1; background:#333; color:#fff;">Voltar</button>
+                    <button onclick="salvarNovaRecorrencia()" style="flex:2; background:linear-gradient(45deg, #f39c12, #d35400); color:#fff; font-weight:bold; border:none; box-shadow:0 4px 10px rgba(243,156,18,0.4);">🚀 SALVAR & AGENDAR</button>
                 </div>
             </div>
+        `;
 
-            <div style="margin-bottom:15px;">
-                <label style="font-size:11px; color:#f39c12; font-weight:bold;">5. REPETIR A CADA (DIAS)</label>
-                <select id="recIntervalo" onchange="preverDatasRecorrencia()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #f39c12; border-radius:6px; margin-top:3px;">
-                    <option value="7">7 dias (Semanal)</option>
-                    <option value="15" selected>15 dias (Quinzenal)</option>
-                    <option value="21">21 dias (A cada 3 semanas)</option>
-                    <option value="30">30 dias (Mensal)</option>
-                    <option value="45">45 dias</option>
-                </select>
-            </div>
+        fecharTodosOsModais(); // Fecha o "Aguarde..."
+        abrirModal('modalNovaRecorrencia');
+        preverDatasRecorrencia();
 
-            <div id="recPrevisaoContainer" style="background:#000; border:1px dashed #555; padding:10px; border-radius:6px; margin-bottom:20px; display:none;">
-                <div style="font-size:10px; color:#aaa; margin-bottom:5px; text-transform:uppercase;">Previsão (Próximos 60 dias):</div>
-                <div id="recPrevisaoLista" style="font-size:12px; color:#2ecc71; line-height:1.6;"></div>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button onclick="document.getElementById('modalNovaRecorrencia').classList.remove('show'); setTimeout(()=>document.getElementById('modalNovaRecorrencia').style.display='none',300);" style="flex:1; background:#333; color:#fff;">Voltar</button>
-                <button onclick="salvarNovaRecorrencia()" style="flex:2; background:linear-gradient(45deg, #f39c12, #d35400); color:#fff; font-weight:bold; border:none; box-shadow:0 4px 10px rgba(243,156,18,0.4);">🚀 SALVAR & AGENDAR</button>
-            </div>
-        </div>
-    `;
-
-    abrirModal('modalNovaRecorrencia');
-    preverDatasRecorrencia(); 
+    } catch (e) {
+        fecharTodosOsModais();
+        exibirPopup("Erro ao carregar dados", e.message);
+        console.error(e);
+    }
 }
 
 // 4. Inteligência de Busca (Com Fallback para o Form Manual)
