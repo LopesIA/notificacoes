@@ -44894,9 +44894,8 @@ function abrirOnboardingEtapa4(isModoLembrete = false) {
     
     abrirModal('modalOnboardingLogomarca');
 }
-
 // =========================================================================
-// 🔁 MOTOR DE RECORRÊNCIAS (FRONTEND)
+// 🔁 MOTOR DE RECORRÊNCIAS (FRONTEND) - V2 (COM MANUAL E EXCLUSÃO EM CASCATA)
 // =========================================================================
 
 // 1. Abre a Central (Listagem)
@@ -44939,7 +44938,6 @@ async function carregarListaRecorrencias() {
     try {
         const uidDono = perfil.isProprietario ? auth.currentUser.uid : (perfil.pertenceABarbearia?.uid || auth.currentUser.uid);
         
-        // Busca configurações raiz
         const snap = await db.collection('config_recorrencias').where('donoUid', '==', uidDono).get();
         
         if (snap.empty) {
@@ -44984,7 +44982,7 @@ async function carregarListaRecorrencias() {
     }
 }
 
-// 3. Abre o Form de Criação
+// 3. Abre o Form de Criação (AGORA COM FORMULÁRIO MANUAL EMBUTIDO)
 async function abrirNovaRecorrencia() {
     let modal = document.getElementById('modalNovaRecorrencia');
     if (!modal) {
@@ -44995,12 +44993,10 @@ async function abrirNovaRecorrencia() {
         document.body.appendChild(modal);
     }
 
-    // Pega serviços do dono para o select
     const servicosUser = perfil.listaServicos || perfil.servicos || [];
     let optionsServico = servicosUser.map(s => `<option value="${s.nome}" data-valor="${s.valor}" data-duracao="${s.duracao || 30}">${s.nome} (R$ ${s.valor})</option>`).join('');
     if(optionsServico === '') optionsServico = '<option value="">Sem serviços cadastrados</option>';
 
-    // Pega profissionais (Dono + Equipe)
     let optionsProf = `<option value="${auth.currentUser.uid}">Eu mesmo (${perfil.nome})</option>`;
     if (perfil.equipe && perfil.equipe.length > 0) {
         perfil.equipe.forEach(m => {
@@ -45010,7 +45006,6 @@ async function abrirNovaRecorrencia() {
         });
     }
 
-    // Data de amanhã como padrão para o primeiro agendamento
     const amanha = new Date();
     amanha.setDate(amanha.getDate() + 1);
     const dataPadrao = amanha.toISOString().split('T')[0];
@@ -45026,6 +45021,19 @@ async function abrirNovaRecorrencia() {
                 
                 <div id="recResultadoBusca" style="display:none; background:#222; border:1px solid #444; border-radius:6px; max-height:120px; overflow-y:auto; margin-bottom:10px;"></div>
                 
+                <div id="recClienteManual" style="display:none; background:rgba(230, 126, 34, 0.1); border:1px solid #e67e22; padding:10px; border-radius:6px; margin-top:5px;">
+                    <p style="font-size:11px; color:#e67e22; margin:0 0 10px 0; font-weight:bold;">Cliente não encontrado. Preencha os campos abaixo manualmente:</p>
+                    <label style="font-size:10px; color:#aaa;">Nome do Cliente:</label>
+                    <input type="text" id="recNomeManual" style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:8px; border-radius:6px; margin-bottom:10px; box-sizing:border-box;">
+                    
+                    <label style="font-size:10px; color:#aaa;">Telefone (WhatsApp):</label>
+                    <input type="tel" id="recTelManual" placeholder="(DD) 99999-9999" style="width:100%; background:#222; color:#fff; border:1px solid #444; padding:8px; border-radius:6px; box-sizing:border-box;">
+                    
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button onclick="cancelarClienteManualRec()" style="flex:1; background:#555; border:none; padding:8px; border-radius:6px; color:#fff; font-size:11px;">Voltar à Busca</button>
+                        <button onclick="confirmarClienteManualRec()" style="flex:1; background:#e67e22; border:none; padding:8px; border-radius:6px; color:#fff; font-size:11px; font-weight:bold;">Usar este cliente</button>
+                    </div>
+                </div>
                 <div id="recClienteSelecionado" style="display:none; background:rgba(46, 204, 113, 0.1); border:1px solid #2ecc71; padding:10px; border-radius:6px; margin-top:5px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
@@ -45088,10 +45096,10 @@ async function abrirNovaRecorrencia() {
     `;
 
     abrirModal('modalNovaRecorrencia');
-    preverDatasRecorrencia(); // Roda a primeira previsão com os dados padrão
+    preverDatasRecorrencia(); 
 }
 
-// 4. Inteligência de Busca (Procura no histórico de Agendamentos do Salão)
+// 4. Inteligência de Busca (Com Fallback para o Form Manual)
 let timeoutBuscaRec = null;
 async function buscarClienteRecorrencia(texto) {
     const lista = document.getElementById('recResultadoBusca');
@@ -45109,7 +45117,6 @@ async function buscarClienteRecorrencia(texto) {
         const uidDono = perfil.isProprietario ? auth.currentUser.uid : (perfil.pertenceABarbearia?.uid || auth.currentUser.uid);
 
         try {
-            // Busca os últimos 100 agendamentos do salão e filtra na memória (Rápido e barato pro Firestore)
             const snap = await db.collection('agendamentos')
                 .where('donoUid', '==', uidDono)
                 .orderBy('ts', 'desc')
@@ -45121,7 +45128,6 @@ async function buscarClienteRecorrencia(texto) {
             snap.forEach(doc => {
                 const ag = doc.data();
                 if (ag.clienteNome && ag.clienteNome.toLowerCase().includes(termo)) {
-                    // Usa o nome ou telefone como chave para não repetir
                     const chave = ag.clienteUid || ag.clienteTelefone || ag.clienteNome;
                     if (!clientesUnicos.has(chave)) {
                         clientesUnicos.set(chave, {
@@ -45133,8 +45139,13 @@ async function buscarClienteRecorrencia(texto) {
                 }
             });
 
+            // 👇 LÓGICA ATUALIZADA: CLIENTE NÃO ENCONTRADO
             if (clientesUnicos.size === 0) {
-                lista.innerHTML = '<div style="padding:10px; font-size:11px; color:#e74c3c; text-align:center;">Nenhum cliente encontrado.</div>';
+                lista.innerHTML = `
+                    <div style="padding:15px; font-size:12px; color:#e74c3c; text-align:center;">
+                        Nenhum cliente encontrado com esse nome.<br>
+                        <button onclick="ativarClienteManualRec('${texto}')" style="margin-top:10px; background:#e74c3c; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">Preencher Manualmente</button>
+                    </div>`;
                 return;
             }
 
@@ -45157,6 +45168,44 @@ async function buscarClienteRecorrencia(texto) {
             lista.innerHTML = '<div style="padding:10px; font-size:11px; color:red; text-align:center;">Erro na busca.</div>';
         }
     }, 400);
+}
+
+// Helpers do Cliente Manual / Busca
+function ativarClienteManualRec(nomeDigitado) {
+    document.getElementById('recResultadoBusca').style.display = 'none';
+    document.getElementById('recBuscaCliente').style.display = 'none';
+    
+    const manualDiv = document.getElementById('recClienteManual');
+    manualDiv.style.display = 'block';
+    
+    // Aproveita o que o barbeiro já tinha digitado na busca
+    document.getElementById('recNomeManual').value = nomeDigitado;
+}
+
+function cancelarClienteManualRec() {
+    document.getElementById('recClienteManual').style.display = 'none';
+    document.getElementById('recBuscaCliente').style.display = 'block';
+    document.getElementById('recBuscaCliente').value = '';
+    document.getElementById('recBuscaCliente').focus();
+}
+
+function confirmarClienteManualRec() {
+    const nome = document.getElementById('recNomeManual').value.trim();
+    const tel = document.getElementById('recTelManual').value.trim();
+    
+    if (!nome) return alert("Por favor, digite o nome do cliente.");
+    if (!tel) return alert("Por favor, informe o telefone (importante para enviar o lembrete).");
+    
+    document.getElementById('recClienteManual').style.display = 'none';
+    
+    // Reutiliza a exibição visual de cliente selecionado
+    document.getElementById('recClienteSelecionado').style.display = 'block';
+    document.getElementById('recNomeSel').textContent = nome + ' (Novo)';
+    document.getElementById('recTelSel').textContent = tel;
+    
+    // Cria um ID falso (Manual) e salva o telefone
+    document.getElementById('recClienteUidHidden').value = 'manual_' + Date.now();
+    document.getElementById('recClienteTelefoneHidden').value = tel;
 }
 
 function selecionarClienteRecorrencia(uid, nome, telefone) {
@@ -45199,9 +45248,8 @@ function preverDatasRecorrencia() {
 
     container.style.display = 'block';
     
-    // Calcula datas (Hoje + 60 dias)
     const datasGeradas = [];
-    const dataAtual = new Date(dataInicioStr + 'T12:00:00'); // Evita pular dia no fuso
+    const dataAtual = new Date(dataInicioStr + 'T12:00:00'); 
     const limiteFuturo = new Date();
     limiteFuturo.setDate(limiteFuturo.getDate() + 60);
 
@@ -45212,20 +45260,18 @@ function preverDatasRecorrencia() {
         const dia = dataAtual.getDate().toString().padStart(2, '0');
         const mes = (dataAtual.getMonth() + 1).toString().padStart(2, '0');
         html += `<div>${contador}º Corte: <b>${dia}/${mes}</b> às ${horarioStr}</div>`;
-        
-        // Adiciona o intervalo
         dataAtual.setDate(dataAtual.getDate() + intervaloDias);
         contador++;
     }
 
-    html += `<div style="color:#f39c12; font-size:10px; margin-top:5px; border-top:1px solid #333; padding-top:5px;">O sistema continuará reabastecendo o calendário automaticamente.</div>`;
+    html += `<div style="color:#f39c12; font-size:10px; margin-top:5px; border-top:1px solid #333; padding-top:5px;">O sistema continuará reabastecendo a agenda automaticamente.</div>`;
     lista.innerHTML = html;
 }
 
-// 6. O GRANDE FINAL: Salva a configuração e GERA OS AGENDAMENTOS REAIS
+// 6. O GRANDE FINAL: Salva a configuração e GERA OS AGENDAMENTOS
 async function salvarNovaRecorrencia() {
     const clienteUid = document.getElementById('recClienteUidHidden').value;
-    const clienteNome = document.getElementById('recNomeSel').textContent;
+    let clienteNome = document.getElementById('recNomeSel').textContent.replace(' (Novo)', '');
     const clienteTelefone = document.getElementById('recClienteTelefoneHidden').value;
     
     const selectProf = document.getElementById('recProfissional');
@@ -45269,7 +45315,7 @@ async function salvarNovaRecorrencia() {
             ts: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // B. GERA OS FILHOS (Agendamentos reais para os próximos 60 dias)
+        // B. GERA OS FILHOS (Agendamentos reais)
         const dataAtualIteracao = new Date(dataInicioStr + 'T12:00:00');
         const limiteFuturo = new Date();
         limiteFuturo.setDate(limiteFuturo.getDate() + 60);
@@ -45284,12 +45330,12 @@ async function salvarNovaRecorrencia() {
 
             const novoAgRef = db.collection('agendamentos').doc();
             batch.set(novoAgRef, {
-                recorrenciaId: configRef.id, // Marca que é filho desta recorrência
+                recorrenciaId: configRef.id, // Marca o ID da mãe
                 barbeiroUid: barbeiroUid,
                 barbeiroNome: barbeiroNome,
                 donoUid: uidDono,
                 clienteUid: clienteUid,
-                clienteNome: clienteNome + ' 🔁', // Símbolo para o barbeiro bater o olho e saber
+                clienteNome: clienteNome + ' 🔁',
                 clienteTelefone: clienteTelefone,
                 servico: servicoNome,
                 valor: valorServico,
@@ -45304,23 +45350,19 @@ async function salvarNovaRecorrencia() {
                 clienteNotificado: false
             });
 
-            // Pula para a próxima data
             dataAtualIteracao.setDate(dataAtualIteracao.getDate() + intervaloDias);
         }
 
-        // C. ATUALIZA A CONFIGURAÇÃO MÃE COM A ÚLTIMA DATA GERADA
-        // O Cron Job (backend) no futuro vai ler isso para saber de onde continuar!
+        // C. ATUALIZA A MÃE COM A ÚLTIMA DATA GERADA
         batch.update(configRef, { 
             ultimaDataGerada: ultimoAgendamentoGeradoStr 
         });
 
-        // EXECUTA TUDO NO BANCO DE UMA VEZ
         await batch.commit();
 
         fecharTodosOsModais();
         exibirPopup("Sucesso Supremo! 👑", "Recorrência ativada e agenda dos próximos 2 meses já foi preenchida!");
         
-        // Remove modal de criação e reabre listagem
         const m = document.getElementById('modalNovaRecorrencia');
         if(m) m.remove();
         abrirCentralRecorrencias();
@@ -45331,7 +45373,7 @@ async function salvarNovaRecorrencia() {
     }
 }
 
-// 7. Funções de Gestão (Pausar e Deletar)
+// 7. Funções de Gestão (Pausar e Deletar COM CASCATA)
 async function toggleStatusRecorrencia(id, statusAtual) {
     exibirAguarde("Alterando...");
     try {
@@ -45339,7 +45381,7 @@ async function toggleStatusRecorrencia(id, statusAtual) {
             ativa: !statusAtual
         });
         fecharTodosOsModais();
-        carregarListaRecorrencias(); // Recarrega visualmente
+        carregarListaRecorrencias(); 
     } catch(e) {
         fecharTodosOsModais();
         alert("Erro: " + e.message);
@@ -45347,19 +45389,40 @@ async function toggleStatusRecorrencia(id, statusAtual) {
 }
 
 async function deletarRecorrencia(id) {
-    if(!confirm("⚠️ APAGAR RECORRÊNCIA?\n\nOs agendamentos futuros gerados por ela NÃO serão apagados automaticamente da agenda. Deseja remover o gerador de fato?")) return;
+    if(!confirm("⚠️ APAGAR RECORRÊNCIA?\n\nOs agendamentos futuros gerados por ela também serão APAGADOS da agenda.\n\nDeseja continuar?")) return;
     
-    exibirAguarde("Apagando...");
+    exibirAguarde("Apagando recorrência e limpando agenda...");
     try {
-        await db.collection('config_recorrencias').doc(id).delete();
+        const batch = db.batch();
+
+        // 1. Apagar a Mãe (A Configuração)
+        const configRef = db.collection('config_recorrencias').doc(id);
+        batch.delete(configRef);
+
+        // 2. Caçar e Apagar os Filhos (Os agendamentos gerados por ela)
+        const agendamentosFilhosSnap = await db.collection('agendamentos')
+            .where('recorrenciaId', '==', id)
+            .get();
+        
+        agendamentosFilhosSnap.forEach(doc => {
+            const ag = doc.data();
+            // Segurança: Só apaga se ainda não foi concluído/cancelado
+            if (ag.status !== 'concluido' && ag.status !== 'cancelado') {
+                 batch.delete(doc.ref);
+            }
+        });
+
+        // 3. Executa a limpeza dupla
+        await batch.commit();
+
         fecharTodosOsModais();
+        exibirPopup("Sucesso", "Recorrência e agendamentos futuros foram removidos da sua agenda!");
         carregarListaRecorrencias();
     } catch(e) {
         fecharTodosOsModais();
         alert("Erro: " + e.message);
     }
 }
-
 async function salvarOnboardingLogo() {
     const fileInput = document.getElementById("onboardingLogomarcaFile");
     const progressBar = document.getElementById('onboardingLogoUploadProgress');
