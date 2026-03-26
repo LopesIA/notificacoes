@@ -19259,75 +19259,79 @@ function selecionarServico(element, servico) {
     element.classList.add('selected');
     element.style.border = '2px solid #2ecc71'; // Borda verde de seleção
     
-    // 2. Reseta estado (Seu código original)
+    // 2. Reseta estado (com adição crucial para não bugar a troca de serviço)
     if (typeof agendamentoState !== 'undefined') {
         agendamentoState.servico = servico;
         agendamentoState.isPeloPlano = false; 
+        agendamentoState.horario = null; // 🚨 LIMPA HORÁRIO: Se ele trocar de serviço, força a reescolher a hora
     }
     
-    // 3. VERIFICAÇÃO DE PLANO (Sua lógica original)
+    // 3. VERIFICAÇÃO DE PLANO (Mantida intocável)
     const btnAgendar = document.getElementById('btnConfirmarAgendamento');
-    // Tenta pegar o UID do estado ou da global
     const barbeiroUid = (typeof agendamentoState !== 'undefined' && agendamentoState.barbeiroUid) ? agendamentoState.barbeiroUid : window.uidBarbeiroAtual;
 
-    // Busca nas assinaturas ativas do cliente
     const planoAtivo = (perfil.assinaturasAtivas || []).find(a => {
-        // Converte data para verificar validade
         let dataValidade = new Date();
         if(a.validade && a.validade.seconds) dataValidade = new Date(a.validade.seconds * 1000);
         else if(a.validade && a.validade.toDate) dataValidade = a.validade.toDate();
 
-        // O serviço tem que estar no plano E não pode estar vencido
         return a.profissionalUid === barbeiroUid && 
                a.status === 'ativa' && 
                a.servicosInclusos.includes(servico.nome) && 
                dataValidade > new Date(); 
     });
 
-    // 4. SALVA NA VARIÁVEL GLOBAL (AQUI ESTÁ O TRUQUE)
-    // Criamos um objeto com tudo que o botão precisa saber
+    // 4. SALVA NA VARIÁVEL GLOBAL
     window.servicoSelecionado = {
         nome: servico.nome,
         valorOriginal: parseFloat(servico.valor),
-        valor: parseFloat(servico.valor), // Valor padrão
+        valor: parseFloat(servico.valor), 
         isPeloPlano: false,
         planoId: null,
         nomePlano: null
     };
 
     if (planoAtivo) {
-        // MODO PLANO ATIVADO
         btnAgendar.innerHTML = `💎 AGENDAR PELO PLANO (${planoAtivo.nomePlano})`;
         btnAgendar.className = 'btn-agendar-plano';
-        btnAgendar.style.background = 'linear-gradient(45deg, #f1c40f, #d35400)'; // Dourado
+        btnAgendar.style.background = 'linear-gradient(45deg, #f1c40f, #d35400)'; 
         btnAgendar.style.color = '#fff';
         
-        // Atualiza flags no estado antigo
         if (typeof agendamentoState !== 'undefined') {
             agendamentoState.isPeloPlano = true;
             agendamentoState.planoId = planoAtivo.planoId;
         }
 
-        // Atualiza nossa variável global para o botão saber que é grátis/plano
-        window.servicoSelecionado.valor = 0; // Sai de graça na hora
+        window.servicoSelecionado.valor = 0; 
         window.servicoSelecionado.isPeloPlano = true;
         window.servicoSelecionado.planoId = planoAtivo.planoId;
         window.servicoSelecionado.nomePlano = planoAtivo.nomePlano;
-        
-        console.log("💎 Serviço coberto pelo plano:", planoAtivo.nomePlano);
     } else {
-        // MODO NORMAL
-        // Se já tiver horário selecionado, mostra o texto padrão
-        if (!btnAgendar.disabled && btnAgendar.innerText.includes('Agendar às')) {
-            // Mantém "Agendar às 10:00"
-        } else {
-            btnAgendar.innerHTML = '🗓️ Agendar';
-        }
+        btnAgendar.innerHTML = '🗓️ Agendar';
         btnAgendar.className = ''; 
-        btnAgendar.style.background = ''; // Reseta estilo
+        btnAgendar.style.background = ''; 
     }
 
     if (typeof verificarEstadoBotaoAgendar === 'function') verificarEstadoBotaoAgendar();
+
+    // =========================================================================
+    // 5. 🚀 GATILHO MÁGICO: DESENHAR OS HORÁRIOS AGORA!
+    // =========================================================================
+    if (window.ultimoMonitoramentoArgs && window.ultimoMonitoramentoArgs.modo === 'cliente') {
+        
+        // Opcional: Rola a tela um pouquinho pra baixo pra focar nos horários
+        const containerAgenda = document.getElementById(window.ultimoMonitoramentoArgs.container);
+        if (containerAgenda) {
+            containerAgenda.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Religa o cálculo de horários passando os parâmetros salvos!
+        monitorarHorariosRealTime(
+            window.ultimoMonitoramentoArgs.uid, 
+            window.ultimoMonitoramentoArgs.container, 
+            window.ultimoMonitoramentoArgs.modo
+        );
+    }
 }
 
 // ============================================================
@@ -31896,6 +31900,9 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    // Salva os argumentos na memória para conseguirmos recarregar lá na selecionarServico()
+    window.ultimoMonitoramentoArgs = { uid: uidProfissional, container: containerId, modo: modoVisualizacao };
+
     // --- LIMPEZA DE LISTENERS ---
     if (modoVisualizacao === 'cliente') {
         if (window.unsubscribeHorariosPerfil) {
@@ -31909,7 +31916,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
         }
     }
 
-    // --- SETUP VISUAL ---
+    // --- SETUP VISUAL E DE DATA ---
     if (typeof renderizarSeletorDatasGenerico === 'function') {
         renderizarSeletorDatasGenerico(uidProfissional, containerId, modoVisualizacao);
     }
@@ -31920,47 +31927,50 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
         if (modoVisualizacao === 'equipe') window.dataSelecionadaEquipe = dataAtiva;
         else window.dataSelecionadaCliente = dataAtiva;
     }
-
     const dataBusca = formatarDataIso(dataAtiva); 
 
-    // --- SYNC WITH AGENDAMENTO STATE (TASK 1) ---
+    // --- SYNC WITH AGENDAMENTO STATE ---
     if (modoVisualizacao === 'cliente') {
          if (typeof agendamentoState === 'undefined') window.agendamentoState = {};
          agendamentoState.data = dataBusca;
-         // Tenta verificar o botão (caso já tenha horário/serviço)
          setTimeout(() => {
             if(typeof verificarEstadoBotaoAgendar === 'function') verificarEstadoBotaoAgendar();
          }, 500);
     }
 
+    // ============================================================================
+    // 🛑 REGRA DE OURO UX: O CLIENTE SÓ VÊ HORÁRIOS SE ESCOLHER O SERVIÇO ANTES
+    // ============================================================================
+    if (modoVisualizacao === 'cliente' && (!window.agendamentoState || !window.agendamentoState.servico)) {
+        container.innerHTML = `
+            <div style="font-size:10px; color:#aaa; text-align:center; margin-bottom:5px;">Agenda de: <b>${dataBusca}</b></div>
+            <div id="avisoSelecioneServico" style="text-align:center; padding:30px; margin: 10px 0; background: linear-gradient(145deg, #1a1a1a, #111); border-radius:12px; border:1px dashed #d4af37; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                <div style="font-size:30px; margin-bottom:10px;">✂️</div>
+                <h3 style="color:#d4af37; margin:0 0 5px 0;">Escolha o Serviço</h3>
+                <p style="font-size:12px; margin:0; color:#aaa;">Selecione um serviço acima para o sistema analisar a agenda e mostrar os horários compatíveis com o tempo necessário.</p>
+            </div>`;
+        return; // Pára toda a execução! Não consulta banco nem processa o Dominó.
+    }
+
     container.innerHTML = `
-        <div style="font-size:10px; color:#aaa; text-align:center; margin-bottom:5px;">
-            Agenda de: <b>${dataBusca}</b>
-        </div>
+        <div style="font-size:10px; color:#aaa; text-align:center; margin-bottom:5px;">Agenda de: <b>${dataBusca}</b></div>
         <div class="spinner" style="margin:10px auto; width:20px; height:20px;"></div>
     `;
 
-    // 1. QUERY DE AGENDAMENTOS (O que já está marcado)
+    // 1. QUERY DE AGENDAMENTOS E EXCEÇÕES
     const queryAgendamentos = db.collection('agendamentos')
         .where('barbeiroUid', '==', uidProfissional)
         .where('data', '==', dataBusca)
         .where('status', 'in', ['pendente', 'confirmado', 'imediato', 'conclusão pendente']);
 
-    // 2. QUERY DA EXCEÇÃO DO DIA (A CORREÇÃO!)
-    // Vamos ouvir também se o dono muda o horário desse dia em tempo real
-    const docRefExcecao = db.collection('usuarios').doc(uidProfissional)
-                            .collection('agenda_diaria').doc(dataBusca);
-
+    const docRefExcecao = db.collection('usuarios').doc(uidProfissional).collection('agenda_diaria').doc(dataBusca);
     const docRefProfissional = db.collection('usuarios').doc(uidProfissional);
 
     // --- LISTENER MESTRE (PERFIL + EXCEÇÃO + AGENDAMENTOS) ---
-    // Usamos Promise.all no inicio, mas como é realtime, aninhamos os listeners
-    
     const unsubPerfil = docRefProfissional.onSnapshot(async (userSnap) => {
         if (!userSnap.exists) { container.innerHTML = "Erro: Profissional não achado."; return; }
         const u = userSnap.data();
 
-        // MAPEAMENTO DE DURAÇÃO (Seu código original mantido)
         let listaServicosRaw = [];
         let idFonte = uidProfissional; 
         if (u.vinculoSalao && u.vinculoSalao !== uidProfissional) idFonte = u.vinculoSalao;
@@ -31987,10 +31997,8 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
             });
         }
 
-        // --- LISTENER DA EXCEÇÃO (AQUI QUE O SISTEMA VAI LER O QUE VC SALVOU) ---
         const unsubExcecao = docRefExcecao.onSnapshot(async (excecaoSnap) => {
             
-            // Variáveis de Horário
             let inicioExpediente = 480; // 08:00
             let fimExpediente = 1080;   // 18:00
             let almocoIni = null;
@@ -31998,27 +32006,21 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
             let diaBloqueado = false;
             let usouExcecao = false;
 
-            // 1. TENTA USAR A EXCEÇÃO DO DIA
             if (excecaoSnap.exists) {
                 const dadosDia = excecaoSnap.data();
-                
                 if (dadosDia.fechado === true) {
                     diaBloqueado = true;
                     usouExcecao = true;
                 } 
                 else if (dadosDia.horarioInicio && dadosDia.horarioFim) {
-                    // USA OS DADOS QUE VC SALVOU NO MODAL NOVO
                     inicioExpediente = timeToMin(dadosDia.horarioInicio);
                     fimExpediente = timeToMin(dadosDia.horarioFim);
-                    
                     if(dadosDia.almocoInicio) almocoIni = timeToMin(dadosDia.almocoInicio);
                     if(dadosDia.almocoFim) almocoFim = timeToMin(dadosDia.almocoFim);
-                    
                     usouExcecao = true;
                 }
             }
 
-            // 2. SE NÃO TEM EXCEÇÃO, USA O PADRÃO SEMANAL
             if (!diaBloqueado && !usouExcecao) {
                 const dateObj = new Date(dataBusca + 'T12:00:00');
                 const diasSemanaMap = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
@@ -32033,7 +32035,6 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                     if(configDia.almocoInicio) almocoIni = timeToMin(configDia.almocoInicio);
                     if(configDia.almocoFim) almocoFim = timeToMin(configDia.almocoFim);
                 } else if (u.usaAgendaManual && u.agenda) {
-                     // Fallback antigo
                      const slotsManuais = Object.keys(u.agenda).filter(k => u.agenda[k]);
                      if(slotsManuais.length > 0) {
                          inicioExpediente = Math.min(...slotsManuais.map(timeToMin));
@@ -32044,7 +32045,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                 }
             }
 
-            // --- LISTENER DE AGENDAMENTOS (Cálculo dos slots) ---
+            // --- LISTENER DE AGENDAMENTOS ---
             const unsubAgendamentos = queryAgendamentos.onSnapshot((agendSnap) => {
                 
                 const ocupados = {}; 
@@ -32071,18 +32072,33 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                 blocosBloqueados.sort((a,b) => a.inicio - b.inicio);
                 let listaCandidatos = new Set();
 
+                // ==========================================================
+                // ⏱️ A MATEMÁTICA DO ESPAÇO (-10 MIN)
+                // ==========================================================
+                let duracaoEfetivaSlot = 30; // Se não houver regra, o padrão é testar 30min
+
+                // Se for a tela de agendamento (Cliente), calcula o desconto do tempo do serviço selecionado
+                if (modoVisualizacao === 'cliente' && window.agendamentoState && window.agendamentoState.servico) {
+                    const duracaoOriginal = parseInt(window.agendamentoState.servico.duracao) || 30;
+                    duracaoEfetivaSlot = duracaoOriginal - 10; 
+                    
+                    // Trava de segurança (Nunca deixa testar zero ou negativo)
+                    if (duracaoEfetivaSlot <= 0) duracaoEfetivaSlot = 10; 
+                }
+
                 // LÓGICA DOMINÓ
                 if (!diaBloqueado) {
                     let cursor = inicioExpediente;
-                    const duracaoPadraoSlot = 30; 
+                    const duracaoSaltoLoop = 30; // Os botões visuais (slots) continuam aparecendo de meia em meia hora (Ex: 09:00, 09:30)
 
                     while (cursor < fimExpediente) {
-                        // Almoço
+                        // Pula o almoço
                         if (almocoIni && almocoFim && cursor >= almocoIni && cursor < almocoFim) {
                             cursor = almocoFim;
                             continue;
                         }
-                        // Colisão
+                        
+                        // Verifica se o slot está em cima de alguém
                         let colidiu = false;
                         let salto = 0;
                         for (let bloco of blocosBloqueados) {
@@ -32096,10 +32112,11 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                             cursor = salto;
                             continue;
                         }
-                        // Fim expediente
-                        if ((cursor + duracaoPadraoSlot) > fimExpediente) break;
+                        
+                        // Corta se passar do expediente
+                        if ((cursor + duracaoSaltoLoop) > fimExpediente) break;
 
-                        // Filtro Buraco
+                        // PROCURA O PRÓXIMO BURACO (Obstáculo)
                         let proximoObstaculo = fimExpediente;
                         const proximoBloqueio = blocosBloqueados.find(b => b.inicio > cursor);
                         if (proximoBloqueio && proximoBloqueio.inicio < proximoObstaculo) {
@@ -32109,24 +32126,26 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                              proximoObstaculo = almocoIni;
                         }
 
-                        if ((proximoObstaculo - cursor) >= duracaoPadraoSlot) {
+                        // 💡 A MÁGICA: O botão só vai aparecer se o "Próximo Obstáculo - Agora" for MAIOR ou IGUAL à "Duração Efetiva"
+                        if ((proximoObstaculo - cursor) >= duracaoEfetivaSlot) {
                             listaCandidatos.add(minToTime(cursor));
                         }
                         
-                        cursor += duracaoPadraoSlot;
+                        cursor += duracaoSaltoLoop;
                     }
                     
-                    // Encaixes Pós-Serviço
+                    // Encaixes Perfeitos (Logo após um término "quebrado" como 09:40)
                     blocosBloqueados.forEach(b => {
                         const tempoFim = b.fim;
-                        if((tempoFim + duracaoPadraoSlot) <= fimExpediente && !ocupados[minToTime(tempoFim)]) {
+                        if((tempoFim + duracaoSaltoLoop) <= fimExpediente && !ocupados[minToTime(tempoFim)]) {
                             if(!(almocoIni && tempoFim >= almocoIni && tempoFim < almocoFim)) {
                                 let proxObs = fimExpediente;
                                 const proxBlk = blocosBloqueados.find(bx => bx.inicio > tempoFim);
                                 if(proxBlk && proxBlk.inicio < proxObs) proxObs = proxBlk.inicio;
                                 if(almocoIni && tempoFim < almocoIni && almocoIni < proxObs) proxObs = almocoIni;
 
-                                if ((proxObs - tempoFim) >= 30) {
+                                // 💡 A MÁGICA TAMBÉM SE APLICA AQUI
+                                if ((proxObs - tempoFim) >= duracaoEfetivaSlot) {
                                     listaCandidatos.add(minToTime(tempoFim));
                                 }
                             }
@@ -32134,13 +32153,13 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                     });
                 }
 
-                // RENDERIZAR
+                // RENDERIZAR VISUALMENTE
                 if (diaBloqueado) {
-                    container.innerHTML = `<div style="text-align:center; padding:20px; color:#e74c3c; border:1px dashed #e74c3c; border-radius:10px; margin-top:10px;"><h3>😴 Dia Fechado</h3><p style="font-size:12px; opacity:0.8;">Horário especial configurado.</p></div>`;
+                    container.innerHTML = `<div style="text-align:center; padding:20px; color:#e74c3c; border:1px dashed #e74c3c; border-radius:10px; margin-top:10px;"><h3>😴 Dia Fechado</h3><p style="font-size:12px; opacity:0.8;">O profissional não atenderá neste dia.</p></div>`;
                     return;
                 }
 
-                Object.keys(ocupados).forEach(h => listaCandidatos.add(h)); // Adiciona ocupados na lista visual
+                Object.keys(ocupados).forEach(h => listaCandidatos.add(h)); 
 
                 let html = '';
                 if (modoVisualizacao === 'equipe') html = '<div class="grid-horarios-mini">';
@@ -32167,7 +32186,6 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                             
                             const duracaoTxt = (dados.duracao && dados.duracao > 30) ? `<br><small style="opacity:0.8">(${dados.duracao}m)</small>` : '';
 
-                            // --- DRAG AND DROP MODIFICATION (MOBILE + DESKTOP) ---
                             const isDraggable = (modoVisualizacao === 'equipe' && (perfil.isProprietario || perfil.tipo === 'secretaria'));
                             const dragAttrs = isDraggable 
                                 ? `draggable="true" 
@@ -32186,21 +32204,18 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                     }
 
                     // CARD LIVRE
-                    // VERIFICAÇÃO DE CONFLITO VISUAL: Não renderizar botão se horário está "esmagado" no meio de um atendimento
+                    // Verifica se o slot livre está esmagado dentro de um outro atendimento
                     const horaAvaliadaMin = timeToMin(hora);
                     let estaEsmagado = false;
-                    
                     for (let bloco of blocosBloqueados) {
                         if (horaAvaliadaMin > bloco.inicio && horaAvaliadaMin < bloco.fim) {
                             estaEsmagado = true;
                             break;
                         }
                     }
+                    if (estaEsmagado) return; 
                     
-                    if (estaEsmagado) {
-                        return; // Pula este horário sem renderizar o botão
-                    }
-                    
+                    // Trava horário passado (Se for hoje, esconde o que já passou)
                     if (isHoje) {
                         const [h, m] = hora.split(':').map(Number);
                         if (h < horaAtual || (h === horaAtual && m <= minAtual)) return;
@@ -32212,7 +32227,6 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                         const ehEncaixe = (tMin % 30 !== 0); 
                         const estiloExtra = ehEncaixe ? 'border:2px dashed #f1c40f;' : '';
                         
-                        // --- DRAG AND DROP TARGET ---
                         const dropEvents = (modoVisualizacao === 'equipe' && (perfil.isProprietario || perfil.tipo === 'secretaria')) 
                             ? `ondragover="handleDragOver(event)" ondrop="handleDrop(event, '${uidProfissional}', '${hora}', '${dataBusca}')" ondragenter="this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')"` 
                             : '';
@@ -32224,7 +32238,7 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                 });
 
                 if (modoVisualizacao === 'equipe') html += '</div>';
-                if (html === '<div class="grid-horarios-mini"></div>' || html === '') html = '<div style="text-align:center; padding:20px; opacity:0.7;">Sem horários disponíveis.</div>';
+                if (html === '<div class="grid-horarios-mini"></div>' || html === '') html = '<div style="text-align:center; padding:20px; opacity:0.7;">Sem horários disponíveis para este tempo de serviço.</div>';
 
                 container.innerHTML = html;
 
@@ -32232,21 +32246,18 @@ function monitorarHorariosRealTime(uidProfissional, containerId, modoVisualizaca
                 console.error("Erro agendamentos:", error);
             });
 
-            // Guarda unsubscribe dos agendamentos para limpar depois
             if(!window.listenersAgendamentosInternos) window.listenersAgendamentosInternos = {};
             if(window.listenersAgendamentosInternos[uidProfissional]) window.listenersAgendamentosInternos[uidProfissional]();
             window.listenersAgendamentosInternos[uidProfissional] = unsubAgendamentos;
 
         }); // Fim listener Exceção
 
-        // Guarda unsubscribe da exceção
         if(!window.listenersExcecaoInternos) window.listenersExcecaoInternos = {};
         if(window.listenersExcecaoInternos[uidProfissional]) window.listenersExcecaoInternos[uidProfissional]();
         window.listenersExcecaoInternos[uidProfissional] = unsubExcecao;
 
     }); // Fim listener Perfil
 
-    // Função de limpeza total (chamada quando troca de aba)
     const unsubscribeTotal = () => { 
         unsubPerfil(); 
         if(window.listenersExcecaoInternos && window.listenersExcecaoInternos[uidProfissional]) window.listenersExcecaoInternos[uidProfissional]();
